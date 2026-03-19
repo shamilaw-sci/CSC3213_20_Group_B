@@ -3,10 +3,11 @@ name: Mirror Repo
 on:
   push:
     branches:
-      - '**'
+      - main
 
 jobs:
   mirror:
+    if: github.repository == 'csc3213-2026-group-b/scs-pdn-monorepo'
     runs-on: ubuntu-latest
 
     steps:
@@ -14,4 +15,5 @@ jobs:
         run: |
           git clone --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
           cd scs-pdn-monorepo.git
+          git status
           git push --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/shamilaw-sci/CSC3213_20_Group_B.git
