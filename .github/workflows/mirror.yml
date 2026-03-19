@@ -15,5 +15,5 @@ jobs:
           git clone --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
           cd scs-pdn-monorepo.git
           # remove workflows before pushing
-          rm -rf .github/workflows
+          git filter-repo --path .github/workflows --invert-paths
           git push --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/shamilaw-sci/CSC3213_20_Group_B.git
