@@ -1,0 +1,17 @@
+name: Mirror Repo
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mirror repository
+        run: |
+          git clone --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+          cd scs-pdn-monorepo.git
+          git push --mirror https://x-access-token:${{ secrets.TARGET_TOKEN }}@github.com/shamilaw-sci/scs-pdn-monorepo.git
