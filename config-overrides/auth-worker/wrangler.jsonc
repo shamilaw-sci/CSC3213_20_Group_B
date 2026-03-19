@@ -14,22 +14,22 @@
 
     "GITHUB_CLIENT_ID": "Ov23lieXg7aKWvl5dC0M",
     "GITHUB_CLIENT_SECRET": "d86ec485eb7fc803e4e0285ba036cbcc5635695e",
-    "GITHUB_REDIRECT_URI": "http://localhost:3000/auth/github/callback",
+    "GITHUB_REDIRECT_URI": "http://localhost:3000/auth/github/callback"
   },
   "kv_namespaces": [
     {
       "binding": "PERMISSIONS",
-      "id": "8ec7ba8609354d1187e562a56a82fca1",
+      "id": "8ec7ba8609354d1187e562a56a82fca1"
     },
     {
       "binding": "TOKEN_BLACKLIST",
-      "id": "a1de1b81b8e24c09ba99a9baf3dee6be",
-    },
+      "id": "a1de1b81b8e24c09ba99a9baf3dee6be"
+    }
   ],
   "observability": {
     "logs": {
       "enabled": true,
-      "invocation_logs": true,
-    },
-  },
+      "invocation_logs": true
+    }
+  }
 }
