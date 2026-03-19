@@ -9,7 +9,7 @@ const TARGET_ROOT = path.resolve('apps');
 
 const isDryRun = process.argv.includes('--dry');
 
-// 🎨 per-app colors
+// per-app colors
 const appColors = [
   chalk.blue,
   chalk.green,
@@ -19,7 +19,7 @@ const appColors = [
   chalk.red,
 ];
 
-// 🔐 hash helper
+// hash helper
 async function hashFile(filePath: string) {
   try {
     const content = await readFile(filePath);
@@ -29,7 +29,7 @@ async function hashFile(filePath: string) {
   }
 }
 
-// 🔍 tiny diff preview (first few lines)
+// tiny diff preview (first few lines)
 async function showDiff(src: string, dest: string, color: any) {
   try {
     const [a, b] = await Promise.all([
@@ -74,7 +74,7 @@ async function copyRecursive(
       hashFile(dest),
     ]);
 
-    // 🧠 skip unchanged
+    // skip unchanged
     if (srcHash && destHash && srcHash === destHash) {
       console.log(chalk.gray('• Unchanged'), chalk.dim(dest));
       return;
