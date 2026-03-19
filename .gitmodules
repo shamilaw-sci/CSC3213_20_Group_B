@@ -1,0 +1,18 @@
+[submodule "apps/main-site"]
+	path = apps/main-site
+	url = https://github.com/csc3213-2026-group-b/scs.pdn.ac.lk.git
+[submodule "apps/portal"]
+	path = apps/portal
+	url = https://github.com/csc3213-2026-group-b/portal.scs.pdn.ac.lk.git
+[submodule "apps/api"]
+	path = apps/api
+	url = https://github.com/csc3213-2026-group-b/api.scs.pdn.ac.lk.git
+[submodule "apps/people"]
+	path = apps/people
+	url = https://github.com/csc3213-2026-group-b/people.scs.pdn.ac.lk.git
+[submodule "apps/projects"]
+	path = apps/projects
+	url = https://github.com/csc3213-2026-group-b/projects.scs.pdn.ac.lk.git
+[submodule "apps/auth-worker"]
+	path = apps/auth-worker
+	url = https://github.com/csc3213-2026-group-b/scs-portal-auth-app.git
