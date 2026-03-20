@@ -107,24 +107,26 @@ bun run dev
 
 This starts all six services in parallel with colour-coded log output:
 
-| Colour  | App                                                            |
-| ------- | -------------------------------------------------------------- |
-| Blue    | `main-site` → [http://localhost:3001](http://localhost:3001)   |
-| Green   | `portal` → [http://localhost:3002](http://localhost:3002)      |
-| Yellow  | `people` → [http://localhost:3003](http://localhost:3003)      |
-| Magenta | `projects` → [http://localhost:3004](http://localhost:3004)    |
-| Cyan    | `api` → [http://localhost:3000](http://localhost:3000)         |
-| White   | `auth-worker` → [http://localhost:8787](http://localhost:8787) |
+| Colour  | App                                                             |
+| ------- | --------------------------------------------------------------- |
+| Blue    | `main-site` → [http://localhost:3001](http://localhost:3001)    |
+| Green   | `portal` → [http://localhost:3002](http://localhost:3002)       |
+| Yellow  | `people` → [http://localhost:3003](http://localhost:3003)       |
+| Magenta | `projects` → [http://localhost:3004](http://localhost:3004)     |
+| Cyan    | `api` → [http://localhost:3000](http://localhost:3000)          |
+| White   | `auth-worker` → [http://localhost:8787](http://localhost:8787)  |
+| Gray    | `proxy-worker` → [http://localhost:8788](http://localhost:8788) |
 
 #### Run a single app
 
 ```bash
-bun run dev:main      # main-site   → http://localhost:3001
-bun run dev:portal    # portal      → http://localhost:3002
-bun run dev:people    # people      → http://localhost:3003
-bun run dev:projects  # projects    → http://localhost:3004
-bun run dev:api       # api         → http://localhost:3000
-bun run dev:worker    # auth-worker → http://localhost:8787
+bun run dev:main            # main-site    → http://localhost:3001
+bun run dev:portal          # portal       → http://localhost:3002
+bun run dev:people          # people       → http://localhost:3003
+bun run dev:projects        # projects     → http://localhost:3004
+bun run dev:api             # api          → http://localhost:3000
+bun run dev:worker:auth     # auth-worker  → http://localhost:8787
+bun run dev:worker:proxy    # proxy-worker → http://localhost:8788
 ```
 
 ---
