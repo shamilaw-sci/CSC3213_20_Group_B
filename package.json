@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "predev": "kill-port 3000 3001 3002 3003 3004 3005 8787 8788",
-    "dev": "concurrently \"bun dev:main\" \"bun dev:portal\" \"bun dev:people\" \"bun dev:projects\" \"bun dev:api\" \"bun dev:worker:auth\" \"bun dev:worker:proxy\"",
+    "dev": "concurrently --prefix \"[{name}]\" -n main,portal,people,projects,api,auth,proxy -c blue,green,magenta,cyan,blueBright,greenBright,magentaBright \"bun dev:main\" \"bun dev:portal\" \"bun dev:people\" \"bun dev:projects\" \"bun dev:api\" \"bun dev:worker:auth\" \"bun dev:worker:proxy\"",
     "dev:main": "bun --filter=scs.pdn.ac.lk dev -p 3001",
     "dev:portal": "bun --filter=portal.scs.pdn.ac.lk dev -p 3002",
     "dev:people": "bun --filter=people.scs.pdn.ac.lk dev -p 3003",

@@ -107,15 +107,15 @@ bun run dev
 
 This starts all six services in parallel with colour-coded log output:
 
-| Colour  | App                                                             |
-| ------- | --------------------------------------------------------------- |
-| Blue    | `main-site` → [http://localhost:3001](http://localhost:3001)    |
-| Green   | `portal` → [http://localhost:3002](http://localhost:3002)       |
-| Yellow  | `people` → [http://localhost:3003](http://localhost:3003)       |
-| Magenta | `projects` → [http://localhost:3004](http://localhost:3004)     |
-| Cyan    | `api` → [http://localhost:3000](http://localhost:3000)          |
-| White   | `auth-worker` → [http://localhost:8787](http://localhost:8787)  |
-| Gray    | `proxy-worker` → [http://localhost:8788](http://localhost:8788) |
+| Colour         | App            | URL                                            |
+| -------------- | -------------- | ---------------------------------------------- |
+| Blue           | `main-site`    | [http://localhost:3001](http://localhost:3001) |
+| Green          | `portal`       | [http://localhost:3002](http://localhost:3002) |
+| Magenta        | `people`       | [http://localhost:3003](http://localhost:3003) |
+| Cyan           | `projects`     | [http://localhost:3004](http://localhost:3004) |
+| Bright Blue    | `api`          | [http://localhost:3000](http://localhost:3000) |
+| Bright Green   | `auth-worker`  | [http://localhost:8787](http://localhost:8787) |
+| Bright Magenta | `proxy-worker` | [http://localhost:8788](http://localhost:8788) |
 
 #### Run a single app
 
