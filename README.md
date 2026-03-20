@@ -19,7 +19,7 @@ A monorepo containing all applications for the SCS PDN platform.
 
 | Tool                          | Version | Install                                                                               |
 |-------------------------------|---------|---------------------------------------------------------------------------------------|
-| [Bun](https://bun.sh)         | ≥ 1.3.1 | `powershell -c "irm bun.sh/install.ps1 | iex"`                                        |
+| [Bun](https://bun.sh)         | ≥ 1.3.1 | `powershell -c "irm bun.sh/install.ps1 \| iex"`                                       |
 | [Node.js](https://nodejs.org) | ≥ 18    | Via [nvm](https://github.com/nvm-sh/nvm) or official installer                        |
 | Git                           | any     | `winget install --id Git.Git -e --source winget` / [git-scm.com](https://git-scm.com) |
 
@@ -89,14 +89,14 @@ npm run dev
 
 This starts all six services in parallel with colour-coded log output:
 
-| Colour  | App                                   |
-|---------|---------------------------------------|
-| Blue    | `main-site` → http://localhost:3001   |
-| Green   | `portal` → http://localhost:3002      |
-| Yellow  | `people` → http://localhost:3003      |
-| Magenta | `projects` → http://localhost:3004    |
-| Cyan    | `api` → http://localhost:3000         |
-| White   | `auth-worker` → http://localhost:8787 |
+| Colour  | App                                                            |
+|---------|----------------------------------------------------------------|
+| Blue    | `main-site` → [http://localhost:3001](http://localhost:3001)   |
+| Green   | `portal` → [http://localhost:3002](http://localhost:3002)      |
+| Yellow  | `people` → [http://localhost:3003](http://localhost:3003)      |
+| Magenta | `projects` → [http://localhost:3004](http://localhost:3004)    |
+| Cyan    | `api` → [http://localhost:3000](http://localhost:3000)         |
+| White   | `auth-worker` → [http://localhost:8787](http://localhost:8787) |
 
 #### Run a single app
 
@@ -145,7 +145,7 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ## Project Structure
 
-```
+```text
 CSC3213_20_Group_B/
 ├── apps/                  # Git submodules — one repo per app
 │   ├── main-site/
@@ -182,9 +182,9 @@ git submodule update --remote --merge
 
 ## Troubleshooting
 
-| Problem                                           | Solution                                                  |
-|---------------------------------------------------|-----------------------------------------------------------|
-| `apps/*` directories are empty                    | Run `git submodule update --init --recursive`             |
-| Missing `.env` / `.env.local` files inside an app | Run `bun run inject:config`                               |
-| Port already in use                               | Stop the conflicting process                              |
-| `bun: command not found`                          | Install Bun: `powershell -c "irm bun.sh/install.ps1|iex"` |
+| Problem                                           | Solution                                                     |
+|---------------------------------------------------|--------------------------------------------------------------|
+| `apps/*` directories are empty                    | Run `git submodule update --init --recursive`                |
+| Missing `.env` / `.env.local` files inside an app | Run `bun run inject:config`                                  |
+| Port already in use                               | Stop the conflicting process                                 |
+| `bun: command not found`                          | Install Bun: `powershell -c "irm bun.sh/install.ps1 \| iex"` |
