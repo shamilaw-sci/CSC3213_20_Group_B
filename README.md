@@ -4,25 +4,27 @@
 
 A monorepo containing all applications for the SCS PDN platform.
 
-| App                | Description                | Default Port |
-| ------------------ | -------------------------- | ------------ |
-| `apps/main-site`   | Main public-facing website | `3001`       |
-| `apps/portal`      | Student/staff portal       | `3002`       |
-| `apps/people`      | People directory app       | `3003`       |
-| `apps/projects`    | Projects showcase app      | `3004`       |
-| `apps/api`         | Backend REST API           | `3000`       |
-| `apps/auth-worker` | Cloudflare auth worker     | `8787`       |
+| App                 | Description                | Default Port |
+| ------------------- | -------------------------- | ------------ |
+| `apps/main-site`    | Main public-facing website | `3001`       |
+| `apps/portal`       | Student/staff portal       | `3002`       |
+| `apps/people`       | People directory app       | `3003`       |
+| `apps/projects`     | Projects showcase app      | `3004`       |
+| `apps/api`          | Backend REST API           | `3000`       |
+| `apps/auth-worker`  | Cloudflare auth worker     | `8787`       |
+| `apps/proxy-worker` | Cloudflare proxy worker    | `8788`       |
 
 To see the projects in live, please see the bellow table for the links to the deployed applications:
 
-| App                | Description                | URL                                                                                                |
-| ------------------ | -------------------------- | -------------------------------------------------------------------------------------------------- |
-| `apps/main-site`   | Main public-facing website | [https://scs-pdn.space](https://scs-pdn.space)                                                     |
-| `apps/portal`      | Student/staff portal       | [https://portal.scs-pdn.space](https://portal.scs-pdn.space)                                       |
-| `apps/people`      | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)                                       |
-| `apps/projects`    | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space)                                   |
-| `apps/api`         | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
-| `apps/auth-worker` | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
+| App                 | Description                | URL                                                                                                |
+| ------------------- | -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `apps/main-site`    | Main public-facing website | [https://scs-pdn.space](https://scs-pdn.space)                                                     |
+| `apps/portal`       | Student/staff portal       | [https://portal.scs-pdn.space](https://portal.scs-pdn.space)                                       |
+| `apps/people`       | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)                                       |
+| `apps/projects`     | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space)                                   |
+| `apps/api`          | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
+| `apps/auth-worker`  | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
+| `apps/proxy-worker` | Cloudflare proxy worker    | [https://scs-proxy-worker.scs-pdn.workers.dev](https://scs-proxy-worker.scs-pdn.workers.dev)       |
 
 ---
 
@@ -76,9 +78,6 @@ Install all workspace dependencies from the repo root:
 
 ```bash
 bun install
-
-# or with npm
-npm install
 ```
 
 ---
@@ -91,12 +90,9 @@ correct locations inside each `apps/*` directory:
 
 ```bash
 bun run inject:config
-
-# or with npm
-npm run inject:config
 ```
 
-> **Note:** This step is also run automatically before every `bun run build` or `npm run build`.
+> **Note:** This step is also run automatically before every `bun run build`.
 > Re-run it any time you update files inside `config-overrides/`.
 
 ---
@@ -107,9 +103,6 @@ npm run inject:config
 
 ```bash
 bun run dev
-
-# or with npm
-npm run dev
 ```
 
 This starts all six services in parallel with colour-coded log output:
@@ -132,14 +125,6 @@ bun run dev:people    # people      → http://localhost:3003
 bun run dev:projects  # projects    → http://localhost:3004
 bun run dev:api       # api         → http://localhost:3000
 bun run dev:worker    # auth-worker → http://localhost:8787
-
-# or with npm
-npm run dev:main      # main-site   → http://localhost:3001
-npm run dev:portal    # portal      → http://localhost:3002
-npm run dev:people    # people      → http://localhost:3003
-npm run dev:projects  # projects    → http://localhost:3004
-npm run dev:api       # api         → http://localhost:3000
-npm run dev:worker    # auth-worker → http://localhost:8787
 ```
 
 ---
@@ -148,9 +133,6 @@ npm run dev:worker    # auth-worker → http://localhost:8787
 
 ```bash
 bun run build
-
-# or with npm
-npm run build
 ```
 
 Turbo runs builds for all apps in dependency order and caches the results.
@@ -173,34 +155,26 @@ Turbo runs builds for all apps in dependency order and caches the results.
 ```text
 CSC3213_20_Group_B/
 ├── apps/                  # Git submodules — one repo per app
-│   ├── main-site/
-│   ├── portal/
-│   ├── people/
-│   ├── projects/
 │   ├── api/
-│   └── auth-worker/
+│   ├── auth-worker/
+│   ├── main-site/
+│   ├── people/
+│   ├── portal/
+│   ├── projects/
+|   └── proxy-worker/
 ├── config-overrides/      # Env & config files injected into each app
 │   ├── api/
 │   ├── auth-worker/
 │   ├── main-site/
 │   ├── people/
 │   ├── portal/
-│   └── projects/
+│   ├── projects/
+|   └── proxy-worker/
 ├── scripts/
 │   └── inject-config.ts   # Config injection script
 ├── package.json
 ├── turbo.json
 └── bun.lock
-```
-
----
-
-## Updating Submodules
-
-To pull the latest commits for all submodules:
-
-```bash
-git submodule update --remote --merge
 ```
 
 ---
