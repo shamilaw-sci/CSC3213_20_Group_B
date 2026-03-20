@@ -16,3 +16,6 @@
 [submodule "apps/auth-worker"]
 	path = apps/auth-worker
 	url = https://github.com/csc3213-2026-group-b/scs-portal-auth-app.git
+[submodule "apps/proxy-worker"]
+	path = apps/proxy-worker
+	url = https://github.com/csc3213-2026-group-b/scs-proxy-worker.git
