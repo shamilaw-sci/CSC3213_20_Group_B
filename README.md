@@ -48,7 +48,7 @@ You **must** initialise the submodules after cloning or they will be empty.
 Before cloning, set up a git config to use the below URL rewrite rule so that you can push to the submodule repos with the correct authentication token:
 
 ```bash
-git config url."https://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@github.com/".insteadOf "https://github.com/"
+git config url."https://<TOKEN>@github.com/".insteadOf "https://github.com/"
 ```
 
 After setting up the URL rewrite, clone the monorepo with:
@@ -67,7 +67,7 @@ git submodule update --init --recursive
 After cloning, please unset the URL rewrite rule to avoid affecting other repositories:
 
 ```bash
-git config --unset url."https://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@github.com/".insteadOf
+git config --unset url."https://<TOKEN>@github.com/".insteadOf
 ```
 
 ---
