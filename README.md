@@ -5,7 +5,7 @@
 A monorepo containing all applications for the SCS PDN platform.
 
 | App                | Description                | Default Port |
-|--------------------|----------------------------|--------------|
+| ------------------ | -------------------------- | ------------ |
 | `apps/main-site`   | Main public-facing website | `3001`       |
 | `apps/portal`      | Student/staff portal       | `3002`       |
 | `apps/people`      | People directory app       | `3003`       |
@@ -13,12 +13,23 @@ A monorepo containing all applications for the SCS PDN platform.
 | `apps/api`         | Backend REST API           | `3000`       |
 | `apps/auth-worker` | Cloudflare auth worker     | `8787`       |
 
+To see the projects in live, please see the bellow table for the links to the deployed applications:
+
+| App                | Description                | URL                                                                                                |
+| ------------------ | -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `apps/main-site`   | Main public-facing website | [https://scs-pdn.space](https://scs-pdn.space)                                                     |
+| `apps/portal`      | Student/staff portal       | [https://portal.scs-pdn.space](https://portal.scs-pdn.space)                                       |
+| `apps/people`      | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)                                       |
+| `apps/projects`    | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space)                                   |
+| `apps/api`         | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
+| `apps/auth-worker` | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
+
 ---
 
 ## Prerequisites
 
 | Tool                          | Version | Install                                                                               |
-|-------------------------------|---------|---------------------------------------------------------------------------------------|
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | [Bun](https://bun.sh)         | ≥ 1.3.1 | `powershell -c "irm bun.sh/install.ps1 \| iex"`                                       |
 | [Node.js](https://nodejs.org) | ≥ 18    | Via [nvm](https://github.com/nvm-sh/nvm) or official installer                        |
 | Git                           | any     | `winget install --id Git.Git -e --source winget` / [git-scm.com](https://git-scm.com) |
@@ -32,8 +43,16 @@ A monorepo containing all applications for the SCS PDN platform.
 Each app lives in its own git repository and is registered as a submodule.
 You **must** initialise the submodules after cloning or they will be empty.
 
+Before cloning, set up a git config to use the below URL rewrite rule so that you can push to the submodule repos with the correct authentication token:
+
 ```bash
-git clone --recurse-submodules https://github.com/shamilaw-sci/CSC3213_20_Group_B.git
+git config url."https://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@github.com/".insteadOf "https://github.com/"
+```
+
+After setting up the URL rewrite, clone the monorepo with:
+
+```bash
+git clone https://github.com/shamilaw-sci/CSC3213_20_Group_B.git --recurse-submodules
 cd CSC3213_20_Group_B
 ```
 
@@ -41,6 +60,12 @@ If you already cloned without `--recurse-submodules`, run:
 
 ```bash
 git submodule update --init --recursive
+```
+
+After cloning, please unset the URL rewrite rule to avoid affecting other repositories:
+
+```bash
+git config --unset url."https://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@github.com/".insteadOf
 ```
 
 ---
@@ -90,7 +115,7 @@ npm run dev
 This starts all six services in parallel with colour-coded log output:
 
 | Colour  | App                                                            |
-|---------|----------------------------------------------------------------|
+| ------- | -------------------------------------------------------------- |
 | Blue    | `main-site` → [http://localhost:3001](http://localhost:3001)   |
 | Green   | `portal` → [http://localhost:3002](http://localhost:3002)      |
 | Yellow  | `people` → [http://localhost:3003](http://localhost:3003)      |
@@ -135,7 +160,7 @@ Turbo runs builds for all apps in dependency order and caches the results.
 ## Useful Scripts
 
 | Command                 | Description                           |
-|-------------------------|---------------------------------------|
+| ----------------------- | ------------------------------------- |
 | `bun run dev`           | Start all apps in development mode    |
 | `bun run build`         | Build all apps for production         |
 | `bun run inject:config` | Copy config overrides into each app   |
@@ -183,7 +208,7 @@ git submodule update --remote --merge
 ## Troubleshooting
 
 | Problem                                           | Solution                                                     |
-|---------------------------------------------------|--------------------------------------------------------------|
+| ------------------------------------------------- | ------------------------------------------------------------ |
 | `apps/*` directories are empty                    | Run `git submodule update --init --recursive`                |
 | Missing `.env` / `.env.local` files inside an app | Run `bun run inject:config`                                  |
 | Port already in use                               | Stop the conflicting process                                 |
