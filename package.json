@@ -15,7 +15,7 @@
     "dev:api": "bun --filter=\"api.scs.pdn.ac.lk\" dev",
     "dev:worker:auth": "bun --filter=\"scs-portal-auth-app\" dev --port 8787",
     "dev:worker:proxy": "bun --filter=\"scs-proxy-worker\" dev --port 8788",
-    "dev:github:app": "bun --filter=\"scs-portal-github-app\" dev --port 8789",
+    "dev:github:app": "bun --filter=\"scs-portal-github-app\" dev",
     "prebuild": "bun scripts/inject-config.ts",
     "build": "turbo run build",
     "format": "prettier --write .",
