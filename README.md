@@ -26,7 +26,7 @@ To see the projects in live, please see the bellow table for the links to the de
 | `apps/api`          | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
 | `apps/auth-worker`  | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
 | `apps/proxy-worker` | Cloudflare proxy worker    | [https://scs-proxy-worker.scs-pdn.workers.dev](https://scs-proxy-worker.scs-pdn.workers.dev)       |
-| `apps/github-app`   | GitHub app for portal      | [scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)                       |
+| `apps/github-app`   | GitHub app for portal      | [https://scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)               |
 
 ---
 
