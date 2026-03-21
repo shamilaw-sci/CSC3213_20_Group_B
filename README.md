@@ -13,6 +13,7 @@ A monorepo containing all applications for the SCS PDN platform.
 | `apps/api`          | Backend REST API           | `3000`       |
 | `apps/auth-worker`  | Cloudflare auth worker     | `8787`       |
 | `apps/proxy-worker` | Cloudflare proxy worker    | `8788`       |
+| `apps/github-app`   | GitHub app for portal      | `8789`       |
 
 To see the projects in live, please see the bellow table for the links to the deployed applications:
 
@@ -25,6 +26,7 @@ To see the projects in live, please see the bellow table for the links to the de
 | `apps/api`          | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
 | `apps/auth-worker`  | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
 | `apps/proxy-worker` | Cloudflare proxy worker    | [https://scs-proxy-worker.scs-pdn.workers.dev](https://scs-proxy-worker.scs-pdn.workers.dev)       |
+| `apps/github-app`   | GitHub app for portal      | [scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)                       |
 
 ---
 
@@ -116,6 +118,7 @@ This starts all six services in parallel with colour-coded log output:
 | Bright Blue    | `api`          | [http://localhost:3000](http://localhost:3000) |
 | Bright Green   | `auth-worker`  | [http://localhost:8787](http://localhost:8787) |
 | Bright Magenta | `proxy-worker` | [http://localhost:8788](http://localhost:8788) |
+| Bright Cyan    | `github-app`   | [http://localhost:8789](http://localhost:8789) |
 
 #### Run a single app
 
@@ -127,6 +130,7 @@ bun run dev:projects        # projects     → http://localhost:3004
 bun run dev:api             # api          → http://localhost:3000
 bun run dev:worker:auth     # auth-worker  → http://localhost:8787
 bun run dev:worker:proxy    # proxy-worker → http://localhost:8788
+bun run dev:github:App      # github-app   → http://localhost:8789
 ```
 
 ---
@@ -159,6 +163,7 @@ CSC3213_20_Group_B/
 ├── apps/                  # Git submodules — one repo per app
 │   ├── api/
 │   ├── auth-worker/
+|   ├── github-app/
 │   ├── main-site/
 │   ├── people/
 │   ├── portal/
@@ -167,6 +172,7 @@ CSC3213_20_Group_B/
 ├── config-overrides/      # Env & config files injected into each app
 │   ├── api/
 │   ├── auth-worker/
+|   ├── github-app/
 │   ├── main-site/
 │   ├── people/
 │   ├── portal/
