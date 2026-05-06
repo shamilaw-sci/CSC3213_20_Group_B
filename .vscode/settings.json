@@ -1,0 +1,161 @@
+{
+  /* Files and Explorer */
+  "files.autoSave": "afterDelay",
+  "files.associations": {
+    "*.json": "json"
+  },
+  "files.watcherExclude": {
+    "**/node_modules/*": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/dist/**": true,
+    "**/.agents/**": true,
+    "**/.wrangler/**": true,
+    "**/.turbo/**": true,
+    "**/.cache/**": true
+  },
+  "search.exclude": {
+    "**/node_modules/*": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/dist/**": true,
+    "**/.agents/**": true,
+    "**/husky/**": true,
+    "**/.wrangler/**": true,
+    "**/.turbo/**": true,
+    "**/.cache/**": true
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "files.eol": "\n",
+  "terminal.integrated.env.windows": {
+    "FORCE_COLOR": "1"
+  },
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDelete": false,
+  "explorer.confirmPasteNative": false,
+  "explorer.compactFolders": false,
+
+  /* Editor */
+  "editor.minimap.enabled": false,
+  "editor.smoothScrolling": false,
+  "editor.renderWhitespace": "none",
+  "editor.renderControlCharacters": false,
+  "editor.cursorBlinking": "solid",
+  "editor.semanticHighlighting.enabled": true,
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "editor.showUnused": true,
+  "editor.hover.showLongLineWarning": false,
+  "editor.find.history": "never",
+  "breadcrumbs.enabled": false,
+
+  /* Formatter */
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[mdx]": {
+    "editor.defaultFormatter": "unifiedjs.vscode-mdx"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  "[dockercompose]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-containers"
+  },
+
+  /* JavaScript and TypeScript */
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+
+  /* Terminal */
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.initialHint": false,
+
+  /* Git */
+  "git.suggestSmartCommit": false,
+  "git.replaceTagsWhenPull": true,
+  "git.confirmSync": false,
+  "scm.repositories.selectionMode": "multiple",
+
+  /* UI and Workbench */
+  "workbench.startupEditor": "none",
+  "workbench.iconTheme": "material-icon-theme",
+  "material-icon-theme.folders.theme": "specific",
+  "workbench.colorTheme": "Dark Modern",
+  "workbench.preferredDarkColorTheme": "Dark Modern",
+  "workbench.preferredLightColorTheme": "Dark Modern",
+  "workbench.preferredHighContrastColorTheme": "Dark Modern",
+  "workbench.preferredHighContrastLightColorTheme": "Dark Modern",
+
+  /* Extensions */
+  "extensions.ignoreRecommendations": true,
+
+  /* Copilot */
+  "github.copilot.enable": {
+    "markdown": true,
+    "plaintext": true
+  },
+  "chat.agentSkillsLocations": {
+    ".agents/skills": true,
+    ".github/skills": true,
+    ".claude/skills": true,
+    "~/.agents/skills": true,
+    "~/.copilot/skills": true,
+    "~/.claude/skills": true
+  },
+  "chat.useCustomizationsInParentRepositories": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": false,
+
+  /* Chat */
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true
+  },
+  "chat.agent.maxRequests": 2500,
+  "chat.tools.terminal.autoApprove": {
+    "bun": true,
+    "bun run test": true,
+    "bun run build": true,
+    "bun run dev": true,
+    "bun run start": true,
+    "bun run lint": true,
+    "bun run lint:fix": true,
+    "bun run format": true
+  },
+  "chat.tools.urls.autoApprove": {},
+  "chat.viewSessions.enabled": false,
+
+  /* Telemetry */
+  "telemetry.feedback.enabled": false,
+  "telemetry.editStats.enabled": false,
+  "code-runner.enableAppInsights": false,
+
+  /* JSON Schema */
+  "json.schemaDownload.trustedDomains": {
+    "https://raw.githubusercontent.com": true,
+    "https://unpkg.com": true,
+    "https://www.unpkg.com": true,
+    "https://www.schemastore.org": true,
+    "https://turbo.build": true,
+    "https://ui.shadcn.com": true,
+    "https://openapi.vercel.sh": true
+  },
+
+  /* Misc */
+  "window.confirmSaveUntitledWorkspace": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "git.addAICoAuthor": "off"
+}
