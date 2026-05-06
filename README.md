@@ -147,13 +147,15 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ## Useful Scripts
 
-| Command                                 | Description                            |
-| --------------------------------------- | -------------------------------------- |
-| `bun run dev`                           | Start all apps in development mode     |
-| `bun run build`                         | Build all apps for production          |
-| `bun run inject:config`                 | Copy config overrides into each app    |
-| `bun run format`                        | Format all source files with Prettier  |
-| `git submodule update --remote --merge` | Pull latest changes for all submodules |
+| Command                                  | Description                            |
+| ---------------------------------------- | -------------------------------------- |
+| `bun run dev`                            | Start all apps in development mode     |
+| `bun run build`                          | Build all apps for production          |
+| `bun run inject:config`                  | Copy config overrides into each app    |
+| `bun run format`                         | Format all source files with Prettier  |
+| `git submodule update --remote --merge`  | Pull latest changes for all submodules |
+| `git tag -a vx.y.z -m "Release Message"` | Create a new annotated git tag         |
+| `git push origin vx.y.z`                 | Push the new tag to GitHub             |
 
 ---
 
