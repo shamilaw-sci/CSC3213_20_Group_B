@@ -8,7 +8,7 @@ COPY apps ./apps
 COPY config-overrides ./config-overrides
 COPY scripts ./scripts
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Inject per-app env/config files from config-overrides.
 RUN bun run inject:config
