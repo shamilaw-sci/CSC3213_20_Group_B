@@ -145,6 +145,12 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ---
 
+### 6. Docker Setup
+
+For detailed instructions on running the applications with Docker, see [DOCKER.md](./DOCKER.md).
+
+---
+
 ## Useful Scripts
 
 | Command                                  | Description                            |
