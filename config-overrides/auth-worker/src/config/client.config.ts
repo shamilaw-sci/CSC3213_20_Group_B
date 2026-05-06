@@ -10,6 +10,10 @@ export const ERROR_REDIRECT_URLS: Record<string, string> = {
   portal: 'http://localhost:3002/login',
 };
 
+export const MAGIC_LINK_URLS: Record<string, string> = {
+  portal: 'http://localhost:3002/auth/magic-link/verify',
+};
+
 export const COOKIE_DOMAIN = 'localhost';
 
 export const COOKIE_MAX_AGE = 60 * 15; // 15 minutes
