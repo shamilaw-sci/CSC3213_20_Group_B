@@ -1,8 +1,7 @@
-import { readdir, stat, mkdir, copyFile, readFile } from 'node:fs/promises';
-import path from 'node:path';
-import chalk from 'chalk';
-import crypto from 'node:crypto';
-import type { ChalkInstance } from 'chalk';
+import { readdir, stat, mkdir, copyFile } from 'fs/promises';
+import path from 'path';
+import chalk, { type ChalkInstance } from 'chalk';
+import crypto from 'crypto';
 
 const SOURCE_DIR = path.resolve('config-overrides');
 const TARGET_ROOT = path.resolve('apps');
@@ -22,19 +21,20 @@ const appColors = [
 // hash helper
 async function hashFile(filePath: string) {
   try {
-    const content = await readFile(filePath);
-    return crypto.createHash('sha1').update(content).digest('hex');
+    const content = await Bun.file(filePath).arrayBuffer();
+
+    return crypto.createHash('sha1').update(Buffer.from(content)).digest('hex');
   } catch {
     return null;
   }
 }
 
-// tiny diff preview (first few lines)
-async function showDiff(src: string, dest: string, color: any) {
+// tiny diff preview
+async function showDiff(src: string, dest: string, color: ChalkInstance) {
   try {
     const [a, b] = await Promise.all([
-      readFile(dest, 'utf-8'),
-      readFile(src, 'utf-8'),
+      Bun.file(dest).text(),
+      Bun.file(src).text(),
     ]);
 
     if (a === b) return;
@@ -51,18 +51,14 @@ async function showDiff(src: string, dest: string, color: any) {
   }
 }
 
-async function copyRecursive(
-  src: string,
-  dest: string,
-
-  color: ChalkInstance
-) {
+async function copyRecursive(src: string, dest: string, color: ChalkInstance) {
   const stats = await stat(src);
 
   if (stats.isDirectory()) {
     await mkdir(dest, { recursive: true });
 
     const files = await readdir(src);
+
     for (const file of files) {
       await copyRecursive(path.join(src, file), path.join(dest, file), color);
     }
@@ -105,10 +101,25 @@ async function copyRecursive(
   }
 }
 
+async function cleanNestedLocks() {
+  console.log(chalk.yellow.bold('🧹 Cleaning nested bun.lock files'));
+
+  for await (const file of new Bun.Glob('apps/**/bun.lock').scan('.')) {
+    await Bun.file(file).delete();
+
+    console.log(chalk.gray('✖ Deleted'), chalk.dim(file));
+  }
+
+  console.log();
+}
+
 async function main() {
   console.log(
     chalk.bold(`🚀 Config injection ${isDryRun ? '(dry-run)' : ''}\n`)
   );
+
+  // cleanup before injection
+  await cleanNestedLocks();
 
   const apps = await readdir(SOURCE_DIR);
 
