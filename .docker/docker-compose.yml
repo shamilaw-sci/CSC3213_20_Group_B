@@ -1,0 +1,72 @@
+services:
+  main-site:
+    build:
+      context: .
+      dockerfile: .docker/next.Dockerfile
+      args:
+        APP_NAME: main-site
+    ports:
+      - '3001:3001'
+
+  portal:
+    build:
+      context: .
+      dockerfile: .docker/next.Dockerfile
+      args:
+        APP_NAME: portal
+    ports:
+      - '3002:3002'
+
+  people:
+    build:
+      context: .
+      dockerfile: .docker/next.Dockerfile
+      args:
+        APP_NAME: people
+    ports:
+      - '3003:3003'
+
+  projects:
+    build:
+      context: .
+      dockerfile: .docker/next.Dockerfile
+      args:
+        APP_NAME: projects
+    ports:
+      - '3004:3004'
+
+  api:
+    build:
+      context: .
+      dockerfile: .docker/hono.Dockerfile
+      args:
+        APP_NAME: api
+    ports:
+      - '3000:3000'
+
+  github-app:
+    build:
+      context: .
+      dockerfile: .docker/hono.Dockerfile
+      args:
+        APP_NAME: github-app
+    ports:
+      - '8789:8789'
+
+  auth-worker:
+    build:
+      context: .
+      dockerfile: .docker/worker.Dockerfile
+      args:
+        APP_NAME: auth-worker
+    ports:
+      - '8787:8787'
+
+  proxy-worker:
+    build:
+      context: .
+      dockerfile: .docker/worker.Dockerfile
+      args:
+        APP_NAME: proxy-worker
+    ports:
+      - '8788:8788'
