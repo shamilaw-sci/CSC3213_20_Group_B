@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install workspace dependencies once for all apps.
 COPY package.json bun.lock turbo.json tsconfig.json ./
-COPY apps ./apps
+COPY apps ./workspace
 COPY config-overrides ./config-overrides
 COPY scripts ./scripts
 
