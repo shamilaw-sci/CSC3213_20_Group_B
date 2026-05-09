@@ -3,5 +3,3 @@
 .wrangler
 dist
 node_modules
-docker/
-.github/workflows/docker-build.yml

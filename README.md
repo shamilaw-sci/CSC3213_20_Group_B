@@ -140,7 +140,7 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ### 6. Docker Setup
 
-For detailed instructions on running the applications with Docker, see [docker/README.md](./docker/README.md).
+> **Note:** Docker setup is currently a work in progress. The previous Docker configuration files have been removed and will be re-added in a future commit.
 
 ---
 
