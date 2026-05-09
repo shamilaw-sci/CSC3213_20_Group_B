@@ -6,14 +6,14 @@ A monorepo containing all applications for the SCS PDN platform.
 
 | App                 | Description                | Default Port |
 | ------------------- | -------------------------- | ------------ |
-| `apps/main-site`    | Main public-facing website | `3001`       |
-| `apps/portal`       | Student/staff portal       | `3002`       |
-| `apps/people`       | People directory app       | `3003`       |
-| `apps/projects`     | Projects showcase app      | `3004`       |
-| `apps/api`          | Backend REST API           | `3000`       |
+| `apps/main-site`    | Main public-facing website | `auto`       |
+| `apps/portal`       | Student/staff portal       | `auto`       |
+| `apps/people`       | People directory app       | `auto`       |
+| `apps/projects`     | Projects showcase app      | `auto`       |
+| `apps/api`          | Backend REST API           | `auto`       |
+| `apps/github-app`   | GitHub app for portal      | `auto`       |
 | `apps/auth-worker`  | Cloudflare auth worker     | `8787`       |
 | `apps/proxy-worker` | Cloudflare proxy worker    | `8788`       |
-| `apps/github-app`   | GitHub app for portal      | `8789`       |
 
 To see the projects in live, please see the bellow table for the links to the deployed applications:
 
@@ -24,9 +24,9 @@ To see the projects in live, please see the bellow table for the links to the de
 | `apps/people`       | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)                                       |
 | `apps/projects`     | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space)                                   |
 | `apps/api`          | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
+| `apps/github-app`   | GitHub app for portal      | [https://scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)               |
 | `apps/auth-worker`  | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
 | `apps/proxy-worker` | Cloudflare proxy worker    | [https://scs-proxy-worker.scs-pdn.workers.dev](https://scs-proxy-worker.scs-pdn.workers.dev)       |
-| `apps/github-app`   | GitHub app for portal      | [https://scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)               |
 
 ---
 
@@ -107,30 +107,30 @@ bun run inject:config
 bun run dev
 ```
 
-This starts all six services in parallel with colour-coded log output:
+This starts all six services in parallel. The frontend apps will be available at the URLs listed below, and the workers will be running on their respective ports.
 
-| Colour         | App            | URL                                            |
-| -------------- | -------------- | ---------------------------------------------- |
-| Blue           | `main-site`    | [http://localhost:3001](http://localhost:3001) |
-| Green          | `portal`       | [http://localhost:3002](http://localhost:3002) |
-| Magenta        | `people`       | [http://localhost:3003](http://localhost:3003) |
-| Cyan           | `projects`     | [http://localhost:3004](http://localhost:3004) |
-| Bright Blue    | `api`          | [http://localhost:3000](http://localhost:3000) |
-| Bright Green   | `auth-worker`  | [http://localhost:8787](http://localhost:8787) |
-| Bright Magenta | `proxy-worker` | [http://localhost:8788](http://localhost:8788) |
-| Bright Cyan    | `github-app`   | [http://localhost:8789](http://localhost:8789) |
+| App            | URL                                                              |
+| -------------- | ---------------------------------------------------------------- |
+| `main-site`    | [https://scs.localhost](https://scs.localhost)                   |
+| `portal`       | [https://portal.scs.localhost](https://portal.scs.localhost)     |
+| `people`       | [https://people.scs.localhost](https://people.scs.localhost)     |
+| `projects`     | [https://projects.scs.localhost](https://projects.scs.localhost) |
+| `api`          | [https://api.scs.localhost](https://api.scs.localhost)           |
+| `github-app`   | [https://github.scs.localhost](https://github.scs.localhost)     |
+| `auth-worker`  | [http://127.0.0.1:8787](http://127.0.0.1:8787)                   |
+| `proxy-worker` | [http://127.0.0.1:8788](http://127.0.0.1:8788)                   |
 
 #### Run a single app
 
 ```bash
-bun run dev:main            # main-site    → http://localhost:3001
-bun run dev:portal          # portal       → http://localhost:3002
-bun run dev:people          # people       → http://localhost:3003
-bun run dev:projects        # projects     → http://localhost:3004
-bun run dev:api             # api          → http://localhost:3000
-bun run dev:worker:auth     # auth-worker  → http://localhost:8787
-bun run dev:worker:proxy    # proxy-worker → http://localhost:8788
-bun run dev:github:App      # github-app   → http://localhost:8789
+bun run dev:main            # main-site    → https://scs.localhost
+bun run dev:portal          # portal       → https://portal.scs.localhost
+bun run dev:people          # people       → https://people.scs.localhost
+bun run dev:projects        # projects     → https://projects.scs.localhost
+bun run dev:api             # api          → https://api.scs.localhost
+bun run dev:github          # github-app   → https://github.scs.localhost
+bun run dev:auth            # auth-worker  → http://127.0.0.1:8787
+bun run dev:proxy           # proxy-worker → http://127.0.0.1:8788
 ```
 
 ---
@@ -139,6 +139,12 @@ bun run dev:github:App      # github-app   → http://localhost:8789
 
 ```bash
 bun run build
+```
+
+### 6. Run the production build
+
+```bash
+bun run start
 ```
 
 Turbo runs builds for all apps in dependency order and caches the results.
@@ -157,8 +163,9 @@ For detailed instructions on running the applications with Docker, see [DOCKER.m
 | ---------------------------------------- | -------------------------------------- |
 | `bun run dev`                            | Start all apps in development mode     |
 | `bun run build`                          | Build all apps for production          |
+| `bun run start`                          | Start all apps in production mode      |
 | `bun run inject:config`                  | Copy config overrides into each app    |
-| `bun run format`                         | Format all source files with Prettier  |
+| `bun run format`                         | Format source files with Prettier      |
 | `git submodule update --remote --merge`  | Pull latest changes for all submodules |
 | `git tag -a vx.y.z -m "Release Message"` | Create a new annotated git tag         |
 | `git push origin vx.y.z`                 | Push the new tag to GitHub             |

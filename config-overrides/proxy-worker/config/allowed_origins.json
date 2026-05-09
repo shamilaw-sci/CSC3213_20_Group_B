@@ -1,9 +1,7 @@
 [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "http://localhost:3003",
-  "http://localhost:3004",
-  "http://localhost:8787",
-  "http://localhost:8788"
+  "https://scs.localhost",
+  "https://api.scs.localhost",
+  "https://portal.scs.localhost",
+  "https://proxy.scs.localhost",
+  "https://github.scs.localhost"
 ]

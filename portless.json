@@ -1,0 +1,31 @@
+{
+  "turbo": false,
+  "apps": {
+    "apps/main-site": {
+      "name": "scs"
+    },
+    "apps/portal": {
+      "name": "portal.scs"
+    },
+    "apps/people": {
+      "name": "people.scs"
+    },
+    "apps/projects": {
+      "name": "projects.scs"
+    },
+    "apps/api": {
+      "name": "api.scs"
+    },
+    "apps/github-app": {
+      "name": "github.scs"
+    },
+    "apps/auth-worker": {
+      "name": "auth.scs",
+      "proxy": false
+    },
+    "apps/proxy-worker": {
+      "name": "proxy.scs",
+      "proxy": false
+    }
+  }
+}
