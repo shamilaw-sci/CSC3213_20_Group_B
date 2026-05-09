@@ -120,19 +120,6 @@ This starts all six services in parallel. The frontend apps will be available at
 | `auth-worker`  | [http://127.0.0.1:8787](http://127.0.0.1:8787)                   |
 | `proxy-worker` | [http://127.0.0.1:8788](http://127.0.0.1:8788)                   |
 
-#### Run a single app
-
-```bash
-bun run dev:main            # main-site    → https://scs.localhost
-bun run dev:portal          # portal       → https://portal.scs.localhost
-bun run dev:people          # people       → https://people.scs.localhost
-bun run dev:projects        # projects     → https://projects.scs.localhost
-bun run dev:api             # api          → https://api.scs.localhost
-bun run dev:github          # github-app   → https://github.scs.localhost
-bun run dev:auth            # auth-worker  → http://127.0.0.1:8787
-bun run dev:proxy           # proxy-worker → http://127.0.0.1:8788
-```
-
 ---
 
 ### 5. Build for Production
@@ -153,7 +140,7 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ### 6. Docker Setup
 
-For detailed instructions on running the applications with Docker, see [DOCKER.md](./DOCKER.md).
+For detailed instructions on running the applications with Docker, see [docker/README.md](./docker/README.md).
 
 ---
 
