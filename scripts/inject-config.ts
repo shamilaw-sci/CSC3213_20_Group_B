@@ -104,10 +104,18 @@ async function copyRecursive(src: string, dest: string, color: ChalkInstance) {
 async function cleanNestedLocks() {
   console.log(chalk.yellow.bold('🧹 Cleaning nested bun.lock files'));
 
+  let found = false;
+
   for await (const file of new Bun.Glob('apps/**/bun.lock').scan('.')) {
+    found = true;
+
     await Bun.file(file).delete();
 
     console.log(chalk.gray('✖ Deleted'), chalk.dim(file));
+  }
+
+  if (!found) {
+    console.log(chalk.green('✔ No nested bun.lock files found'));
   }
 
   console.log();
