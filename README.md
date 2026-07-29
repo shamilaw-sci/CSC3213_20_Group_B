@@ -4,29 +4,30 @@
 
 A monorepo containing all applications for the SCS PDN platform.
 
-| App                 | Description                | Default Port |
-| ------------------- | -------------------------- | ------------ |
-| `apps/main-site`    | Main public-facing website | `auto`       |
-| `apps/portal`       | Student/staff portal       | `auto`       |
-| `apps/people`       | People directory app       | `auto`       |
-| `apps/projects`     | Projects showcase app      | `auto`       |
-| `apps/api`          | Backend REST API           | `auto`       |
-| `apps/github-app`   | GitHub app for portal      | `auto`       |
-| `apps/auth-worker`  | Cloudflare auth worker     | `8787`       |
-| `apps/proxy-worker` | Cloudflare proxy worker    | `8788`       |
+| App               | Description                     | Default Port |
+| ----------------- | ------------------------------- | ------------ |
+| `apps/site`       | Main public-facing website      | `auto`       |
+| `apps/portal`     | Student/staff portal            | `auto`       |
+| `apps/people`     | People directory app            | `auto`       |
+| `apps/projects`   | Projects showcase app           | `auto`       |
+| `apps/api`        | Backend REST API                | `auto`       |
+| `apps/github-app` | GitHub app for portal           | `auto`       |
+| `apps/config`     | Repository-backed configuration | `auto`       |
+| `apps/data`       | Public JSON data service        | `auto`       |
+| `apps/mailer`     | Transactional email API         | `auto`       |
 
 To see the projects in live, please see the bellow table for the links to the deployed applications:
 
-| App                 | Description                | URL                                                                                                |
-| ------------------- | -------------------------- | -------------------------------------------------------------------------------------------------- |
-| `apps/main-site`    | Main public-facing website | [https://scs-pdn.space](https://scs-pdn.space)                                                     |
-| `apps/portal`       | Student/staff portal       | [https://portal.scs-pdn.space](https://portal.scs-pdn.space)                                       |
-| `apps/people`       | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)                                       |
-| `apps/projects`     | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space)                                   |
-| `apps/api`          | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)                                             |
-| `apps/github-app`   | GitHub app for portal      | [https://scs-portal-github-app.vercel.app](https://scs-portal-github-app.vercel.app)               |
-| `apps/auth-worker`  | Cloudflare auth worker     | [https://scs-portal-auth-app.scs-pdn.workers.dev](https://scs-portal-auth-app.scs-pdn.workers.dev) |
-| `apps/proxy-worker` | Cloudflare proxy worker    | [https://scs-proxy-worker.scs-pdn.workers.dev](https://scs-proxy-worker.scs-pdn.workers.dev)       |
+| App               | Description                | URL                                                              |
+| ----------------- | -------------------------- | ---------------------------------------------------------------- |
+| `apps/site`       | Main public-facing website | [https://scs-pdn.space](https://scs-pdn.space)                   |
+| `apps/portal`     | Student/staff portal       | [https://portal.scs-pdn.space](https://portal.scs-pdn.space)     |
+| `apps/people`     | People directory app       | [https://people.scs-pdn.space](https://people.scs-pdn.space)     |
+| `apps/projects`   | Projects showcase app      | [https://projects.scs-pdn.space](https://projects.scs-pdn.space) |
+| `apps/api`        | Backend REST API           | [https://api.scs-pdn.space](https://api.scs-pdn.space)           |
+| `apps/github-app` | GitHub app for portal      | [https://gh.scs-pdn.space](https://gh.scs-pdn.space)             |
+| `apps/data`       | Public JSON data service   | [https://data.scs-pdn.space](https://data.scs-pdn.space)         |
+| `apps/mailer`     | Transactional email API    | [https://mailer.scs-pdn.space](https://mailer.scs-pdn.space)     |
 
 ---
 
@@ -107,18 +108,19 @@ bun run inject:config
 bun run dev
 ```
 
-This starts all six services in parallel. The frontend apps will be available at the URLs listed below, and the workers will be running on their respective ports.
+This starts the services in parallel. The frontend apps will be available at the URLs listed below.
 
-| App            | URL                                                              |
-| -------------- | ---------------------------------------------------------------- |
-| `main-site`    | [https://scs.localhost](https://scs.localhost)                   |
-| `portal`       | [https://portal.scs.localhost](https://portal.scs.localhost)     |
-| `people`       | [https://people.scs.localhost](https://people.scs.localhost)     |
-| `projects`     | [https://projects.scs.localhost](https://projects.scs.localhost) |
-| `api`          | [https://api.scs.localhost](https://api.scs.localhost)           |
-| `github-app`   | [https://github.scs.localhost](https://github.scs.localhost)     |
-| `auth-worker`  | [http://127.0.0.1:8787](http://127.0.0.1:8787)                   |
-| `proxy-worker` | [http://127.0.0.1:8788](http://127.0.0.1:8788)                   |
+| App          | URL                                                              |
+| ------------ | ---------------------------------------------------------------- |
+| `site`       | [https://scs.localhost](https://scs.localhost)                   |
+| `portal`     | [https://portal.scs.localhost](https://portal.scs.localhost)     |
+| `people`     | [https://people.scs.localhost](https://people.scs.localhost)     |
+| `projects`   | [https://projects.scs.localhost](https://projects.scs.localhost) |
+| `api`        | [https://api.scs.localhost](https://api.scs.localhost)           |
+| `github-app` | [https://github.scs.localhost](https://github.scs.localhost)     |
+| `config`     | [https://config.scs.localhost](https://config.scs.localhost)     |
+| `data`       | [https://data.scs.localhost](https://data.scs.localhost)         |
+| `mailer`     | [https://mailer.scs.localhost](https://mailer.scs.localhost)     |
 
 ---
 
@@ -163,29 +165,22 @@ Turbo runs builds for all apps in dependency order and caches the results.
 
 ```text
 CSC3213_20_Group_B/
-├── apps/                  # Git submodules — one repo per app
-│   ├── api/
-│   ├── auth-worker/
-|   ├── github-app/
-│   ├── main-site/
-│   ├── people/
-│   ├── portal/
-│   ├── projects/
-|   └── proxy-worker/
-├── config-overrides/      # Env & config files injected into each app
-│   ├── api/
-│   ├── auth-worker/
-|   ├── github-app/
-│   ├── main-site/
-│   ├── people/
-│   ├── portal/
-│   ├── projects/
-|   └── proxy-worker/
-├── scripts/
-│   └── inject-config.ts   # Config injection script
-├── package.json
-├── turbo.json
-└── bun.lock
+|-- apps/                  # Git submodules, one repo per app/service
+|   |-- api/
+|   |-- config/
+|   |-- data/
+|   |-- github-app/
+|   |-- mailer/
+|   |-- people/
+|   |-- portal/
+|   |-- projects/
+|   `-- site/
+|-- config-overrides/      # Env & config files injected into each app
+|-- scripts/
+|   `-- inject-config.ts   # Config injection script
+|-- package.json
+|-- turbo.json
+`-- bun.lock
 ```
 
 ---

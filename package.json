@@ -11,6 +11,8 @@
     "dev": "portless",
     "prebuild": "bun scripts/inject-config.ts",
     "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "format": "prettier --write .",
     "inject:config": "bun scripts/inject-config.ts"
   },

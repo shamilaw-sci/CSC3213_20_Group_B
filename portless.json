@@ -1,7 +1,7 @@
 {
   "turbo": false,
   "apps": {
-    "apps/main-site": {
+    "apps/site": {
       "name": "scs"
     },
     "apps/portal": {
@@ -19,13 +19,14 @@
     "apps/github-app": {
       "name": "github.scs"
     },
-    "apps/auth-worker": {
-      "name": "auth.scs",
-      "proxy": false
+    "apps/config": {
+      "name": "config.scs"
     },
-    "apps/proxy-worker": {
-      "name": "proxy.scs",
-      "proxy": false
+    "apps/data": {
+      "name": "data.scs"
+    },
+    "apps/mailer": {
+      "name": "mailer.scs"
     }
   }
 }
