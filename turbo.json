@@ -5,14 +5,77 @@
       "persistent": true,
       "cache": false
     },
-    "build": {
+    "scs.pdn.ac.lk#build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", ".wrangler/**"]
+      "outputs": [".next/**"]
     },
-    "format": {
+    "portal.scs.pdn.ac.lk#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "people.scs.pdn.ac.lk#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "projects.scs.pdn.ac.lk#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "api.scs.pdn.ac.lk#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".wrangler/**", "dist/**"]
+    },
+    "scs-portal-github-app#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".wrangler/**", "dist/**"]
+    },
+    "config.scs.pdn.ac.lk#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".wrangler/**", "dist/**"]
+    },
+    "scs.pdn.ac.lk#lint": {
       "outputs": []
     },
-    "lint": {
+    "portal.scs.pdn.ac.lk#lint": {
+      "outputs": []
+    },
+    "people.scs.pdn.ac.lk#lint": {
+      "outputs": []
+    },
+    "projects.scs.pdn.ac.lk#lint": {
+      "outputs": []
+    },
+    "api.scs.pdn.ac.lk#lint": {
+      "outputs": []
+    },
+    "scs-portal-github-app#lint": {
+      "outputs": []
+    },
+    "api.scs.pdn.ac.lk#typecheck": {
+      "outputs": []
+    },
+    "scs-portal-github-app#typecheck": {
+      "outputs": []
+    },
+    "config.scs.pdn.ac.lk#typecheck": {
+      "outputs": []
+    },
+    "data.scs.pdn.ac.lk#typecheck": {
+      "outputs": []
+    },
+    "mailer.scs.pdn.ac.lk#typecheck": {
+      "outputs": []
+    },
+    "projects.scs.pdn.ac.lk#test": {
+      "outputs": []
+    },
+    "api.scs.pdn.ac.lk#test": {
+      "outputs": []
+    },
+    "config.scs.pdn.ac.lk#test": {
+      "outputs": []
+    },
+    "data.scs.pdn.ac.lk#test": {
       "outputs": []
     }
   }

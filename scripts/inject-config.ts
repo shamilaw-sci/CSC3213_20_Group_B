@@ -109,9 +109,14 @@ async function cleanNestedLocks() {
   for await (const file of new Bun.Glob('apps/**/bun.lock').scan('.')) {
     found = true;
 
-    await Bun.file(file).delete();
+    if (!isDryRun) {
+      await Bun.file(file).delete();
+    }
 
-    console.log(chalk.gray('✖ Deleted'), chalk.dim(file));
+    console.log(
+      chalk.gray(isDryRun ? '✖ Would delete' : '✖ Deleted'),
+      chalk.dim(file)
+    );
   }
 
   if (!found) {

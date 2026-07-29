@@ -9,15 +9,14 @@ export const REDIRECT_URLS: Record<string, string> = {
 };
 
 export const ERROR_REDIRECT_URLS: Record<string, string> = {
-  portal: 'http://portal.scs.localhost/login',
+  portal: 'https://portal.scs.localhost/login',
 };
 
 export const COOKIE_DOMAIN = 'scs.localhost';
 
-export const COOKIE_MAX_AGE = 60 * 15; // 15 minutes
+export const COOKIE_MAX_AGE = 60 * 60 * 5; // 5 hours
 
-// NOTE: Keep this time same as the cookie max age to avoid issues with token expiration and cookie expiration mismatch.
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+// Keep this time same as the cookie max age to avoid token/cookie mismatch.
 export const JWT_EXPIRATION_TIME: string = ms(COOKIE_MAX_AGE * 1000, {
   long: false,
 });
@@ -31,6 +30,29 @@ export const ALLOWED_ORIGINS = [
   'https://people.scs.localhost',
   'https://projects.scs.localhost',
   'https://github.scs.localhost',
-  'http://127.0.0.1:8787',
-  'http://127.0.0.1:8788',
+  'https://config.scs.localhost',
+  'https://data.scs.localhost',
+  'https://mailer.scs.localhost',
 ];
+
+export const PASSKEY_CHALLENGE_COOKIE = 'passkey_challenge';
+
+export const PASSKEY_CHALLENGE_MAX_AGE = 300;
+
+export const PASSKEY_LIMIT = 4;
+
+export const PASSKEY_RP_NAME = 'SCS Portal';
+
+export const PASSKEY_RP_IDS: Record<string, string> = {
+  'https://portal.scs.localhost': 'scs.localhost',
+};
+
+export const PROXY_DEFAULT_AVAILABLE_ATTEMPTS = 5;
+export const PROXY_ATTEMPTS_RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export const PERMISSION_LIST_PAGE_LIMIT = 100;
+export const PERMISSION_BATCH_SIZE = 50;
+export const MAX_USERS_PER_REQUEST = 1000;
+
+export const PROFILE_NAME_MAX_LENGTH = 100;
+export const PROFILE_PICTURE_MAX_LENGTH = 2048;
