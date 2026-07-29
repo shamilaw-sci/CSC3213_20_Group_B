@@ -141,12 +141,10 @@
   /* Telemetry */
   "telemetry.feedback.enabled": false,
   "telemetry.editStats.enabled": false,
-  "code-runner.enableAppInsights": false,
 
   /* JSON Schema */
   "json.schemaDownload.trustedDomains": {
     "https://raw.githubusercontent.com": true,
-    "https://unpkg.com": true,
     "https://www.unpkg.com": true,
     "https://www.schemastore.org": true,
     "https://turbo.build": true,
