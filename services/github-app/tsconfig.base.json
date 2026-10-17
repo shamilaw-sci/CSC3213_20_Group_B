@@ -1,17 +1,12 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "@scs/tsconfig/worker.json",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
     "esModuleInterop": true,
-    "isolatedModules": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

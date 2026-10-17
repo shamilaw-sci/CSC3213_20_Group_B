@@ -1,0 +1,11 @@
+{
+  "name": "@scs/tsconfig",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./nextjs.json": "./nextjs.json",
+    "./worker.json": "./worker.json",
+    "./bun.json": "./bun.json"
+  }
+}

@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@scs/eslint-config": "workspace:*",
+    "@scs/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/bun": "^1.3.13",
     "@types/node": "^25.6.0",

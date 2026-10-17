@@ -1,9 +1,9 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
-  "extends": "./tsconfig.base.json",
+  "extends": "@scs/tsconfig/bun.json",
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": ["node"],
     "outDir": "dist/node"
   },
