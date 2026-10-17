@@ -40,3 +40,16 @@ repositories. It is applied to committed Git trees only.
 | Nested `.git` directories | Never import | The destination retains its own Git history and does not use submodules. |
 | `@csc3213-2026-group-b/academic-domain-schemas` | Keep external | Preserve published package lifecycle and version `5.1.0` for the baseline. |
 | `packages/ui`, `packages/schemas`, `packages/utils` | Leave empty unless justified | No abstraction is created before verified duplication analysis. |
+
+## Captured Shared Tooling Values
+
+The source packages use `printWidth: 80`, `tabWidth: 2`, spaces, semicolons,
+single quotes, ES5 trailing commas, bracket spacing, parenthesized arrow
+parameters, and automatic end-of-line handling. API and GitHub App additionally
+disable trailing commas for `*.jsonc`.
+
+Frontend lint-staged behavior runs cached ESLint fixes for `*.{ts,tsx}` and
+Prettier for `*.{json,md,css,html,ts,tsx}`. API and GitHub App use their Worker
+ESLint configuration for `src/**/*.ts`; mailer formats
+`*.{js,ts,json,md,yml,yaml}`. The root dispatcher must reproduce these scopes
+before package-level blocks are removed from the remaining workspaces.
