@@ -77,3 +77,22 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: the development server became ready on port 3102; `GET /`
   returned HTTP 200 with an 88,877-byte response. No authenticated mutation or
   external write was attempted.
+
+## `@scs/api`
+
+- Source: `api.scs.pdn.ac.lk@0f5c03e3f57e5f44059d7b41f8b63cf5022f2d36`.
+- The committed Wrangler file was treated as tainted input. The destination
+  configuration retains the Worker name, entrypoint, compatibility date,
+  custom domain, public OAuth identifiers and redirects, service URLs, three
+  KV bindings, and observability settings while omitting all six plaintext
+  secret values.
+- 2026-10-17: the pre-stage regression scan found no source secret literal,
+  private-key marker, committed `.dev.vars`, or non-template environment file
+  under `services/api`.
+- 2026-10-17: `bun --filter '@scs/api' typecheck`, `typecheck:test`, and
+  `lint` exited successfully.
+- 2026-10-17: `bun --filter '@scs/api' test` discovered all nine preserved
+  files and passed all 117 tests with 384 assertions.
+- 2026-10-17: `bun --filter '@scs/api' build` completed a Wrangler dry-run
+  bundle successfully and reported only the intended public variables and KV
+  bindings.

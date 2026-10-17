@@ -1,0 +1,2430 @@
+openapi: 3.1.0
+info:
+  title: SCS PDN API
+  version: 1.0.0
+  description: Compact OpenAPI-style specification derived from the current API codebase.
+servers:
+  - url: https://api.scs-pdn.space
+tags:
+  - name: Auth
+  - name: OAuth
+  - name: Profile
+  - name: People
+  - name: Projects
+  - name: Admin
+  - name: Passkeys
+  - name: Proxy
+paths:
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: Create permission record and return a JWT
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: JWT token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorObject'
+                  - $ref: '#/components/schemas/CodeMessageError'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/magic-code:
+    post:
+      tags: [Auth]
+      summary: Send a one-time magic code by email
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicCodeRequest'
+      responses:
+        '200':
+          description: Magic code sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MagicCodeSentResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: Mailer failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/magic-code/verify:
+    post:
+      tags: [Auth]
+      summary: Verify a magic code and start a session
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicCodeVerifyRequest'
+      responses:
+        '200':
+          description: Magic code verified and session cookie issued
+          headers:
+            Set-Cookie:
+              description: Session cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthVerifiedResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorObject'
+                  - $ref: '#/components/schemas/CodeMessageError'
+        '401':
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorObject'
+                  - $ref: '#/components/schemas/CodeMessageError'
+        '403':
+          description: Unauthorized client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/verify:
+    get:
+      tags: [Auth]
+      summary: Verify a JWT session cookie
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Session is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing, invalid, or revoked token
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Unauthorized client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/logout:
+    get:
+      tags: [Auth]
+      summary: Logout and clear cookies
+      responses:
+        '200':
+          description: Logout completed
+    post:
+      tags: [Auth]
+      summary: Logout and clear cookies
+      responses:
+        '200':
+          description: Logout completed
+    patch:
+      tags: [Auth]
+      summary: Logout and clear cookies
+      responses:
+        '200':
+          description: Logout completed
+  /auth/google:
+    get:
+      tags: [OAuth]
+      summary: Start Google OAuth
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          example: portal
+        - name: signup
+          in: query
+          required: false
+          schema:
+            type: string
+          example: 'true'
+        - name: prompt
+          in: query
+          required: false
+          schema:
+            type: string
+          example: select_account
+      responses:
+        '302':
+          description: Redirect to Google with oauth_state cookie set
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          description: Missing or invalid client_id
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/google/callback:
+    get:
+      tags: [OAuth]
+      summary: Handle Google OAuth callback
+      responses:
+        '302':
+          description: Redirect to dashboard or login error page
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          description: Missing state
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Invalid or expired state
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/github:
+    get:
+      tags: [OAuth]
+      summary: Start GitHub OAuth
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+          example: https://portal.scs-pdn.space/login
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          example: portal
+      responses:
+        '302':
+          description: Redirect to GitHub or error redirect_uri
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          description: Missing redirect_uri
+          content:
+            text/plain:
+              schema:
+                type: string
+  /auth/github/callback:
+    get:
+      tags: [OAuth]
+      summary: Handle GitHub OAuth callback
+      responses:
+        '302':
+          description: Redirect to dashboard or login error page
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          description: Missing state
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Invalid or expired state
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/me:
+    get:
+      tags: [Profile]
+      summary: Get current user profile and permission flags
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          description: Missing client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+    patch:
+      tags: [Profile]
+      summary: Update current user profile and profile picture source
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfilePatchRequest'
+      responses:
+        '200':
+          description: Updated profile fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  picture:
+                    type: string
+                    description: Resolved profile picture URL
+                  pictureMode:
+                    oneOf:
+                      - $ref: '#/components/schemas/ProfilePictureMode'
+                      - type: 'null'
+                  gravatarMail:
+                    oneOf:
+                      - type: string
+                      - type: 'null'
+        '400':
+          description: Invalid name, picture mode, or picture URL. Manual picture URLs are verified by image content type and may be PNG, JPEG, or WebP.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/me/notifications:
+    patch:
+      tags: [Profile]
+      summary: Update notification preferences
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPatchRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/user/permissions:
+    patch:
+      tags: [Profile]
+      summary: Update a user's permission record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPermissionPatchRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/me/oauth/github:
+    delete:
+      tags: [Profile]
+      summary: Remove linked GitHub OAuth state
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Removed
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/people/v2/me:
+    get:
+      tags: [People]
+      summary: Get the signed-in user's public people profile JSON
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current public profile, or null when no user JSON exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    oneOf:
+                      - type: object
+                        additionalProperties: true
+                      - type: 'null'
+                required: [profile]
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/people/v2/me/schema:
+    get:
+      tags: [People]
+      summary: Get allowed public profile kinds for the signed-in user
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Allowed profile submission metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfileSchemaResponse'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/people/v2/me/pr:
+    get:
+      tags: [People]
+      summary: Get public profile PR status for the signed-in user
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Latest profile PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfilePrStatus'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+    put:
+      tags: [People]
+      summary: Create or update the signed-in user's public profile PR
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProfilePrRequest'
+      responses:
+        '200':
+          description: Open profile PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfilePrStatus'
+        '400':
+          description: Invalid profile body or schema validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden profile kind or identity mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+    post:
+      tags: [People]
+      summary: Same as PUT /api/people/v2/me/pr
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProfilePrRequest'
+      responses:
+        '200':
+          description: Open profile PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfilePrStatus'
+  /api/projects/v2/projects/{slug}:
+    get:
+      tags: [Projects]
+      summary: Get one public project metadata record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/ProjectSlug'
+      responses:
+        '200':
+          description: Project metadata, or null when no project file exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProjectResponse'
+  /api/projects/v2/projects/{slug}/schema:
+    get:
+      tags: [Projects]
+      summary: Get public project submission metadata for the signed-in user
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/ProjectSlug'
+      responses:
+        '200':
+          description: Project submission metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProjectSchemaResponse'
+  /api/projects/v2/projects/{slug}/pr:
+    get:
+      tags: [Projects]
+      summary: Get project metadata PR status
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/ProjectSlug'
+      responses:
+        '200':
+          description: Latest project PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProjectPrStatus'
+    put:
+      tags: [Projects]
+      summary: Create or update a project metadata PR
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/ProjectSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProjectPrRequest'
+      responses:
+        '200':
+          description: Open project PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProjectPrStatus'
+    post:
+      tags: [Projects]
+      summary: Same as PUT /api/projects/v2/projects/{slug}/pr
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/ProjectSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProjectPrRequest'
+      responses:
+        '200':
+          description: Open project PR state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProjectPrStatus'
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List user summaries
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserData'
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/admin/actions:
+    get:
+      tags: [Admin]
+      summary: List schema-described admin actions
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Available admin actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionsResponse'
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/admin/actions/{actionId}:
+    post:
+      tags: [Admin]
+      summary: Run one admin action
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: actionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminActionRunRequest'
+      responses:
+        '200':
+          description: Action result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRunResponse'
+        '400':
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Action not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /api/admin/users/{email}:
+    get:
+      tags: [Admin]
+      summary: Get one permission record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          description: Missing email
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+    patch:
+      tags: [Admin]
+      summary: Merge a permission patch into one user
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionPatch'
+      responses:
+        '200':
+          description: Updated permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          description: Invalid body or missing email
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+    delete:
+      tags: [Admin]
+      summary: Delete one permission record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          description: Missing email
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Unauthorized or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/passkey/register/options:
+    post:
+      tags: [Passkeys]
+      summary: Create WebAuthn registration options
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/OriginHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyNameRequest'
+      responses:
+        '200':
+          description: Registration options
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Missing client context or passkey configuration
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session/challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '409':
+          description: Passkey limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+  /auth/passkey/register/verify:
+    post:
+      tags: [Passkeys]
+      summary: Verify passkey registration
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/ChallengeCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyVerifyRequest'
+      responses:
+        '200':
+          description: Verification succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifiedResponse'
+        '400':
+          description: Missing response
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Challenge or verification failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '409':
+          description: Passkey name conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+  /auth/passkey/login/options:
+    post:
+      tags: [Passkeys]
+      summary: Create WebAuthn authentication options
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/OriginHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyEmailRequest'
+      responses:
+        '200':
+          description: Authentication options
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/passkey/login/verify:
+    post:
+      tags: [Passkeys]
+      summary: Verify passkey login and issue a session
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/ChallengeCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyVerifyRequest'
+      responses:
+        '200':
+          description: Verification succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifiedResponse'
+        '400':
+          description: Missing response
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Challenge or verification failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/passkey/credentials:
+    get:
+      tags: [Passkeys]
+      summary: List the current user's passkeys for the active RP ID
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - $ref: '#/components/parameters/OriginHeader'
+      responses:
+        '200':
+          description: Passkey list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyListResponse'
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/passkey/credentials/{id}:
+    get:
+      tags: [Passkeys]
+      summary: Alias of PATCH /auth/passkey/credentials/{id}
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRenameRequest'
+      responses:
+        '200':
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Unauthorized client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '409':
+          description: Name conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+    patch:
+      tags: [Passkeys]
+      summary: Rename one passkey credential
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRenameRequest'
+      responses:
+        '200':
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Unauthorized client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '409':
+          description: Name conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+    delete:
+      tags: [Passkeys]
+      summary: Delete one passkey credential
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Unauthorized client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /auth/passkey/revoke:
+    post:
+      tags: [Passkeys]
+      summary: Revoke a user or credential globally
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRevokeRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Missing client context
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorObject'
+  /user/proxy/all:
+    get:
+      tags: [Proxy]
+      summary: List proxy records for super-admins
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Paginated proxy records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminProxyListResponse'
+        '400':
+          description: Missing client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /user/proxy:
+    get:
+      tags: [Proxy]
+      summary: Get the current user's proxy record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Proxy data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+        '400':
+          description: Missing client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+    post:
+      tags: [Proxy]
+      summary: Create or update a proxy record
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyUpdateResponse'
+        '400':
+          description: Missing client ID, invalid JSON, or invalid proxy update
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CodeMessageError'
+                  - $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Proxy missing or user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+        '409':
+          description: Attempts exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+    patch:
+      tags: [Proxy]
+      summary: Same as POST /user/proxy
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyUpdateResponse'
+        '400':
+          description: Missing client ID, invalid JSON, or invalid proxy update
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CodeMessageError'
+                  - $ref: '#/components/schemas/ErrorObject'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Proxy missing or user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+        '409':
+          description: Attempts exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+  /user/proxy/reset:
+    post:
+      tags: [Proxy]
+      summary: Reset proxy edit attempts
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyUpdateRequest'
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyUpdateResponse'
+        '400':
+          description: Missing client ID or invalid body
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Proxy missing or user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/admin/proxy/reset-attempts:
+    post:
+      tags: [Proxy]
+      summary: Reset a user's proxy edit attempts as a super-admin
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required: [email]
+              additionalProperties: true
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyUpdateResponse'
+        '400':
+          description: Missing client ID, invalid JSON, or missing email
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Proxy missing or user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeMessageError'
+  /api/admin/proxy/build:
+    post:
+      tags: [Proxy]
+      summary: Generate the active proxy manifest as a super-admin
+      parameters:
+        - $ref: '#/components/parameters/XClientId'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Generated proxy manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminProxyManifestResponse'
+        '400':
+          description: Missing client ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid session
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: User not found
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  parameters:
+    XClientId:
+      name: X-Client-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: [portal]
+    SessionCookie:
+      name: Cookie
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Cookie header carrying the session token.
+    ChallengeCookie:
+      name: Cookie
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Cookie header carrying passkey_challenge.
+    OriginHeader:
+      name: Origin
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Must match one of the allowed portal origins.
+    ProjectSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+  schemas:
+    ErrorObject:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error]
+      additionalProperties: true
+    CodeMessageError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required: [code, message]
+      additionalProperties: true
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+    MagicCodeSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        expiresIn:
+          type: integer
+      required: [message, expiresIn]
+    VerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        email:
+          type: string
+        role:
+          $ref: '#/components/schemas/AppRole'
+      required: [valid, email]
+    AppRole:
+      type: string
+      enum: [USER, OTHER, STUDENT, ACADEMIC, NON_ACADEMIC, ACADEMIC_SUPPORT]
+    AccessLevel:
+      type: string
+      enum: [NONE, ADMIN, SUPER_ADMIN]
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        picture:
+          type: string
+      required: [email]
+      additionalProperties: true
+    MagicCodeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+      required: [email]
+      additionalProperties: true
+    MagicCodeVerifyRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        code:
+          type: string
+      required: [email, code]
+      additionalProperties: true
+    NotificationPatchRequest:
+      type: object
+      properties:
+        notifications:
+          type: object
+          properties:
+            email:
+              type: boolean
+            push:
+              type: boolean
+          additionalProperties: false
+      required: [notifications]
+      additionalProperties: false
+    ProfilePictureMode:
+      type: string
+      enum: [google, github, manual, gravatar]
+    ProfilePatchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        pictureMode:
+          $ref: '#/components/schemas/ProfilePictureMode'
+        picture:
+          type: string
+          description: Manual custom image URL. The URL does not need a file extension; the API verifies PNG, JPEG, or WebP by Content-Type.
+        gravatarMail:
+          type: string
+          description: Custom Gravatar email. Omit or send null to use the university email.
+      required: [name]
+      additionalProperties: false
+    PublicProfileKind:
+      type: string
+      enum: [academic, academic-support, non-academic, student]
+    PublicProfileSpecialStream:
+      type: string
+      enum:
+        [
+          biomedical-science,
+          botany,
+          computer-science,
+          data-science,
+          geology,
+          mathematics,
+          microbiology,
+          molecular-biology,
+          physics,
+          statistics,
+          zoology,
+          applied-science,
+          statistics-and-operations-research,
+        ]
+      description: Honours stream used only when profileKind is student and the submitted profile has studentTrack HONOURS.
+    PublicProfileSchemaResponse:
+      type: object
+      properties:
+        allowedKinds:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProfileKind'
+        specialStreams:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProfileSpecialStream'
+        note:
+          type: string
+      required: [allowedKinds, specialStreams, note]
+    PublicProfilePrStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - none
+            - open
+            - merged
+            - closed
+            - checks_pending
+            - checks_failed
+            - auto_merge_queued
+        number:
+          type: integer
+        url:
+          type: string
+        branch:
+          type: string
+        canEdit:
+          type: boolean
+      required: [status, canEdit]
+      additionalProperties: true
+    PublicProfilePrRequest:
+      type: object
+      properties:
+        profileKind:
+          $ref: '#/components/schemas/PublicProfileKind'
+        stream:
+          $ref: '#/components/schemas/PublicProfileSpecialStream'
+        profile:
+          type: object
+          additionalProperties: true
+      required: [profileKind, profile]
+      additionalProperties: false
+    PublicProjectResponse:
+      type: object
+      properties:
+        project:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: 'null'
+        targetProjectFile:
+          type: string
+        targetAggregateFile:
+          type: string
+        targetManifestFile:
+          type: string
+      required: [project]
+      additionalProperties: true
+    PublicProjectSchemaResponse:
+      type: object
+      properties:
+        canSubmitOwnedProjects:
+          type: boolean
+        canSubmitAnyProject:
+          type: boolean
+        identity:
+          type: object
+          additionalProperties: true
+        lockedFields:
+          type: array
+          items:
+            type: string
+        note:
+          type: string
+      required:
+        - canSubmitOwnedProjects
+        - canSubmitAnyProject
+        - identity
+        - lockedFields
+        - note
+    PublicProjectPrStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - none
+            - open
+            - merged
+            - closed
+            - checks_pending
+            - checks_failed
+            - auto_merge_queued
+        number:
+          type: integer
+        url:
+          type: string
+        branch:
+          type: string
+        canEdit:
+          type: boolean
+      required: [status, canEdit]
+      additionalProperties: true
+    PublicProjectPrRequest:
+      type: object
+      properties:
+        project:
+          type: object
+          additionalProperties: true
+      required: [project]
+      additionalProperties: false
+    UserPermissionPatchRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        permission:
+          $ref: '#/components/schemas/PermissionPatch'
+      required: [email, permission]
+      additionalProperties: false
+    PermissionPatch:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/AppRole'
+        accessLevel:
+          $ref: '#/components/schemas/AccessLevel'
+        include:
+          type: object
+          additionalProperties:
+            type: string
+        exclude:
+          type: array
+          items:
+            type: string
+        proxy:
+          $ref: '#/components/schemas/ProxyEntry'
+        blacklisted:
+          type: boolean
+        githubUserID:
+          type: integer
+        notifications:
+          type: object
+          properties:
+            email:
+              type: boolean
+            push:
+              type: boolean
+          additionalProperties: false
+        lastPasswordChanged:
+          type: integer
+        oAuthProviders:
+          type: object
+          properties:
+            google:
+              type: boolean
+            github:
+              type: boolean
+          additionalProperties: false
+        passkeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/PasskeyCredential'
+        name:
+          type: string
+        picture:
+          type: string
+        pictureMode:
+          $ref: '#/components/schemas/ProfilePictureMode'
+        gravatarMail:
+          type: string
+        createdAt:
+          type: integer
+      additionalProperties: true
+    Permission:
+      allOf:
+        - $ref: '#/components/schemas/PermissionPatch'
+      required: [role]
+    UserData:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        picture:
+          type: string
+        role:
+          $ref: '#/components/schemas/AppRole'
+        accessLevel:
+          $ref: '#/components/schemas/AccessLevel'
+        blacklisted:
+          type: boolean
+        createdAt:
+          type: integer
+      required: [id, email, name, picture, role, accessLevel, blacklisted]
+    ProxyEntry:
+      type: object
+      properties:
+        proxyUrl:
+          type: string
+        active:
+          type: boolean
+        availableAttempts:
+          type: integer
+        updatedAt:
+          type: integer
+        editedBy:
+          oneOf:
+            - type: string
+            - type: 'null'
+      required: [proxyUrl, active, availableAttempts, updatedAt, editedBy]
+    AdminProxyEntry:
+      allOf:
+        - $ref: '#/components/schemas/ProxyEntry'
+        - type: object
+          properties:
+            email:
+              type: string
+            username:
+              type: string
+          required: [email, username]
+    AdminProxyListResponse:
+      type: object
+      properties:
+        proxies:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminProxyEntry'
+        page:
+          type: integer
+        totalPages:
+          type: integer
+        total:
+          type: integer
+      required: [proxies, page, totalPages, total]
+    AdminProxyManifestEntry:
+      type: object
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+        proxyUrl:
+          type: string
+        active:
+          type: boolean
+        updatedAt:
+          type: integer
+        editedBy:
+          oneOf:
+            - type: string
+            - type: 'null'
+      required: [email, username, proxyUrl, active, updatedAt, editedBy]
+    AdminProxyManifestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        generatedAt:
+          type: integer
+        proxies:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminProxyManifestEntry'
+      required: [success, generatedAt, proxies]
+    AdminActionsResponse:
+      type: object
+      properties:
+        schemaVersion:
+          type: integer
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminActionDefinition'
+      required: [schemaVersion, actions]
+    AdminActionDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        method:
+          type: string
+          enum: [POST]
+        href:
+          type: string
+        danger:
+          type: boolean
+        confirmation:
+          type: string
+        requestSchema:
+          type: object
+          additionalProperties: true
+        resultSchema:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - title
+        - description
+        - method
+        - href
+        - danger
+        - confirmation
+        - requestSchema
+        - resultSchema
+    AdminActionRunRequest:
+      type: object
+      additionalProperties: true
+    AdminActionRunResponse:
+      type: object
+      additionalProperties: true
+    ProxyResponse:
+      type: object
+      properties:
+        isAllowed:
+          type: boolean
+        canEdit:
+          type: boolean
+        proxy:
+          oneOf:
+            - $ref: '#/components/schemas/ProxyEntry'
+            - type: 'null'
+      required: [isAllowed, canEdit, proxy]
+    ProxyUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        isAllowed:
+          type: boolean
+        active:
+          type: boolean
+        proxyUrl:
+          type: string
+        editedBy:
+          oneOf:
+            - type: string
+            - type: 'null'
+        updatedAt:
+          type: integer
+      additionalProperties: true
+    ProxyUpdateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        proxy:
+          $ref: '#/components/schemas/ProxyEntry'
+      required: [success, proxy]
+    PasskeyNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      additionalProperties: true
+    PasskeyEmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+      additionalProperties: false
+    PasskeyVerifyRequest:
+      type: object
+      properties:
+        response:
+          type: object
+      required: [response]
+      additionalProperties: false
+    VerifiedResponse:
+      type: object
+      properties:
+        verified:
+          type: boolean
+      required: [verified]
+    AuthVerifiedResponse:
+      type: object
+      properties:
+        verified:
+          type: boolean
+        redirectTo:
+          type: string
+      required: [verified, redirectTo]
+    PasskeyRenameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+      additionalProperties: false
+    PasskeyRevokeRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        credentialId:
+          type: string
+      additionalProperties: false
+    PasskeyListResponse:
+      type: object
+      properties:
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/PasskeyCredential'
+      required: [credentials]
+    PasskeyCredential:
+      type: object
+      properties:
+        id:
+          type: string
+        publicKey:
+          type: string
+        counter:
+          type: integer
+        transports:
+          type: array
+          items:
+            type: string
+        backedUp:
+          type: boolean
+        deviceType:
+          type: string
+        rpId:
+          type: string
+        createdAt:
+          type: integer
+        lastUsedAt:
+          type: integer
+        name:
+          type: string
+      required: [id, publicKey, counter, backedUp, deviceType, rpId, createdAt]
+    ProfileResponse:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        picture:
+          type: string
+        role:
+          $ref: '#/components/schemas/AppRole'
+        accessLevel:
+          $ref: '#/components/schemas/AccessLevel'
+        blacklisted:
+          type: boolean
+        lastPasswordChanged:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        googleOAuth:
+          type: boolean
+        githubOAuth:
+          type: boolean
+        githubUserID:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        pictureMode:
+          oneOf:
+            - $ref: '#/components/schemas/ProfilePictureMode'
+            - type: 'null'
+        gravatarMail:
+          oneOf:
+            - type: string
+            - type: 'null'
+        isEmailNotificationEnabled:
+          type: boolean
+        isPushNotificationEnabled:
+          type: boolean
+      required:
+        - email
+        - role
+        - accessLevel
+        - blacklisted
+        - lastPasswordChanged
+        - googleOAuth
+        - githubOAuth
+        - githubUserID
+        - pictureMode
+        - gravatarMail
+        - isEmailNotificationEnabled
+        - isPushNotificationEnabled

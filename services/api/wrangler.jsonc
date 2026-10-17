@@ -1,0 +1,46 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "api-scs-pdn-ac-lk",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "api.scs-pdn.space",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "JWT_ISSUER": "api.scs-pdn.space",
+    "GOOGLE_CLIENT_ID": "745767843751-p01q3t3sat4m38ae7fp51c7h88gnvjqv.apps.googleusercontent.com",
+    "GOOGLE_REDIRECT_URI": "https://api.scs-pdn.space/auth/google/callback",
+    "GITHUB_CLIENT_ID": "Ov23lieXg7aKWvl5dC0M",
+    "GITHUB_REDIRECT_URI": "https://api.scs-pdn.space/auth/github/callback",
+    "MAILER_API_URL": "https://mailer.scs-pdn.space",
+    "GITHUB_APP_API_URL": "https://gh.scs-pdn.space",
+    "CONFIG_DATA_BASE_URL": "https://config.scs-pdn.space",
+    "DATA_PUBLIC_BASE_URL": "https://data.scs-pdn.space"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "PERMISSIONS",
+      "id": "8ec7ba8609354d1187e562a56a82fca1"
+    },
+    {
+      "binding": "TOKEN_BLACKLIST",
+      "id": "a1de1b81b8e24c09ba99a9baf3dee6be"
+    },
+    {
+      "binding": "MAGIC_CODES",
+      "id": "c3a955d7da774df892cb11c48c8e3184"
+    }
+  ],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  }
+}
