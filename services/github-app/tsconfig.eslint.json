@@ -1,0 +1,11 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["bun"],
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}

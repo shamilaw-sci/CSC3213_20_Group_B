@@ -109,3 +109,24 @@ missing suite is listed as missing coverage rather than a passing test.
   3103. `GET /favicon.ico` returned HTTP 200 with the committed 285,478-byte
   asset, proving filtered scripts execute with the workspace-relative static
   path intact. Non-mutating `GET /` returned the expected JSON 404 response.
+
+## `@scs/github-app`
+
+- Source: `scs-portal-github-app@5a3b82472af63a664a5011bde52f4135ffb8aa45`.
+- Import policy: `keys/**`, every `*.pem`, local hooks, nested lockfiles, and
+  local environment files were denylisted. The destination contains a
+  placeholder-only template and a reconstructed Wrangler configuration with
+  public identifiers only.
+- 2026-10-17: the pre-stage credential scan found no private-key marker,
+  tracked PEM/key-directory path, source internal-secret literal, or forbidden
+  local environment file in the destination or existing Git index.
+- The committed package omitted a `test` script despite containing three test
+  files. The workspace adds `test: bun test` so the migration gate executes
+  rather than silently skipping those suites.
+- 2026-10-17: `bun --filter '@scs/github-app' typecheck`, `typecheck:test`,
+  and `lint` exited successfully.
+- 2026-10-17: `bun --filter '@scs/github-app' test` discovered all three
+  preserved files and passed all 23 tests with 28 assertions.
+- 2026-10-17: `bun --filter '@scs/github-app' build` completed a Wrangler
+  dry-run bundle successfully and reported only the intended non-secret
+  identifiers, repository names, and port.
