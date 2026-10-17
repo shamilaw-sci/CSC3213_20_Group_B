@@ -42,3 +42,21 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: the development server became ready on port 3101; `GET /`
   returned HTTP 200 with 49,487 bytes and
   `GET /students/computer-science/s21` returned HTTP 200 with 78,508 bytes.
+
+## `@scs/projects`
+
+- Source: `projects.scs.pdn.ac.lk@3e905bd8873fceb95f3cc2ac8a4c43f1f34ea840`.
+- Import policy: committed Git archive only; repository-level lockfiles, hooks,
+  editor settings, and CI metadata remain owned by the monorepo.
+- The first lint gate exposed four `react-hooks/set-state-in-effect` errors in
+  the committed search and username lookup views. The repair preserves their
+  URL-driven form reset behavior with keyed uncontrolled inputs and avoids
+  synchronously clearing state that is already hidden when no query exists.
+- 2026-10-17: `bun --filter '@scs/projects' lint`, `typecheck`, and
+  `typecheck:test` exited successfully.
+- 2026-10-17: `bun --filter '@scs/projects' test` discovered all three test
+  files and passed all eight tests. Vitest emitted its existing advisory that
+  the TypeScript config uses ESM syntax without a package-level module type;
+  this did not affect the test result.
+- 2026-10-17: `bun --filter '@scs/projects' build` completed with all 13
+  static/dynamic route entries generated and exit code 0.
