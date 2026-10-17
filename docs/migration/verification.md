@@ -96,3 +96,16 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: `bun --filter '@scs/api' build` completed a Wrangler dry-run
   bundle successfully and reported only the intended public variables and KV
   bindings.
+
+## `@scs/mailer`
+
+- Source: `mailer.scs.pdn.ac.lk@7043928c8cf1510a081739201dc69f1d19949bc7`.
+- Tests: no test files or source test script exist.
+- 2026-10-17: `bun --filter '@scs/mailer' typecheck` and `check` exited
+  successfully; `check` reran TypeScript and confirmed the workspace matches
+  its preserved Prettier rules.
+- 2026-10-17: the service started from the repository root through
+  `bun --filter '@scs/mailer' start` with inert local placeholders on port
+  3103. `GET /favicon.ico` returned HTTP 200 with the committed 285,478-byte
+  asset, proving filtered scripts execute with the workspace-relative static
+  path intact. Non-mutating `GET /` returned the expected JSON 404 response.
