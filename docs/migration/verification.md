@@ -60,3 +60,20 @@ missing suite is listed as missing coverage rather than a passing test.
   this did not affect the test result.
 - 2026-10-17: `bun --filter '@scs/projects' build` completed with all 13
   static/dynamic route entries generated and exit code 0.
+
+## `@scs/portal`
+
+- Source: `portal.scs.pdn.ac.lk@eca1474b7c28535a223bd96a631b83481c91df9f`.
+- Import policy: committed Git archive only; the dirty source working tree was
+  neither read as migration input nor modified.
+- 2026-10-17: the migrated
+  `src/components/custom/project-management-page/ProjectManagementPage.tsx`
+  matched the object from `eca1474` byte-for-byte, proving the known dirty edit
+  was excluded.
+- Tests: no test files or source test script exist.
+- 2026-10-17: `bun --filter '@scs/portal' lint`, `typecheck`, and `build`
+  exited successfully. The production build generated all 35 listed static or
+  dynamic route entries.
+- 2026-10-17: the development server became ready on port 3102; `GET /`
+  returned HTTP 200 with an 88,877-byte response. No authenticated mutation or
+  external write was attempted.
