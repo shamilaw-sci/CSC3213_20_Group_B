@@ -1,0 +1,6 @@
+# Normalize text while retaining binary files unchanged.
+* text=auto
+
+# Hooks and shell scripts must remain executable on Unix runners.
+.husky/* text eol=lf
+*.sh text eol=lf

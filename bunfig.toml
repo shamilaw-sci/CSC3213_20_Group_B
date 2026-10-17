@@ -1,0 +1,6 @@
+[install]
+# Only install package versions published at least seven days ago.
+minimumReleaseAge = 604800
+
+# This system-owned schema package is allowed through the age gate.
+minimumReleaseAgeExcludes = ["@csc3213-2026-group-b/academic-domain-schemas"]

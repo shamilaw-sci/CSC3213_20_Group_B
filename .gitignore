@@ -1,7 +1,42 @@
-node_modules
-.bun
-.turbo
-.next
-dist
+# dependencies
+node_modules/
+.bun/
+
+# task and framework caches
+.turbo/
+**/.next/
+**/.cache/
+**/.wrangler/
+
+# build and test output
+**/dist/
+**/build/
+**/out/
+**/coverage/
+
+# TypeScript generated files
+*.tsbuildinfo
+next-env.d.ts
+
+# local environment and deployment state
 .env
-.env.local
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.vercel/
+
+# credentials and local keys
+*.pem
+**/keys/
+
+# package-manager and debug artifacts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# operating-system files
+.DS_Store
+Thumbs.db
