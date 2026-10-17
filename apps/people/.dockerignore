@@ -1,0 +1,23 @@
+# dependencies
+node_modules
+
+# next build
+.next
+
+# git
+.git
+.gitignore
+
+# env
+.env*
+*.log
+
+# docker
+Dockerfile*
+docker-compose*
+
+# dev-only
+.devcontainer
+.vscode
+.husky
+.agents
