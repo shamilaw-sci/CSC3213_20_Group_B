@@ -100,7 +100,8 @@ The package directories are reserved as follows:
 ### Move to the Monorepo Root
 
 - The common Bun minimum-release-age policy.
-- One Husky installation and one pre-commit hook.
+- One Husky installation with pre-commit and commit-message hooks copied from
+  the established `sivothayan.com` workflow.
 - Shared Prettier settings and the root lint-staged dispatcher.
 - Consolidated `.gitignore`, `.gitattributes`, and non-container VS Code
   recommendations.

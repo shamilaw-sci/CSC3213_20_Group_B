@@ -1,0 +1,32 @@
+if [ -f pnpm-lock.yaml ]; then
+    command -v pnpm >/dev/null 2>&1 || {
+        echo "pnpm-lock.yaml found, but pnpm is not installed."
+        exit 1
+    }
+    pnpm exec commitlint --edit "$1"
+
+elif [ -f bun.lockb ] || [ -f bun.lock ]; then
+    command -v bun >/dev/null 2>&1 || {
+        echo "Bun lockfile found, but Bun is not installed."
+        exit 1
+    }
+    bunx --bun commitlint --edit "$1"
+
+elif [ -f yarn.lock ]; then
+    command -v yarn >/dev/null 2>&1 || {
+        echo "yarn.lock found, but Yarn is not installed."
+        exit 1
+    }
+    yarn commitlint --edit "$1"
+
+elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+    command -v npx >/dev/null 2>&1 || {
+        echo "npm lockfile found, but npm/npx is not installed."
+        exit 1
+    }
+    npx --no-install commitlint --edit "$1"
+
+else
+    echo "No supported package-manager lockfile found."
+    exit 1
+fi

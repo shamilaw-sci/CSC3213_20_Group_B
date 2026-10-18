@@ -199,3 +199,20 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: `bun --filter '@scs/github-app' build` completed a Wrangler
   dry-run bundle successfully and reported only the intended non-secret
   identifiers, repository names, and port.
+
+## Root Git Hooks and Commit Validation
+
+- 2026-10-18: the root pre-commit and commit-message hooks and typed Commitlint
+  configuration matched the established `sivothayan.com` workflow after the
+  repository's LF normalization.
+- The commit-message hook, invoked with Git for Windows' shell, accepted
+  `chore: verify commit hook` with exit code 0 and rejected
+  `invalid commit message` with the expected `type-empty` and `subject-empty`
+  errors and exit code 1.
+- `bun install --frozen-lockfile` completed successfully with Commitlint
+  21.2.3 and the Husky prepare step.
+- After formatting the updated migration matrix, the root `format:check`,
+  `lint`, and `typecheck` gates exited successfully. Turbo executed all 6 lint
+  tasks and all 8 typecheck tasks with zero cache hits.
+- The staged pre-commit hook ran the root lint-staged dispatcher successfully
+  before the Task 15 commit.

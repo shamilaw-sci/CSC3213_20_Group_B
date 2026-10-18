@@ -11,6 +11,7 @@ on:
       - 'bun.lock'
       - 'bunfig.toml'
       - 'turbo.json'
+      - 'commitlint.config.mts'
       - 'prettier.config.mts'
       - 'lint-staged.config.mts'
   push:
@@ -25,6 +26,7 @@ on:
       - 'bun.lock'
       - 'bunfig.toml'
       - 'turbo.json'
+      - 'commitlint.config.mts'
       - 'prettier.config.mts'
       - 'lint-staged.config.mts'
 

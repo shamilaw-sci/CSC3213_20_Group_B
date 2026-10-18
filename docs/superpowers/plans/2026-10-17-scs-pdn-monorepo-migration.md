@@ -701,3 +701,46 @@ new `.mts` modules.
 git add .github apps lint-staged.config.mts prettier.config.mts docs
 git commit -m "refactor(config): standardize TypeScript ESM modules"
 ```
+
+---
+
+### Task 15: Align Husky and Commitlint Workflow
+
+**Files:**
+
+- Replace: `.husky/pre-commit`
+- Create: `.husky/commit-msg`
+- Create: `commitlint.config.mts`
+- Modify: `package.json`, `bun.lock`, `.github/workflows/ci.yml`
+- Update: root and migration documentation
+
+**Interfaces:**
+
+- Consumes: the verified Task 14 configuration baseline and the established
+  `sivothayan.com` Git-hook scripts.
+- Produces: package-manager-aware lint-staged execution and Conventional Commit
+  validation for every local commit.
+
+- [x] **Step 1: Copy hooks and configuration**
+
+Copy the reference pre-commit and commit-message scripts byte-for-byte, add its
+typed ESM Commitlint configuration, and install the matching Commitlint
+dependency ranges with Bun.
+
+- [x] **Step 2: Update CI and documentation**
+
+Include `commitlint.config.mts` in root-tooling CI filters and document the
+Conventional Commit requirement.
+
+- [x] **Step 3: Verify hook behavior**
+
+Confirm the copied files match the reference, the commit-msg hook accepts a
+valid Conventional Commit and rejects an invalid subject, the pre-commit hook
+runs lint-staged, and the root format, lint, and typecheck gates pass.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add .husky .github commitlint.config.mts package.json bun.lock README.md docs
+git commit -m "chore(git): align hooks and commit validation"
+```

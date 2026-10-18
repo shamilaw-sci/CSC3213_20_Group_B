@@ -69,6 +69,9 @@ the shared ESLint package, Projects, API, and GitHub App. A missing test script
 is documented as missing coverage, not a passing suite. Pull requests use
 affected-workspace CI; pushes to `main` run the full gate.
 
+Commits use the Conventional Commits format. The Husky pre-commit hook runs
+lint-staged, and the commit-message hook validates the subject with Commitlint.
+
 Dockerfiles, Compose configuration, devcontainers, and container/image
 publishing workflows are intentionally absent. Verification and development
 use Bun directly.
