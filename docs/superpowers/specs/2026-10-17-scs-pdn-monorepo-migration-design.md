@@ -76,8 +76,10 @@ The package directories are reserved as follows:
 - `packages/ui`: remains empty unless the post-migration duplication audit finds
   components that are genuinely identical and safe across server/client and
   styling boundaries.
-- `packages/schemas`: remains empty for the baseline. The published
-  `@csc3213-2026-group-b/academic-domain-schemas` dependency stays external.
+- `packages/schemas`: remained empty for the baseline. After the final baseline
+  gate, the clean published `v5.1.0` tree moves here as private workspace
+  `@scs/schemas`, preserving its source, tests, and public API while making all
+  monorepo consumers use `workspace:*`.
 - `packages/utils`: remains empty unless an actual shared utility is justified
   after behavioral equivalence.
 

@@ -22,7 +22,7 @@ import {
   type SocialLinks,
   type Staff,
   type Student,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';
 
 export type {
   AcademicDepartmentCode,

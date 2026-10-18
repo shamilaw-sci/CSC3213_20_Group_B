@@ -230,3 +230,27 @@ missing suite is listed as missing coverage rather than a passing test.
 - The Projects, API, and GitHub App `typecheck:test` commands and the Mailer
   `check` command all exited successfully after the root test and build gates.
 - No Docker image, container, or Compose operation was performed.
+
+## Local Schema Workspace
+
+- 2026-10-18: `packages/schemas` was imported from the clean
+  `academic-domain-schemas@v5.1.0` committed tree. Before adaptation, its full
+  `src` and `tests` directories matched the source checkout with
+  `git diff --no-index` exit code 0.
+- The package was renamed to private workspace `@scs/schemas`; People, Portal,
+  Projects, API, and GitHub App now consume it through `workspace:*`. The
+  former published dependency name no longer appears in active source or
+  package manifests.
+- The first consumer typecheck exposed source aliases leaking across the
+  package boundary, and the first Next.js build exposed `.js` source
+  specifiers unsupported by Turbopack. The final package uses portable relative
+  extensionless source imports with Bundler resolution, while `tsc-alias`
+  emits explicit `.js` paths in `dist`.
+- Independent schema lint, source/test typechecks, all 263 upstream tests, and
+  the build passed. The public API contract test confirmed the complete export
+  surface.
+- A forced six-workspace Turbo gate passed all 24 lint, typecheck, test, and
+  build tasks with zero cache hits. Projects, API, and GitHub App auxiliary
+  `typecheck:test` commands also passed.
+- A final read-only source check confirmed the schema repository remained clean
+  at `3121ed9`; no Docker or publishing operation was performed.

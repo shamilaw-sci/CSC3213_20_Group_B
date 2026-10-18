@@ -6,7 +6,7 @@ import {
   NonAcademicStaffSchema,
   ProjectSchema,
   StudentSchema,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';
 import { z } from 'zod';
 
 import { repositoryPermissionLevelSchema } from '@/schemas/user-access.schema';

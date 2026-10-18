@@ -16,7 +16,7 @@
     "knip:fix": "knip --fix"
   },
   "dependencies": {
-    "@csc3213-2026-group-b/academic-domain-schemas": "5.1.0",
+    "@scs/schemas": "workspace:*",
     "@simplewebauthn/server": "^13.3.2",
     "jose": "^6.2.3",
     "ms": "^2.1.3",

@@ -1,7 +1,4 @@
-import {
-  ProjectSchema,
-  type Project,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+import { ProjectSchema, type Project } from '@scs/schemas';
 
 import {
   createJsonErrorResponse,
@@ -294,7 +291,7 @@ function schemaDetailsForUser(
       sNumber: sNumberFromEmail(user.email),
     },
     lockedFields: ['slug'],
-    note: 'Submit project JSON matching @csc3213-2026-group-b/academic-domain-schemas ProjectSchema. Non-admin users must be listed in project.people by email, username, or sNumber.',
+    note: 'Submit project JSON matching @scs/schemas ProjectSchema. Non-admin users must be listed in project.people by email, username, or sNumber.',
   };
 }
 

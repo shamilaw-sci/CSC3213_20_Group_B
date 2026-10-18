@@ -17,14 +17,12 @@ their contents.
 
 ## Shared product packages
 
-`packages/ui`, `packages/schemas`, and `packages/utils` remain empty. No shared
-component, schema, or utility was extracted before every imported workspace
-passed independently. Any future extraction should begin with proven duplicate
-behavior and retain each consumer's public interface.
-
-The published `@csc3213-2026-group-b/academic-domain-schemas` dependency also
-remains external at version `5.1.0`; replacing it with a local package is a
-separate compatibility decision.
+`packages/ui`, `packages/schemas`, and `packages/utils` remained empty through
+the independently validated baseline. The clean published schema source at tag
+`v5.1.0` was then migrated into `packages/schemas` as private workspace
+`@scs/schemas`; its sibling source repository remains untouched. Shared UI and
+utility extraction still require proven duplicate behavior and compatible
+consumer interfaces.
 
 ## Missing coverage and external checks
 

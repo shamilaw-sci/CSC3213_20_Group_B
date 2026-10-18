@@ -183,7 +183,7 @@ Success response:
 ## Public Project PRs
 
 These endpoints support public project metadata editing. The upstream API
-validates project JSON with `@csc3213-2026-group-b/academic-domain-schemas`,
+validates project JSON with `@scs/schemas`,
 derives the target files, and then calls this service.
 
 Project data lives in `GITHUB_PROJECTS_DATA_REPOSITORY` under
@@ -499,7 +499,7 @@ After:
 
 These endpoints support public profile editing through the Portal. The upstream
 API validates profile JSON with
-`@csc3213-2026-group-b/academic-domain-schemas`, derives all target files, and
+`@scs/schemas`, derives all target files, and
 then calls this service.
 
 Profile data lives in `GITHUB_PEOPLE_DATA_REPOSITORY` under `public/people`.

@@ -15,7 +15,7 @@
     "knip:fix": "knip --fix"
   },
   "dependencies": {
-    "@csc3213-2026-group-b/academic-domain-schemas": "5.1.0",
+    "@scs/schemas": "workspace:*",
     "@radix-ui/react-slot": "^1.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

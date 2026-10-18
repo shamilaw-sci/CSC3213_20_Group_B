@@ -1,4 +1,4 @@
-import { ProjectSchema } from '@csc3213-2026-group-b/academic-domain-schemas';
+import { ProjectSchema } from '@scs/schemas';
 
 import publicEnvConfig from '@/config/public.env.config';
 

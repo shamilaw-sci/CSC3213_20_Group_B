@@ -55,3 +55,11 @@ cleaned, switched, committed, or otherwise modified by the migration.
 The final read-only status check on 2026-10-18 found 1 dirty Portal entry and
 19 dirty People entries. The other five source repositories remained clean,
 and every source `HEAD` still matched the full commit recorded in the table.
+
+## Post-baseline Schema Source
+
+The schema extraction used the clean committed tree at
+`academic-domain-schemas@3121ed930c78f2c83ac626f0df80b7864680d0f7`, tagged
+`v5.1.0`. Its `src` and `tests` trees were imported before monorepo-specific
+module-path adaptation. The sibling source repository remained on `main`,
+matched `origin/main`, and had no working-tree changes after the import.

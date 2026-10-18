@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { Project } from '@csc3213-2026-group-b/academic-domain-schemas';
+import type { Project } from '@scs/schemas';
 
 import {
   hasProjectInAggregate,

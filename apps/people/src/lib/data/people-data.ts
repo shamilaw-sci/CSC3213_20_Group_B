@@ -9,7 +9,7 @@ import {
   StaffSchema,
   type Student,
   StudentSchema,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';
 
 import publicEnvConfig from '@/config/public.env.config';
 import { isSubjectSlug, type SubjectSlug } from '@/config/subjects';

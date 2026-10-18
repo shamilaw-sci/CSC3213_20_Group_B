@@ -541,7 +541,7 @@ Errors:
 
 These routes are authenticated portal routes for editing public profile JSON in
 the `data.scs.pdn.ac.lk` repository. The API validates payloads with
-`@csc3213-2026-group-b/academic-domain-schemas`, derives the target
+`@scs/schemas`, derives the target
 `public/people/v2/...` files, and delegates GitHub branch/PR work to the internal
 SCS Portal GitHub App. The API does not store public profile data in KV or a
 database.
@@ -620,7 +620,7 @@ Success:
     "applied-science",
     "statistics-and-operations-research"
   ],
-  "note": "Submit profile JSON matching @csc3213-2026-group-b/academic-domain-schemas."
+  "note": "Submit profile JSON matching @scs/schemas."
 }
 ```
 
@@ -707,7 +707,7 @@ Project metadata edit routes require:
 - `Cookie: session=...`
 
 The API validates submitted project JSON with
-`@csc3213-2026-group-b/academic-domain-schemas` `ProjectSchema`, authorizes the
+`@scs/schemas` `ProjectSchema`, authorizes the
 caller, derives the data-repository paths, then calls the SCS Portal GitHub App.
 
 Who can edit:

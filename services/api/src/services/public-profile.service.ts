@@ -8,7 +8,7 @@ import {
   type AcademicTeachingStaff,
   type NonAcademicStaff,
   type Student,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';
 import type { z } from 'zod';
 
 import {
@@ -343,7 +343,7 @@ function schemaDetailsForUser(
     lockedFields: [
       ...new Set(allowedKindsForRole(user.role).flatMap(lockedFieldsForKind)),
     ],
-    note: 'Submit profile JSON matching @csc3213-2026-group-b/academic-domain-schemas.',
+    note: 'Submit profile JSON matching @scs/schemas.',
   };
 }
 

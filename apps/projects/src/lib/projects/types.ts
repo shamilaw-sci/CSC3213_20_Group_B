@@ -3,4 +3,4 @@ export type {
   ProjectLinks,
   ProjectStatus,
   ProjectType,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';

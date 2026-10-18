@@ -781,3 +781,44 @@ Run `typecheck:test` for Projects, API, and GitHub App, plus the Mailer
 git add docs/migration/verification.md docs/superpowers/plans/2026-10-17-scs-pdn-monorepo-migration.md
 git commit -m "docs: record post-configuration verification"
 ```
+
+---
+
+### Task 17: Migrate Academic Domain Schemas In-repository
+
+**Files:**
+
+- Create: `packages/schemas/**`
+- Modify: five consumer package manifests and schema imports
+- Modify: root lockfile and migration documentation
+
+**Interfaces:**
+
+- Consumes: clean source tag `academic-domain-schemas@v5.1.0`.
+- Produces: private workspace `@scs/schemas` with the same public schema API and
+  `workspace:*` consumers.
+
+- [x] **Step 1: Import the committed schema tree**
+
+Import source, tests, and documentation from commit
+`3121ed930c78f2c83ac626f0df80b7864680d0f7`; do not modify the sibling source
+repository.
+
+- [x] **Step 2: Adapt the package boundary**
+
+Rename the package to `@scs/schemas`, retain version `5.1.0`, preserve all
+runtime exports, and replace repository-only aliases with portable local module
+paths.
+
+- [x] **Step 3: Switch and verify consumers**
+
+Replace the published dependency in People, Portal, Projects, API, and GitHub
+App. Run independent schema gates, then force lint, typecheck, test, and build
+across the schema workspace and all consumers. Run auxiliary test typechecks.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add packages/schemas apps services README.md bun.lock docs
+git commit -m "refactor(schemas): migrate domain contracts in-repository"
+```

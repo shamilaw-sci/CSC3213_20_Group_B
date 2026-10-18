@@ -5,7 +5,7 @@ import {
   AcademicDepartmentCodeSchema,
   CourseCodeSchema,
   ScienceAcademicDepartments,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+} from '@scs/schemas';
 import CodeMirror from '@uiw/react-codemirror';
 import JsonView from '@uiw/react-json-view';
 import { githubDarkTheme } from '@uiw/react-json-view/githubDark';

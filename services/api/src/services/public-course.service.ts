@@ -1,7 +1,4 @@
-import {
-  CourseOfferingSchema,
-  CourseSchema,
-} from '@csc3213-2026-group-b/academic-domain-schemas';
+import { CourseOfferingSchema, CourseSchema } from '@scs/schemas';
 
 import {
   createJsonErrorResponse,
