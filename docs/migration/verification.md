@@ -9,6 +9,33 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: `bunx turbo --version` returned `2.11.9`.
 - 2026-10-17: `git diff --check` exited successfully.
 
+## Final baseline gate
+
+- 2026-10-18: all root and direct-workspace dependency directories were absent
+  before `bun install --frozen-lockfile`; Bun 1.4.3 installed 692 packages and
+  the Husky prepare step exited successfully.
+- The fresh root `format:check`, `lint`, `typecheck`, `test`, and `build` gates
+  all exited successfully with zero Turbo cache hits. Turbo ran 6 lint tasks, 8
+  typecheck tasks, 4 real test tasks, and 6 build tasks.
+- The fresh test gate passed 4 shared ESLint tests, 8 Projects tests, 117 API
+  tests, and 23 GitHub App tests. Projects retained its existing advisory about
+  ESM syntax in a TypeScript Vitest configuration loaded as CommonJS.
+- The auxiliary Projects, API, and GitHub App `typecheck:test` commands and the
+  Mailer `check` command all exited successfully.
+- A tracked-file audit found no nested lockfile, non-example environment file,
+  private-key marker, PEM/key path, generated build/cache path, or nested Git
+  directory. Root configuration was limited to the classified Git, Bun, Turbo,
+  Prettier, lint-staged, and skill-lock files.
+- Git-object comparisons matched all 157 selected Portal product files to
+  `eca1474` and all 100 selected People product files to `fdd3f9e`. The audit
+  exposed an ignored People environment template; commit `25953af` now tracks
+  the byte-identical source file and explicitly exempts it from the workspace
+  ignore rule.
+- Every source repository still points to its recorded commit. Web, Projects,
+  API, Mailer, and GitHub App remain clean; Portal retains 1 dirty entry and
+  People retains 19 dirty entries, confirming the deferred working trees were
+  not cleaned or committed.
+
 ## Shared repository tooling
 
 - 2026-10-18: `bun install`, `bun run format:check`, `bun run lint`, and

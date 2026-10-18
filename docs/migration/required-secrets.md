@@ -38,3 +38,17 @@ The GitHub App ID, installation ID, owner, repository names, and local server
 port are non-secret configuration. For local development, copy `.env.example`
 to an ignored `.env` file and provide the rotated key and a new internal
 secret there. Do not store a PEM file inside the repository.
+
+## `@scs/mailer`
+
+Copy `services/mailer/.env.example` to a local ignored `.env` file and set a new
+`MAILER_API_KEY` plus the deployment's SMTP host, username, password, and sender
+identity. `VERCEL_EXPERIMENTAL_BACKENDS` is a non-secret runtime setting.
+
+## Frontend settings
+
+People and Portal expose non-secret public URL contracts in their local
+`.env.example` files. Replace the example hosts for the deployment environment.
+Portal's cookie domain must match the deployed site and API domain layout.
+Web and Projects do not require committed environment templates in the
+baseline.

@@ -43,3 +43,15 @@ from the recorded Git objects, not from the source working directories.
 These paths are recorded only to prove exclusion. Their contents are not part
 of the baseline migration and remain available solely in the untouched source
 working trees for later review.
+
+## Final Baseline Policy
+
+The baseline uses the seven full commit hashes above. Portal and People were
+imported from Git objects at `eca1474` and `fdd3f9e`, respectively; no product
+file was copied from either dirty working directory. All other repositories
+used their recorded committed `HEAD`. The source repositories were not
+cleaned, switched, committed, or otherwise modified by the migration.
+
+The final read-only status check on 2026-10-18 found 1 dirty Portal entry and
+19 dirty People entries. The other five source repositories remained clean,
+and every source `HEAD` still matched the full commit recorded in the table.
