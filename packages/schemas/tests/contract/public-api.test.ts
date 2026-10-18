@@ -1,8 +1,28 @@
 import { describe, expect, it } from 'bun:test';
 
+import type {
+  ApiErrorEnvelope,
+  MutationAccepted,
+  MutationControl,
+  OperationStatusResponse,
+  Page,
+  PaginationRequest,
+} from '#index';
 import * as publicApi from '#index';
 
+function acceptsPublicApiTypes(_contracts: {
+  error: ApiErrorEnvelope;
+  mutation: MutationControl;
+  accepted: MutationAccepted;
+  operation: OperationStatusResponse;
+  request: PaginationRequest;
+  page: Page<{ id: string }>;
+}): void {}
+
 const expectedRuntimeExports = [
+  'ApiErrorCodeSchema',
+  'ApiErrorEnvelopeSchema',
+  'ApiErrorSchema',
   'AcademicDepartmentCodeSchema',
   'AcademicDepartmentSchema',
   'AcademicPeriodSchema',
@@ -21,20 +41,35 @@ const expectedRuntimeExports = [
   'AlumniBatchListSchema',
   'AlumniBatchSchema',
   'ConferenceSchema',
+  'ConflictDetailsSchema',
+  'CorrelationIdSchema',
   'CourseCodeSchema',
   'CourseIdSchema',
   'CourseOfferingIdSchema',
   'CourseOfferingSchema',
   'CourseSchema',
   'CourseStaffSchema',
+  'EntityRevisionSchema',
   'FacultyCodeSchema',
   'HonoursProgrammeDepartmentMap',
   'HonoursStreamSchema',
   'HonoursProgrammeCodeSchema',
+  'IdempotencyKeySchema',
   'KnownSocialIcons',
   'KnownSocialPlatforms',
   'NonAcademicPositionSchema',
   'NonAcademicStaffSchema',
+  'OpaqueCursorSchema',
+  'OperationActorSchema',
+  'OperationIdSchema',
+  'OperationOutcomeSchema',
+  'OperationResourceSchema',
+  'OperationResourceTypeSchema',
+  'OperationStatusResponseSchema',
+  'OperationStatusSchema',
+  'PageInfoSchema',
+  'PageLimitSchema',
+  'PaginationRequestSchema',
   'PeopleSearchEntrySchema',
   'PeopleSearchEntryTypeSchema',
   'PeopleSearchIndexSchema',
@@ -77,11 +112,18 @@ const expectedRuntimeExports = [
   'StudentTrackSchema',
   'StudentTypeSchema',
   'UpperLevelSubjectCodes',
+  'MutationAcceptedSchema',
+  'MutationControlSchema',
+  'createPageSchema',
   'detectKnownSocialUrl',
   'normalizeKnownSocialUrl',
 ] as const satisfies readonly (keyof typeof publicApi)[];
 
 describe('package public API', () => {
+  it('exports the API contract types', () => {
+    expect(acceptsPublicApiTypes).toBeFunction();
+  });
+
   for (const exportName of expectedRuntimeExports) {
     it(`exports ${exportName}`, () => {
       expect(publicApi[exportName]).toBeDefined();

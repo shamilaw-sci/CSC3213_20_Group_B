@@ -1,4 +1,4 @@
-import type { Project } from '@scs/schemas';
+import type { EntityRevision, Project } from '@scs/schemas';
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
@@ -9,7 +9,7 @@ export interface PublicProjectPrStatus {
   number?: number;
   url?: string;
   branch?: string;
-  headSha?: string;
+  headSha?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;
@@ -43,7 +43,7 @@ interface UpdatePublicProjectInput {
   aggregatePath: 'public/projects/v2/projects.json';
   manifestPath: 'public/projects/v2/manifest.json';
   project: Project;
-  expectedHeadSha?: string;
+  expectedHeadSha?: EntityRevision;
 }
 
 interface DeletePublicProjectInput {
@@ -53,7 +53,7 @@ interface DeletePublicProjectInput {
   projectPath: string;
   aggregatePath: 'public/projects/v2/projects.json';
   manifestPath: 'public/projects/v2/manifest.json';
-  expectedHeadSha?: string;
+  expectedHeadSha?: EntityRevision;
 }
 
 interface FileEntry {

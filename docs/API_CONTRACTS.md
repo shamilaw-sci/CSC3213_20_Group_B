@@ -22,9 +22,83 @@ when prose and code disagree.
   conflicting changes use `409`; upstream failures use `502` where applicable.
 
 During the optimization program, the existing mix of JSON and text errors is
-preserved for compatibility. The target versioned error and operation
-contracts are defined in
-[Repository Optimization Design](REPOSITORY_OPTIMIZATION_DESIGN.md).
+preserved only on legacy routes. New and migrated routes use the versioned
+contracts exported by `@scs/schemas`.
+
+## Versioned Error Contract
+
+New error responses use `ApiErrorEnvelopeSchema`:
+
+```json
+{
+  "version": 1,
+  "error": {
+    "code": "entity_revision_conflict",
+    "message": "The project changed after it was loaded.",
+    "correlationId": "req_01JAA2V8M7X4G9NK2QF6D3P1ZT",
+    "conflict": {
+      "resourceType": "project",
+      "resourceId": "scholarship-management-system",
+      "expectedRevision": "commit-41",
+      "actualRevision": "commit-42"
+    }
+  }
+}
+```
+
+Codes are stable lowercase snake-case identifiers. Messages are bounded human
+descriptions and must not be parsed for control flow. Correlation IDs are
+required on versioned errors. Conflict details are optional and contain only
+resource identity and revision information safe to return to the caller.
+
+## Mutation and Operation Contract
+
+Every migrated mutation carries `MutationControl`: a required idempotency key
+and an optional expected entity revision. The idempotency key identifies the
+logical user action across retries; the revision provides compare-and-set
+protection for updates and deletes.
+
+A durable mutation responds with HTTP `202 Accepted` and a value matching
+`MutationAcceptedSchema`:
+
+```json
+{
+  "version": 1,
+  "operationId": "op_01JAA2V8M7X4G9NK2QF6D3P1ZT",
+  "status": "queued",
+  "statusUrl": "/api/operations/op_01JAA2V8M7X4G9NK2QF6D3P1ZT",
+  "retryAfterMs": 1000
+}
+```
+
+The operation resource reports `queued`, `running`, `succeeded`, `failed`,
+`conflicted`, or `cancelled`. Terminal responses include a matching typed
+outcome. Actor references contain an opaque subject ID rather than an email,
+token, GitHub credential, or provider payload. Resource types are limited to
+the mutation families owned by this system.
+
+## Cursor Pagination Contract
+
+List routes accept `cursor` and `limit` values through
+`PaginationRequestSchema`. The default limit is 25 and the maximum is 100.
+Cursors are opaque: clients store and return them unchanged and must not infer
+offsets or resource IDs from their contents.
+
+Versioned list responses use this shape:
+
+```json
+{
+  "version": 1,
+  "items": [],
+  "page": {
+    "nextCursor": null,
+    "hasMore": false
+  }
+}
+```
+
+`hasMore` is true exactly when `nextCursor` is non-null. A total may be
+included when it is cheap and consistent, but clients must not require it.
 
 ## Authentication and Account Routes
 

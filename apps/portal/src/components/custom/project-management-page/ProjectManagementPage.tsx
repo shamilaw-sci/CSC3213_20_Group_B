@@ -3,6 +3,7 @@
 import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
+  type EntityRevision,
   type ProjectLinks,
   type ProjectPerson,
   type ProjectPersonRole,
@@ -198,7 +199,7 @@ interface ProjectPr {
   number?: number;
   url?: string;
   branch?: string;
-  headSha?: string;
+  headSha?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;

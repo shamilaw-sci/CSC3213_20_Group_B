@@ -1,4 +1,4 @@
-import { ProjectSchema, type Project } from '@scs/schemas';
+import { type EntityRevision, ProjectSchema, type Project } from '@scs/schemas';
 
 import {
   createJsonErrorResponse,
@@ -29,7 +29,7 @@ interface PublicProjectPr {
   number?: number;
   url?: string;
   branch?: string;
-  headSha?: string;
+  headSha?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;

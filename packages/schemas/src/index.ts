@@ -1,3 +1,9 @@
+// API
+export * from './schemas/api/error.schema';
+export * from './schemas/api/mutation.schema';
+export * from './schemas/api/operation.schema';
+export * from './schemas/api/pagination.schema';
+
 // Academics
 export * from './schemas/academics/academic-organization.schema';
 export * from './schemas/academics/academic-period.schema';
