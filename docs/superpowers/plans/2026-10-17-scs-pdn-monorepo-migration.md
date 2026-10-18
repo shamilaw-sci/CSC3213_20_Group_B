@@ -36,6 +36,7 @@
 ### Task 1: Freeze Source Evidence and Finish Root Bootstrap
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `turbo.json`
 - Modify: `.gitignore`
@@ -45,6 +46,7 @@
 - Create: `docs/migration/migration-matrix.md`
 
 **Interfaces:**
+
 - Consumes: approved design commit `4721d23` and the seven local source repositories.
 - Produces: pinned source evidence, Bun 1.4.3 workspace metadata, and root task names used by every later task.
 
@@ -86,6 +88,7 @@ git commit -m "chore: prepare verified monorepo migration"
 ### Task 2: Migrate and Validate the Public Web App
 
 **Files:**
+
 - Create/replace from `scs.pdn.ac.lk@7de460e`: `apps/web/src/**`, `apps/web/README.md`, `apps/web/components.json`, `apps/web/postcss.config.json`, `apps/web/knip.json`, `apps/web/.agents/**`, `apps/web/skills-lock.json`, `apps/web/.npmrc.example`
 - Modify from source: `apps/web/package.json`
 - Modify: `apps/web/tsconfig.json`
@@ -95,6 +98,7 @@ git commit -m "chore: prepare verified monorepo migration"
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: root Bun workspace and source commit `7de460e`.
 - Produces: independently lintable, type-checkable, buildable package `@scs/web`.
 
@@ -137,12 +141,14 @@ git commit -m "feat(web): migrate public site into monorepo"
 ### Task 3: Migrate and Validate People from Committed State
 
 **Files:**
+
 - Create from `people.scs.pdn.ac.lk@fdd3f9e`: `apps/people/src/**`, `apps/people/public/**`, `apps/people/docker/**`, `apps/people/README.md`, `apps/people/ROUTES.md`, `apps/people/components.json`, `apps/people/postcss.config.json`, `apps/people/knip.json`, `apps/people/.env.example`, `apps/people/.agents/**`, `apps/people/skills-lock.json`
 - Create then adapt: `apps/people/package.json`, `apps/people/tsconfig.json`, `apps/people/next.config.ts`, `apps/people/eslint.config.ts`, `apps/people/Dockerfile`, `apps/people/.dockerignore`
 - Modify: `bun.lock`
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: source commit `fdd3f9edfac553033c89d08eb0419f850ca5aff6` only.
 - Produces: independently validated package `@scs/people`; explicitly excludes all dirty route-generalization work.
 
@@ -179,12 +185,14 @@ git commit -m "feat(people): migrate directory from committed baseline"
 ### Task 4: Migrate and Validate Projects
 
 **Files:**
+
 - Create from `projects.scs.pdn.ac.lk@3e905bd`: `apps/projects/src/**`, `apps/projects/public/**`, `apps/projects/tests/**`, `apps/projects/README.md`, `apps/projects/components.json`, `apps/projects/postcss.config.json`, `apps/projects/knip.json`, `apps/projects/vitest.config.ts`, `apps/projects/tsconfig.test.json`, `apps/projects/.agents/**`, `apps/projects/skills-lock.json`
 - Create then adapt: `apps/projects/package.json`, `apps/projects/tsconfig.json`, `apps/projects/next.config.ts`, `apps/projects/eslint.config.ts`, `apps/projects/Dockerfile`, `apps/projects/.dockerignore`
 - Modify: `bun.lock`
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: source commit `3e905bd` and the external schema package.
 - Produces: tested package `@scs/projects` with preserved Vitest aliases and setup.
 
@@ -219,12 +227,14 @@ git commit -m "feat(projects): migrate projects site into monorepo"
 ### Task 5: Migrate and Validate Portal from Committed State
 
 **Files:**
+
 - Create from `portal.scs.pdn.ac.lk@eca1474`: `apps/portal/src/**`, `apps/portal/public/**`, `apps/portal/assets/**`, `apps/portal/scripts/**`, `apps/portal/docs/**`, `apps/portal/README.md`, `apps/portal/components.json`, `apps/portal/postcss.config.json`, `apps/portal/knip.json`, `apps/portal/.env.example`, `apps/portal/.agents/**`, `apps/portal/skills-lock.json`
 - Create then adapt: `apps/portal/package.json`, `apps/portal/tsconfig.json`, `apps/portal/next.config.ts`, `apps/portal/eslint.config.ts`, `apps/portal/Dockerfile`, `apps/portal/.dockerignore`
 - Modify: `bun.lock`
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: source commit `eca1474b7c28535a223bd96a631b83481c91df9f` only.
 - Produces: independently validated package `@scs/portal`; excludes the dirty `ProjectManagementPage.tsx` changes.
 
@@ -261,6 +271,7 @@ git commit -m "feat(portal): migrate portal from committed baseline"
 ### Task 6: Migrate and Validate the Cloudflare API
 
 **Files:**
+
 - Create from `api.scs.pdn.ac.lk@0f5c03e`: `services/api/src/**`, `services/api/test/**`, `services/api/docs/**`, `services/api/README.md`, `services/api/knip.json`, `services/api/.agents/**`, `services/api/skills-lock.json`
 - Create then adapt: `services/api/package.json`, `services/api/eslint.config.ts`, `services/api/tsconfig.base.json`, `services/api/tsconfig.json`, `services/api/tsconfig.node.json`, `services/api/tsconfig.test.json`, `services/api/tsconfig.worker.json`, `services/api/tsconfig.eslint.json`, `services/api/wrangler.jsonc`
 - Create: `services/api/.dev.vars.example`
@@ -269,6 +280,7 @@ git commit -m "feat(portal): migrate portal from committed baseline"
 - Modify: `docs/migration/required-secrets.md`
 
 **Interfaces:**
+
 - Consumes: source commit `0f5c03e`, schema package `5.1.0`, Cloudflare bindings, mailer URL, and GitHub App URL.
 - Produces: secure, independently deployable Worker package `@scs/api` with nine preserved tests.
 
@@ -307,12 +319,14 @@ git commit -m "feat(api): migrate worker with secure bindings"
 ### Task 7: Migrate and Validate the Mailer
 
 **Files:**
+
 - Create from `mailer.scs.pdn.ac.lk@7043928`: `services/mailer/src/**`, `services/mailer/public/**`, `services/mailer/docs/**`, `services/mailer/README.md`, `services/mailer/.env.example`, `services/mailer/vercel.json`
 - Create then adapt: `services/mailer/package.json`, `services/mailer/tsconfig.json`
 - Modify: `bun.lock`
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: source commit `7043928`, SMTP environment variables, and `MAILER_API_KEY`.
 - Produces: independently runnable package `@scs/mailer` with preserved Hono/Nodemailer behavior and Vercel deployment.
 
@@ -344,6 +358,7 @@ git commit -m "feat(mailer): migrate transactional mail service"
 ### Task 8: Migrate and Validate the GitHub App
 
 **Files:**
+
 - Create from `scs-portal-github-app@5a3b824`: `services/github-app/src/**`, `services/github-app/tests/**`, `services/github-app/docs/**`, `services/github-app/README.md`, `services/github-app/knip.json`, `services/github-app/.env.example`
 - Create then adapt: `services/github-app/package.json`, `services/github-app/eslint.config.ts`, `services/github-app/tsconfig.base.json`, `services/github-app/tsconfig.json`, `services/github-app/tsconfig.test.json`, `services/github-app/tsconfig.worker.json`, `services/github-app/tsconfig.eslint.json`, `services/github-app/wrangler.jsonc`
 - Modify: `bun.lock`
@@ -351,6 +366,7 @@ git commit -m "feat(mailer): migrate transactional mail service"
 - Modify: `docs/migration/required-secrets.md`
 
 **Interfaces:**
+
 - Consumes: source commit `5a3b824`, GitHub App credentials, data/config repository names, and internal caller secret.
 - Produces: secure package `@scs/github-app` with three preserved tests and no private-key material.
 
@@ -389,6 +405,7 @@ git commit -m "feat(github-app): migrate repository automation service"
 ### Task 9: Extract Shared ESLint Configuration
 
 **Files:**
+
 - Create: `packages/eslint-config/package.json`
 - Create: `packages/eslint-config/base.ts`
 - Create: `packages/eslint-config/next.ts`
@@ -402,6 +419,7 @@ git commit -m "feat(github-app): migrate repository automation service"
 - Modify: `bun.lock`
 
 **Interfaces:**
+
 - Consumes: four passing identical frontend configs and two passing Worker configs.
 - Produces: `@scs/eslint-config/base`, `@scs/eslint-config/next`, and `@scs/eslint-config/worker`; thin local wrappers retain runtime-specific ignores and test rules.
 
@@ -433,6 +451,7 @@ git commit -m "refactor(eslint): centralize shared configurations"
 ### Task 10: Extract Shared TypeScript Configuration
 
 **Files:**
+
 - Create: `packages/tsconfig/package.json`
 - Create: `packages/tsconfig/base.json`
 - Create: `packages/tsconfig/nextjs.json`
@@ -447,6 +466,7 @@ git commit -m "refactor(eslint): centralize shared configurations"
 - Modify: `bun.lock`
 
 **Interfaces:**
+
 - Consumes: all passing local TypeScript projects.
 - Produces: `@scs/tsconfig` presets with local aliases/includes/references preserved by each consumer.
 
@@ -480,6 +500,7 @@ git commit -m "refactor(tsconfig): centralize runtime presets"
 ### Task 11: Centralize Repository Development Tooling
 
 **Files:**
+
 - Create: `.prettierignore`
 - Create: `prettier.config.mjs`
 - Create: `lint-staged.config.mjs`
@@ -494,6 +515,7 @@ git commit -m "refactor(tsconfig): centralize runtime presets"
 - Modify: `bun.lock`
 
 **Interfaces:**
+
 - Consumes: audited identical hook, Prettier defaults, release-age policy, and source editor/tooling files.
 - Produces: one root hook and formatter while preserving workspace-specific lint behavior.
 
@@ -530,6 +552,7 @@ git commit -m "refactor(tooling): centralize repository tooling"
 ### Task 12: Repair Docker Builds and Consolidate CI
 
 **Files:**
+
 - Create: `.dockerignore`
 - Modify: `apps/web/Dockerfile`
 - Modify: `apps/people/Dockerfile`
@@ -545,6 +568,7 @@ git commit -m "refactor(tooling): centralize repository tooling"
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
+
 - Consumes: final root lockfile/workspace graph, four passing Next.js builds, and original source workflows.
 - Produces: independently buildable frontend images with stable GHCR identities and path-aware monorepo checks.
 
@@ -585,6 +609,7 @@ git commit -m "ci: consolidate monorepo checks and image builds"
 ### Task 13: Document Operations and Run Final Verification
 
 **Files:**
+
 - Create/replace: `README.md`
 - Finalize: `docs/migration/source-state.md`
 - Finalize: `docs/migration/migration-matrix.md`
@@ -593,6 +618,7 @@ git commit -m "ci: consolidate monorepo checks and image builds"
 - Create: `docs/migration/deferred-work.md`
 
 **Interfaces:**
+
 - Consumes: all migrated workspaces, shared packages, root tooling, CI, Docker, and observed verification output.
 - Produces: operator/developer documentation and the evidence required to claim baseline completion.
 

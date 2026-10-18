@@ -28,15 +28,15 @@ complete.
 
 ## Source-State Matrix
 
-| Destination | Source repository | Source commit | Working-tree policy |
-| --- | --- | --- | --- |
-| `apps/web` | `scs.pdn.ac.lk` | `7de460e` | Use committed `HEAD` |
-| `apps/portal` | `portal.scs.pdn.ac.lk` | `eca1474b7c28535a223bd96a631b83481c91df9f` | Use this committed tree; exclude the dirty working tree |
-| `apps/people` | `people.scs.pdn.ac.lk` | `fdd3f9edfac553033c89d08eb0419f850ca5aff6` | Use this committed tree; exclude the dirty working tree |
-| `apps/projects` | `projects.scs.pdn.ac.lk` | `3e905bd` | Use committed `HEAD` |
-| `services/api` | `api.scs.pdn.ac.lk` | `0f5c03e` | Use committed `HEAD` |
-| `services/mailer` | `mailer.scs.pdn.ac.lk` | `7043928` | Use committed `HEAD` |
-| `services/github-app` | `scs-portal-github-app` | `5a3b824` | Use committed `HEAD` |
+| Destination           | Source repository        | Source commit                              | Working-tree policy                                     |
+| --------------------- | ------------------------ | ------------------------------------------ | ------------------------------------------------------- |
+| `apps/web`            | `scs.pdn.ac.lk`          | `7de460e`                                  | Use committed `HEAD`                                    |
+| `apps/portal`         | `portal.scs.pdn.ac.lk`   | `eca1474b7c28535a223bd96a631b83481c91df9f` | Use this committed tree; exclude the dirty working tree |
+| `apps/people`         | `people.scs.pdn.ac.lk`   | `fdd3f9edfac553033c89d08eb0419f850ca5aff6` | Use this committed tree; exclude the dirty working tree |
+| `apps/projects`       | `projects.scs.pdn.ac.lk` | `3e905bd`                                  | Use committed `HEAD`                                    |
+| `services/api`        | `api.scs.pdn.ac.lk`      | `0f5c03e`                                  | Use committed `HEAD`                                    |
+| `services/mailer`     | `mailer.scs.pdn.ac.lk`   | `7043928`                                  | Use committed `HEAD`                                    |
+| `services/github-app` | `scs-portal-github-app`  | `5a3b824`                                  | Use committed `HEAD`                                    |
 
 Before importing a clean source, its current `HEAD` must still resolve to the
 recorded abbreviated commit. If it has moved, the migration stops and records

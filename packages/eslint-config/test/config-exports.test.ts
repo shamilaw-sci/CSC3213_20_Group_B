@@ -53,8 +53,8 @@ describe('shared ESLint exports', () => {
 
     expect(testOverride).toBeDefined();
     expect(testOverride?.name).toBe('typescript-eslint/disable-type-checked');
-    expect(testOverride?.rules?.['@typescript-eslint/no-floating-promises']).toBe(
-      'off'
-    );
+    expect(
+      testOverride?.rules?.['@typescript-eslint/no-floating-promises']
+    ).toBe('off');
   });
 });

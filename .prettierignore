@@ -1,0 +1,12 @@
+**/.agents/**
+**/.cache/**
+**/.next/**
+**/.turbo/**
+**/.wrangler/**
+**/build/**
+**/coverage/**
+**/dist/**
+**/next-env.d.ts
+**/node_modules/**
+.superpowers/**
+bun.lock

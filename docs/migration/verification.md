@@ -105,8 +105,7 @@ missing suite is listed as missing coverage rather than a passing test.
   successfully; `check` reran TypeScript and confirmed the workspace matches
   its preserved Prettier rules.
 - 2026-10-17: the service started from the repository root through
-  `bun --filter '@scs/mailer' start` with inert local placeholders on port
-  3103. `GET /favicon.ico` returned HTTP 200 with the committed 285,478-byte
+  `bun --filter '@scs/mailer' start` with inert local placeholders on port 3103. `GET /favicon.ico` returned HTTP 200 with the committed 285,478-byte
   asset, proving filtered scripts execute with the workspace-relative static
   path intact. Non-mutating `GET /` returned the expected JSON 404 response.
 

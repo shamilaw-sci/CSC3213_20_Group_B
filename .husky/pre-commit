@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+command -v bun >/dev/null 2>&1 || {
+  echo "Bun is required to run the monorepo pre-commit checks."
+  exit 1
+}
+
+cd -- "$(dirname -- "$0")/.."
+bun run lint-staged

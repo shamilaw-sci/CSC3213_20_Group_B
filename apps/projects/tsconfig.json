@@ -16,12 +16,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    ".agents",
-    ".cache",
-    ".next",
-    ".turbo",
-    "node_modules",
-    "tests"
-  ]
+  "exclude": [".agents", ".cache", ".next", ".turbo", "node_modules", "tests"]
 }

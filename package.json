@@ -14,9 +14,13 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint-staged": "lint-staged",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "prettier": "^3",
     "turbo": "^2"
   }
