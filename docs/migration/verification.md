@@ -9,6 +9,33 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-17: `bunx turbo --version` returned `2.11.9`.
 - 2026-10-17: `git diff --check` exited successfully.
 
+## Shared repository tooling
+
+- 2026-10-18: `bun install`, `bun run format:check`, `bun run lint`, and
+  `bun run typecheck` exited successfully after root tooling consolidation.
+- 2026-10-18: a temporary staged Web TypeScript file invoked the owning
+  workspace's full `lint:fix` script, while that file and a staged Markdown
+  probe were both formatted successfully. The probe files were then removed.
+
+## Continuous integration and local skills
+
+- 2026-10-18: Prettier parsed the path-aware root CI workflow successfully;
+  static assertions confirmed Bun 1.4.3, frozen installation, affected pull
+  request tasks, and full default-branch gates are present.
+- Dockerfiles, Compose files, Docker ignore rules, container development
+  configuration, and GHCR workflows were removed by explicit user direction.
+  No Docker build or runtime result is claimed.
+- `.agents` payloads are ignored and untracked. After removing stale upstream
+  entries and consolidating the valid records, a root-scoped
+  `bunx skills experimental_install` restored all twelve skills with exit code 0. Nested Portal installation was abandoned because
+  the installer removed unrelated tracked workspace files; those files were
+  restored byte-for-byte from the current monorepo commit.
+- 2026-10-18: after removing the container-only Next.js adaptations,
+  `bun run format:check`, `lint`, `typecheck`, `test`, and `build` all exited
+  successfully. Turbo ran 6 lint tasks, 8 typechecks, 4 real test tasks, and 6
+  builds; the test suites passed 4 ESLint-config tests, 8 Projects tests, 117
+  API tests, and 23 GitHub App tests.
+
 ## `@scs/web`
 
 - Source: `scs.pdn.ac.lk@7de460eda9813266bdfbde1a803d95032b164c95`.

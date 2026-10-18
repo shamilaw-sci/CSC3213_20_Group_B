@@ -4,9 +4,15 @@
 
 **Goal:** Migrate seven SCS PDN applications and services from pinned committed Git trees into a verified Bun/Turborepo monorepo without modifying the source repositories or changing deployment boundaries.
 
-**Architecture:** Import one committed source tree at a time, retain workspace-local behavior and configuration until that workspace passes, then extract only proven shared configuration. Root tooling, Docker, CI, and documentation are consolidated after every workspace has a green independent baseline.
+**Architecture:** Import one committed source tree at a time, retain workspace-local behavior and configuration until that workspace passes, then extract only proven shared configuration. Root tooling, CI, and documentation are consolidated after every workspace has a green independent baseline.
 
-**Tech Stack:** Bun 1.4.3, Turborepo 2.11.9, Next.js 16, React 19, TypeScript, ESLint 9, Tailwind CSS 4, Vitest, Cloudflare Workers/Wrangler, Hono, Vercel, Docker, GitHub Actions, Husky, and lint-staged.
+**Tech Stack:** Bun 1.4.3, Turborepo 2.11.9, Next.js 16, React 19, TypeScript, ESLint 9, Tailwind CSS 4, Vitest, Cloudflare Workers/Wrangler, Hono, Vercel, GitHub Actions, Husky, and lint-staged.
+
+**2026-10-18 scope amendment:** Dockerfiles, Compose files, Docker ignore
+rules, devcontainer configuration, and GHCR image workflows are excluded from
+the destination. Agent skill payloads are ignored and restored locally from
+one reconciled root lock. This amendment supersedes earlier Docker/devcontainer
+and tracked `.agents` instructions in the historical slice descriptions.
 
 **Spec:** `docs/superpowers/specs/2026-10-17-scs-pdn-monorepo-migration-design.md`
 
@@ -27,9 +33,9 @@
 
 - Dirty-tree exclusion: destination product files must match the pinned `portal` and `people` Git trees, not their local checkouts; Task 1 records the dirty paths and Tasks 3 and 5 compare imports against archived committed trees.
 - Secret exclusion: API plaintext secrets and GitHub App private keys must never enter destination history; Tasks 6 and 8 add sanitized configuration and scan staged files before commit.
-- Root-relative runtime paths: Docker standalone output and the mailer favicon must still resolve from workspace-specific commands; Tasks 7 and 12 exercise those paths.
+- Root-relative runtime paths: the mailer favicon must still resolve from workspace-specific commands; Task 7 exercises that path.
 - Shared configuration resolution: ESLint and TypeScript presets must resolve from every runtime without weakening rules; Tasks 9 and 10 run every consumer after extraction.
-- Deployment identity: monorepo workflows must continue publishing the original GHCR image names and retain service-specific secrets/bindings; Task 12 checks workflow mappings and Docker labels explicitly.
+- Deployment identity: each app/service retains its own runtime scripts and service-specific secrets/bindings; Task 12 adds verification-only CI without inventing deployments.
 
 ---
 
@@ -507,11 +513,10 @@ git commit -m "refactor(tsconfig): centralize runtime presets"
 - Create: `.husky/pre-commit`
 - Create/merge: `.vscode/settings.json`
 - Create/merge: `.vscode/extensions.json`
-- Create/merge: `.devcontainer/devcontainer.json`
-- Create/merge: `.agents/skills/**` and `skills-lock.json` only where unique tooling can be reconciled safely
+- Create/merge: `skills-lock.json` files only where unique tooling can be reconciled safely
 - Modify: `package.json`
 - Modify: workspace `package.json` files
-- Remove: nested `.husky/**`, duplicate package-level Prettier/lint-staged blocks, and proven duplicate editor/devcontainer files
+- Remove: nested `.husky/**`, duplicate package-level Prettier/lint-staged blocks, devcontainer files, and tracked `.agents` payloads
 - Modify: `bun.lock`
 
 **Interfaces:**
@@ -527,9 +532,9 @@ Move the common Prettier options to `prettier.config.mjs`. Configure lint-staged
 
 Create `.husky/pre-commit` that checks for Bun and runs `bun run lint-staged` from the repository root. Remove the repeated multi-package-manager hooks after confirming their only effective Bun behavior is reproduced.
 
-- [ ] **Step 3: Merge editor, devcontainer, and agent tooling**
+- [ ] **Step 3: Merge editor metadata and lock local agent tooling**
 
-Create one root Bun devcontainer with forwarded ports `3000` and `8787`, Git/GitHub CLI features, and root `bun install`. Merge the union of useful VS Code recommendations/settings. Compare conflicting `.agents` skills by content; keep one identical copy, keep uniquely named skills, and document unresolved same-name conflicts instead of overwriting one silently.
+Merge the union of useful non-container VS Code recommendations/settings. Keep `.agents` ignored and untracked; reconcile the valid skill metadata into the root `skills-lock.json`, and validate local restoration with `bunx skills experimental_install` from the repository root.
 
 - [ ] **Step 4: Validate tooling**
 
@@ -545,65 +550,54 @@ Stage representative temporary TypeScript and Markdown changes, run `bun run lin
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add .husky .vscode .devcontainer .agents package.json prettier.config.mjs .prettierignore lint-staged.config.mjs apps services skills-lock.json bun.lock docs/migration
+git add .husky .vscode .gitignore package.json prettier.config.mjs .prettierignore lint-staged.config.mjs apps services skills-lock.json bun.lock docs/migration
 git commit -m "refactor(tooling): centralize repository tooling"
 ```
 
-### Task 12: Repair Docker Builds and Consolidate CI
+### Task 12: Consolidate Verification CI and Remove Container Tooling
 
 **Files:**
 
-- Create: `.dockerignore`
-- Modify: `apps/web/Dockerfile`
-- Modify: `apps/people/Dockerfile`
-- Modify: `apps/projects/Dockerfile`
-- Modify: `apps/portal/Dockerfile`
-- Remove: obsolete workspace `.dockerignore` files after root rules are verified
+- Remove: app Dockerfiles, Compose files, `.dockerignore` files, and `.devcontainer/**`
+- Modify: the four frontend `next.config.ts` files to remove container-only standalone/tracing settings
 - Create: `.github/workflows/ci.yml`
-- Create: `.github/workflows/deploy-web.yml`
-- Create: `.github/workflows/deploy-people.yml`
-- Create: `.github/workflows/deploy-projects.yml`
-- Create: `.github/workflows/deploy-portal.yml`
-- Modify: `docs/migration/required-secrets.md`
 - Modify: `docs/migration/verification.md`
 
 **Interfaces:**
 
-- Consumes: final root lockfile/workspace graph, four passing Next.js builds, and original source workflows.
-- Produces: independently buildable frontend images with stable GHCR identities and path-aware monorepo checks.
+- Consumes: final root lockfile/workspace graph and passing workspace gates.
+- Produces: path-aware monorepo checks with no container or image-publishing surface.
 
-- [ ] **Step 1: Make each Dockerfile consume the root workspace**
+- [ ] **Step 1: Remove container-only configuration**
 
-Use the monorepo root as build context, install with the root `package.json`, `bun.lock`, and `bunfig.toml`, copy the workspace graph needed by Bun, and build only the selected `@scs/*` app. Copy the monorepo-shaped standalone server plus that app's static/public assets into the runtime image. Preserve each app's existing production environment defaults and non-root runtime user.
+Remove app Dockerfiles, the People Compose helper, every Docker ignore file,
+the root devcontainer, and Docker/container editor recommendations. Remove
+Docker-only standalone output and tracing-root adaptations from the Next.js
+configurations while preserving application-specific settings.
 
-- [ ] **Step 2: Add a root Docker ignore policy**
+- [ ] **Step 2: Keep agent skills local**
 
-Exclude Git metadata, all dependency/build/cache directories, ignored environment files, keys, agent-only content, logs, and unrelated local artifacts without excluding any workspace manifest or source needed by the selected build.
+Ignore every `.agents` directory, remove all tracked skill payloads, reconcile
+valid entries into the root lock after removing entries the current installer
+cannot resolve, and restore that set locally with
+`bunx skills experimental_install` from the repository root.
 
 - [ ] **Step 3: Add path-aware checks**
 
 Create `ci.yml` for pull requests and pushes affecting `apps/**`, `services/**`, `packages/**`, or root toolchain files. Install Bun 1.4.3 with a frozen lockfile. On pull requests run `bunx turbo run lint typecheck test build --affected` so shared-package changes reach dependants; on the default branch run the full root lint, typecheck, test, and build gates.
 
-- [ ] **Step 4: Preserve manual image publishing identities**
+- [ ] **Step 4: Validate the reduced automation surface**
 
-Create one manual workflow per frontend, retaining the source workflow's semantic-version validation and commit-SHA fallback. Hard-code these image repositories rather than deriving them from the monorepo name: `scs.pdn.ac.lk`, `people.scs.pdn.ac.lk`, `projects.scs.pdn.ac.lk`, and `portal.scs.pdn.ac.lk`. Grant `contents: read` and `packages: write`, use each app's Dockerfile with root context, and document that `GITHUB_TOKEN` supplies GHCR authentication.
+Parse `ci.yml`, assert the expected path filters and pull-request/default-branch
+commands, and assert no Dockerfile, Compose file, `.dockerignore`, devcontainer,
+or deploy workflow remains tracked. Run format, lint, typecheck, test, and build
+after removing the container-only Next.js settings.
 
-- [ ] **Step 5: Validate all images and workflow mappings**
-
-```powershell
-docker build -f apps/web/Dockerfile -t scs-web:migration-test .
-docker build -f apps/people/Dockerfile -t scs-people:migration-test .
-docker build -f apps/projects/Dockerfile -t scs-projects:migration-test .
-docker build -f apps/portal/Dockerfile -t scs-portal:migration-test .
-```
-
-Run each image locally on a distinct port and assert a non-5xx response. Parse all four workflow files and assert their image names equal the original repositories, their Dockerfile paths are correct, and no deploy step exists for API, mailer, or GitHub App.
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```powershell
-git add .dockerignore .github apps/*/Dockerfile apps/*/next.config.ts docs/migration
-git commit -m "ci: consolidate monorepo checks and image builds"
+git add .github .gitignore .vscode apps docs/migration skills-lock.json
+git commit -m "ci: consolidate monorepo verification"
 ```
 
 ### Task 13: Document Operations and Run Final Verification
@@ -619,12 +613,12 @@ git commit -m "ci: consolidate monorepo checks and image builds"
 
 **Interfaces:**
 
-- Consumes: all migrated workspaces, shared packages, root tooling, CI, Docker, and observed verification output.
+- Consumes: all migrated workspaces, shared packages, root tooling, CI, and observed verification output.
 - Produces: operator/developer documentation and the evidence required to claim baseline completion.
 
 - [ ] **Step 1: Write the root development and deployment guide**
 
-Document the final tree, prerequisites, Bun 1.4.3 setup, PowerShell install/dev/filter commands, per-workspace scripts, lint/typecheck/test/build behavior, Docker commands, Cloudflare/Vercel/GHCR boundaries, environment templates, and the external data/config repositories. Use verified filter syntax such as `bun --filter '@scs/web' dev`.
+Document the final tree, prerequisites, Bun 1.4.3 setup, PowerShell install/dev/filter commands, per-workspace scripts, lint/typecheck/test/build behavior, Cloudflare/Vercel boundaries, local skill restoration, environment templates, and the external data/config repositories. Use verified filter syntax such as `bun --filter '@scs/web' dev`.
 
 - [ ] **Step 2: Record intentional non-extractions and deferred work**
 
@@ -651,7 +645,7 @@ Assert there are no nested `.git` directories, nested lockfiles, tracked environ
 
 - [ ] **Step 5: Complete the verification ledger**
 
-For each command, record date, exit status, relevant counts, and any limitation without claiming unavailable evidence. Include final tree, migrated repositories, shared packages, centralized/local configurations, Actions changes, Docker/devcontainer changes, required settings/secrets, unresolved risks, and behavior that could not be reproduced exactly.
+For each command, record date, exit status, relevant counts, and any limitation without claiming unavailable evidence. Include final tree, migrated repositories, shared packages, centralized/local configurations, Actions changes, removed container tooling, required settings/secrets, unresolved risks, and behavior that could not be reproduced exactly.
 
 - [ ] **Step 6: Commit documentation**
 

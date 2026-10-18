@@ -1,0 +1,61 @@
+name: Monorepo CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'packages/**'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+      - 'bun.lock'
+      - 'bunfig.toml'
+      - 'turbo.json'
+      - 'prettier.config.mjs'
+      - 'lint-staged.config.mjs'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'packages/**'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+      - 'bun.lock'
+      - 'bunfig.toml'
+      - 'turbo.json'
+      - 'prettier.config.mjs'
+      - 'lint-staged.config.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify affected workspaces
+        if: github.event_name == 'pull_request'
+        run: bunx turbo run lint typecheck test build --affected
+
+      - name: Verify complete monorepo
+        if: github.event_name == 'push'
+        run: |
+          bun run lint
+          bun run typecheck
+          bun run test
+          bun run build

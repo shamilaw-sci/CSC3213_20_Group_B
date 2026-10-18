@@ -9,6 +9,12 @@ workspaces and Turborepo, validates every workspace independently, and defers
 shared-code extraction until the imported applications and services work in
 their new locations.
 
+As amended on 2026-10-18, the destination excludes Dockerfiles, Compose files,
+Docker ignore rules, devcontainer configuration, and GHCR image-publishing
+workflows. Agent skill payloads are local generated tooling: `.agents`
+directories are ignored, while one reconciled root lock remains committed and
+is verified by local restoration.
+
 The migration must not modify any source repository. It must not migrate the
 Git-backed `data.scs.pdn.ac.lk` or `config.scs.pdn.ac.lk` repositories, and it
 must not redesign their storage model.
@@ -96,17 +102,16 @@ The package directories are reserved as follows:
 - The common Bun minimum-release-age policy.
 - One Husky installation and one pre-commit hook.
 - Shared Prettier settings and the root lint-staged dispatcher.
-- Consolidated `.gitignore`, `.gitattributes`, VS Code recommendations, and a
-  monorepo-aware development container.
+- Consolidated `.gitignore`, `.gitattributes`, and non-container VS Code
+  recommendations.
 - The single generated root `bun.lock`.
 
 ### Merge at the Monorepo Root
 
 - Root scripts and Turborepo tasks for development, linting, type checking,
   tests, builds, and format checking.
-- GitHub Actions checks and manual image-publishing workflows, with workspace
-  path filters and stable deployment identities.
-- Docker ignore rules for builds whose context is the monorepo root.
+- GitHub Actions verification with workspace path filters and affected-package
+  execution on pull requests.
 - Root documentation, environment setup, deployment prerequisites, and source
   migration notes.
 
@@ -124,16 +129,14 @@ The package directories are reserved as follows:
 
 - Workspace-local ESLint and TypeScript configurations until their baseline
   checks pass.
-- Source `.agents` skills, `skills-lock.json`, editor configuration, and
-  devcontainer configuration until duplicates and unique tooling are compared.
-- Workspace Dockerfiles until monorepo-root build contexts reproduce the
-  existing images.
+- Source `skills-lock.json` files and editor configuration until duplicates and
+  unique tooling are compared. `.agents` payloads remain local and ignored.
 
 ### Remove Only After Proven Redundant
 
 - Nested `bun.lock` files after the root install succeeds.
 - Nested Husky internals after the root hook reproduces their behavior.
-- Duplicate editor/devcontainer configuration after useful settings are merged.
+- Duplicate editor configuration after useful settings are merged.
 - Generated or cached output: `node_modules`, `.next`, `.cache`, `.turbo`,
   `.wrangler`, `dist`, coverage, `*.tsbuildinfo`, and generated
   `next-env.d.ts`.
@@ -200,20 +203,12 @@ The final root gates are `bun install --frozen-lockfile`, `bun run lint`,
 `bun run typecheck`, `bun run test`, `bun run build`, and the configured format
 check. Turbo skips workspaces that do not define a requested script.
 
-## Docker and Deployment
+## Continuous Integration and Deployment Boundaries
 
-Docker builds use the monorepo root as their context so the root lockfile and
-workspace graph are available. Each frontend retains an explicit Dockerfile
-that installs the root workspace dependencies, builds only its application, and
-copies the correct monorepo-shaped Next.js standalone output. Next.js tracing
-roots are set to the monorepo root without changing application routes or
-runtime configuration.
-
-The existing manual GHCR publishing behavior remains available. Image names
-remain the names used by the original repositories instead of becoming the
-monorepo repository name. Path-aware checks run for affected workspaces and for
-dependants of changed packages. The migration does not invent automatic
-deployments for the API, mailer, or GitHub App where no source workflow exists.
+Path-aware checks run for affected workspaces and for dependants of changed
+packages on pull requests. Default-branch pushes run the complete root lint,
+typecheck, test, and build gates. The destination contains no Docker or GHCR
+automation and does not invent automatic deployments for any workspace.
 
 Mailer remains independently deployable with Vercel. The API and GitHub App
 remain separate Cloudflare Workers with separate Wrangler configurations,
@@ -228,6 +223,6 @@ absence of tests where applicable.
 
 Migration notes record the exact source commits, the excluded dirty working
 trees, centralized versus intentionally local configuration, secret and GitHub
-setting requirements, Docker and CI changes, unresolved risks, exact commands,
+setting requirements, CI and removed-container decisions, unresolved risks, exact commands,
 and observed results. Completion is claimed only after those commands have been
 run against the final repository state.

@@ -12,9 +12,6 @@
     "unifiedjs.vscode-mdx",
     "github.vscode-pull-request-github",
     "github.vscode-github-actions",
-    "ms-vscode-remote.remote-containers",
-    "ms-azuretools.vscode-docker",
-    "ms-azuretools.vscode-containers",
     "redhat.vscode-yaml",
     "foxundermoon.shell-format",
     "pkief.material-icon-theme"
