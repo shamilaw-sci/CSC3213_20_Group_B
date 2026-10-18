@@ -10,6 +10,7 @@ node_modules/
 
 # locally restored agent skills
 .agents/
+.superpowers/
 
 # build and test output
 **/dist/

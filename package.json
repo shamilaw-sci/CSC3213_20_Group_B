@@ -13,6 +13,8 @@
     "lint": "turbo lint",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
+    "docs:check": "bun scripts/check-documentation.mts",
+    "test:docs": "bun test scripts/check-documentation.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint-staged": "lint-staged",

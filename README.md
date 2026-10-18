@@ -1,80 +1,54 @@
 # SCS PDN Monorepo
 
-This Bun/Turborepo workspace contains the independently deployable SCS PDN
-websites and services migrated from their pinned source commits. The baseline
-preserves application behavior and deployment boundaries; shared product code
-was extracted only after the baseline passed and duplicate behavior was proven.
+The SCS PDN monorepo contains independently deployable websites and services
+for the Department of Statistics and Computer Science, University of
+Peradeniya. Bun manages the workspace and Turborepo coordinates shared quality
+gates without merging deployment boundaries.
 
 ## Workspaces
 
-| Path                     | Package              | Runtime                            | Production boundary       |
-| ------------------------ | -------------------- | ---------------------------------- | ------------------------- |
-| `apps/web`               | `@scs/web`           | Next.js                            | Vercel-compatible web app |
-| `apps/people`            | `@scs/people`        | Next.js                            | Vercel-compatible web app |
-| `apps/projects`          | `@scs/projects`      | Next.js                            | Vercel-compatible web app |
-| `apps/portal`            | `@scs/portal`        | Next.js                            | Vercel-compatible web app |
-| `services/api`           | `@scs/api`           | Cloudflare Worker                  | Wrangler deployment       |
-| `services/mailer`        | `@scs/mailer`        | Bun/Hono                           | Independent Bun service   |
-| `services/github-app`    | `@scs/github-app`    | Bun and Cloudflare-compatible code | Independent service       |
-| `packages/schemas`       | `@scs/schemas`       | TypeScript/Zod                     | Shared domain contracts   |
-| `packages/ui`            | `@scs/ui`            | React/shadcn                       | Shared UI primitives      |
-| `packages/eslint-config` | `@scs/eslint-config` | Tooling                            | Shared ESLint presets     |
-| `packages/tsconfig`      | `@scs/tsconfig`      | Tooling                            | Shared TypeScript presets |
+| Path                     | Package              | Purpose                             |
+| ------------------------ | -------------------- | ----------------------------------- |
+| `apps/web`               | `@scs/web`           | Department website                  |
+| `apps/people`            | `@scs/people`        | Public people directory             |
+| `apps/projects`          | `@scs/projects`      | Public project directory            |
+| `apps/portal`            | `@scs/portal`        | Authenticated management portal     |
+| `services/api`           | `@scs/api`           | Public and authenticated API        |
+| `services/github-app`    | `@scs/github-app`    | Git-backed change automation        |
+| `services/mailer`        | `@scs/mailer`        | Transactional email service         |
+| `packages/schemas`       | `@scs/schemas`       | Shared runtime and TypeScript types |
+| `packages/ui`            | `@scs/ui`            | Shared shadcn UI primitives         |
+| `packages/eslint-config` | `@scs/eslint-config` | Shared ESLint presets               |
+| `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets           |
 
-`data.scs.pdn.ac.lk` and `config.scs.pdn.ac.lk` remain external Git-backed
-systems and are not workspaces in this repository.
+Public data and access configuration remain separate Git-backed systems. They
+are consumed by this monorepo but are not workspaces inside it.
 
-## Prerequisites and setup
+## Setup
+
+Requirements:
 
 - Bun 1.4.3
 - Git
-- Provider credentials only when running integrations or deploying
-
-From PowerShell at the repository root:
+- provider credentials only for integration or deployment work
 
 ```powershell
-bun --version
 bun install --frozen-lockfile
 bun run dev
 ```
 
-Run one workspace with its package filter:
+Run one workspace by package name:
 
 ```powershell
-bun --filter '@scs/web' dev
-bun --filter '@scs/people' dev
-bun --filter '@scs/projects' dev
 bun --filter '@scs/portal' dev
 bun --filter '@scs/api' dev
-bun --filter '@scs/mailer' dev
 bun --filter '@scs/github-app' dev
-bun --filter '@scs/schemas' test
-bun --filter '@scs/ui' test
 ```
-
-Each workspace retains its own package scripts and can be built or started
-without invoking unrelated applications. Inspect its `package.json` and local
-README for additional maintenance commands.
-
-## Shared UI and configuration
-
-`packages/ui` is the only source location for shadcn primitives. Applications
-import them through explicit subpaths such as
-`@scs/ui/components/button`. Their composed, product-specific components remain
-under each app's `src/components/custom` tree. The shadcn CLI metadata routes
-reusable `ui`, `utils`, `lib`, and `hooks` items into `@scs/ui`; ordinary app
-domain modules continue to use local `@/lib/*` or `@/hooks/*` imports.
-
-`packages/tsconfig` is the source of truth for runtime compiler defaults.
-Workspace configs extend its Next.js, React-library, library, tooling, Worker,
-or Bun preset and keep only path-sensitive aliases, file sets, and references
-locally.
 
 ## Verification
 
-The complete native gate is:
-
 ```powershell
+bun run docs:check
 bun run format:check
 bun run lint
 bun run typecheck
@@ -82,42 +56,39 @@ bun run test
 bun run build
 ```
 
-Turbo runs only scripts declared by each workspace. Tests currently exist for
-Schemas, shared UI, the shared ESLint package, Projects, API, and GitHub App. A
-missing test script is documented as missing coverage, not a passing suite.
-Pull requests use affected-workspace CI; pushes to `main` run the full gate.
+Turbo invokes only scripts declared by each workspace. A workspace without a
+test script has missing automated coverage; it is not treated as a passing test
+suite.
 
-Commits use the Conventional Commits format. The Husky pre-commit hook runs
-lint-staged, and the commit-message hook validates the subject with Commitlint.
+Commits use Conventional Commits. Husky runs lint-staged before commits and
+Commitlint validates commit messages.
 
-Dockerfiles, Compose configuration, devcontainers, and container/image
-publishing workflows are intentionally absent. Verification and development
-use Bun directly.
+## Shared Foundations
 
-## Configuration and deployment
+- `packages/ui` is the only source of reusable shadcn primitives.
+- `packages/schemas` owns shared domain and transport contracts.
+- `packages/tsconfig` owns compiler presets.
+- `packages/eslint-config` owns lint presets.
+- Product-specific components and domain behavior stay in their owning app or
+  service until reuse is proven.
 
-Copy the relevant example file locally and keep the populated file untracked:
+## Documentation
 
-- `apps/people/.env.example`
-- `apps/portal/.env.example`
-- `services/api/.dev.vars.example`
-- `services/github-app/.env.example`
-- `services/mailer/.env.example`
+- [Architecture](docs/ARCHITECTURE.md)
+- [API contracts](docs/API_CONTRACTS.md)
+- [Development](docs/DEVELOPMENT.md)
+- [Operations](docs/OPERATIONS.md)
+- [Schemas](docs/SCHEMAS.md)
+- [Security](docs/SECURITY.md)
+- [Optimization design](docs/REPOSITORY_OPTIMIZATION_DESIGN.md)
+- [Optimization plan](docs/REPOSITORY_OPTIMIZATION_PLAN.md)
 
-The four Next.js apps remain separate deployment units. The API uses
-`bun --filter '@scs/api' deploy` after its Cloudflare secrets and bindings are
-configured. The Mailer and GitHub App remain independently runnable services;
-no replacement deployment platform was invented during migration. See
-`docs/migration/required-secrets.md` before any deployment.
-
-## Local agent skills
-
-Agent payloads are generated local tooling and are not tracked. Restore the
-reconciled set only from the repository root:
+Tracked Markdown belongs in the repository root or root `docs` directory and
+uses uppercase snake-case filenames. Installed agent skills and generated
+assistant work are local-only. Restore the locked skill set from the root with:
 
 ```powershell
 bunx skills experimental_install
 ```
 
-The source snapshots, migration decisions, verification evidence, and deferred
-work are recorded under `docs/migration`.
+Docker is not part of the current development or verification workflow.
