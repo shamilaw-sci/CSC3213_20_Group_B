@@ -35,6 +35,15 @@ missing suite is listed as missing coverage rather than a passing test.
   API, Mailer, and GitHub App remain clean; Portal retains 1 dirty entry and
   People retains 19 dirty entries, confirming the deferred working trees were
   not cleaned or committed.
+- A history-wide scan across all 16 migration commits found no tracked PEM/key
+  path, private-key marker, or occurrence of the eight sensitive literal values
+  from the pinned API and GitHub App source configurations.
+- The Mailer started through its root package filter with an inert local API
+  key. `GET /favicon.ico` returned HTTP 200 and the exact 285,478-byte asset;
+  `GET /` returned the expected HTTP 404, reconfirming its root-relative path.
+- Whole-branch review confirmed the separate package names and runtime scripts,
+  preserved API/GitHub App routes and public bindings, verification-only CI,
+  and a clean destination working tree after documentation was committed.
 
 ## Shared repository tooling
 
