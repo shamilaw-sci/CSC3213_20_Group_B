@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const workflow = readFileSync(
-  resolve(import.meta.dir, '../.github/workflows/ci.yml'),
+  resolve(import.meta.dir, '../../.github/workflows/ci.yml'),
   'utf8'
 );
 

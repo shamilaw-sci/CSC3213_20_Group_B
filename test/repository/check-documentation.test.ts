@@ -3,7 +3,10 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
-const checker = resolve(import.meta.dir, 'check-documentation.mts');
+const checker = resolve(
+  import.meta.dir,
+  '../../scripts/check-documentation.mts'
+);
 const fixtures: string[] = [];
 
 async function createFixture(files: Record<string, string>): Promise<string> {
