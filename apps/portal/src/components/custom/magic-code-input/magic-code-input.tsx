@@ -1,13 +1,12 @@
 'use client';
 
+import { cn } from 'cn';
 import {
   type ClipboardEvent,
   type KeyboardEvent,
   useRef,
   useState,
 } from 'react';
-
-import { cn } from '@/lib/utils';
 
 interface MagicCodeInputProps {
   length?: number;

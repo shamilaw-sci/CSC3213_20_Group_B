@@ -1,11 +1,11 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
 import { RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
 import { ErrorPageFlag } from '@/components/custom/theme/error-page-flag';
-import { Button } from '@/components/ui/button';
 
 export default function Error({
   error,

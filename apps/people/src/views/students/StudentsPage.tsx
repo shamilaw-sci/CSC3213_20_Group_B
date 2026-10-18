@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent } from '@scs/ui/card';
+import { Card, CardContent } from '@scs/ui/components/card';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 

@@ -1,11 +1,10 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
+import { cn } from 'cn';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 export default function ThemeToggle({
   className,

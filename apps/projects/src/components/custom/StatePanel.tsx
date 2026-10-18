@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
+import { cn } from 'cn';
 import {
   AlertTriangle,
   ArrowRight,
@@ -9,9 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ComponentType } from 'react';
-
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type StatePanelAction = {
   href: string;

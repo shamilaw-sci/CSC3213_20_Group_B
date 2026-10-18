@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
 import { BookOpen, ChevronDown, Compass, Layers3, Tag } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,7 +8,6 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import ThemeToggle from '@/components/custom/ThemeToggle';
-import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const pathname = usePathname();

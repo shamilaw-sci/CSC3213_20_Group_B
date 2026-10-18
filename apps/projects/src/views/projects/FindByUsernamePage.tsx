@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
 import { Search, UserRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
@@ -8,7 +9,6 @@ import {
   ProjectErrorPanel,
   ProjectListLoading,
 } from '@/components/custom/StatePanel';
-import { Button } from '@/components/ui/button';
 import { fetchProjectsByUsername } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
 

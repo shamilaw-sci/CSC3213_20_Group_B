@@ -1,13 +1,20 @@
 'use client';
 
-import { Badge } from '@scs/ui/badge';
+import { Badge } from '@scs/ui/components/badge';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@scs/ui/card';
+} from '@scs/ui/components/card';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@scs/ui/components/tabs';
+import { cn } from 'cn';
 import {
   BriefcaseBusiness,
   Building2,
@@ -34,7 +41,6 @@ import {
   FaYoutube,
 } from 'react-icons/fa6';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type {
   AcademicTeachingStaff,
   Publication,
@@ -55,7 +61,6 @@ import {
   getStudentRoleLabel,
   NON_ACADEMIC_POSITION_LABELS,
 } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 function initialsFrom(name: string): string {
   return name
@@ -996,7 +1001,10 @@ export function DetailedPersonCard({
             onValueChange={setActiveTabId}
             className="mb-5"
           >
-            <TabsList className="h-auto flex-wrap justify-start">
+            <TabsList
+              variant="brand"
+              className="h-auto flex-wrap justify-start"
+            >
               {tabs.map((tab) => (
                 <TabsTrigger key={tab.id} value={tab.id} className="min-h-8">
                   {tab.label}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Label } from '@/components/ui/label';
+import { Label } from '@scs/ui/components/label';
 import {
   Select,
   SelectContent,
@@ -8,8 +8,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+} from '@scs/ui/components/select';
+import { cn } from 'cn';
 
 export type EditorModeValue = 'form' | 'json-view' | 'json-edit';
 

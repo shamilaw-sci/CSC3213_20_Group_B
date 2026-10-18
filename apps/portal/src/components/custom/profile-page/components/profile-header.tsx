@@ -1,10 +1,10 @@
-import { Badge } from '@scs/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import { Card, CardContent } from '@scs/ui/components/card';
 import { IdCard, Mail, Pencil, Settings } from 'lucide-react';
 import Link from 'next/link';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import type { AppRole } from '@/types/role';
 import { getUserRole, ROLE_LABEL } from '@/types/role';
 

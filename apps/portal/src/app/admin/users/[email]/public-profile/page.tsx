@@ -1,5 +1,5 @@
 import PublicProfilePage from '@/components/custom/public-profile-page/PublicProfilePage';
-import { emailPathSegment } from '@/lib/utils';
+import { emailPathSegment } from '@/lib/email';
 
 export default async function Page({
   params,

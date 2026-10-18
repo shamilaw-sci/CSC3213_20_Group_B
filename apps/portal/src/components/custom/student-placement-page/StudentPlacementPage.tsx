@@ -1,6 +1,29 @@
 'use client';
 
-import { Badge } from '@scs/ui/badge';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Checkbox } from '@scs/ui/components/checkbox';
+import { Field, FieldLabel } from '@scs/ui/components/field';
+import { Input } from '@scs/ui/components/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@scs/ui/components/select';
+import { Switch } from '@scs/ui/components/switch';
+import { cn } from 'cn';
 import {
   CheckCircle2,
   GraduationCap,
@@ -19,28 +42,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import {
   adminStudentPlacementMetadataApiUrl,
   adminStudentPlacementMetadataPrApiUrl,
@@ -49,7 +50,6 @@ import {
   apiHeaders,
   readApiError,
 } from '@/lib/api';
-import { cn } from '@/lib/utils';
 
 type StudentTrack = 'GENERAL' | 'HONOURS';
 type StudentLevel = '1000' | '2000' | '3000' | '4000';

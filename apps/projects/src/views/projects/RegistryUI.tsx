@@ -4,8 +4,15 @@ import {
   type AcademicDepartmentCode,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
-import { Badge } from '@scs/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@scs/ui/card';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { cn } from 'cn';
 import {
   Activity,
   ArrowRight,
@@ -31,7 +38,6 @@ import Link from 'next/link';
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
 
 import { EmptyProjectsPanel } from '@/components/custom/StatePanel';
-import { Button } from '@/components/ui/button';
 import publicEnvConfig from '@/config/public.env.config';
 import {
   fetchCategories,
@@ -46,7 +52,6 @@ import {
   slugify,
 } from '@/lib/projects/metadata';
 import type { Project, ProjectLinks } from '@/lib/projects/types';
-import { cn } from '@/lib/utils';
 
 const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   Activity,

@@ -2,10 +2,9 @@
 
 import './globals.css';
 
+import { Button } from '@scs/ui/components/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Open_Sans } from 'next/font/google';
-
-import { Button } from '@/components/ui/button';
 
 const openSans = Open_Sans({
   variable: '--font-open-sans',

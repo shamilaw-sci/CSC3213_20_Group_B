@@ -1,20 +1,20 @@
 'use client';
-import Link from 'next/link';
-import { useState } from 'react';
-import { toast } from 'sonner';
-
-import { Button } from '@/components/ui/button';
+import { Button } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Field, FieldDescription, FieldGroup } from '@/components/ui/field';
+} from '@scs/ui/components/card';
+import { Field, FieldDescription, FieldGroup } from '@scs/ui/components/field';
+import { cn } from 'cn';
+import Link from 'next/link';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import publicEnvConfig from '@/config/public.env.config';
 import { authProviderApiUrl } from '@/lib/api';
-import { cn } from '@/lib/utils';
 
 export function SignupForm({
   className,

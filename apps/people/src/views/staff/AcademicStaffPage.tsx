@@ -1,5 +1,6 @@
 'use client';
 
+import { Tabs, TabsList, TabsTrigger } from '@scs/ui/components/tabs';
 import { useEffect, useState } from 'react';
 
 import PageHeader from '@/components/custom/layout/PageHeader';
@@ -7,7 +8,6 @@ import {
   PeopleCardSkeletonGrid,
   StaffCard,
 } from '@/components/custom/people/PeopleCard';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   getAcademicStaff,
   prefetchPeopleProfiles,
@@ -143,7 +143,10 @@ export default function AcademicStaffPage() {
         onValueChange={(value) => setActiveGroupId(value as AcademicGroupId)}
         className="mb-8"
       >
-        <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3">
+        <TabsList
+          variant="brand"
+          className="grid h-auto w-full grid-cols-1 sm:grid-cols-3"
+        >
           {ACADEMIC_GROUPS.map((group) => (
             <TabsTrigger key={group.id} value={group.id} className="min-h-9">
               {group.label}

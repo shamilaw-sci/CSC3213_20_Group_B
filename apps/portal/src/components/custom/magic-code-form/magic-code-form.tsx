@@ -1,12 +1,12 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { MagicCodeInput } from '@/components/custom/magic-code-input/magic-code-input';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import publicEnvConfig from '@/config/public.env.config';
 import { requestMagicCode, verifyMagicCode } from '@/lib/api';
 import { auth_error_messages } from '@/views/auth/auth-errors';

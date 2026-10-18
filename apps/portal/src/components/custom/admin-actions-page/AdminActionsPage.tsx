@@ -1,5 +1,14 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Separator } from '@scs/ui/components/separator';
 import { Play, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -9,15 +18,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { adminActionApiUrl, apiHeaders, readApiError } from '@/lib/api';
 import { AdminActionDefinition } from '@/types/admin-action';
 

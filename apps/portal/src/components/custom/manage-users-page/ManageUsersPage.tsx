@@ -1,6 +1,17 @@
 'use client';
 
-import { Badge } from '@scs/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Input } from '@scs/ui/components/input';
+import { Separator } from '@scs/ui/components/separator';
 import { Search, Shield, UserCheck, Users, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -10,18 +21,7 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { emailPathSegment } from '@/lib/utils';
+import { emailPathSegment } from '@/lib/email';
 import {
   ACCESS_LEVEL,
   ACCESS_LEVEL_LABEL,

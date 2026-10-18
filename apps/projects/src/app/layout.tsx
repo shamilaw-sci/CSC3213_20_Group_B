@@ -1,6 +1,6 @@
 import './globals.css';
 
-import { Toaster } from '@scs/ui/sonner';
+import { Toaster } from '@scs/ui/components/sonner';
 import type { Metadata, Viewport } from 'next';
 import { Open_Sans } from 'next/font/google';
 

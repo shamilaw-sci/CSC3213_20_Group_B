@@ -1,20 +1,21 @@
 'use client';
-import { Fingerprint, Mail } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-
-import { MagicCodeForm } from '@/components/custom/magic-code-form/magic-code-form';
-import { Button } from '@/components/ui/button';
+import { Button } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Field, FieldDescription, FieldGroup } from '@/components/ui/field';
-import { Separator } from '@/components/ui/separator';
+} from '@scs/ui/components/card';
+import { Field, FieldDescription, FieldGroup } from '@scs/ui/components/field';
+import { Separator } from '@scs/ui/components/separator';
+import { cn } from 'cn';
+import { Fingerprint, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import { MagicCodeForm } from '@/components/custom/magic-code-form/magic-code-form';
 import publicEnvConfig from '@/config/public.env.config';
 import { authProviderApiUrl } from '@/lib/api';
 import {
@@ -22,7 +23,6 @@ import {
   isPasskeyApiError,
   passkeysAreSupported,
 } from '@/lib/passkeys';
-import { cn } from '@/lib/utils';
 import { auth_error_messages } from '@/views/auth/auth-errors';
 
 export function LoginForm({

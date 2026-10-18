@@ -2,12 +2,12 @@
 
 import './globals.css';
 
+import { Button } from '@scs/ui/components/button';
 import { RefreshCw } from 'lucide-react';
 import { Open_Sans } from 'next/font/google';
 import Image from 'next/image';
 
 import { ThemeInitScript } from '@/components/custom/theme/theme-init-script';
-import { Button } from '@/components/ui/button';
 
 const openSans = Open_Sans({
   variable: '--font-open-sans',

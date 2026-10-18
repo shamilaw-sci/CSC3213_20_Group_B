@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -7,7 +8,6 @@ import {
   ProjectErrorPanel,
   ProjectListLoading,
 } from '@/components/custom/StatePanel';
-import { Button } from '@/components/ui/button';
 import { fetchProjects } from '@/lib/projects/api-client';
 import type { Project, ProjectType } from '@/lib/projects/types';
 import { ProjectGrid } from '@/views/projects/RegistryUI';

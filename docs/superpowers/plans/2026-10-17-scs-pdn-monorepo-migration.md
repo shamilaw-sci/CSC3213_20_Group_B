@@ -862,3 +862,53 @@ diagnose and correct every failure.
 git add packages/ui apps/people apps/projects apps/portal README.md bun.lock docs
 git commit -m "refactor(ui): extract shared shadcn primitives"
 ```
+
+---
+
+### Task 19: Canonicalize shadcn and TypeScript Configuration
+
+**Files:**
+
+- Modify: `packages/ui/**`, all frontend shadcn metadata, dependencies, and
+  primitive imports
+- Modify: `packages/tsconfig/**` and all TypeScript preset consumers
+- Remove: app-local shadcn primitives/helpers, redundant nested TypeScript
+  configs, and obsolete changelog material
+- Modify: root lockfile and migration documentation
+
+**Interfaces:**
+
+- Consumes: the verified Task 18 UI package and existing runtime-specific
+  TypeScript behavior.
+- Produces: one canonical shadcn primitive tree and one runtime-aware TypeScript
+  configuration package without merging application deployment boundaries.
+
+- [x] **Step 1: Apply the `cn` package migration**
+
+Run the shadcn migration serially in `@scs/ui` and each app. Remove old
+`clsx`/`tailwind-merge` helpers and dependencies once no references remain.
+
+- [x] **Step 2: Canonicalize primitive ownership**
+
+Move every migrated shadcn primitive under `packages/ui/src/components`, remove
+app-local `components/ui` trees, preserve meaningful styling differences as
+explicit variants, and route app shadcn aliases to the shared package. Keep
+product composition and domain helpers app-local.
+
+- [x] **Step 3: Centralize TypeScript presets**
+
+Add library, React-library, and tooling presets; strengthen the existing
+Next.js and Worker presets; retain aliases, includes, excludes, and references
+in leaf configs because those properties are path-sensitive or replace rather
+than merge. Convert the Projects Vitest config to typed ESM.
+
+- [x] **Step 4: Verify and commit**
+
+Run shadcn resolution checks, dependency audits, package and consumer gates,
+auxiliary test typechecks, and the complete root native gate. Do not run Docker
+or deploy.
+
+```powershell
+git add apps packages services README.md bun.lock docs
+git commit -m "refactor(config): canonicalize ui and typescript presets"
+```

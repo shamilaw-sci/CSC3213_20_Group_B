@@ -3,10 +3,6 @@
   "extends": "@scs/tsconfig/worker.json",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "esModuleInterop": true,
-    "moduleDetection": "force",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

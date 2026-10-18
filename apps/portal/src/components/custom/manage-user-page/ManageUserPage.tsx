@@ -1,20 +1,20 @@
-import { Badge } from '@scs/ui/badge';
-import { Calendar, IdCard, Mail, Shield, UserCheck, UserX } from 'lucide-react';
-import Link from 'next/link';
-
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageShell } from '@/components/custom/page-shell/page-shell';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { emailPathSegment } from '@/lib/utils';
+} from '@scs/ui/components/card';
+import { Separator } from '@scs/ui/components/separator';
+import { Calendar, IdCard, Mail, Shield, UserCheck, UserX } from 'lucide-react';
+import Link from 'next/link';
+
+import { BackButton } from '@/components/custom/back-button/back-button';
+import { PageShell } from '@/components/custom/page-shell/page-shell';
+import { emailPathSegment } from '@/lib/email';
 import {
   ACCESS_LEVEL,
   ACCESS_LEVEL_LABEL,

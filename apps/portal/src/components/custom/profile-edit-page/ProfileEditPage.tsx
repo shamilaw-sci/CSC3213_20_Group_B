@@ -1,5 +1,15 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
 import { Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -15,16 +25,6 @@ import ProfilePictureEditor, {
   profilePictureDraftPayload,
   validateProfilePictureDraft,
 } from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import type { ProfilePictureMode } from '@/types/user';
 

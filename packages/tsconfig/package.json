@@ -4,7 +4,10 @@
   "type": "module",
   "exports": {
     "./base.json": "./base.json",
+    "./library.json": "./library.json",
     "./nextjs.json": "./nextjs.json",
+    "./react-library.json": "./react-library.json",
+    "./tooling.json": "./tooling.json",
     "./worker.json": "./worker.json",
     "./bun.json": "./bun.json"
   }

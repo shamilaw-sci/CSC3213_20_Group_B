@@ -1,0 +1,9 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "./nextjs.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "plugins": []
+  }
+}

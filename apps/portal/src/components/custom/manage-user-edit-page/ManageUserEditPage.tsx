@@ -1,6 +1,19 @@
 'use client';
 
-import { Badge } from '@scs/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
+import { Separator } from '@scs/ui/components/separator';
+import { Switch } from '@scs/ui/components/switch';
 import { Save, Shield, UserX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -13,21 +26,8 @@ import ProfilePictureEditor, {
   profilePictureDraftPayload,
   validateProfilePictureDraft,
 } from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { adminUserApiUrl, apiHeaders, readApiError } from '@/lib/api';
-import { emailPathSegment } from '@/lib/utils';
+import { emailPathSegment } from '@/lib/email';
 import type { AppRole } from '@/types/role';
 import {
   ACCESS_LEVEL,

@@ -261,9 +261,9 @@ missing suite is listed as missing coverage rather than a passing test.
   registry versions of Badge, Card, and Sonner were inspected with dry-run and
   per-file diff commands. No registry overwrite was applied.
 - Hash comparison established that Badge was identical in People, Projects,
-  and Portal; Card and Sonner were identical in People and Projects. Portal's
-  distinct Card and all customized Button and Tabs implementations remain
-  application-owned.
+  and Portal; Card and Sonner were identical in People and Projects. This
+  supported the initial low-risk extraction; later canonicalization is recorded
+  below.
 - The proven duplicates moved to private workspace `@scs/ui`. Consumer imports
   use explicit package subpaths, and each consumer's Tailwind stylesheet scans
   the shared source so its utility classes remain available in production.
@@ -273,3 +273,37 @@ missing suite is listed as missing coverage rather than a passing test.
 - The final forced affected gate passed all 19 lint, typecheck, test, and build
   tasks with zero cache hits. All three consuming Next.js production builds
   completed successfully; no Docker or publishing operation was performed.
+
+## Canonical shadcn and TypeScript Configuration
+
+- 2026-10-19: the shadcn `cn` migration was applied to all four apps and
+  `@scs/ui`. Shared primitives now import `cn` from the `cn` package; app-local
+  `lib/utils.ts` copies and the old `clsx`/`tailwind-merge` dependencies were
+  removed.
+- All 19 migrated shadcn primitives now have one canonical implementation under
+  `packages/ui/src/components`. No `components/ui` source remains in an app and
+  no app-named component folder remains in `@scs/ui`. People's distinct active
+  tab treatment is preserved as the explicit `brand` Tabs variant.
+- Each app's shadcn metadata resolves `ui`, `utils`, `lib`, and `hooks` into
+  `@scs/ui`; `components` remains app-local for composed product components.
+  `shadcn info --json` resolved those destinations successfully for the package
+  and all four apps.
+- App-owned domain helpers remain local and explicitly named. Portal's email
+  path encoding helper moved to `apps/portal/src/lib/email.ts`; shadcn no longer
+  owns or shadows an app-level `@/lib/utils` module.
+- A single embedded NUL byte inherited by Portal's profile-content TSX file was
+  removed in the destination after the committed snapshot had been preserved;
+  the source checkout was not changed.
+- `@scs/tsconfig` now owns Next.js, React-library, TypeScript-library, tooling,
+  Bun, and Worker presets. Leaf configs retain only their path-sensitive
+  aliases, includes, excludes, and project references. Redundant nested test
+  configs and the API pass-through base were removed.
+- PostCSS configs are typed ESM `postcss.config.mts`; the Projects Vitest config
+  is now `vitest.config.mts` and uses `import.meta.dirname`, eliminating Vite's
+  CommonJS/native-loader warnings.
+- UI lint/typecheck and five contract tests passed. App lint and typecheck,
+  Projects tests, schema lint/typecheck/263 tests/build, API typechecks/117
+  tests, GitHub App typechecks/23 tests, and Mailer typecheck passed.
+- The final root native gate passed `format:check`, lint, typecheck, test, and
+  build for every participating workspace. The build used Next.js and Wrangler
+  dry-run builds only; no Docker, deployment, or publishing operation ran.

@@ -29,11 +29,29 @@ import {
   StudentTrackSchema,
   StudentTypeSchema,
 } from '@scs/schemas';
-import { Badge } from '@scs/ui/badge';
+import { Badge } from '@scs/ui/components/badge';
+import { Button } from '@scs/ui/components/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@scs/ui/components/select';
 import CodeMirror from '@uiw/react-codemirror';
 import JsonView from '@uiw/react-json-view';
 import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
 import { githubLightTheme } from '@uiw/react-json-view/githubLight';
+import { cn } from 'cn';
 import {
   ExternalLink,
   Pencil,
@@ -59,23 +77,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   adminPublicProfileApiUrl,
   adminPublicProfilePrApiUrl,
@@ -92,7 +93,6 @@ import {
   profileToolBackRoute,
   type ProfileToolSource,
 } from '@/lib/back-routes';
-import { cn } from '@/lib/utils';
 
 type ProfileKind = 'academic' | 'academic-support' | 'non-academic' | 'student';
 

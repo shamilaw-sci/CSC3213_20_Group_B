@@ -1,5 +1,10 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
+import { Button } from '@scs/ui/components/button';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
+import { cn } from 'cn';
 import {
   CheckCircle2,
   Circle,
@@ -12,11 +17,6 @@ import {
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import type { ProfilePictureMode } from '@/types/user';
 
 export interface ProfilePictureDraft {

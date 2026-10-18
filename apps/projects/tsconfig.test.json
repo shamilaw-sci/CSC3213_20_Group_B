@@ -10,7 +10,7 @@
     "src/**/*.tsx",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "vitest.config.ts"
+    "vitest.config.mts"
   ],
   "exclude": [".agents", ".cache", ".next", ".turbo", "node_modules"]
 }

@@ -1,9 +1,8 @@
 'use client';
 
+import { Button } from '@scs/ui/components/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-import { Button } from '@/components/ui/button';
 
 interface BackButtonProps {
   fallbackHref: string;

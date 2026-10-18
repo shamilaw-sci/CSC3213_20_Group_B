@@ -1,7 +1,12 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import publicEnvConfig from '@/config/public.env.config';
 
 export const metadata: Metadata = {

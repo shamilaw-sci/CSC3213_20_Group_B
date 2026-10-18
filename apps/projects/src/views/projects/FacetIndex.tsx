@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@scs/ui/badge';
-import { Card, CardContent, CardTitle } from '@scs/ui/card';
+import { Badge } from '@scs/ui/components/badge';
+import { Card, CardContent, CardTitle } from '@scs/ui/components/card';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 

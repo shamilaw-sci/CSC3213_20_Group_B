@@ -1,4 +1,11 @@
-import { Badge } from '@scs/ui/badge';
+import { Badge } from '@scs/ui/components/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/components/card';
 import { Mail } from 'lucide-react';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
@@ -8,13 +15,6 @@ import {
 } from '@/components/custom/page-shell/page-shell';
 import ProfileHeader from '@/components/custom/profile-page/components/profile-header';
 import { ProfileHeaderProps } from '@/components/custom/profile-page/components/profile-header';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 type ProfilePageProps = Omit<
   ProfileHeaderProps,

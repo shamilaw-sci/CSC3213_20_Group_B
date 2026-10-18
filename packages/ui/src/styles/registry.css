@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/*
+ * CLI target for shared shadcn component generation. Runtime theme tokens stay
+ * application-owned and each app scans packages/ui/src from its globals.css.
+ */

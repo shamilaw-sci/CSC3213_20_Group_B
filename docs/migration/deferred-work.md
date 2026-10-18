@@ -20,11 +20,11 @@ their contents.
 `packages/ui`, `packages/schemas`, and `packages/utils` remained empty through
 the independently validated baseline. The clean published schema source at tag
 `v5.1.0` was then migrated into `packages/schemas` as private workspace
-`@scs/schemas`; its sibling source repository remains untouched. A subsequent
-duplicate audit moved only identical Badge, Card, and Sonner implementations
-into `@scs/ui`. Portal's distinct Card and each app's distinct Button and Tabs
-remain local. Further UI and utility extraction still requires proven duplicate
-behavior and compatible consumer interfaces.
+`@scs/schemas`; its sibling source repository remains untouched. The UI audit
+first extracted byte-identical primitives, then established one canonical
+implementation for all 19 migrated shadcn primitives in `@scs/ui`. App-specific
+visual behavior is represented by explicit variants, while composed product
+components remain app-owned. `packages/utils` remains unjustified and absent.
 
 ## Missing coverage and external checks
 

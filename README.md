@@ -56,6 +56,20 @@ Each workspace retains its own package scripts and can be built or started
 without invoking unrelated applications. Inspect its `package.json` and local
 README for additional maintenance commands.
 
+## Shared UI and configuration
+
+`packages/ui` is the only source location for shadcn primitives. Applications
+import them through explicit subpaths such as
+`@scs/ui/components/button`. Their composed, product-specific components remain
+under each app's `src/components/custom` tree. The shadcn CLI metadata routes
+reusable `ui`, `utils`, `lib`, and `hooks` items into `@scs/ui`; ordinary app
+domain modules continue to use local `@/lib/*` or `@/hooks/*` imports.
+
+`packages/tsconfig` is the source of truth for runtime compiler defaults.
+Workspace configs extend its Next.js, React-library, library, tooling, Worker,
+or Bun preset and keep only path-sensitive aliases, file sets, and references
+locally.
+
 ## Verification
 
 The complete native gate is:
