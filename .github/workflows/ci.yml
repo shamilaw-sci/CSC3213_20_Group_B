@@ -2,33 +2,14 @@ name: Monorepo CI
 
 on:
   pull_request:
-    paths:
-      - 'apps/**'
-      - 'services/**'
-      - 'packages/**'
-      - '.github/workflows/ci.yml'
-      - 'package.json'
-      - 'bun.lock'
-      - 'bunfig.toml'
-      - 'turbo.json'
-      - 'commitlint.config.mts'
-      - 'prettier.config.mts'
-      - 'lint-staged.config.mts'
+  merge_group:
   push:
     branches:
       - main
-    paths:
-      - 'apps/**'
-      - 'services/**'
-      - 'packages/**'
-      - '.github/workflows/ci.yml'
-      - 'package.json'
-      - 'bun.lock'
-      - 'bunfig.toml'
-      - 'turbo.json'
-      - 'commitlint.config.mts'
-      - 'prettier.config.mts'
-      - 'lint-staged.config.mts'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -47,15 +28,40 @@ jobs:
         with:
           bun-version: 1.4.3
 
+      - name: Restore dependency and build caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            .turbo
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Validate documentation
+        run: bun run docs:check
+
+      - name: Test repository policies
+        run: bun run test:repo
+
+      - name: Validate formatting
+        run: bun run format:check
+
+      - name: Validate pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | bunx commitlint
 
       - name: Verify affected workspaces
         if: github.event_name == 'pull_request'
         run: bunx turbo run lint typecheck test build --affected
 
       - name: Verify complete monorepo
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           bun run lint
           bun run typecheck

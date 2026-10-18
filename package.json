@@ -15,6 +15,7 @@
     "typecheck": "turbo typecheck",
     "docs:check": "bun scripts/check-documentation.mts",
     "test:docs": "bun test scripts/check-documentation.test.ts",
+    "test:repo": "bun test scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint-staged": "lint-staged",
