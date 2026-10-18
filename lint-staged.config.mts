@@ -1,3 +1,5 @@
+import type { Configuration } from 'lint-staged';
+
 const linters = [
   ['apps/web/', "bun --filter '@scs/web' lint:fix"],
   ['apps/people/', "bun --filter '@scs/people' lint:fix"],
@@ -5,19 +7,19 @@ const linters = [
   ['apps/portal/', "bun --filter '@scs/portal' lint:fix"],
   ['services/api/', "bun --filter '@scs/api' lint:fix"],
   ['services/github-app/', "bun --filter '@scs/github-app' lint:fix"],
-];
+] as const;
 
 const typescriptFile = /\.(?:ts|tsx)$/i;
 const prettierFile =
-  /\.(?:css|html|js|json|jsonc|jsx|md|mdx|mjs|ts|tsx|ya?ml)$/i;
+  /\.(?:css|html|js|json|jsonc|jsx|md|mdx|mjs|mts|ts|tsx|ya?ml)$/i;
 
-function quote(file) {
+function quote(file: string): string {
   return `"${file.replaceAll('"', '\\"')}"`;
 }
 
-export default (stagedFiles) => {
+const config: Configuration = (stagedFiles) => {
   const normalized = stagedFiles.map((file) => file.replaceAll('\\', '/'));
-  const commands = linters
+  const commands: string[] = linters
     .filter(([prefix]) =>
       normalized.some(
         (file) => file.includes(`/${prefix}`) && typescriptFile.test(file)
@@ -38,3 +40,5 @@ export default (stagedFiles) => {
 
   return commands;
 };
+
+export default config;

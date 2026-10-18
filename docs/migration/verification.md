@@ -52,6 +52,13 @@ missing suite is listed as missing coverage rather than a passing test.
 - 2026-10-18: a temporary staged Web TypeScript file invoked the owning
   workspace's full `lint:fix` script, while that file and a staged Markdown
   probe were both formatted successfully. The probe files were then removed.
+- 2026-10-18: Task 14 converted all four frontend PostCSS configurations plus
+  the root Prettier and lint-staged configurations to `.mts`. Prettier and
+  lint-staged loaded their renamed files successfully, and the six modules
+  passed an explicit TypeScript check with the repository compiler.
+- After the conversion, root format, lint, typecheck, test, and build gates all
+  exited successfully. All four Next.js builds were cache misses and completed,
+  directly proving that Next.js/PostCSS loaded each `postcss.config.mts`.
 
 ## Continuous integration and local skills
 

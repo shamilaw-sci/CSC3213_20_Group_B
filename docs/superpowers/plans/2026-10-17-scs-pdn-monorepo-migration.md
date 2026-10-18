@@ -657,3 +657,47 @@ git commit -m "docs: document monorepo development and migration"
 - [ ] **Step 7: Review the complete branch**
 
 Run `git status --short --branch`, inspect the commit sequence and full diff from `4721d23`, and perform an independent whole-branch review focused on the five Review Focus items. The baseline is complete only when the tree is clean apart from intentionally documented files and all final gates have fresh passing evidence.
+
+---
+
+### Task 14: Standardize TypeScript ESM Configuration Modules
+
+**Files:**
+
+- Replace: `apps/*/postcss.config.json` with `postcss.config.mts`
+- Replace: `prettier.config.mjs` with `prettier.config.mts`
+- Replace: `lint-staged.config.mjs` with `lint-staged.config.mts`
+- Modify: `.github/workflows/ci.yml`
+- Update: migration specification, matrix, and verification ledger
+
+**Interfaces:**
+
+- Consumes: the verified Task 13 baseline and the established
+  `sivothayan.com` TypeScript ESM configuration convention.
+- Produces: behavior-equivalent typed ESM configuration loaded directly by
+  Next.js/PostCSS, Prettier, lint-staged, and CI path filters.
+
+- [x] **Step 1: Convert configuration modules**
+
+Convert all four identical PostCSS JSON objects to default-exported
+`postcss.config.mts` modules. Rename the two root `.mjs` configuration modules
+to `.mts`, adding tool-supplied types without changing behavior.
+
+- [x] **Step 2: Update consumers and documentation**
+
+Update CI root-tooling path filters and current migration documentation. Keep
+historical import-slice references unchanged where they describe the original
+source filenames.
+
+- [x] **Step 3: Verify loaders and workspaces**
+
+Run Prettier and lint-staged configuration probes, then run root lint,
+typecheck, test, and build. The four Next.js builds must prove PostCSS loads the
+new `.mts` modules.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add .github apps lint-staged.config.mts prettier.config.mts docs
+git commit -m "refactor(config): standardize TypeScript ESM modules"
+```

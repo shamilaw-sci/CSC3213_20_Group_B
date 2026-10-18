@@ -11,8 +11,8 @@ on:
       - 'bun.lock'
       - 'bunfig.toml'
       - 'turbo.json'
-      - 'prettier.config.mjs'
-      - 'lint-staged.config.mjs'
+      - 'prettier.config.mts'
+      - 'lint-staged.config.mts'
   push:
     branches:
       - main
@@ -25,8 +25,8 @@ on:
       - 'bun.lock'
       - 'bunfig.toml'
       - 'turbo.json'
-      - 'prettier.config.mjs'
-      - 'lint-staged.config.mjs'
+      - 'prettier.config.mts'
+      - 'lint-staged.config.mts'
 
 permissions:
   contents: read

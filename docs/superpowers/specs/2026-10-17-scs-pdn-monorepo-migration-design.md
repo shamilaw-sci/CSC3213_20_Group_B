@@ -89,7 +89,7 @@ The package directories are reserved as follows:
   behavior-specific documentation.
 - Workspace `package.json`, renamed to its `@scs/*` package name while retaining
   its scripts and compatible dependency versions.
-- `next.config.ts`, `postcss.config.json`, `components.json`, `knip.json`, and
+- `next.config.ts`, `postcss.config.mts`, `components.json`, `knip.json`, and
   test configuration while each frontend is validated independently.
 - Wrangler configuration, bindings, routes, service-specific TypeScript
   projects, and service ESLint configuration while each Worker is validated.
@@ -105,6 +105,10 @@ The package directories are reserved as follows:
 - Consolidated `.gitignore`, `.gitattributes`, and non-container VS Code
   recommendations.
 - The single generated root `bun.lock`.
+
+Configuration modules use TypeScript ESM where the owning tools support it:
+the four PostCSS files, Prettier configuration, and lint-staged dispatcher use
+`.mts`, matching the established `sivothayan.com` convention.
 
 ### Merge at the Monorepo Root
 
