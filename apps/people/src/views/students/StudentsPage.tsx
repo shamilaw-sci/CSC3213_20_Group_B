@@ -1,10 +1,10 @@
 'use client';
 
+import { Card, CardContent } from '@scs/ui/card';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import PageHeader from '@/components/custom/layout/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
 import { getSubjectPath, isSubjectSlug, SUBJECTS } from '@/config/subjects';
 import {
   getPeopleManifest,

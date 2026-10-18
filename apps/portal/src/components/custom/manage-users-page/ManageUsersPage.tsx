@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@scs/ui/badge';
 import { Search, Shield, UserCheck, Users, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -10,7 +11,6 @@ import {
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,

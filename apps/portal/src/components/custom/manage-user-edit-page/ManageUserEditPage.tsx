@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@scs/ui/badge';
 import { Save, Shield, UserX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -13,7 +14,6 @@ import ProfilePictureEditor, {
   validateProfilePictureDraft,
 } from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,

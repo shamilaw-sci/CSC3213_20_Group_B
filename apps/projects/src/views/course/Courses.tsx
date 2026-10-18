@@ -1,5 +1,7 @@
 'use client';
 
+import { Badge } from '@scs/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@scs/ui/card';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -8,8 +10,6 @@ import {
   StatePanel,
   TileGridLoading,
 } from '@/components/custom/StatePanel';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchCourses, type ProjectCourse } from '@/lib/projects/api-client';
 import { PageIntro } from '@/views/projects/RegistryUI';
 

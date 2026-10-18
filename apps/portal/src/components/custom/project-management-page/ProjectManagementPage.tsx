@@ -13,6 +13,7 @@ import {
   ProjectTypeSchema,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
+import { Badge } from '@scs/ui/badge';
 import CodeMirror from '@uiw/react-codemirror';
 import JsonView from '@uiw/react-json-view';
 import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
@@ -52,7 +53,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,

@@ -4,6 +4,8 @@ import {
   type AcademicDepartmentCode,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
+import { Badge } from '@scs/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@scs/ui/card';
 import {
   Activity,
   ArrowRight,
@@ -29,9 +31,7 @@ import Link from 'next/link';
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
 
 import { EmptyProjectsPanel } from '@/components/custom/StatePanel';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import publicEnvConfig from '@/config/public.env.config';
 import {
   fetchCategories,

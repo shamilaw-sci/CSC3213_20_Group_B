@@ -254,3 +254,22 @@ missing suite is listed as missing coverage rather than a passing test.
   `typecheck:test` commands also passed.
 - A final read-only source check confirmed the schema repository remained clean
   at `3121ed9`; no Docker or publishing operation was performed.
+
+## Shared shadcn UI Workspace
+
+- 2026-10-18: all four frontend shadcn configurations were inventoried and the
+  registry versions of Badge, Card, and Sonner were inspected with dry-run and
+  per-file diff commands. No registry overwrite was applied.
+- Hash comparison established that Badge was identical in People, Projects,
+  and Portal; Card and Sonner were identical in People and Projects. Portal's
+  distinct Card and all customized Button and Tabs implementations remain
+  application-owned.
+- The proven duplicates moved to private workspace `@scs/ui`. Consumer imports
+  use explicit package subpaths, and each consumer's Tailwind stylesheet scans
+  the shared source so its utility classes remain available in production.
+- Independent UI lint, typecheck, and three characterization tests passed. The
+  first forced consumer gate found one missed nested Portal import; the second
+  exposed import ordering only. Both were corrected without bypasses.
+- The final forced affected gate passed all 19 lint, typecheck, test, and build
+  tasks with zero cache hits. All three consuming Next.js production builds
+  completed successfully; no Docker or publishing operation was performed.

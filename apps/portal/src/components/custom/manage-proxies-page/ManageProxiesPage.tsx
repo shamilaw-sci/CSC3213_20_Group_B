@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@scs/ui/badge';
 import {
   AlertCircle,
   ChevronLeft,
@@ -20,7 +21,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,

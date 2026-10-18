@@ -3,7 +3,7 @@
 This Bun/Turborepo workspace contains the independently deployable SCS PDN
 websites and services migrated from their pinned source commits. The baseline
 preserves application behavior and deployment boundaries; shared product code
-was deliberately not extracted during migration.
+was extracted only after the baseline passed and duplicate behavior was proven.
 
 ## Workspaces
 
@@ -17,6 +17,7 @@ was deliberately not extracted during migration.
 | `services/mailer`        | `@scs/mailer`        | Bun/Hono                           | Independent Bun service   |
 | `services/github-app`    | `@scs/github-app`    | Bun and Cloudflare-compatible code | Independent service       |
 | `packages/schemas`       | `@scs/schemas`       | TypeScript/Zod                     | Shared domain contracts   |
+| `packages/ui`            | `@scs/ui`            | React/shadcn                       | Shared UI primitives      |
 | `packages/eslint-config` | `@scs/eslint-config` | Tooling                            | Shared ESLint presets     |
 | `packages/tsconfig`      | `@scs/tsconfig`      | Tooling                            | Shared TypeScript presets |
 
@@ -48,6 +49,7 @@ bun --filter '@scs/api' dev
 bun --filter '@scs/mailer' dev
 bun --filter '@scs/github-app' dev
 bun --filter '@scs/schemas' test
+bun --filter '@scs/ui' test
 ```
 
 Each workspace retains its own package scripts and can be built or started
@@ -67,9 +69,9 @@ bun run build
 ```
 
 Turbo runs only scripts declared by each workspace. Tests currently exist for
-Schemas, the shared ESLint package, Projects, API, and GitHub App. A missing test script
-is documented as missing coverage, not a passing suite. Pull requests use
-affected-workspace CI; pushes to `main` run the full gate.
+Schemas, shared UI, the shared ESLint package, Projects, API, and GitHub App. A
+missing test script is documented as missing coverage, not a passing suite.
+Pull requests use affected-workspace CI; pushes to `main` run the full gate.
 
 Commits use the Conventional Commits format. The Husky pre-commit hook runs
 lint-staged, and the commit-message hook validates the subject with Commitlint.

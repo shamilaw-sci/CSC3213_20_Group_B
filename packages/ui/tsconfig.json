@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "@scs/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "incremental": false,
+    "types": ["bun"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

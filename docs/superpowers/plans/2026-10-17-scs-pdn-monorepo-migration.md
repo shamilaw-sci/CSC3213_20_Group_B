@@ -822,3 +822,43 @@ across the schema workspace and all consumers. Run auxiliary test typechecks.
 git add packages/schemas apps services README.md bun.lock docs
 git commit -m "refactor(schemas): migrate domain contracts in-repository"
 ```
+
+---
+
+### Task 18: Extract Verified Shared shadcn Primitives
+
+**Files:**
+
+- Create: `packages/ui/**`
+- Modify: People, Projects, and Portal component imports and Tailwind sources
+- Modify: root lockfile and migration documentation
+
+**Interfaces:**
+
+- Consumes: byte-identical local shadcn components after the validated baseline.
+- Produces: private workspace `@scs/ui` with explicit Badge, Card, and Sonner
+  subpath exports while preserving application-specific variants locally.
+
+- [x] **Step 1: Inventory and compare components**
+
+Inspect each frontend's shadcn metadata, hash local component copies, and run
+registry dry-run/per-file diffs. Do not overwrite local components.
+
+- [x] **Step 2: Extract only proven duplicates**
+
+Move Badge shared by People, Projects, and Portal plus Card and Sonner shared by
+People and Projects. Keep Portal's distinct Card and all distinct Button and
+Tabs implementations local. Add explicit Tailwind source discovery.
+
+- [x] **Step 3: Verify package and consumers**
+
+Run independent UI lint, typecheck, and tests. Then force lint, typecheck, test,
+and production builds for `@scs/ui` and all three consuming applications;
+diagnose and correct every failure.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add packages/ui apps/people apps/projects apps/portal README.md bun.lock docs
+git commit -m "refactor(ui): extract shared shadcn primitives"
+```

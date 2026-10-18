@@ -1,5 +1,13 @@
 'use client';
 
+import { Badge } from '@scs/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@scs/ui/card';
 import {
   BriefcaseBusiness,
   Building2,
@@ -26,14 +34,6 @@ import {
   FaYoutube,
 } from 'react-icons/fa6';
 
-import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type {
   AcademicTeachingStaff,

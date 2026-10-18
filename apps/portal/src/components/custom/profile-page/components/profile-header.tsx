@@ -1,8 +1,8 @@
+import { Badge } from '@scs/ui/badge';
 import { IdCard, Mail, Pencil, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { AppRole } from '@/types/role';

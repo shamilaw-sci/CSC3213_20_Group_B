@@ -1,11 +1,11 @@
 import './globals.css';
 
+import { Toaster } from '@scs/ui/sonner';
 import type { Metadata, Viewport } from 'next';
 import { Open_Sans } from 'next/font/google';
 
 import Navbar from '@/components/custom/navbar/Navbar';
 import { ThemeProvider } from '@/components/custom/theme/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
 import publicEnvConfig from '@/config/public.env.config';
 
 const openSans = Open_Sans({

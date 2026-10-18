@@ -1,3 +1,4 @@
+import { Badge } from '@scs/ui/badge';
 import { Mail } from 'lucide-react';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
@@ -7,7 +8,6 @@ import {
 } from '@/components/custom/page-shell/page-shell';
 import ProfileHeader from '@/components/custom/profile-page/components/profile-header';
 import { ProfileHeaderProps } from '@/components/custom/profile-page/components/profile-header';
-import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,

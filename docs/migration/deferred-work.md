@@ -20,9 +20,11 @@ their contents.
 `packages/ui`, `packages/schemas`, and `packages/utils` remained empty through
 the independently validated baseline. The clean published schema source at tag
 `v5.1.0` was then migrated into `packages/schemas` as private workspace
-`@scs/schemas`; its sibling source repository remains untouched. Shared UI and
-utility extraction still require proven duplicate behavior and compatible
-consumer interfaces.
+`@scs/schemas`; its sibling source repository remains untouched. A subsequent
+duplicate audit moved only identical Badge, Card, and Sonner implementations
+into `@scs/ui`. Portal's distinct Card and each app's distinct Button and Tabs
+remain local. Further UI and utility extraction still requires proven duplicate
+behavior and compatible consumer interfaces.
 
 ## Missing coverage and external checks
 
@@ -42,5 +44,5 @@ consumer interfaces.
 - Choose and document native deployment automation for the frontend apps,
   Mailer, and GitHub App if automation is required. The baseline CI verifies
   code only and does not publish artifacts.
-- Review the intentionally empty shared-package directories only after the
+- Review `packages/utils` and any remaining UI duplication only after the
   baseline has production evidence.
