@@ -1,7 +1,7 @@
 import workerConfig from '@scs/eslint-config/worker';
 import { globalIgnores } from 'eslint/config';
 
-export default [
+const config = [
   globalIgnores([
     'node_modules',
     'dist',
@@ -11,3 +11,5 @@ export default [
   ]),
   ...workerConfig,
 ];
+
+export default config;

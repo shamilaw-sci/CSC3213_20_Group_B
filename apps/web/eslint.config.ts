@@ -1,7 +1,7 @@
 import nextConfig from '@scs/eslint-config/next';
 import { globalIgnores } from 'eslint/config';
 
-export default [
+const config = [
   ...nextConfig,
   globalIgnores([
     '.agents/**',
@@ -18,3 +18,5 @@ export default [
     'next-env.d.ts',
   ]),
 ];
+
+export default config;

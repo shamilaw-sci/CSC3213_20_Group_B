@@ -3,7 +3,7 @@ import { globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default [
+const config = [
   globalIgnores(['node_modules', 'dist', 'eslint.config.ts']),
   ...workerConfig,
   {
@@ -22,3 +22,5 @@ export default [
     },
   },
 ];
+
+export default config;
