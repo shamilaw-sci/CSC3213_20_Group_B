@@ -744,3 +744,40 @@ runs lint-staged, and the root format, lint, and typecheck gates pass.
 git add .husky .github commitlint.config.mts package.json bun.lock README.md docs
 git commit -m "chore(git): align hooks and commit validation"
 ```
+
+---
+
+### Task 16: Run the Post-configuration Final Gate
+
+**Files:**
+
+- Update: `docs/migration/verification.md`
+- Update: this implementation plan
+
+**Interfaces:**
+
+- Consumes: the committed Task 14 TypeScript ESM configuration and Task 15
+  Git-hook baseline.
+- Produces: fresh, uncached evidence that all test and production-build tasks
+  still pass after the final configuration changes.
+
+- [x] **Step 1: Run uncached tests**
+
+Run `bunx turbo test --force` and require every discovered suite to pass.
+
+- [x] **Step 2: Run uncached native builds**
+
+Run `bunx turbo build --force` and require all four Next.js builds and both
+Wrangler dry-run builds to pass. Do not invoke Docker tooling.
+
+- [x] **Step 3: Run auxiliary workspace gates**
+
+Run `typecheck:test` for Projects, API, and GitHub App, plus the Mailer
+`check` command.
+
+- [x] **Step 4: Record and commit the evidence**
+
+```powershell
+git add docs/migration/verification.md docs/superpowers/plans/2026-10-17-scs-pdn-monorepo-migration.md
+git commit -m "docs: record post-configuration verification"
+```
