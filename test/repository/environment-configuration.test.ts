@@ -37,6 +37,7 @@ const workspaceVariables = {
     'NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH',
   ],
   'services/api/.dev.vars.example': [
+    'BETTER_AUTH_SECRET',
     'CONFIG_ACCESS_TOKEN_SECRET',
     'GITHUB_APP_INTERNAL_SECRET',
     'GITHUB_CLIENT_SECRET',
