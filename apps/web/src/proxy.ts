@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { routingConfig } from '@/config/routing.config';
 import serverEnvConfig from '@/config/server.env.config';
 
 export default async function proxy(req: NextRequest) {
@@ -13,8 +14,7 @@ export default async function proxy(req: NextRequest) {
 
   if (pathname.startsWith('/~')) {
     const username = pathname.slice(2).split('/')[0].toLowerCase();
-    const USERNAME_REGEX = /^[a-z0-9_-]+$/;
-    if (!USERNAME_REGEX.test(username)) {
+    if (!routingConfig.usernamePattern.test(username)) {
       console.warn(`Invalid username attempted: ${username}`);
       return new Response('Invalid username', { status: 400 });
     }

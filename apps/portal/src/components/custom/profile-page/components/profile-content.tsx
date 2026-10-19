@@ -22,6 +22,7 @@ import { Fingerprint, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { authConfig } from '@/config/auth.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { authProviderApiUrl } from '@/lib/api';
 import {
@@ -34,9 +35,6 @@ import {
   updatePasskeyCredential,
 } from '@/lib/passkeys';
 import { auth_error_messages } from '@/views/auth/auth-errors';
-
-const MAX_PASSKEY_CREDENTIALS = 4;
-const MAX_PASSKEY_NAME_LENGTH = 64;
 
 export interface ProfileContentProps {
   id: string;
@@ -85,7 +83,7 @@ function normalizePasskeyName(name: string) {
     return '';
   }
 
-  if (trimmed.length > MAX_PASSKEY_NAME_LENGTH) {
+  if (trimmed.length > authConfig.passkey.maxNameLength) {
     return null;
   }
 
@@ -228,9 +226,9 @@ export default function ProfileContent({
   async function handleRegisterPasskey() {
     if (!passkeySupported || passkeyLoading) return;
 
-    if (passkeyCredentials.length >= MAX_PASSKEY_CREDENTIALS) {
+    if (passkeyCredentials.length >= authConfig.passkey.maxCredentials) {
       toast.error(
-        `You can save up to ${MAX_PASSKEY_CREDENTIALS} passkeys for this account.`
+        `You can save up to ${authConfig.passkey.maxCredentials} passkeys for this account.`
       );
       return;
     }
@@ -293,7 +291,7 @@ export default function ProfileContent({
   }
 
   const hasReachedPasskeyLimit =
-    passkeyCredentials.length >= MAX_PASSKEY_CREDENTIALS;
+    passkeyCredentials.length >= authConfig.passkey.maxCredentials;
 
   async function handleDeletePasskey(credentialId: string) {
     if (passkeyDeletingId) return;
@@ -676,7 +674,7 @@ export default function ProfileContent({
                       if (passkeyNameError) setPasskeyNameError('');
                     }}
                     placeholder="Office key"
-                    maxLength={MAX_PASSKEY_NAME_LENGTH}
+                    maxLength={authConfig.passkey.maxNameLength}
                     className="w-full md:w-[18rem]"
                   />
                   {passkeyNameError ? (
@@ -704,7 +702,7 @@ export default function ProfileContent({
                     !passkeySupported
                       ? 'Passkeys are not supported in this browser.'
                       : hasReachedPasskeyLimit
-                        ? `You can save up to ${MAX_PASSKEY_CREDENTIALS} passkeys for this account.`
+                        ? `You can save up to ${authConfig.passkey.maxCredentials} passkeys for this account.`
                         : undefined
                   }
                   className="w-fit self-start"
@@ -789,7 +787,9 @@ export default function ProfileContent({
                                         credential,
                                         index
                                       )}
-                                      maxLength={MAX_PASSKEY_NAME_LENGTH}
+                                      maxLength={
+                                        authConfig.passkey.maxNameLength
+                                      }
                                       disabled={
                                         passkeyRenamingId === credential.id ||
                                         passkeyDeletingId === credential.id
@@ -877,8 +877,8 @@ export default function ProfileContent({
                 </div>
                 {hasReachedPasskeyLimit && (
                   <p className="text-muted-foreground text-sm">
-                    You have reached the maximum of {MAX_PASSKEY_CREDENTIALS}{' '}
-                    saved passkeys.
+                    You have reached the maximum of{' '}
+                    {authConfig.passkey.maxCredentials} saved passkeys.
                   </p>
                 )}
               </div>

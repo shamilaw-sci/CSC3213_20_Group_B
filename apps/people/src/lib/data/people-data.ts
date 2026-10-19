@@ -11,6 +11,7 @@ import {
   StudentSchema,
 } from '@scs/schemas';
 
+import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { isSubjectSlug, type SubjectSlug } from '@/config/subjects';
 
@@ -75,8 +76,6 @@ export interface PeopleSearchEntry {
   email?: string;
   keywords: string[];
 }
-
-const PEOPLE_DATA_TTL_MS = 5 * 60 * 1000;
 
 interface CacheEntry<T> {
   expiresAt: number;
@@ -275,7 +274,7 @@ async function fetchPeopleData<T>(
   );
 
   peopleDataCache.set(path, {
-    expiresAt: now + PEOPLE_DATA_TTL_MS,
+    expiresAt: now + dataConfig.cacheTtlMs,
     promise,
   });
 

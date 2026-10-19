@@ -1,10 +1,9 @@
 import { ProjectSchema } from '@scs/schemas';
 
+import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 
 import type { Project } from './types';
-
-const PROJECTS_DATA_TTL_MS = 5 * 60 * 1000;
 
 type Schema<T> = {
   parse(input: unknown): T;
@@ -95,7 +94,7 @@ async function fetchProjectData<T>(
   );
 
   projectDataCache.set(path, {
-    expiresAt: now + PROJECTS_DATA_TTL_MS,
+    expiresAt: now + dataConfig.cacheTtlMs,
     promise,
   });
 

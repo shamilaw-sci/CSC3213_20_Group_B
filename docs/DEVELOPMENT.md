@@ -67,6 +67,18 @@ overrides locally. Do not copy compiler policy into each app.
 ESLint presets live in `packages/eslint-config`. Use workspace overrides only
 for a demonstrated runtime or file-class difference.
 
+## Application Configuration
+
+Runtime and feature settings belong under each workspace's `src/config`
+directory. Environment parsing stays in `*.env.config.ts`; grouped behavior
+such as authentication limits, polling timeouts, cache lifetimes, and routing
+patterns belongs in focused files such as `auth.config.ts` or
+`data.config.ts`. Components and service modules consume those typed configs
+instead of declaring operational constants locally.
+
+Schema-derived view options and function-local implementation values are not
+configuration and stay with their owning domain or component.
+
 ## UI Components
 
 Reusable shadcn primitives live only in `packages/ui`. Import explicit

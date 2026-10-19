@@ -7,12 +7,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { MagicCodeInput } from '@/components/custom/magic-code-input/magic-code-input';
-import publicEnvConfig from '@/config/public.env.config';
+import { authConfig } from '@/config/auth.config';
 import { requestMagicCode, verifyMagicCode } from '@/lib/api';
 import { auth_error_messages } from '@/views/auth/auth-errors';
-
-const CODE_LENGTH = publicEnvConfig.NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH;
-const RESEND_COOLDOWN_MS = 30_000;
 
 type Step = 'idle' | 'sending' | 'verify' | 'verifying';
 
@@ -120,12 +117,16 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
       }
 
       setStep('verify');
-      setExpiresAt(Date.now() + (data.expiresIn ?? 300) * 1000);
+      setExpiresAt(
+        Date.now() +
+          (data.expiresIn ?? authConfig.magicCode.fallbackExpiresInSeconds) *
+            1000
+      );
       localStorage.setItem('lastUsedAuth', 'email');
 
       resendTimerRef.current = setTimeout(
         () => setCanResend(true),
-        RESEND_COOLDOWN_MS
+        authConfig.magicCode.resendCooldownMs
       );
     } catch {
       toast.error('Network error. Please check your connection.');
@@ -196,7 +197,7 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
         )}
 
         <MagicCodeInput
-          length={CODE_LENGTH}
+          length={authConfig.magicCode.length}
           disabled={step === 'verifying'}
           error={!!codeError}
           onComplete={handleCodeComplete}

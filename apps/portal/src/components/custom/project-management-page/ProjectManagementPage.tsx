@@ -81,6 +81,7 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
+import { projectConfig } from '@/config/project.config';
 import publicEnvConfig from '@/config/public.env.config';
 import {
   apiHeaders,
@@ -208,8 +209,6 @@ interface ProjectPr {
   draftProject?: ProjectRecord | null;
 }
 
-const PROJECT_PR_STATUS_TIMEOUT_MS = 10000;
-
 function emptyProjectPr(): ProjectPr {
   return {
     status: 'none',
@@ -229,7 +228,7 @@ async function fetchProjectPrStatus(slug: string): Promise<Response> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => {
     controller.abort();
-  }, PROJECT_PR_STATUS_TIMEOUT_MS);
+  }, projectConfig.pullRequestStatusTimeoutMs);
 
   try {
     return await fetch(publicProjectPrApiUrl(slug), {

@@ -1,5 +1,6 @@
 import { ProjectSchema } from '@scs/schemas';
 
+import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 
 import {
@@ -25,8 +26,6 @@ export type ProjectCourse = {
 type ProjectByPersonEntry = {
   slug: string;
 };
-
-const PROJECTS_DATA_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CacheEntry = {
   expiresAt: number;
@@ -69,7 +68,7 @@ async function fetchJson<T>(path: string): Promise<T> {
     });
 
   jsonCache.set(url, {
-    expiresAt: now + PROJECTS_DATA_CACHE_TTL_MS,
+    expiresAt: now + dataConfig.cacheTtlMs,
     promise,
   });
 
