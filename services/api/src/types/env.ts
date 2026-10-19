@@ -19,6 +19,7 @@ export interface Env {
 
   GITHUB_APP_API_URL: string;
   GITHUB_APP_INTERNAL_SECRET: string;
+  GITHUB_APP?: Fetcher;
 
   CONFIG_DATA_BASE_URL: string;
   CONFIG_ACCESS_TOKEN_SECRET: string;

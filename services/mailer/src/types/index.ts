@@ -34,23 +34,3 @@ export const sendResponseSchema = z.discriminatedUnion('ok', [
 ]);
 
 export type SendResponse = z.infer<typeof sendResponseSchema>;
-
-// ---------------------------------------------------------------------------
-// Environment
-// ---------------------------------------------------------------------------
-
-/** Environment variables consumed by the mailer. */
-export const envSchema = z.object({
-  MAILER_API_KEY: z.string().min(1),
-  SMTP_HOST: z.string().min(1),
-  SMTP_PORT: z.coerce.number().int().min(1).max(65_535),
-  SMTP_SECURE: z.string().transform((value) => value.toLowerCase() === 'true'),
-  SMTP_USER: z.string().min(1),
-  SMTP_PASS: z.string().min(1),
-  SMTP_FROM: z.email(),
-  PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
-});
-
-export type Env = z.infer<typeof envSchema>;
-
-export const env = envSchema.parse(process.env);

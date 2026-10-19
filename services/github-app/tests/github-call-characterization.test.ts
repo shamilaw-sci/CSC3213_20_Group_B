@@ -2,12 +2,28 @@ import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import type { Project } from '@scs/schemas';
 
 import * as clientConfig from '@/config/client.config';
+import {
+  parseRuntimeConfig,
+  runWithRuntimeConfig,
+} from '@/config/runtime.config';
 import { upsertPublicAcademicPr } from '@/repositories/public-course.repo';
 import { upsertPublicProfilePr } from '@/repositories/public-profile.repo';
 import { upsertPublicProjectPr } from '@/repositories/public-project.repo';
 import { updateUserProxySettings } from '@/repositories/user.repo';
 
 type CallCounts = Record<string, number>;
+
+const runtimeConfig = parseRuntimeConfig({
+  GITHUB_APP_ID: '123',
+  GITHUB_PRIVATE_KEY: 'private-key',
+  GITHUB_INSTALLATION_ID: '456',
+  GITHUB_OWNER: 'scs-pdn',
+  GITHUB_CONFIG_REPOSITORY: 'config.scs.pdn.ac.lk',
+  GITHUB_PEOPLE_DATA_REPOSITORY: 'data.scs.pdn.ac.lk',
+  GITHUB_PROJECTS_DATA_REPOSITORY: 'data.scs.pdn.ac.lk',
+  X_INTERNAL_SECRET: 'internal-secret',
+  PORT: '3000',
+});
 
 interface PullRecord {
   number: number;
@@ -205,59 +221,61 @@ describe('GitHub mutation call characterization', () => {
       for (const key of Object.keys(harness.calls)) delete harness.calls[key];
     };
 
-    await updateUserProxySettings(
-      'student',
-      'student@pdn.ac.lk',
-      'admin@pdn.ac.lk',
-      { active: true, url: 'https://proxy.example', availableAttempts: 4 }
-    );
-    snapshot('config');
+    await runWithRuntimeConfig(runtimeConfig, async () => {
+      await updateUserProxySettings(
+        'student',
+        'student@pdn.ac.lk',
+        'admin@pdn.ac.lk',
+        { active: true, url: 'https://proxy.example', availableAttempts: 4 }
+      );
+      snapshot('config');
 
-    await upsertPublicAcademicPr({
-      kind: 'course',
-      id: 'csc3213',
-      updatedBy: 'admin@pdn.ac.lk',
-      recordPath: 'public/academic/v2/courses/csc3213.json',
-      aggregatePath: 'public/academic/v2/courses.json',
-      record: { id: 'csc3213', title: 'Software Engineering Project' },
-    });
-    snapshot('course');
+      await upsertPublicAcademicPr({
+        kind: 'course',
+        id: 'csc3213',
+        updatedBy: 'admin@pdn.ac.lk',
+        recordPath: 'public/academic/v2/courses/csc3213.json',
+        aggregatePath: 'public/academic/v2/courses.json',
+        record: { id: 'csc3213', title: 'Software Engineering Project' },
+      });
+      snapshot('course');
 
-    await upsertPublicAcademicPr({
-      kind: 'offering',
-      id: 'csc3213-2026',
-      updatedBy: 'admin@pdn.ac.lk',
-      recordPath: 'public/academic/v2/offerings/csc3213-2026.json',
-      aggregatePath: 'public/academic/v2/offerings.json',
-      record: { id: 'csc3213-2026', title: 'CSC3213 2026' },
-    });
-    snapshot('offering');
+      await upsertPublicAcademicPr({
+        kind: 'offering',
+        id: 'csc3213-2026',
+        updatedBy: 'admin@pdn.ac.lk',
+        recordPath: 'public/academic/v2/offerings/csc3213-2026.json',
+        aggregatePath: 'public/academic/v2/offerings.json',
+        record: { id: 'csc3213-2026', title: 'CSC3213 2026' },
+      });
+      snapshot('offering');
 
-    await upsertPublicProjectPr({
-      slug: 'example',
-      updatedBy: 'admin@pdn.ac.lk',
-      projectPath: 'public/projects/v2/projects/example.json',
-      aggregatePath: 'public/projects/v2/projects.json',
-      manifestPath: 'public/projects/v2/manifest.json',
-      project,
-    });
-    snapshot('project');
+      await upsertPublicProjectPr({
+        slug: 'example',
+        updatedBy: 'admin@pdn.ac.lk',
+        projectPath: 'public/projects/v2/projects/example.json',
+        aggregatePath: 'public/projects/v2/projects.json',
+        manifestPath: 'public/projects/v2/manifest.json',
+        project,
+      });
+      snapshot('project');
 
-    await upsertPublicProfilePr({
-      username: 'academic',
-      updatedBy: 'admin@pdn.ac.lk',
-      profileKind: 'academic',
-      userPath: 'public/people/v2/users/academic.json',
-      aggregatePaths: ['public/people/v2/staff/academic.json'],
-      profile: {
-        title: 'Dr',
-        fullName: 'Example Academic',
-        email: 'academic@pdn.ac.lk',
-        staffType: 'ACADEMIC_TEACHING',
-        academicRank: 'LECTURER',
-      },
+      await upsertPublicProfilePr({
+        username: 'academic',
+        updatedBy: 'admin@pdn.ac.lk',
+        profileKind: 'academic',
+        userPath: 'public/people/v2/users/academic.json',
+        aggregatePaths: ['public/people/v2/staff/academic.json'],
+        profile: {
+          title: 'Dr',
+          fullName: 'Example Academic',
+          email: 'academic@pdn.ac.lk',
+          staffType: 'ACADEMIC_TEACHING',
+          academicRank: 'LECTURER',
+        },
+      });
+      snapshot('profile');
     });
-    snapshot('profile');
 
     expect(snapshots).toEqual({
       config: {

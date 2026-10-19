@@ -1,22 +1,29 @@
-interface PublicEnvConfig {
-  NEXT_PUBLIC_SITE_URL: string;
-  NEXT_PUBLIC_PEOPLE_DATA_BASE_URL: string;
-  NEXT_PUBLIC_PROJECTS_DATA_BASE_URL: string;
-  NEXT_PUBLIC_PROJECTS_SITE_URL: string;
-}
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
 
-const publicEnvConfig: PublicEnvConfig = {
-  NEXT_PUBLIC_SITE_URL:
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://people.scs-pdn.space',
-  NEXT_PUBLIC_PEOPLE_DATA_BASE_URL:
-    process.env.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL ??
-    'https://data.scs-pdn.space/people/v2',
-  NEXT_PUBLIC_PROJECTS_DATA_BASE_URL:
-    process.env.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL ??
-    'https://data.scs-pdn.space/projects/v2',
-  NEXT_PUBLIC_PROJECTS_SITE_URL:
-    process.env.NEXT_PUBLIC_PROJECTS_SITE_URL ??
-    'https://projects.scs-pdn.space',
-};
+const publicEnvConfig = createEnv({
+  client: {
+    NEXT_PUBLIC_SITE_URL: z.url().default('https://people.scs-pdn.space'),
+    NEXT_PUBLIC_PEOPLE_DATA_BASE_URL: z
+      .url()
+      .default('https://data.scs-pdn.space/people/v2'),
+    NEXT_PUBLIC_PROJECTS_DATA_BASE_URL: z
+      .string()
+      .min(1)
+      .default('https://data.scs-pdn.space/projects/v2'),
+    NEXT_PUBLIC_PROJECTS_SITE_URL: z
+      .url()
+      .default('https://projects.scs-pdn.space'),
+  },
+  runtimeEnv: {
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_PEOPLE_DATA_BASE_URL:
+      process.env.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL,
+    NEXT_PUBLIC_PROJECTS_DATA_BASE_URL:
+      process.env.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL,
+    NEXT_PUBLIC_PROJECTS_SITE_URL: process.env.NEXT_PUBLIC_PROJECTS_SITE_URL,
+  },
+  emptyStringAsUndefined: true,
+});
 
 export default publicEnvConfig;

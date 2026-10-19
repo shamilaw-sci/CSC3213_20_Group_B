@@ -1,13 +1,14 @@
 import { Octokit } from '@octokit/rest';
 import { createAppAuth } from '@octokit/auth-app';
 
-import envConfig from '@/config/env.config';
+import { getRuntimeConfig } from '@/config/runtime.config';
 
 /**
  * Creates an Octokit client authenticated as the configured GitHub App
  * installation.
  */
 export function getOctokit() {
+  const envConfig = getRuntimeConfig();
   return new Octokit({
     authStrategy: createAppAuth,
     auth: {

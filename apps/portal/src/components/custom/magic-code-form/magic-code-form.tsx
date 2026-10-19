@@ -11,7 +11,7 @@ import publicEnvConfig from '@/config/public.env.config';
 import { requestMagicCode, verifyMagicCode } from '@/lib/api';
 import { auth_error_messages } from '@/views/auth/auth-errors';
 
-const CODE_LENGTH = publicEnvConfig.NEXT_VERIFICATION_CODE_MAX_LENGTH;
+const CODE_LENGTH = publicEnvConfig.NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH;
 const RESEND_COOLDOWN_MS = 30_000;
 
 type Step = 'idle' | 'sending' | 'verify' | 'verifying';

@@ -196,7 +196,7 @@ export default function ManageProxiesPage({
             ? {
                 ...p,
                 availableAttempts:
-                  publicEnvConfig.NEXT_DEFAULT_AVAILABLE_ATTEMPTS,
+                  publicEnvConfig.NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS,
               }
             : p
         )

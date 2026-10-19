@@ -1,5 +1,6 @@
 import { CourseOfferingSchema, CourseSchema } from '@scs/schemas';
 
+import { callGithubApp } from '@/clients/github-app.client';
 import {
   createJsonErrorResponse,
   createJsonResponse,
@@ -83,47 +84,8 @@ function idFromPath(req: Request, kind: AcademicRegistryKind): string | null {
   }
 }
 
-function githubAppUrl(env: Env, path: string): string {
-  return new URL(path, env.GITHUB_APP_API_URL).toString();
-}
-
 function dataPublicUrl(env: Env, path: string): string {
   return new URL(path, env.DATA_PUBLIC_BASE_URL).toString();
-}
-
-async function callGithubApp<T>(
-  env: Env,
-  origin: string,
-  path: string,
-  init?: RequestInit
-): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
-  const headers = new Headers(init?.headers);
-  headers.set('X-Internal-Secret', env.GITHUB_APP_INTERNAL_SECRET);
-  const response = await fetch(githubAppUrl(env, path), {
-    ...init,
-    headers,
-  });
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as {
-      message?: string;
-      error?: string;
-      code?: string;
-    } | null;
-    return {
-      ok: false,
-      response: createJsonErrorResponse(
-        body?.message ??
-          body?.error ??
-          `GitHub App request failed: ${response.statusText}`,
-        response.status,
-        origin,
-        body?.code
-      ),
-    };
-  }
-
-  return { ok: true, value: (await response.json()) as T };
 }
 
 async function verifiedUser(

@@ -1,3 +1,4 @@
+import { typescriptProjectRoot } from '@scs/eslint-config/project';
 import workerConfig from '@scs/eslint-config/worker';
 import { globalIgnores } from 'eslint/config';
 
@@ -10,6 +11,7 @@ const config = [
     'eslint.config.ts',
   ]),
   ...workerConfig,
+  typescriptProjectRoot(import.meta.dirname),
 ];
 
 export default config;

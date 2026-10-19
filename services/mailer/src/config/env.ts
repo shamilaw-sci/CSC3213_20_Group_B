@@ -1,21 +1,25 @@
-import type { Env } from '@/types';
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
-function requireEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    console.error(`FATAL: Environment variable "${key}" is not set`);
-    process.exit(1);
-  }
-  return value;
-}
+const processEnv = createEnv({
+  server: {
+    MAILER_API_KEY: z.string().min(1),
+    SMTP_HOST: z.string().min(1).default('smtp.example.com'),
+    SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
+    SMTP_SECURE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+    SMTP_USER: z.string().default(''),
+    SMTP_PASS: z.string().default(''),
+    SMTP_FROM: z.string().optional(),
+    PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+  },
+  runtimeEnv: process.env,
+  emptyStringAsUndefined: true,
+});
 
-export const env: Env = {
-  MAILER_API_KEY: requireEnv('MAILER_API_KEY'),
-  SMTP_HOST: process.env.SMTP_HOST || 'smtp.example.com',
-  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
-  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
-  SMTP_USER: process.env.SMTP_USER || '',
-  SMTP_PASS: process.env.SMTP_PASS || '',
-  SMTP_FROM: process.env.SMTP_FROM || process.env.SMTP_USER || '',
-  PORT: Number(process.env.PORT) || 3000,
+export const env = {
+  ...processEnv,
+  SMTP_FROM: processEnv.SMTP_FROM ?? processEnv.SMTP_USER,
 };

@@ -23,6 +23,12 @@
     "CONFIG_DATA_BASE_URL": "https://config.scs-pdn.space",
     "DATA_PUBLIC_BASE_URL": "https://data.scs-pdn.space"
   },
+  "services": [
+    {
+      "binding": "GITHUB_APP",
+      "service": "scs-portal-github-app"
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "PERMISSIONS",

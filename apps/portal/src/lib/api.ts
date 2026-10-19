@@ -6,7 +6,7 @@ function apiUrl(path: string) {
 
 export function apiHeaders(headers?: HeadersInit) {
   const mergedHeaders = new Headers(headers);
-  mergedHeaders.set('X-Client-Id', publicEnvConfig.NEXT_API_CLIENT_ID);
+  mergedHeaders.set('X-Client-Id', publicEnvConfig.NEXT_PUBLIC_API_CLIENT_ID);
   return mergedHeaders;
 }
 
@@ -252,7 +252,7 @@ export async function verifyMagicCode(
   const url = authEmailVerifyCodeApiUrl();
   const headers = new Headers();
   headers.set('Content-Type', 'application/json');
-  headers.set('X-Client-Id', publicEnvConfig.NEXT_API_CLIENT_ID);
+  headers.set('X-Client-Id', publicEnvConfig.NEXT_PUBLIC_API_CLIENT_ID);
 
   const res = await fetch(url, {
     method: 'POST',

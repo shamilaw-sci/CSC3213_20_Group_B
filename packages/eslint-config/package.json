@@ -5,6 +5,7 @@
   "exports": {
     "./base": "./base.ts",
     "./next": "./next.ts",
+    "./project": "./project.ts",
     "./worker": "./worker.ts"
   },
   "scripts": {
