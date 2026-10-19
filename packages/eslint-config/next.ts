@@ -3,6 +3,17 @@ import nextTs from 'eslint-config-next/typescript';
 
 import baseConfig from './base';
 
-const nextConfig = [...nextTs, ...nextVitals, ...baseConfig];
+const nextConfig = [
+  ...nextTs,
+  ...nextVitals,
+  ...baseConfig,
+  {
+    files: ['postcss.config.mts'],
+    rules: {
+      // The plugin misclassifies a named `.mts` default export as type-only.
+      'unused-imports/no-unused-vars': 'off',
+    },
+  },
+];
 
 export default nextConfig;

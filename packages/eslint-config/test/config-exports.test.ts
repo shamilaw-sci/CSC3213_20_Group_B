@@ -30,11 +30,18 @@ describe('shared ESLint exports', () => {
   });
 
   test('Next preserves its recommended rule sets and shared base rules', () => {
-    const rules = mergedRules(nextConfig as FlatConfig[]);
+    const config = nextConfig as FlatConfig[];
+    const rules = mergedRules(config);
+    const postcssOverride = config.find((entry) =>
+      entry.files?.includes('postcss.config.mts')
+    );
 
     expect(rules['@next/next/no-html-link-for-pages']).toBeDefined();
     expect(rules['@typescript-eslint/no-explicit-any']).toBe('warn');
     expect(rules['simple-import-sort/imports']).toBe('error');
+    expect(postcssOverride?.rules?.['unused-imports/no-unused-vars']).toBe(
+      'off'
+    );
   });
 
   test('Worker preserves security, import, and typed promise rules', () => {
