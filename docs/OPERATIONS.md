@@ -70,6 +70,34 @@ update configured repository permissions. Re-evaluate permissions when a
 feature changes; do not grant organization-wide administration for
 convenience.
 
+## Durable GitHub Mutations
+
+The GitHub App stores operation state in the `OPERATION_STATE` Durable Object
+binding and serializes each logical resource through the
+`MUTATION_COORDINATOR` binding. Accepted production work is published to the
+`OPERATION_QUEUE` queue; messages that exhaust three queue retries move to
+`scs-github-operations-dlq` for explicit recovery.
+
+Operation IDs are deterministic for an actor and idempotency key. A separate
+hash covers the actor, action, resource, and validated payload, so reusing a
+key for different input is rejected. The executor records `queued`, `running`,
+and terminal transitions around external GitHub calls. It serializes the same
+resource while allowing independent resources to proceed concurrently, never
+logs request payloads, and applies bounded provider-aware retry delays.
+
+Trusted upstream requests can inspect or cancel an operation through:
+
+```text
+GET /operations/:operationId
+DELETE /operations/:operationId
+```
+
+Both routes require `X-Actor-Subject-Id`. The subject must match the operation
+owner unless `X-Actor-Admin: true` is supplied by the authenticated upstream
+API. Cancellation is immediate while queued. Once external work is running,
+the cancellation request is persisted and prevents another retry; a side
+effect that has already completed is reported truthfully as completed.
+
 ## Verification Before Deployment
 
 Run the affected workspace gate and then the root gate for shared changes:
@@ -98,9 +126,13 @@ OAuth, KV, queue, or repository-ruleset behavior.
   invalidate affected sessions or keys.
 - Failed automation: preserve the operation/PR audit trail, determine whether a
   side effect occurred, and retry only through an idempotent path.
+- Dead-lettered operation: inspect its correlation ID, attempt count, and
+  bounded error category; verify the GitHub ref/PR state before replaying the
+  original idempotency key. Never edit Durable Object state by hand.
 
-Queue backlog, dead-letter recovery, projection regeneration, and stale PR
-reconciliation procedures will be added with the durable operation runtime.
+Projection regeneration and stale PR reconciliation procedures are added with
+the corresponding registry migrations. Queue backlog and dead-letter counts
+must be monitored before and after GitHub App releases.
 
 ## Observability
 

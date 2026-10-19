@@ -5,8 +5,14 @@ import {
   runWithRuntimeConfig,
 } from '@/config/runtime.config';
 import type { GithubAppEnv } from '@/types/env';
+import type { OperationQueueBatch } from '@/operations/cloudflare.types';
+import { MutationCoordinatorDurableObject } from '@/operations/mutation-coordinator.object';
+import { OperationStateDurableObject } from '@/operations/operation-state.object';
+import { consumeOperationBatch } from '@/operations/queue.consumer';
+import type { OperationHandler } from '@/operations/operation.types';
 
 type AppExecutionContext = Parameters<typeof app.fetch>[2];
+const operationHandlers: Record<string, OperationHandler> = {};
 
 const worker = {
   async fetch(
@@ -32,6 +38,13 @@ const worker = {
       );
     }
   },
+  async queue(batch: OperationQueueBatch, env: GithubAppEnv): Promise<void> {
+    const config = parseRuntimeConfig(env);
+    await runWithRuntimeConfig(config, () =>
+      consumeOperationBatch(batch, env, operationHandlers)
+    );
+  },
 };
 
+export { MutationCoordinatorDurableObject, OperationStateDurableObject };
 export default worker;

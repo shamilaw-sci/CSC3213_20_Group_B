@@ -27,6 +27,9 @@ const processEnv = createEnv({
 const bindings: GithubAppEnv = processEnv;
 const runtimeConfig = parseRuntimeConfig(bindings);
 
+// Operation factories fall back to the shared in-memory store and coordinator
+// when Cloudflare bindings are absent in local Bun development.
+
 /**
  * Starts the Hono app on Bun's native HTTP server.
  */

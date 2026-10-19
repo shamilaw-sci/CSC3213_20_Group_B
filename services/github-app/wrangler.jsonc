@@ -22,6 +22,45 @@
     "GITHUB_PROJECTS_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
     "PORT": "3000"
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "OPERATION_STATE",
+        "class_name": "OperationStateDurableObject"
+      },
+      {
+        "name": "MUTATION_COORDINATOR",
+        "class_name": "MutationCoordinatorDurableObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-operation-runtime",
+      "new_sqlite_classes": [
+        "OperationStateDurableObject",
+        "MutationCoordinatorDurableObject"
+      ]
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "OPERATION_QUEUE",
+        "queue": "scs-github-operations"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "scs-github-operations",
+        "dead_letter_queue": "scs-github-operations-dlq",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "retry_delay": 5
+      }
+    ]
+  },
   "observability": {
     "logs": {
       "enabled": true,

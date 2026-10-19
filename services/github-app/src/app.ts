@@ -3,6 +3,10 @@ import { logger } from 'hono/logger';
 
 import { handleUpdateRepositoryPermission } from '@/controllers/repository-permission.controller';
 import {
+  handleCancelOperation,
+  handleGetOperation,
+} from '@/controllers/operation.controller';
+import {
   handleGetPublicProfile,
   handleGetPublicProfilePrStatus,
   handleDiscardPublicProfilePr,
@@ -45,6 +49,12 @@ app.use(logger());
 app.use(auth);
 
 app.get('/', (c) => c.json({ message: 'GitHub App is running!' }));
+app.get('/operations/:operationId', async (c) =>
+  handleGetOperation(c.req.raw, c.env, c.req.param('operationId'))
+);
+app.delete('/operations/:operationId', async (c) =>
+  handleCancelOperation(c.req.raw, c.env, c.req.param('operationId'))
+);
 
 app.get('/user/access-config', async (c) =>
   handleGetUserAccessConfig(c.req.raw)

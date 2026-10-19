@@ -9,6 +9,30 @@ const config = [
   ...workerConfig,
   typescriptProjectRoot(import.meta.dirname),
   {
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.eslint.json'],
+        projectService: false,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['src/index.ts', 'src/operations/*.object.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.worker.json'],
+        projectService: false,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // Cloudflare exposes this runtime module virtually; TypeScript validates it
+      // through @cloudflare/workers-types in the worker project.
+      'import/no-unresolved': 'off',
+    },
+  },
+  {
     linterOptions: {
       reportUnusedDisableDirectives: false,
     },
