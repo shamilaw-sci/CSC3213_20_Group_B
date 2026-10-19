@@ -408,6 +408,7 @@ export const updatePublicProjectRequestSchema = z
     manifestPath: z.literal('public/projects/v2/manifest.json'),
     project: ProjectSchema,
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedProjectPath = `public/projects/v2/projects/${value.slug}.json`;
@@ -442,6 +443,7 @@ export const deletePublicProjectRequestSchema = z
     aggregatePath: z.literal('public/projects/v2/projects.json'),
     manifestPath: z.literal('public/projects/v2/manifest.json'),
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedProjectPath = `public/projects/v2/projects/${value.slug}.json`;
@@ -454,6 +456,31 @@ export const deletePublicProjectRequestSchema = z
       });
     }
   });
+
+const projectOperationEnvelopeSchema = z.object({
+  actorSubjectId: z
+    .string()
+    .trim()
+    .min(16)
+    .max(128)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
+  idempotencyKey: IdempotencyKeySchema,
+  correlationId: z.string().trim().min(8).max(128),
+});
+
+export const submitPublicProjectOperationRequestSchema = z.discriminatedUnion(
+  'action',
+  [
+    projectOperationEnvelopeSchema.extend({
+      action: z.literal('upsert'),
+      request: updatePublicProjectRequestSchema,
+    }),
+    projectOperationEnvelopeSchema.extend({
+      action: z.literal('delete'),
+      request: deletePublicProjectRequestSchema,
+    }),
+  ]
+);
 
 export const updatePublicCourseRequestSchema = z
   .object({

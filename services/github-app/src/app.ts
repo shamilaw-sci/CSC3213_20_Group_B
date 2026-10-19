@@ -18,6 +18,7 @@ import {
   handleGetPublicProject,
   handleGetPublicProjectPrStatus,
   handleListPublicProjects,
+  handleSubmitPublicProjectOperation,
   handleUpsertPublicProjectPr,
 } from '@/controllers/public-project.controller';
 import {
@@ -99,6 +100,9 @@ app.get('/projects/public-project/pr', async (c) =>
 );
 app.put('/projects/public-project/pr', async (c) =>
   handleUpsertPublicProjectPr(c.req.raw)
+);
+app.post('/projects/public-project/operations', async (c) =>
+  handleSubmitPublicProjectOperation(c.req.raw, c.env)
 );
 app.delete('/projects/public-project/pr', async (c) =>
   handleDeletePublicProjectPr(c.req.raw)

@@ -1,3 +1,13 @@
+import { ApiErrorEnvelopeSchema, MutationAcceptedSchema } from '@scs/schemas';
+
+import {
+  createProjectOperationCommand,
+  createProjectOperationHandlers,
+} from '@/domains/projects/project.operation';
+import { createProjectDraftRepository } from '@/domains/projects/project.repository';
+import { createOperationExecutor } from '@/operations/queue.consumer';
+import { OperationIdempotencyConflictError } from '@/operations/operation.executor';
+import type { OperationRecord } from '@/operations/operation.types';
 import {
   deletePublicProjectPr,
   getPublicProject,
@@ -9,8 +19,10 @@ import {
 import {
   deletePublicProjectRequestSchema,
   getPublicProjectQuerySchema,
+  submitPublicProjectOperationRequestSchema,
   updatePublicProjectRequestSchema,
 } from '@/schemas/request.schema';
+import type { GithubAppEnv } from '@/types/env';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 
 export async function handleGetPublicProject(req: Request): Promise<Response> {
@@ -99,4 +111,70 @@ export async function handleDeletePublicProjectPr(
     }
     throw error;
   }
+}
+
+export async function handleSubmitPublicProjectOperation(
+  req: Request,
+  env: GithubAppEnv
+): Promise<Response> {
+  const body = await readJsonBody(req);
+  const parsed = submitPublicProjectOperationRequestSchema.safeParse(body);
+  if (!parsed.success) return createValidationErrorResponse(parsed.error);
+
+  const repository = createProjectDraftRepository();
+  const executor = createOperationExecutor(
+    env,
+    createProjectOperationHandlers(repository)
+  );
+  const request = {
+    action: parsed.data.action,
+    slug: parsed.data.request.slug,
+    updatedBy: parsed.data.request.updatedBy,
+    projectPath: parsed.data.request.projectPath,
+    expectedRevision: parsed.data.request.expectedRevision,
+    ...(parsed.data.action === 'upsert'
+      ? { project: parsed.data.request.project }
+      : {}),
+  };
+  let operation: OperationRecord;
+  try {
+    operation = await executor.submit(
+      createProjectOperationCommand({
+        request,
+        actorSubjectId: parsed.data.actorSubjectId,
+        idempotencyKey: parsed.data.idempotencyKey,
+        correlationId: parsed.data.correlationId,
+      })
+    );
+  } catch (error) {
+    if (error instanceof OperationIdempotencyConflictError) {
+      return Response.json(
+        ApiErrorEnvelopeSchema.parse({
+          version: 1,
+          error: {
+            code: 'idempotency_conflict',
+            message: 'The idempotency key was already used for another input',
+            correlationId: parsed.data.correlationId,
+            conflict: {
+              resourceType: 'project',
+              resourceId: parsed.data.request.slug,
+            },
+          },
+        }),
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
+
+  return Response.json(
+    MutationAcceptedSchema.parse({
+      version: 1,
+      operationId: operation.operationId,
+      status: operation.status === 'running' ? 'running' : 'queued',
+      statusUrl: `/api/operations/${operation.operationId}`,
+      retryAfterMs: 500,
+    }),
+    { status: 202 }
+  );
 }
