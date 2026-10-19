@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto';
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
-import { isGitHubNotFoundError } from '@/utils/github';
+import { createAtomicCommit } from '@/github/atomic-commit';
+import { createGithubClient } from '@/github/github.client';
+import { PullRequestGateway } from '@/github/pull-request.gateway';
+import { RepositoryGateway } from '@/github/repository.gateway';
 
 /**
  * Result returned after a config file change is committed through a PR.
@@ -24,17 +27,6 @@ interface ConfigFileChangeInput {
   pullRequestTitle: string;
   pullRequestBody: string;
   branchNamePrefix: string;
-}
-
-interface ExistingContent {
-  sha?: string;
-}
-
-/**
- * Encodes file content for GitHub's create-or-update-file API.
- */
-function encodeBase64(value: string): string {
-  return Buffer.from(value).toString('base64');
 }
 
 /**
@@ -62,93 +54,48 @@ function createBranchName(prefix: string): string {
 export async function applyConfigFileChangeThroughPullRequest(
   input: ConfigFileChangeInput
 ): Promise<PullRequestAutomationResult> {
-  const octokit = getOctokit();
-  const owner = envConfig.GITHUB_OWNER;
-  const repo = envConfig.GITHUB_CONFIG_REPOSITORY;
-
-  const repository = await octokit.repos.get({ owner, repo });
-  const defaultBranch = repository.data.default_branch;
-  const baseRef = await octokit.git.getRef({
-    owner,
-    repo,
-    ref: `heads/${defaultBranch}`,
-  });
+  const client = createGithubClient(getOctokit());
+  const repository = {
+    owner: envConfig.GITHUB_OWNER,
+    repo: envConfig.GITHUB_CONFIG_REPOSITORY,
+  };
+  const repositoryGateway = new RepositoryGateway(client, repository);
+  const pullRequestGateway = new PullRequestGateway(client, repository);
+  const defaultBranch = await repositoryGateway.getDefaultBranch();
 
   const branch = createBranchName(input.branchNamePrefix);
 
-  await octokit.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${branch}`,
-    sha: baseRef.data.object.sha,
-  });
-
-  let existingContent: ExistingContent | undefined;
-  try {
-    const response = await octokit.repos.getContent({
-      owner,
-      repo,
-      path: input.path,
-      ref: branch,
-    });
-
-    if (!Array.isArray(response.data) && 'sha' in response.data) {
-      existingContent = { sha: response.data.sha };
-    }
-  } catch (error) {
-    if (!isGitHubNotFoundError(error)) {
-      throw error;
-    }
-  }
-
-  const fileUpdate = await octokit.repos.createOrUpdateFileContents({
-    owner,
-    repo,
-    path: input.path,
+  await repositoryGateway.createBranch(branch, defaultBranch.sha);
+  const commit = await createAtomicCommit(client, {
+    repository,
+    ref: `heads/${branch}`,
+    expectedParentSha: defaultBranch.sha,
     message: input.message,
-    content: encodeBase64(input.content),
-    branch,
-    sha: existingContent?.sha,
+    changes: [{ path: input.path, content: input.content }],
   });
 
-  const pullRequest = await octokit.pulls.create({
-    owner,
-    repo,
+  const pullRequest = await pullRequestGateway.create({
     title: input.pullRequestTitle,
     body: input.pullRequestBody,
     head: branch,
-    base: defaultBranch,
+    base: defaultBranch.name,
   });
 
-  const merge = await octokit.pulls.merge({
-    owner,
-    repo,
-    pull_number: pullRequest.data.number,
-    merge_method: 'squash',
-  });
-  const commitSha = fileUpdate.data.commit.sha;
-
-  if (!commitSha) {
-    throw new Error(`GitHub did not return a commit SHA for ${input.path}`);
-  }
+  const merged = await pullRequestGateway.merge(pullRequest.number);
 
   try {
-    await octokit.git.deleteRef({
-      owner,
-      repo,
-      ref: `heads/${branch}`,
-    });
+    await repositoryGateway.deleteBranch(branch);
   } catch (error) {
     console.warn(`Failed to delete branch ${branch}:`, error);
   }
 
   return {
     branch,
-    commitSha,
+    commitSha: commit.commitSha,
     pullRequest: {
-      number: pullRequest.data.number,
-      url: pullRequest.data.html_url,
-      merged: merge.data.merged,
+      number: pullRequest.number,
+      url: pullRequest.html_url,
+      merged,
     },
   };
 }

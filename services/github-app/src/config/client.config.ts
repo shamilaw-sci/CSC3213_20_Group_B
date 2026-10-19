@@ -1,7 +1,25 @@
-import { Octokit } from '@octokit/rest';
+import { createHash } from 'node:crypto';
+
 import { createAppAuth } from '@octokit/auth-app';
+import { Octokit } from '@octokit/rest';
 
 import { getRuntimeConfig } from '@/config/runtime.config';
+
+let cachedClient: { fingerprint: string; octokit: Octokit } | undefined;
+
+function credentialFingerprint(input: {
+  appId: string;
+  installationId: string;
+  privateKey: string;
+}): string {
+  return createHash('sha256')
+    .update(input.appId)
+    .update('\0')
+    .update(input.installationId)
+    .update('\0')
+    .update(input.privateKey)
+    .digest('hex');
+}
 
 /**
  * Creates an Octokit client authenticated as the configured GitHub App
@@ -9,12 +27,18 @@ import { getRuntimeConfig } from '@/config/runtime.config';
  */
 export function getOctokit() {
   const envConfig = getRuntimeConfig();
-  return new Octokit({
+  const credentials = {
+    appId: envConfig.GITHUB_APP_ID,
+    privateKey: envConfig.GITHUB_PRIVATE_KEY,
+    installationId: envConfig.GITHUB_INSTALLATION_ID,
+  };
+  const fingerprint = credentialFingerprint(credentials);
+  if (cachedClient?.fingerprint === fingerprint) return cachedClient.octokit;
+
+  const octokit = new Octokit({
     authStrategy: createAppAuth,
-    auth: {
-      appId: envConfig.GITHUB_APP_ID,
-      privateKey: envConfig.GITHUB_PRIVATE_KEY,
-      installationId: envConfig.GITHUB_INSTALLATION_ID,
-    },
+    auth: credentials,
   });
+  cachedClient = { fingerprint, octokit };
+  return octokit;
 }
