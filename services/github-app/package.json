@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "$schema": "https://www.schemastore.org/package.json",
   "name": "@scs/github-app",
   "private": true,
   "type": "module",
