@@ -490,6 +490,7 @@ export const updatePublicCourseRequestSchema = z
     aggregatePath: z.literal('public/academic/v2/courses.json'),
     course: CourseSchema,
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedRecordPath = `public/academic/v2/courses/${value.id}.json`;
@@ -518,6 +519,7 @@ export const deletePublicCourseRequestSchema = z
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/courses.json'),
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedRecordPath = `public/academic/v2/courses/${value.id}.json`;
@@ -539,6 +541,7 @@ export const updatePublicCourseOfferingRequestSchema = z
     aggregatePath: z.literal('public/academic/v2/offerings.json'),
     offering: CourseOfferingSchema,
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedRecordPath = `public/academic/v2/offerings/${value.id}.json`;
@@ -567,6 +570,7 @@ export const deletePublicCourseOfferingRequestSchema = z
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/offerings.json'),
     expectedHeadSha: gitShaSchema.optional(),
+    expectedRevision: EntityRevisionSchema.optional(),
   })
   .superRefine((value, ctx) => {
     const expectedRecordPath = `public/academic/v2/offerings/${value.id}.json`;
@@ -579,3 +583,36 @@ export const deletePublicCourseOfferingRequestSchema = z
       });
     }
   });
+
+const academicOperationEnvelopeSchema = z.object({
+  actorSubjectId: z
+    .string()
+    .trim()
+    .min(16)
+    .max(128)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
+  idempotencyKey: IdempotencyKeySchema,
+  correlationId: z.string().trim().min(8).max(128),
+});
+
+export const submitPublicAcademicOperationRequestSchema = z.discriminatedUnion(
+  'operation',
+  [
+    academicOperationEnvelopeSchema.extend({
+      operation: z.literal('course.upsert'),
+      request: updatePublicCourseRequestSchema,
+    }),
+    academicOperationEnvelopeSchema.extend({
+      operation: z.literal('course.delete'),
+      request: deletePublicCourseRequestSchema,
+    }),
+    academicOperationEnvelopeSchema.extend({
+      operation: z.literal('offering.upsert'),
+      request: updatePublicCourseOfferingRequestSchema,
+    }),
+    academicOperationEnvelopeSchema.extend({
+      operation: z.literal('offering.delete'),
+      request: deletePublicCourseOfferingRequestSchema,
+    }),
+  ]
+);

@@ -1,3 +1,13 @@
+import { ApiErrorEnvelopeSchema, MutationAcceptedSchema } from '@scs/schemas';
+
+import {
+  createAcademicOperationCommand,
+  createAcademicOperationHandlers,
+} from '@/domains/academics/academic.operation';
+import { createAcademicDraftRepository } from '@/domains/academics/academic.repository';
+import { createOperationExecutor } from '@/operations/queue.consumer';
+import { OperationIdempotencyConflictError } from '@/operations/operation.executor';
+import type { OperationRecord } from '@/operations/operation.types';
 import {
   deletePublicAcademicPr,
   getPublicAcademicPrStatus,
@@ -11,9 +21,11 @@ import {
   deletePublicCourseOfferingRequestSchema,
   deletePublicCourseRequestSchema,
   getPublicAcademicRecordQuerySchema,
+  submitPublicAcademicOperationRequestSchema,
   updatePublicCourseOfferingRequestSchema,
   updatePublicCourseRequestSchema,
 } from '@/schemas/request.schema';
+import type { GithubAppEnv } from '@/types/env';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 
 export async function handleListPublicCourses(): Promise<Response> {
@@ -232,4 +244,79 @@ export async function handleDeletePublicCourseOfferingPr(
 
 export function academicRegistryPaths() {
   return publicAcademicPaths;
+}
+
+export async function handleSubmitPublicAcademicOperation(
+  req: Request,
+  env: GithubAppEnv
+): Promise<Response> {
+  const body = await readJsonBody(req);
+  const parsed = submitPublicAcademicOperationRequestSchema.safeParse(body);
+  if (!parsed.success) return createValidationErrorResponse(parsed.error);
+
+  const [kind, action] = parsed.data.operation.split('.') as [
+    'course' | 'offering',
+    'upsert' | 'delete',
+  ];
+  const source = parsed.data.request;
+  const record =
+    parsed.data.operation === 'course.upsert'
+      ? parsed.data.request.course
+      : parsed.data.operation === 'offering.upsert'
+        ? parsed.data.request.offering
+        : undefined;
+  const request = {
+    action,
+    kind,
+    id: source.id,
+    updatedBy: source.updatedBy,
+    recordPath: source.recordPath,
+    expectedRevision: source.expectedRevision,
+    ...(record ? { record } : {}),
+  };
+  const executor = createOperationExecutor(
+    env,
+    createAcademicOperationHandlers(createAcademicDraftRepository())
+  );
+  let operation: OperationRecord;
+  try {
+    operation = await executor.submit(
+      createAcademicOperationCommand({
+        request,
+        actorSubjectId: parsed.data.actorSubjectId,
+        idempotencyKey: parsed.data.idempotencyKey,
+        correlationId: parsed.data.correlationId,
+      })
+    );
+  } catch (error) {
+    if (error instanceof OperationIdempotencyConflictError) {
+      return Response.json(
+        ApiErrorEnvelopeSchema.parse({
+          version: 1,
+          error: {
+            code: 'idempotency_conflict',
+            message: 'The idempotency key was already used for another input',
+            correlationId: parsed.data.correlationId,
+            conflict: {
+              resourceType: kind,
+              resourceId: source.id,
+            },
+          },
+        }),
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
+
+  return Response.json(
+    MutationAcceptedSchema.parse({
+      version: 1,
+      operationId: operation.operationId,
+      status: operation.status === 'running' ? 'running' : 'queued',
+      statusUrl: `/api/operations/${operation.operationId}`,
+      retryAfterMs: 500,
+    }),
+    { status: 202 }
+  );
 }

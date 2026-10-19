@@ -30,6 +30,7 @@ import {
   handleGetPublicCoursePrStatus,
   handleListPublicCourseOfferings,
   handleListPublicCourses,
+  handleSubmitPublicAcademicOperation,
   handleUpsertPublicCourseOfferingPr,
   handleUpsertPublicCoursePr,
 } from '@/controllers/public-course.controller';
@@ -117,6 +118,9 @@ app.get('/academic/public-course/pr', async (c) =>
 app.put('/academic/public-course/pr', async (c) =>
   handleUpsertPublicCoursePr(c.req.raw)
 );
+app.post('/academic/public-course/operations', async (c) =>
+  handleSubmitPublicAcademicOperation(c.req.raw, c.env)
+);
 app.delete('/academic/public-course/pr', async (c) =>
   handleDeletePublicCoursePr(c.req.raw)
 );
@@ -131,6 +135,9 @@ app.get('/academic/public-course-offering/pr', async (c) =>
 );
 app.put('/academic/public-course-offering/pr', async (c) =>
   handleUpsertPublicCourseOfferingPr(c.req.raw)
+);
+app.post('/academic/public-course-offering/operations', async (c) =>
+  handleSubmitPublicAcademicOperation(c.req.raw, c.env)
 );
 app.delete('/academic/public-course-offering/pr', async (c) =>
   handleDeletePublicCourseOfferingPr(c.req.raw)
