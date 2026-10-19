@@ -13,6 +13,12 @@
       "skillPath": "security/SKILL.md",
       "computedHash": "087c1094fa5f1834af4785c058dcc8c9abe4c1321b853883c76ea46c93a21cfe"
     },
+    "build-webmcp-tools": {
+      "source": "GoogleChromeLabs/webmcp-tools",
+      "sourceType": "github",
+      "skillPath": "webmcp-skills/skills/build-webmcp-tools/SKILL.md",
+      "computedHash": "95b99fdda4cef71c286ce8ef6edac7b054b1c5866383fb69c8d21febae119296"
+    },
     "cloudflare": {
       "source": "cloudflare/skills",
       "sourceType": "github",
