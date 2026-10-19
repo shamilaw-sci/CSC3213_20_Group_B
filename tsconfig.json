@@ -1,0 +1,9 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "@scs/tsconfig/bun.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.ts", "scripts/**/*.mts", "test/**/*.ts"],
+  "exclude": ["node_modules"]
+}
