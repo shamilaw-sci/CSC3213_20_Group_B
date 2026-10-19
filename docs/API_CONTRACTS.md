@@ -77,6 +77,14 @@ outcome. Actor references contain an opaque subject ID rather than an email,
 token, GitHub credential, or provider payload. Resource types are limited to
 the mutation families owned by this system.
 
+Authenticated clients read or cancel their own operation through `GET` or
+`DELETE /api/operations/:operationId`. Profile editors opt into the durable
+path by sending `Prefer: respond-async` with `MutationControl` on the existing
+profile PR mutation route. Clients without that preference retain the legacy
+synchronous response during the compatibility period. Profile revisions are
+the authoritative user-record blob SHA; `missing` is the expected revision
+when the user record does not yet exist.
+
 ## Cursor Pagination Contract
 
 List routes accept `cursor` and `limit` values through

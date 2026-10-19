@@ -3,6 +3,8 @@ import {
   AcademicTeachingStaffSchema,
   CourseOfferingSchema,
   CourseSchema,
+  EntityRevisionSchema,
+  IdempotencyKeySchema,
   NonAcademicStaffSchema,
   ProjectSchema,
   StudentSchema,
@@ -226,6 +228,7 @@ const publicProfileRequestBaseSchema = z.object({
   aggregatePaths: z.array(dataRepoPathSchema).min(1).max(3),
   expectedUserFileSha: gitShaSchema.nullable().optional(),
   expectedPrHeadSha: gitShaSchema.optional(),
+  expectedRevision: EntityRevisionSchema.optional(),
 });
 
 function usernameFromProfile(profile: {
@@ -368,6 +371,20 @@ export const updatePublicProfileRequestSchema = z
       });
     }
   });
+
+export const submitPublicProfileOperationRequestSchema = z
+  .object({
+    request: updatePublicProfileRequestSchema,
+    actorSubjectId: z
+      .string()
+      .trim()
+      .min(16)
+      .max(128)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
+    idempotencyKey: IdempotencyKeySchema,
+    correlationId: z.string().trim().min(8).max(128),
+  })
+  .strict();
 
 export const discardPublicProfilePrRequestSchema = z.object({
   username: usernameSchema,

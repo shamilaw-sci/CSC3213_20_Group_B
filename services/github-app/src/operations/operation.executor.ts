@@ -241,7 +241,7 @@ export class OperationExecutor {
           continue;
         }
         if (classification.category === 'compare_conflict') {
-          return await this.conflict(operation);
+          return await this.conflict(operation, error);
         }
         return await this.fail(
           operation,
@@ -260,8 +260,32 @@ export class OperationExecutor {
     );
   }
 
-  private async conflict(operation: OperationRecord): Promise<OperationRecord> {
+  private async conflict(
+    operation: OperationRecord,
+    error: unknown
+  ): Promise<OperationRecord> {
     const timestamp = this.now().toISOString();
+    const details =
+      error && typeof error === 'object'
+        ? (error as {
+            expectedRevision?: unknown;
+            currentRevision?: unknown;
+            expectedSha?: unknown;
+            currentSha?: unknown;
+          })
+        : {};
+    const expectedRevision =
+      typeof details.expectedRevision === 'string'
+        ? details.expectedRevision
+        : typeof details.expectedSha === 'string'
+          ? details.expectedSha
+          : undefined;
+    const actualRevision =
+      typeof details.currentRevision === 'string'
+        ? details.currentRevision
+        : typeof details.currentSha === 'string'
+          ? details.currentSha
+          : undefined;
     const conflicted: OperationRecord = {
       ...operation,
       status: 'conflicted',
@@ -276,6 +300,8 @@ export class OperationExecutor {
           conflict: {
             resourceType: operation.resource.type,
             resourceId: operation.resource.id,
+            ...(expectedRevision ? { expectedRevision } : {}),
+            ...(actualRevision ? { actualRevision } : {}),
           },
         },
       },

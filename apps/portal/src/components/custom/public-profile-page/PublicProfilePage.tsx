@@ -14,10 +14,12 @@ import {
   detectKnownSocialUrl,
   HonoursProgrammeCodeSchema,
   type KnownSocialPlatform,
+  type MutationAccepted,
   NonAcademicPositionSchema,
   type NonAcademicStaff,
   NonAcademicStaffSchema,
   normalizeKnownSocialUrl,
+  type OperationStatusResponse,
   PersonSchema,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
@@ -159,6 +161,7 @@ interface PublicProfilePr {
   branch?: string;
   headSha?: string;
   currentUserFileSha?: string | null;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   profileKind?: ProfileKind;
@@ -166,6 +169,34 @@ interface PublicProfilePr {
   targetUserFile?: string;
   targetAggregateFiles?: string[];
   draftProfile?: ProfileRecord | null;
+}
+
+type TerminalOperationStatus = Exclude<
+  OperationStatusResponse,
+  { status: 'queued' | 'running' }
+>;
+
+async function waitForOperation(
+  accepted: MutationAccepted
+): Promise<TerminalOperationStatus> {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, accepted.retryAfterMs)
+    );
+    const response = await fetch(accepted.statusUrl, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: apiHeaders(),
+    });
+    if (!response.ok) throw new Error((await readApiError(response)).message);
+    const operation = (await response.json()) as OperationStatusResponse;
+    if (operation.status !== 'queued' && operation.status !== 'running') {
+      return operation as TerminalOperationStatus;
+    }
+  }
+  throw new Error(
+    'Profile update is still queued. Refresh to check its status.'
+  );
 }
 
 interface PublicProfileResponse {
@@ -2435,7 +2466,10 @@ export default function PublicProfilePage({
       const res = await fetch(profilePrUrl(), {
         method: 'PUT',
         credentials: 'include',
-        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        headers: apiHeaders({
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        }),
         body: JSON.stringify({
           profileKind,
           ...(asString(payloadProfile.studentTrack) === 'HONOURS' && stream
@@ -2448,6 +2482,11 @@ export default function PublicProfilePage({
                   expectedUserFileSha: pr?.currentUserFileSha ?? null,
                 },
               }),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision:
+              pr?.revision ?? pr?.currentUserFileSha ?? 'missing',
+          },
           profile: payloadProfile,
         }),
       });
@@ -2463,22 +2502,23 @@ export default function PublicProfilePage({
         return;
       }
 
-      const nextPr = (await res.json()) as PublicProfilePr;
-      const nextDraft = isRecord(nextPr.draftProfile)
-        ? nextPr.draftProfile
-        : payloadProfile;
-      setPr(nextPr);
-      setDraftProfile(nextDraft);
-      setProfile(nextDraft);
-      syncJson(nextDraft);
-      setActiveTab('draft');
+      const operation = await waitForOperation(
+        (await res.json()) as MutationAccepted
+      );
+      if (operation.status !== 'succeeded') {
+        toast.error(operation.outcome.error.message);
+        return;
+      }
+      await refresh();
       toast.success(
-        nextPr.number
-          ? `Profile PR #${nextPr.number} is ready`
+        operation.outcome.pullRequest?.number
+          ? `Profile PR #${operation.outcome.pullRequest.number} is ready`
           : 'Profile PR is ready'
       );
-    } catch {
-      toast.error('Failed to submit profile PR');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to submit profile PR'
+      );
     } finally {
       setSaving(false);
     }

@@ -57,11 +57,17 @@ describe('atomic Git commit builder', () => {
       ],
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       commitSha: 'next-commit',
       parentSha: 'base-commit',
       treeSha: 'next-tree',
     });
+    expect(result.changedFileShas).toEqual(
+      new Map([
+        ['first.json', 'blob-{"first":true}\n'],
+        ['second.json', 'blob-{"second":true}\n'],
+      ])
+    );
     expect(calls.filter((call) => call === 'createTree')).toHaveLength(1);
     expect(calls.filter((call) => call === 'createCommit')).toHaveLength(1);
     expect(calls.filter((call) => call === 'updateRef')).toHaveLength(1);

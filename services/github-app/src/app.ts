@@ -10,6 +10,7 @@ import {
   handleGetPublicProfile,
   handleGetPublicProfilePrStatus,
   handleDiscardPublicProfilePr,
+  handleSubmitPublicProfileOperation,
   handleUpsertPublicProfilePr,
 } from '@/controllers/public-profile.controller';
 import {
@@ -73,6 +74,9 @@ app.get('/people/public-profile/pr', async (c) =>
 );
 app.put('/people/public-profile/pr', async (c) =>
   handleUpsertPublicProfilePr(c.req.raw)
+);
+app.post('/people/public-profile/operations', async (c) =>
+  handleSubmitPublicProfileOperation(c.req.raw, c.env)
 );
 app.delete('/people/public-profile/pr', async (c) =>
   handleDiscardPublicProfilePr(c.req.raw)

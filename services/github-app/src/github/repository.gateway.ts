@@ -7,6 +7,7 @@ import type {
 
 export interface RepositorySnapshot {
   files: Map<string, string | null>;
+  revisions: Map<string, string | null>;
   treeSha: string;
 }
 
@@ -68,13 +69,16 @@ export class RepositoryGateway {
       )
     );
     const files = new Map<string, string | null>();
+    const revisions = new Map<string, string | null>();
     await Promise.all(
       [...new Set(paths)].map(async (path) => {
         const sha = entries.get(path);
         if (!sha) {
           files.set(path, null);
+          revisions.set(path, null);
           return;
         }
+        revisions.set(path, sha);
 
         const blob = await this.client.git.getBlob({
           ...this.repository,
@@ -88,6 +92,6 @@ export class RepositoryGateway {
       })
     );
 
-    return { files, treeSha: response.data.sha };
+    return { files, revisions, treeSha: response.data.sha };
   }
 }

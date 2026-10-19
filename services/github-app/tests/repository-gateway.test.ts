@@ -48,6 +48,13 @@ describe('GitHub repository gateway', () => {
     expect(snapshot.files.get('one.json')).toBe('blob-one');
     expect(snapshot.files.get('nested/two.json')).toBe('blob-two');
     expect(snapshot.files.get('missing.json')).toBeNull();
+    expect(snapshot.revisions).toEqual(
+      new Map([
+        ['one.json', 'blob-one'],
+        ['nested/two.json', 'blob-two'],
+        ['missing.json', null],
+      ])
+    );
     expect(calls).toEqual(['getTree', 'getBlob:blob-one', 'getBlob:blob-two']);
   });
 

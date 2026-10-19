@@ -49,6 +49,7 @@ import {
   getMyPublicProfilePr,
   getMyPublicProfileSchema,
   getMyStudentPlacement,
+  getProfileOperation,
   upsertAdminStudentPlacementMetadataPr,
   upsertAdminUserPublicProfilePr,
   upsertMyPublicProfilePr,
@@ -102,6 +103,16 @@ type RegisteredRoute = {
 };
 
 const routes: RegisteredRoute[] = [
+  {
+    method: 'GET',
+    match: { kind: 'prefix', path: '/api/operations/' },
+    handler: getProfileOperation,
+  },
+  {
+    method: 'DELETE',
+    match: { kind: 'prefix', path: '/api/operations/' },
+    handler: getProfileOperation,
+  },
   {
     method: 'GET',
     match: { kind: 'exact', path: '/user/proxy/all' },

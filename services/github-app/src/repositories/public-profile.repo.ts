@@ -1,25 +1,21 @@
-import type {
-  AcademicSupportStaff,
-  AcademicTeachingStaff,
-  NonAcademicStaff,
-  Student,
-} from '@scs/schemas';
+import { Buffer } from 'node:buffer';
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
+import {
+  inferProfileKind,
+  profileIdentity,
+  projectProfileMembership,
+  removeProfileMembership as removeProfile,
+  searchEntryForProfile,
+} from '@/domains/profiles/profile.projection';
+import type {
+  ProfileKind as PublicProfileKind,
+  PublicProfile,
+} from '@/domains/profiles/profile.types';
 import { isGitHubNotFoundError } from '@/utils/github';
 
-type PublicProfileKind =
-  'academic' | 'academic-support' | 'non-academic' | 'student';
-
-type PublicProfileByKind = {
-  academic: AcademicTeachingStaff;
-  'academic-support': AcademicSupportStaff;
-  'non-academic': NonAcademicStaff;
-  student: Student;
-};
-
-type PublicProfile = PublicProfileByKind[PublicProfileKind];
+export { removeProfileMembership as removeProfile } from '@/domains/profiles/profile.projection';
 
 export class PublicProfileRequestError extends Error {
   constructor(
@@ -37,6 +33,7 @@ export interface PublicProfilePrStatus {
   branch?: string;
   headSha?: string;
   currentUserFileSha?: string | null;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   profileKind?: PublicProfileKind;
@@ -146,16 +143,6 @@ function parseJson(value: string): unknown {
   return JSON.parse(value) as unknown;
 }
 
-function uniqueStrings(values: Array<string | undefined>) {
-  return [
-    ...new Set(
-      values
-        .map((value) => value?.trim().toLowerCase())
-        .filter((value): value is string => Boolean(value))
-    ),
-  ];
-}
-
 function parseProfilePullRequestBody(body: string): {
   profileKind?: PublicProfileKind;
   stream?: string;
@@ -211,16 +198,6 @@ function isPublicProfileKind(value: string): value is PublicProfileKind {
   );
 }
 
-function inferProfileKind(
-  profile: Record<string, unknown> | null
-): PublicProfileKind | undefined {
-  if (profile?.staffType === 'ACADEMIC_TEACHING') return 'academic';
-  if (profile?.staffType === 'ACADEMIC_SUPPORT') return 'academic-support';
-  if (profile?.staffType === 'NON_ACADEMIC') return 'non-academic';
-  if (typeof profile?.registrationNo === 'string') return 'student';
-  return undefined;
-}
-
 function inferSpecialStream(aggregatePaths: string[]): string | undefined {
   for (const path of aggregatePaths) {
     const match = /^public\/people\/v2\/special\/([^/]+)\//.exec(path);
@@ -228,71 +205,6 @@ function inferSpecialStream(aggregatePaths: string[]): string | undefined {
   }
 
   return undefined;
-}
-
-function profileIdentity(
-  profile: PublicProfile | Record<string, unknown>
-): string {
-  const registrationNo =
-    'registrationNo' in profile ? profile.registrationNo : undefined;
-  if (typeof registrationNo === 'string' && registrationNo.trim()) {
-    return registrationNo.trim().toLowerCase();
-  }
-
-  const email = profile.email;
-  if (typeof email === 'string' && email.includes('@')) {
-    return email.split('@')[0].toLowerCase();
-  }
-
-  return '';
-}
-
-function inferSearchSubtitle(
-  profileKind: PublicProfileKind,
-  profile: Record<string, unknown>
-) {
-  if (profileKind === 'academic') return 'Academic Staff';
-  if (profileKind === 'academic-support') return 'Academic Support Staff';
-  if (profileKind === 'non-academic') return 'Non-Academic Staff';
-  if (profile.status === 'ALUMNI') return 'Alumni';
-  return 'Student';
-}
-
-function searchEntryForProfile(profile: Record<string, unknown>) {
-  const identity = profileIdentity(profile);
-  const profileKind = inferProfileKind(profile);
-  if (!identity || !profileKind) return null;
-
-  const title = typeof profile.title === 'string' ? profile.title : '';
-  const fullName = typeof profile.fullName === 'string' ? profile.fullName : '';
-  const displayName = [title, fullName].filter(Boolean).join(' ').trim();
-  const email = typeof profile.email === 'string' ? profile.email : undefined;
-  const personalEmail =
-    typeof profile.personalEmail === 'string'
-      ? profile.personalEmail
-      : undefined;
-  const type = profileKind === 'student' ? 'STUDENT' : 'STAFF';
-
-  return {
-    id: `${type.toLowerCase()}:${identity}`,
-    type,
-    identity,
-    href: `/people/${identity}`,
-    name: displayName || fullName,
-    subtitle: inferSearchSubtitle(profileKind, profile),
-    ...(email ? { email } : {}),
-    keywords: uniqueStrings([
-      identity,
-      fullName,
-      displayName,
-      email,
-      email?.split('@')[0],
-      personalEmail,
-      typeof profile.registrationNo === 'string'
-        ? profile.registrationNo
-        : undefined,
-    ]),
-  };
 }
 
 function studentBatchFromIdentity(identity: string): string | null {
@@ -359,59 +271,6 @@ export function candidateAggregatePathsForIdentity(
   }
 
   return [...paths];
-}
-
-function upsertProfile(
-  existingValue: unknown,
-  username: string,
-  profile: PublicProfile
-): Record<string, unknown>[] {
-  const records = Array.isArray(existingValue) ? existingValue : [];
-  const nextRecordIdentity =
-    profileIdentity(profile) || normalizeUsername(username);
-  let replaced = false;
-
-  const nextRecords = records
-    .filter((record): record is Record<string, unknown> => {
-      return (
-        record !== null && typeof record === 'object' && !Array.isArray(record)
-      );
-    })
-    .map((record) => {
-      const currentIdentity = profileIdentity(record);
-      if (currentIdentity === nextRecordIdentity) {
-        replaced = true;
-        return profile;
-      }
-      return record;
-    });
-
-  if (!replaced) {
-    nextRecords.push(profile);
-  }
-
-  return nextRecords;
-}
-
-export function removeProfile(
-  existingValue: unknown,
-  username: string
-): Record<string, unknown>[] {
-  const records: unknown[] = Array.isArray(existingValue) ? existingValue : [];
-  const normalizedUsername = normalizeUsername(username);
-
-  return records.filter((record): record is Record<string, unknown> => {
-    if (
-      record === null ||
-      typeof record !== 'object' ||
-      Array.isArray(record)
-    ) {
-      return false;
-    }
-
-    const currentIdentity = profileIdentity(record as Record<string, unknown>);
-    return currentIdentity !== normalizedUsername;
-  });
 }
 
 function hasSameRecords(
@@ -566,6 +425,9 @@ async function reconcileAggregateFiles(input: {
   aggregatePaths: string[];
   profile: PublicProfile;
 }): Promise<void> {
+  // Compatibility-only path for legacy synchronous callers. New operations
+  // commit only the authoritative user record; the external generator will
+  // replace this projection maintenance before the compatibility path is removed.
   const normalizedUsername = normalizeUsername(input.username);
   const targetPaths = new Set(input.aggregatePaths);
   const candidatePaths = candidateAggregatePathsForIdentity(
@@ -614,7 +476,7 @@ async function reconcileAggregateFiles(input: {
       path,
       branch: input.branch,
       content: stringifyJson(
-        upsertProfile(existingJson, normalizedUsername, input.profile)
+        projectProfileMembership(existingJson, input.profile)
       ),
       message: `Update ${input.profileKind} listing for ${normalizedUsername}`,
     });
@@ -622,6 +484,8 @@ async function reconcileAggregateFiles(input: {
 }
 
 async function regenerateSearchIndex(branch: string): Promise<void> {
+  // Compatibility-only: this whole-directory scan is intentionally excluded
+  // from the entity-versioned operation path.
   const userPaths = await listDirectoryFiles('public/people/v2/users', branch);
   const entries = [];
 
@@ -890,6 +754,7 @@ export async function getPublicProfilePrStatus(
       branch: openPull.head.ref,
       headSha: openPull.head.sha,
       currentUserFileSha,
+      revision: draftEntry?.sha,
       canEdit: true,
       updatedAt: openPull.updated_at,
       profileKind,
@@ -903,7 +768,12 @@ export async function getPublicProfilePrStatus(
 
   const latestPull = await findProfilePullRequest(username, 'closed');
   if (!latestPull) {
-    return { status: 'none', canEdit: false, currentUserFileSha };
+    return {
+      status: 'none',
+      canEdit: false,
+      currentUserFileSha,
+      revision: currentUserFileSha ?? undefined,
+    };
   }
 
   return {
@@ -913,6 +783,7 @@ export async function getPublicProfilePrStatus(
     branch: latestPull.head.ref,
     headSha: latestPull.head.sha,
     currentUserFileSha,
+    revision: currentUserFileSha ?? undefined,
     canEdit: false,
     updatedAt: latestPull.updated_at,
   };

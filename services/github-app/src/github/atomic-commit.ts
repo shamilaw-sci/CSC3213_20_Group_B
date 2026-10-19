@@ -20,10 +20,11 @@ interface AtomicCommitInput {
   changes: AtomicFileChange[];
 }
 
-interface AtomicCommitResult {
+export interface AtomicCommitResult {
   commitSha: string;
   parentSha: string;
   treeSha: string;
+  changedFileShas: ReadonlyMap<string, string | null>;
 }
 
 export async function createAtomicCommit(
@@ -71,6 +72,9 @@ export async function createAtomicCommit(
       };
     })
   );
+  const changedFileShas = new Map(
+    tree.map((entry) => [entry.path, entry.sha] as const)
+  );
   const nextTree = await client.git.createTree({
     ...input.repository,
     base_tree: parent.data.tree.sha,
@@ -106,5 +110,6 @@ export async function createAtomicCommit(
     commitSha: commit.data.sha,
     parentSha: input.expectedParentSha,
     treeSha: nextTree.data.sha,
+    changedFileShas,
   };
 }

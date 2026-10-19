@@ -7,6 +7,8 @@ import {
   type AcademicSupportStaff,
   type AcademicTeachingStaff,
   type NonAcademicStaff,
+  type MutationAccepted,
+  type OperationStatusResponse,
   type Student,
 } from '@scs/schemas';
 import type { z } from 'zod';
@@ -116,6 +118,7 @@ interface PublicProfilePr {
   branch?: string;
   headSha?: string;
   currentUserFileSha?: string | null;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   profileKind?: ProfileKind;
@@ -145,6 +148,50 @@ interface ProfilePatchRequest {
   stream?: SpecialStream;
   profile: unknown;
   concurrency?: ProfileConcurrency;
+  control?: {
+    idempotencyKey?: string;
+    expectedRevision?: string;
+  };
+}
+
+async function actorSubjectId(email: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(email.trim().toLowerCase())
+  );
+  return `usr_${[...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+async function submitProfileOperation(input: {
+  env: Env;
+  origin: string;
+  actorEmail: string;
+  request: Record<string, unknown>;
+  control?: ProfilePatchRequest['control'];
+}): Promise<Response> {
+  const idempotencyKey = input.control?.idempotencyKey ?? crypto.randomUUID();
+  const response = await callGithubApp<MutationAccepted>(
+    input.env,
+    input.origin,
+    '/people/public-profile/operations',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request: {
+          ...input.request,
+          expectedRevision: input.control?.expectedRevision,
+        },
+        actorSubjectId: await actorSubjectId(input.actorEmail),
+        idempotencyKey,
+        correlationId: crypto.randomUUID(),
+      }),
+    }
+  );
+  if (!response.ok) return response.response;
+  return createJsonResponse(response.value, 202, input.origin);
 }
 
 interface StudentPlacementRequest {
@@ -1276,23 +1323,34 @@ export async function upsertMyPublicProfilePr(
     );
   }
 
+  const mutationRequest = {
+    username,
+    updatedBy: user.email,
+    updatedByType: 'self' as const,
+    profileKind,
+    userPath: paths.userPath,
+    aggregatePaths: paths.aggregatePaths,
+    expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
+    expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
+    profile: validatedProfile,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitProfileOperation({
+      env,
+      origin,
+      actorEmail: user.email,
+      request: mutationRequest,
+      control: patchRequest.control,
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicProfilePr;
   }>(env, origin, '/people/public-profile/pr', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username,
-      updatedBy: user.email,
-      updatedByType: 'self',
-      profileKind,
-      userPath: paths.userPath,
-      aggregatePaths: paths.aggregatePaths,
-      expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
-      expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
-      profile: validatedProfile,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
@@ -1418,27 +1476,64 @@ export async function upsertAdminUserPublicProfilePr(
     );
   }
 
+  const mutationRequest = {
+    username,
+    updatedBy: verified.actor.email,
+    updatedByType: 'admin' as const,
+    profileKind,
+    userPath: paths.userPath,
+    aggregatePaths: paths.aggregatePaths,
+    expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
+    expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
+    profile: validatedProfile,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitProfileOperation({
+      env,
+      origin,
+      actorEmail: verified.actor.email,
+      request: mutationRequest,
+      control: patchRequest.control,
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicProfilePr;
   }>(env, origin, '/people/public-profile/pr', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username,
-      updatedBy: verified.actor.email,
-      updatedByType: 'admin',
-      profileKind,
-      userPath: paths.userPath,
-      aggregatePaths: paths.aggregatePaths,
-      expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
-      expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
-      profile: validatedProfile,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
+}
+
+export async function getProfileOperation(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const user = await verifiedUser(req, env);
+  if (!user.ok) return user.response;
+  const operationId = new URL(req.url).pathname.split('/').at(-1);
+  if (!operationId) {
+    return createJsonErrorResponse('Operation ID is required', 400, origin);
+  }
+  const response = await callGithubApp<OperationStatusResponse>(
+    env,
+    origin,
+    `/operations/${encodeURIComponent(operationId)}`,
+    {
+      method: req.method,
+      headers: {
+        'X-Actor-Subject-Id': await actorSubjectId(user.email),
+      },
+    }
+  );
+  if (!response.ok) return response.response;
+  return createJsonResponse(response.value, 200, origin);
 }
 
 export async function discardAdminUserPublicProfilePr(

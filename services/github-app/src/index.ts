@@ -10,9 +10,21 @@ import { MutationCoordinatorDurableObject } from '@/operations/mutation-coordina
 import { OperationStateDurableObject } from '@/operations/operation-state.object';
 import { consumeOperationBatch } from '@/operations/queue.consumer';
 import type { OperationHandler } from '@/operations/operation.types';
+import {
+  createProfileOperationHandler,
+  PROFILE_UPSERT_ACTION,
+} from '@/domains/profiles/profile.operation';
+import { createProfileDraftRepository } from '@/domains/profiles/profile.repository';
 
 type AppExecutionContext = Parameters<typeof app.fetch>[2];
-const operationHandlers: Record<string, OperationHandler> = {};
+
+function operationHandlers(): Record<string, OperationHandler> {
+  return {
+    [PROFILE_UPSERT_ACTION]: createProfileOperationHandler(
+      createProfileDraftRepository()
+    ),
+  };
+}
 
 const worker = {
   async fetch(
@@ -41,7 +53,7 @@ const worker = {
   async queue(batch: OperationQueueBatch, env: GithubAppEnv): Promise<void> {
     const config = parseRuntimeConfig(env);
     await runWithRuntimeConfig(config, () =>
-      consumeOperationBatch(batch, env, operationHandlers)
+      consumeOperationBatch(batch, env, operationHandlers())
     );
   },
 };
