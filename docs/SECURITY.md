@@ -28,6 +28,16 @@ not make it safe.
 
 ## Authentication and Authorization
 
+- Better Auth state is stored in D1. Verification identifiers and email OTPs
+  are hashed, rate-limit counters are durable, and OAuth tokens are encrypted
+  at rest with `BETTER_AUTH_SECRET`.
+- Better Auth keeps CSRF and origin validation enabled and accepts only the
+  explicitly configured Portal origins. OAuth accounts are never implicitly
+  linked by matching email; linking requires an authenticated user action.
+- Passkey registration requires an authenticated session, user verification,
+  an allowed origin, and the origin-specific relying-party ID.
+- Email/password authentication is not enabled. Passwordless email OTP,
+  passkey, Google, and GitHub are the supported methods.
 - Session tokens are verified on every protected request and checked against
   revocation/blacklist state.
 - Administrative routes require the appropriate role at the time of action.
@@ -39,6 +49,11 @@ not make it safe.
 - OAuth state and redirect targets must be bound and validated.
 - Passkey challenges must be short-lived and tied to the configured origin and
   relying party.
+
+The legacy `/auth/*` JWT/KV routes remain only for a staged rollout. Do not
+remove them until the Portal uses `/api/auth/*`, existing identities and
+passkeys have a reviewed D1 migration path, and the root verification gates
+pass. Rotate the legacy and Better Auth secrets independently.
 
 ## Input and Output
 

@@ -1,5 +1,22 @@
 import type { Env } from '@/types/env';
 
+function createTestD1Database(): D1Database {
+  return {
+    prepare() {
+      throw new Error('D1 queries are not available in legacy API tests');
+    },
+    batch() {
+      throw new Error('D1 batches are not available in legacy API tests');
+    },
+    exec() {
+      throw new Error('D1 exec is not available in legacy API tests');
+    },
+    dump() {
+      throw new Error('D1 dump is not available in legacy API tests');
+    },
+  } as unknown as D1Database;
+}
+
 function createTestKvNamespace(): KVNamespace {
   const values = new Map<string, string>();
 
@@ -28,6 +45,9 @@ function createTestKvNamespace(): KVNamespace {
 
 export function createTestEnv(overrides: Partial<Env> = {}): Env {
   return {
+    AUTH_DB: createTestD1Database(),
+    BETTER_AUTH_SECRET: 'test-better-auth-secret-at-least-32-characters',
+    BETTER_AUTH_URL: 'https://test.scs-pdn.space',
     JWT_SECRET: 'test-jwt-secret',
     JWT_ISSUER: 'test.scs-pdn.space',
     GOOGLE_CLIENT_ID: 'test-google-client-id',

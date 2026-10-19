@@ -3,6 +3,7 @@
   "name": "api-scs-pdn-ac-lk",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
   "send_metrics": false,
   "workers_dev": false,
   "preview_urls": false,
@@ -13,6 +14,7 @@
     }
   ],
   "vars": {
+    "BETTER_AUTH_URL": "https://api.scs-pdn.space",
     "JWT_ISSUER": "api.scs-pdn.space",
     "GOOGLE_CLIENT_ID": "745767843751-p01q3t3sat4m38ae7fp51c7h88gnvjqv.apps.googleusercontent.com",
     "GOOGLE_REDIRECT_URI": "https://api.scs-pdn.space/auth/google/callback",
@@ -23,6 +25,14 @@
     "CONFIG_DATA_BASE_URL": "https://config.scs-pdn.space",
     "DATA_PUBLIC_BASE_URL": "https://data.scs-pdn.space"
   },
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "scs-portal-auth",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
   "services": [
     {
       "binding": "GITHUB_APP",

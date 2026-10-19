@@ -1,4 +1,5 @@
 import type { Env } from '@/types/env';
+import { createAuth, isBetterAuthRequest } from '@/auth/auth';
 import { handleWorkerRequest } from '@/middleware/request-guards';
 import { dispatchRoute } from '@/routes';
 
@@ -9,7 +10,9 @@ export default {
     ctx: ExecutionContext
   ): Promise<Response> {
     return handleWorkerRequest(req, env, async (request, workerEnv) => {
-      void ctx;
+      if (isBetterAuthRequest(request)) {
+        return createAuth(request, workerEnv, ctx).handler(request);
+      }
       return dispatchRoute(request, workerEnv);
     });
   },

@@ -66,17 +66,24 @@ can safely and predictably include them in client bundles.
 ## API Worker
 
 Non-secret string variables live in `services/api/wrangler.jsonc`:
-`JWT_ISSUER`, OAuth client IDs and redirect URIs, `MAILER_API_URL`,
+`BETTER_AUTH_URL`, `JWT_ISSUER`, OAuth client IDs and redirect URIs, `MAILER_API_URL`,
 `GITHUB_APP_API_URL`, `CONFIG_DATA_BASE_URL`, and `DATA_PUBLIC_BASE_URL`.
 
-Secrets copied from `services/api/.dev.vars.example` are `JWT_SECRET`,
+Secrets copied from `services/api/.dev.vars.example` are `BETTER_AUTH_SECRET`, `JWT_SECRET`,
 `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_SECRET`, `MAILER_API_KEY`,
 `GITHUB_APP_INTERNAL_SECRET`, and `CONFIG_ACCESS_TOKEN_SECRET`. Configure them
 as Worker secrets outside local development.
 
 Resource bindings are not environment strings:
 
+- `AUTH_DB` is the D1 source of truth for Better Auth users, accounts,
+  sessions, verification records, rate limits, and passkeys. Replace the
+  checked-in zero UUID with the provisioned production database ID before
+  deployment and apply `services/api/migrations/` with Wrangler.
 - `PERMISSIONS`, `TOKEN_BLACKLIST`, and `MAGIC_CODES` are KV namespaces.
+  They remain temporarily for the legacy `/auth/*` compatibility routes and
+  application authorization records; new Better Auth state must not be written
+  to them.
 - `GITHUB_APP` is the preferred service binding to the GitHub App Worker.
 - `GITHUB_APP_API_URL` remains the independently deployable HTTP fallback.
 

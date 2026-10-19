@@ -495,6 +495,12 @@ refactor(profiles): use entity-versioned operations
 
 ## Slice 9: Migrate Project and Academic Mutations
 
+Before Slice 9, complete the approved authentication interlude: introduce
+Better Auth on the API Worker with D1-backed state, migrate the Portal client,
+provide a reviewed legacy-identity/passkey migration path, and remove the
+legacy auth routes only after compatibility validation. Keep this work in
+separate verification-gated commits so it does not weaken the registry slices.
+
 ### Files
 
 Create:

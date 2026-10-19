@@ -16,8 +16,10 @@
     "knip:fix": "knip --fix"
   },
   "dependencies": {
+    "@better-auth/passkey": "^1.7.7",
     "@scs/schemas": "workspace:*",
     "@simplewebauthn/server": "^13.3.2",
+    "better-auth": "^1.7.7",
     "jose": "^6.2.3",
     "ms": "^2.1.3",
     "zod": "^4.4.3"
