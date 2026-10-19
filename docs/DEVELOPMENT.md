@@ -44,17 +44,19 @@ workspace declares.
 Copy examples; never edit or commit populated environment files:
 
 ```text
+apps/web/.env.example
 apps/people/.env.example
+apps/projects/.env.example
 apps/portal/.env.example
 services/api/.dev.vars.example
 services/github-app/.env.example
 services/mailer/.env.example
 ```
 
-People reads `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`. Portal reads
-`NEXT_PUBLIC_BASE_API_URL` and uses `COOKIE_DOMAIN` for the local site/API
-layout. API development uses Wrangler and `.dev.vars`. GitHub App and Mailer
-retain Bun entry points for local execution.
+The complete variable catalog, visibility rules, defaults, secrets, and
+Cloudflare bindings are in [Environment variables](ENVIRONMENT_VARIABLES.md).
+API development uses Wrangler and `.dev.vars`. GitHub App and Mailer retain
+Bun entry points for local execution.
 
 ## TypeScript and Linting
 

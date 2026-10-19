@@ -77,6 +77,7 @@ Commitlint validates commit messages.
 - [Architecture](docs/ARCHITECTURE.md)
 - [API contracts](docs/API_CONTRACTS.md)
 - [Development](docs/DEVELOPMENT.md)
+- [Environment variables](docs/ENVIRONMENT_VARIABLES.md)
 - [Operations](docs/OPERATIONS.md)
 - [Schemas](docs/SCHEMAS.md)
 - [Security](docs/SECURITY.md)
