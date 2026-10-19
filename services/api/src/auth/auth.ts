@@ -10,6 +10,13 @@ import {
   PASSKEY_RP_NAME,
 } from '@/config/client.config';
 import { sendEmail } from '@/services/mailer.service';
+import {
+  ACCESS_LEVEL,
+  defaultRoleForEmail,
+  getUserPermission,
+  setUserPermission,
+} from '@/repositories/permissions.repo';
+import { waitUntil } from '@/runtime/request-context';
 import type { Env } from '@/types/env';
 import { isAllowedEmailDomain } from '@/utils/email-domains';
 
@@ -31,11 +38,7 @@ function otpEmail(otp: string): { html: string; text: string } {
   };
 }
 
-export function createAuth(
-  request: Request,
-  env: Env,
-  executionContext: ExecutionContext
-) {
+export function createAuth(request: Request, env: Env) {
   const production = env.BETTER_AUTH_URL.startsWith('https://');
 
   return betterAuth({
@@ -55,12 +58,34 @@ export function createAuth(
         }
       },
     },
+    databaseHooks: {
+      user: {
+        create: {
+          async after(user) {
+            const email = user.email.toLowerCase();
+            const permission = await getUserPermission(email, env);
+            if (permission) return;
+
+            await setUserPermission(
+              email,
+              {
+                role: defaultRoleForEmail(email),
+                accessLevel: ACCESS_LEVEL.NONE,
+                name: user.name,
+                ...(user.image ? { picture: user.image } : {}),
+                createdAt: Date.now(),
+              },
+              env
+            );
+          },
+        },
+      },
+    },
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
         requireEmailVerification: true,
-        prompt: 'select_account',
       },
       github: {
         clientId: env.GITHUB_CLIENT_ID,
@@ -114,7 +139,7 @@ export function createAuth(
         ipv6Subnet: 64,
       },
       backgroundTasks: {
-        handler: (promise) => executionContext.waitUntil(promise),
+        handler: (promise) => waitUntil(request, promise),
       },
       database: {
         joins: true,

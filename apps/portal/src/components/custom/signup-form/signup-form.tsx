@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import publicEnvConfig from '@/config/public.env.config';
-import { authProviderApiUrl } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 
 export function SignupForm({
   className,
@@ -22,19 +22,28 @@ export function SignupForm({
 }: React.ComponentProps<'div'>) {
   const [loading, setLoading] = useState(false);
 
-  async function signup(provider: 'google' | 'github') {
+  async function signup(provider: 'google') {
     setLoading(true);
 
     try {
-      const oAuthUrl = authProviderApiUrl(provider);
-      oAuthUrl.searchParams.set('client_id', 'portal');
-      oAuthUrl.searchParams.set('signup', 'true');
-      const redirectUri = new URL(
-        '/signup',
-        publicEnvConfig.NEXT_PUBLIC_SITE_URL
-      ).toString();
-      oAuthUrl.searchParams.set('redirect_uri', redirectUri);
-      window.location.href = oAuthUrl.toString();
+      const { error } = await authClient.signIn.social({
+        provider,
+        requestSignUp: true,
+        callbackURL: new URL(
+          '/dashboard',
+          publicEnvConfig.NEXT_PUBLIC_SITE_URL
+        ).toString(),
+        newUserCallbackURL: new URL(
+          '/dashboard',
+          publicEnvConfig.NEXT_PUBLIC_SITE_URL
+        ).toString(),
+        errorCallbackURL: new URL(
+          '/signup',
+          publicEnvConfig.NEXT_PUBLIC_SITE_URL
+        ).toString(),
+        additionalParams: { prompt: 'select_account' },
+      });
+      if (error) throw new Error(error.message ?? 'Signup failed');
     } catch (err) {
       console.error(err);
       toast.error('Signup failed. Please try again.');

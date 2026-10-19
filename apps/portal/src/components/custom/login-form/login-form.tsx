@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { MagicCodeForm } from '@/components/custom/magic-code-form/magic-code-form';
 import publicEnvConfig from '@/config/public.env.config';
 import { authProviderApiUrl } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 import {
   authenticateWithPasskey,
   isPasskeyApiError,
@@ -51,16 +52,6 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      const oAuthUrl = authProviderApiUrl(provider);
-      oAuthUrl.searchParams.set('client_id', 'portal');
-      const redirectUri = new URL(
-        '/signin',
-        publicEnvConfig.NEXT_PUBLIC_SITE_URL
-      ).toString();
-      oAuthUrl.searchParams.set('redirect_uri', redirectUri);
-      if (provider === 'google' && prompt) {
-        oAuthUrl.searchParams.set('prompt', prompt);
-      }
       const lastUsed =
         provider === 'google'
           ? prompt === 'select_account'
@@ -69,7 +60,35 @@ export function LoginForm({
           : 'github';
       localStorage.setItem('lastUsedAuth', lastUsed);
       setLastUsedAuth(lastUsed);
-      window.location.href = oAuthUrl.toString();
+
+      // GitHub remains on the compatibility flow until existing linked
+      // university identities have Better Auth account rows.
+      if (provider === 'github') {
+        const oAuthUrl = authProviderApiUrl('github');
+        oAuthUrl.searchParams.set('client_id', 'portal');
+        oAuthUrl.searchParams.set(
+          'redirect_uri',
+          new URL('/login', publicEnvConfig.NEXT_PUBLIC_SITE_URL).toString()
+        );
+        window.location.href = oAuthUrl.toString();
+        return;
+      }
+
+      const { error } = await authClient.signIn.social({
+        provider,
+        callbackURL: new URL(
+          '/dashboard',
+          publicEnvConfig.NEXT_PUBLIC_SITE_URL
+        ).toString(),
+        errorCallbackURL: new URL(
+          '/login',
+          publicEnvConfig.NEXT_PUBLIC_SITE_URL
+        ).toString(),
+        ...(provider === 'google' && prompt
+          ? { additionalParams: { prompt } }
+          : {}),
+      });
+      if (error) throw new Error(error.message ?? 'Login failed');
     } catch (err) {
       console.error(err);
       toast.error('Login failed. Please try again.');

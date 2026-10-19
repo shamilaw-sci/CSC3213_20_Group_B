@@ -1,7 +1,8 @@
-import { jwtVerify } from 'jose';
-
-import { parseCookies } from '@/utils/cookies';
 import type { Env } from '@/types/env';
+import {
+  hasSessionCookie,
+  verifyIdentitySessionToken,
+} from '@/middleware/session';
 import {
   getPermissionAccessLevel,
   getPermissionRole,
@@ -31,9 +32,7 @@ async function getVerifiedProfile(
 > {
   const origin = req.headers.get('origin') || '';
 
-  const cookie = req.headers.get('Cookie');
-  const session = parseCookies(cookie).session;
-  if (!session) {
+  if (!hasSessionCookie(req)) {
     return {
       ok: false,
       response: createTextErrorResponse('Unauthorized', 401, origin),
@@ -52,25 +51,11 @@ async function getVerifiedProfile(
     };
   }
 
-  let payload: {
-    email: string;
-    name?: string;
-    picture?: string;
-  };
-  try {
-    ({ payload } = await jwtVerify(
-      session,
-      new TextEncoder().encode(env.JWT_SECRET),
-      {
-        issuer: env.JWT_ISSUER,
-        audience: clientId,
-      }
-    ));
-  } catch (error) {
-    console.error('JWT verification failed:', error);
+  const payload = await verifyIdentitySessionToken(req, env, clientId);
+  if (payload instanceof Response) {
     return {
       ok: false,
-      response: createTextErrorResponse('Invalid token', 401, origin),
+      response: payload,
     };
   }
 

@@ -36,8 +36,10 @@ not make it safe.
   linked by matching email; linking requires an authenticated user action.
 - Passkey registration requires an authenticated session, user verification,
   an allowed origin, and the origin-specific relying-party ID.
-- Email/password authentication is not enabled. Passwordless email OTP,
-  passkey, Google, and GitHub are the supported methods.
+- Email/password authentication is not enabled. Better Auth owns passwordless
+  email OTP, passkey, and Google flows. GitHub sign-in remains on the legacy
+  compatibility route until existing linked identities have reviewed Better
+  Auth account rows; implicit email-based linking stays disabled.
 - Session tokens are verified on every protected request and checked against
   revocation/blacklist state.
 - Administrative routes require the appropriate role at the time of action.
@@ -50,10 +52,13 @@ not make it safe.
 - Passkey challenges must be short-lived and tied to the configured origin and
   relying party.
 
-The legacy `/auth/*` JWT/KV routes remain only for a staged rollout. Do not
-remove them until the Portal uses `/api/auth/*`, existing identities and
-passkeys have a reviewed D1 migration path, and the root verification gates
-pass. Rotate the legacy and Better Auth secrets independently.
+The legacy `/auth/*` JWT/KV routes remain only for a staged rollout. Portal
+Google, email OTP, passkey management, and logout now use `/api/auth/*`; the
+API accepts both legacy and Better Auth session cookies while protected routes
+move across. Do not remove the compatibility routes until existing GitHub
+links and passkeys have a reviewed D1 migration/backfill path and the root
+verification gates pass. Rotate the legacy and Better Auth secrets
+independently.
 
 ## Input and Output
 

@@ -110,6 +110,11 @@ included when it is cheap and consistent, but clients must not require it.
 
 ## Authentication and Account Routes
 
+Better Auth is mounted at `/api/auth/*` and owns Google, email OTP, passkey,
+session, and sign-out endpoints used by the Portal. The explicit `/auth/*`
+routes below are compatibility contracts during the staged identity rollout;
+GitHub sign-in remains on that contract until linked accounts are backfilled.
+
 | Method                 | Route                     | Purpose                          |
 | ---------------------- | ------------------------- | -------------------------------- |
 | `POST`                 | `/auth/signup`            | Begin account signup             |

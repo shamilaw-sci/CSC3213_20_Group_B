@@ -501,6 +501,17 @@ provide a reviewed legacy-identity/passkey migration path, and remove the
 legacy auth routes only after compatibility validation. Keep this work in
 separate verification-gated commits so it does not weaken the registry slices.
 
+Interlude status on 2026-10-19:
+
+- complete: D1-backed Better Auth foundation, hardened cookies/origins/rate
+  limits, Portal Google/email OTP/passkey/sign-out clients, and dual-session
+  verification for existing protected API routes;
+- retained intentionally: legacy GitHub sign-in/linking and all legacy auth
+  routes;
+- remaining gate: design and validate the production identity/passkey backfill
+  before deleting compatibility storage or routes, then rerun the root and
+  per-workspace verification gates.
+
 ### Files
 
 Create:

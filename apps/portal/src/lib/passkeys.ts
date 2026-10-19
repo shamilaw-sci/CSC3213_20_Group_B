@@ -1,24 +1,10 @@
-import {
-  browserSupportsWebAuthn,
-  startAuthentication,
-  startRegistration,
-} from '@simplewebauthn/browser';
+import { authClient } from '@/lib/auth-client';
 
-import {
-  apiHeaders,
-  passkeyCredentialApiUrl,
-  passkeyCredentialsApiUrl,
-  passkeyLoginOptionsApiUrl,
-  passkeyLoginVerifyApiUrl,
-  passkeyRegisterOptionsApiUrl,
-  passkeyRegisterVerifyApiUrl,
-  readApiError,
-} from '@/lib/api';
-
-interface PasskeyApiResponse {
-  redirectTo?: string;
-  message?: string;
+interface BetterAuthClientError {
   code?: string;
+  message?: string;
+  status: number;
+  statusText: string;
 }
 
 export interface PasskeyCredential {
@@ -27,14 +13,6 @@ export interface PasskeyCredential {
   transports?: string[];
   name?: string;
 }
-
-type RegistrationOptions = Parameters<
-  typeof startRegistration
->[0]['optionsJSON'];
-
-type AuthenticationOptions = Parameters<
-  typeof startAuthentication
->[0]['optionsJSON'];
 
 class PasskeyApiError extends Error {
   status: number;
@@ -48,138 +26,80 @@ class PasskeyApiError extends Error {
   }
 }
 
-async function fetchPasskeyJson<TResponse>(
-  path: URL,
-  init?: RequestInit
-): Promise<TResponse> {
-  const headers = apiHeaders(init?.headers);
-  headers.set('Content-Type', 'application/json');
+function throwPasskeyError(error: BetterAuthClientError | null): void {
+  if (!error) return;
 
-  const response = await fetch(path, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      ...Object.fromEntries(headers.entries()),
-    },
-  });
-
-  if (!response.ok) {
-    const data = await readApiError(response);
-    throw new PasskeyApiError(
-      data.message ?? 'Passkey request failed. Please try again.',
-      response.status,
-      data.code
-    );
-  }
-
-  const data = (await response.json().catch(() => ({}))) as PasskeyApiResponse;
-  return data as TResponse;
+  throw new PasskeyApiError(
+    error.message ?? error.statusText ?? 'Passkey request failed.',
+    error.status,
+    error.code
+  );
 }
 
 export function passkeysAreSupported() {
-  return browserSupportsWebAuthn();
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.PublicKeyCredential !== 'undefined' &&
+    typeof navigator.credentials !== 'undefined'
+  );
 }
 
 export function isPasskeyApiError(error: unknown): error is PasskeyApiError {
   return error instanceof PasskeyApiError;
 }
 
-export async function authenticateWithPasskey(email?: string) {
-  const optionsJSON = await fetchPasskeyJson<
-    | {
-        challenge: string;
-        allowCredentials: Array<{ id: string; type: 'public-key' }>;
-      }
-    | Record<string, unknown>
-  >(passkeyLoginOptionsApiUrl(), {
-    method: 'POST',
-    body: JSON.stringify(email?.trim() ? { email: email.trim() } : {}),
-  });
+export async function authenticateWithPasskey() {
+  const { data, error } = await authClient.signIn.passkey();
+  throwPasskeyError(error);
 
-  function hasAuthenticationOptions(
-    obj: unknown
-  ): obj is AuthenticationOptions {
-    return typeof obj === 'object' && obj !== null && 'challenge' in obj;
-  }
-
-  if (!hasAuthenticationOptions(optionsJSON)) {
-    throw new PasskeyApiError(
-      'Invalid authentication options from server',
-      500
-    );
-  }
-
-  const credential = await startAuthentication({ optionsJSON: optionsJSON });
-
-  return fetchPasskeyJson<{
-    verified: boolean;
-    redirectTo?: string;
-  }>(passkeyLoginVerifyApiUrl(), {
-    method: 'POST',
-    body: JSON.stringify({ response: credential }),
-  });
+  return {
+    verified: Boolean(data?.session),
+    redirectTo: '/dashboard',
+  };
 }
 
 export async function registerPasskey(name?: string) {
-  const optionsJSON = await fetchPasskeyJson<
-    { registrationOptions: RegistrationOptions } | RegistrationOptions
-  >(passkeyRegisterOptionsApiUrl(), {
-    method: 'POST',
-    body: JSON.stringify(name?.trim() ? { name: name.trim() } : {}),
+  const { data, error } = await authClient.passkey.addPasskey({
+    ...(name ? { name } : {}),
   });
+  throwPasskeyError(error);
 
-  function hasRegistrationOptions(
-    obj: unknown
-  ): obj is { registrationOptions: RegistrationOptions } {
-    return (
-      typeof obj === 'object' && obj !== null && 'registrationOptions' in obj
-    );
-  }
-
-  // support either `{ registrationOptions }` or direct options
-  const registrationOptions = hasRegistrationOptions(optionsJSON)
-    ? optionsJSON.registrationOptions
-    : optionsJSON;
-
-  const credential = await startRegistration({
-    optionsJSON: registrationOptions,
-  });
-
-  return fetchPasskeyJson<{
-    verified: boolean;
-    credentialId?: string;
-  }>(passkeyRegisterVerifyApiUrl(), {
-    method: 'POST',
-    body: JSON.stringify({ response: credential }),
-  });
+  return {
+    verified: Boolean(data),
+    credentialId: data?.id,
+  };
 }
 
 export async function updatePasskeyCredential(
   credentialId: string,
   name: string
 ) {
-  return fetchPasskeyJson<{ success: boolean }>(
-    passkeyCredentialApiUrl(credentialId),
-    {
-      method: 'PATCH',
-      body: JSON.stringify({ name }),
-    }
-  );
+  const { data, error } = await authClient.passkey.updatePasskey({
+    id: credentialId,
+    name,
+  });
+  throwPasskeyError(error);
+  return { success: Boolean(data) };
 }
 
 export async function listPasskeyCredentials() {
-  const data = await fetchPasskeyJson<{ credentials: PasskeyCredential[] }>(
-    passkeyCredentialsApiUrl()
-  );
+  const { data, error } = await authClient.passkey.listUserPasskeys();
+  throwPasskeyError(error);
 
-  return data.credentials ?? [];
+  return (data ?? []).map((credential) => ({
+    id: credential.id,
+    createdAt: new Date(credential.createdAt).getTime(),
+    transports: credential.transports
+      ? credential.transports.split(',').filter(Boolean)
+      : undefined,
+    name: credential.name,
+  }));
 }
 
 export async function deletePasskeyCredential(credentialId: string) {
-  return fetchPasskeyJson<{ success: boolean }>(
-    passkeyCredentialApiUrl(credentialId),
-    {
-      method: 'DELETE',
-    }
-  );
+  const { data, error } = await authClient.passkey.deletePasskey({
+    id: credentialId,
+  });
+  throwPasskeyError(error);
+  return { success: Boolean(data) };
 }

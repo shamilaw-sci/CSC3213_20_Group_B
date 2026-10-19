@@ -1,4 +1,4 @@
-import { jwtVerify, SignJWT } from 'jose';
+import { SignJWT } from 'jose';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import {
@@ -24,7 +24,10 @@ import {
   type Permission,
 } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
-import { parseCookies } from '@/utils/cookies';
+import {
+  hasSessionCookie,
+  verifyIdentitySessionToken,
+} from '@/middleware/session';
 
 interface ProxySession {
   email: string;
@@ -223,8 +226,7 @@ async function requireProxySession(
   env: Env
 ): Promise<ProxySession | Response> {
   const origin = getRequestOrigin(req);
-  const session = parseCookies(req.headers.get('Cookie')).session;
-  if (!session) {
+  if (!hasSessionCookie(req)) {
     return createTextErrorResponse('Unauthorized', 401, origin);
   }
 
@@ -233,20 +235,8 @@ async function requireProxySession(
     return createTextErrorResponse('Missing X-Client-Id header', 400, origin);
   }
 
-  let payload: { email: string };
-  try {
-    ({ payload } = await jwtVerify(
-      session,
-      new TextEncoder().encode(env.JWT_SECRET),
-      {
-        issuer: env.JWT_ISSUER,
-        audience: clientId,
-      }
-    ));
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    return createTextErrorResponse('Invalid token', 401, origin);
-  }
+  const payload = await verifyIdentitySessionToken(req, env, clientId);
+  if (payload instanceof Response) return payload;
 
   const permission = await getUserPermission(payload.email, env);
   if (!permission) {

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import { MagicCodeInput } from '@/components/custom/magic-code-input/magic-code-input';
 import { authConfig } from '@/config/auth.config';
-import { requestMagicCode, verifyMagicCode } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 import { auth_error_messages } from '@/views/auth/auth-errors';
 
 type Step = 'idle' | 'sending' | 'verify' | 'verifying';
@@ -103,13 +103,18 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     setCanResend(false);
 
     try {
-      const data = await requestMagicCode(e);
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
+        email: e,
+        type: 'sign-in',
+      });
 
-      if (data.error) {
+      if (error) {
         const message =
-          data.error === 'Unauthorized email domain'
+          error.code === 'university_email_required'
             ? 'Use your @pdn.ac.lk or @sci.pdn.ac.lk email.'
-            : auth_error_messages[data.error] || data.error;
+            : auth_error_messages[error.code ?? ''] ||
+              error.message ||
+              'Unable to send a verification code.';
         setEmailError(message);
         setStep('idle');
         setCanResend(true);
@@ -118,9 +123,7 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
 
       setStep('verify');
       setExpiresAt(
-        Date.now() +
-          (data.expiresIn ?? authConfig.magicCode.fallbackExpiresInSeconds) *
-            1000
+        Date.now() + authConfig.magicCode.fallbackExpiresInSeconds * 1000
       );
       localStorage.setItem('lastUsedAuth', 'email');
 
@@ -142,26 +145,22 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
       setStep('verifying');
 
       try {
-        const result = await verifyMagicCode(email.trim(), code);
+        const { error } = await authClient.signIn.emailOtp({
+          email: email.trim().toLowerCase(),
+          otp: code,
+        });
 
-        if (result.redirectTo) {
-          window.location.href = result.redirectTo;
-          return;
-        }
-
-        if (result.error) {
+        if (error) {
           const message =
-            auth_error_messages[result.error] ||
-            result.error ||
+            auth_error_messages[error.code ?? ''] ||
+            error.message ||
             'Verification failed.';
           setCodeError(message);
           setStep('verify');
           return;
         }
 
-        // Neither redirectTo nor error — something went wrong upstream
-        toast.error('Verification failed. Please try again.');
-        setStep('verify');
+        window.location.href = '/dashboard';
       } catch {
         toast.error('Network error. Please check your connection.');
         setStep('verify');

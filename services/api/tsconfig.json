@@ -1,7 +1,9 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "@scs/tsconfig/worker.json",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
+    "types": ["@cloudflare/workers-types"],
     "paths": {
       "@/*": ["./src/*"],
       "test/*": ["./test/*"]

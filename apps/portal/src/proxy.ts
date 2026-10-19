@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function proxy(request: NextRequest) {
-  const session = request.cookies.get('session');
+  const session =
+    request.cookies.get('session') ??
+    request.cookies.get('scs-auth.session_token') ??
+    request.cookies.get('__Secure-scs-auth.session_token');
 
   const { pathname } = request.nextUrl;
 

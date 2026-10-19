@@ -3,22 +3,17 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { apiHeaders, logoutApiUrl } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 
 export function LogoutButton() {
   const router = useRouter();
   const handleLogout = async () => {
     try {
-      const res = await fetch(logoutApiUrl(), {
-        method: 'POST',
-        credentials: 'include',
-        headers: apiHeaders(),
-      });
-      if (!res.ok) {
-        throw new Error('Logout failed');
-      }
+      const { error } = await authClient.signOut();
+      if (error) throw new Error(error.message ?? 'Logout failed');
       toast.success('Logged out successfully');
-      router.push('/');
+      router.push('/login');
+      router.refresh();
     } catch (error) {
       toast.error('Logout failed');
       console.error('Logout failed:', error);
