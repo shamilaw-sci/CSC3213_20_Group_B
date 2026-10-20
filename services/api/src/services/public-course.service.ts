@@ -16,6 +16,11 @@ import {
 } from '@/repositories/permissions.repo';
 import { verifySessionRequest } from '@/middleware/session';
 import {
+  InvalidPaginationCursorError,
+  paginateByKey,
+  parsePaginationRequest,
+} from '@/pagination/cursor';
+import {
   mutationControl,
   submitMutationOperation,
 } from '@/services/mutation-operation.service';
@@ -183,6 +188,70 @@ export async function listPublicCourses(
   );
 }
 
+async function fetchRegistryPage<T>(input: {
+  req: Request;
+  env: Env;
+  path: string;
+  scope: string;
+  parse: (value: unknown) => { success: true; data: T[] } | { success: false };
+  key: (item: T) => string;
+  label: string;
+}): Promise<Response> {
+  const origin = getRequestOrigin(input.req);
+  try {
+    const response = await fetch(dataPublicUrl(input.env, input.path), {
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error(`${input.label} registry unavailable`);
+    const parsed = input.parse(await response.json());
+    if (!parsed.success) {
+      return createJsonErrorResponse(
+        `${input.label} data is invalid`,
+        502,
+        origin
+      );
+    }
+    const page = paginateByKey({
+      items: parsed.data,
+      key: input.key,
+      scope: input.scope,
+      request: parsePaginationRequest(new URL(input.req.url)),
+    });
+    return createJsonResponse({ version: 1, ...page }, 200, origin);
+  } catch (error) {
+    if (error instanceof InvalidPaginationCursorError) {
+      return createJsonErrorResponse(
+        'Invalid cursor or page limit',
+        400,
+        origin
+      );
+    }
+    console.error(`Error fetching ${input.label.toLowerCase()} page:`, error);
+    return createJsonErrorResponse(
+      `${input.label} data unavailable`,
+      502,
+      origin
+    );
+  }
+}
+
+export async function listPublicCoursesPage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const user = await verifiedUser(req, env);
+  if (!user.ok) return user.response;
+  return fetchRegistryPage({
+    req,
+    env,
+    path: '/academic/v2/courses.json',
+    scope: 'public-courses',
+    parse: (value) => CourseSchema.array().safeParse(value),
+    key: (course) => course.id,
+    label: 'Course',
+  });
+}
+
 export async function getPublicCourse(
   req: Request,
   env: Env
@@ -213,6 +282,23 @@ export async function listPublicOfferings(
     dataPublicUrl(env, '/academic/v2/offerings.json'),
     302
   );
+}
+
+export async function listPublicOfferingsPage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const user = await verifiedUser(req, env);
+  if (!user.ok) return user.response;
+  return fetchRegistryPage({
+    req,
+    env,
+    path: '/academic/v2/offerings.json',
+    scope: 'public-offerings',
+    parse: (value) => CourseOfferingSchema.array().safeParse(value),
+    key: (offering) => offering.id,
+    label: 'Offering',
+  });
 }
 
 export async function getPublicOffering(

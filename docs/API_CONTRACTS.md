@@ -95,7 +95,7 @@ projection generation and compatibility removal are completed.
 
 ## Cursor Pagination Contract
 
-List routes accept `cursor` and `limit` values through
+Versioned page routes accept `cursor` and `limit` values through
 `PaginationRequestSchema`. The default limit is 25 and the maximum is 100.
 Cursors are opaque: clients store and return them unchanged and must not infer
 offsets or resource IDs from their contents.
@@ -158,15 +158,21 @@ the API Worker.
 | Methods                        | Route                                 |
 | ------------------------------ | ------------------------------------- |
 | `GET`                          | `/api/projects/v2/projects`           |
+| `GET`                          | `/api/projects/v2/projects/page`      |
 | `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/...` |
 | `GET`                          | `/api/academic/v2/courses`            |
+| `GET`                          | `/api/academic/v2/courses/page`       |
 | `GET`, `PUT`, `DELETE`         | `/api/academic/v2/courses/:id/...`    |
 | `GET`                          | `/api/academic/v2/offerings`          |
+| `GET`                          | `/api/academic/v2/offerings/page`     |
 | `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/...`  |
 
 Exact detail, schema, and PR suffixes are matched by
 `services/api/src/routes/index.ts`. Mutations validate records with
 `@scs/schemas` before calling the GitHub App.
+The additive `/page` routes return stable key-ordered page envelopes and use
+resource-scoped cursors. The legacy list routes remain available until Portal
+adopts the page routes.
 
 ## Administration and Proxy Routes
 

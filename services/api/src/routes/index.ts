@@ -45,6 +45,7 @@ import {
   getPublicProjectPr,
   getPublicProjectSchema,
   listPublicProjects,
+  listPublicProjectsPage,
   upsertPublicProjectPr,
 } from '@/services/public-project.service';
 import {
@@ -56,7 +57,9 @@ import {
   getPublicOffering,
   getPublicOfferingPr,
   listPublicCourses,
+  listPublicCoursesPage,
   listPublicOfferings,
+  listPublicOfferingsPage,
   upsertPublicCoursePr,
   upsertPublicOfferingPr,
 } from '@/services/public-course.service';
@@ -236,6 +239,11 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
+    match: { kind: 'exact', path: '/api/projects/v2/projects/page' },
+    handler: listPublicProjectsPage,
+  },
+  {
+    method: 'GET',
     match: { kind: 'prefix', path: '/api/projects/v2/projects/' },
     handler: async (req, env) => {
       const pathname = new URL(req.url).pathname;
@@ -288,6 +296,11 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
+    match: { kind: 'exact', path: '/api/academic/v2/courses/page' },
+    handler: listPublicCoursesPage,
+  },
+  {
+    method: 'GET',
     match: { kind: 'prefix', path: '/api/academic/v2/courses/' },
     handler: async (req, env) => {
       const pathname = new URL(req.url).pathname;
@@ -326,6 +339,11 @@ const routes: RegisteredRoute[] = [
     method: 'GET',
     match: { kind: 'exact', path: '/api/academic/v2/offerings' },
     handler: listPublicOfferings,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/academic/v2/offerings/page' },
+    handler: listPublicOfferingsPage,
   },
   {
     method: 'GET',

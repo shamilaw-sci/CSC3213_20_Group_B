@@ -4,6 +4,7 @@ import {
   decodePaginationCursor,
   encodePaginationCursor,
   InvalidPaginationCursorError,
+  paginateByKey,
   parsePaginationRequest,
 } from '@/pagination/cursor';
 
@@ -33,5 +34,29 @@ describe('pagination cursors', () => {
     expect(() =>
       parsePaginationRequest(new URL('https://example.test?limit=101'))
     ).toThrow(InvalidPaginationCursorError);
+  });
+
+  test('returns stable key-ordered pages when the cursor item was removed', () => {
+    const first = paginateByKey({
+      items: ['delta', 'alpha', 'charlie', 'bravo'],
+      key: (item) => item,
+      scope: 'letters',
+      request: { limit: 2 },
+    });
+    expect(first.items).toEqual(['alpha', 'bravo']);
+    expect(first.page).toMatchObject({ hasMore: true, total: 4 });
+
+    const second = paginateByKey({
+      items: ['delta', 'alpha', 'charlie'],
+      key: (item) => item,
+      scope: 'letters',
+      request: { limit: 2, cursor: first.page.nextCursor! },
+    });
+    expect(second.items).toEqual(['charlie', 'delta']);
+    expect(second.page).toEqual({
+      nextCursor: null,
+      hasMore: false,
+      total: 3,
+    });
   });
 });

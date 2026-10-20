@@ -15,6 +15,11 @@ import {
 } from '@/repositories/permissions.repo';
 import { verifySessionRequest } from '@/middleware/session';
 import {
+  InvalidPaginationCursorError,
+  paginateByKey,
+  parsePaginationRequest,
+} from '@/pagination/cursor';
+import {
   mutationControl,
   submitMutationOperation,
 } from '@/services/mutation-operation.service';
@@ -73,6 +78,21 @@ function sNumberFromEmail(email: string): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseProjectSummaries(
+  value: unknown
+): Array<Record<string, unknown> & { slug: string }> | null {
+  if (!Array.isArray(value)) return null;
+  const entries = value.filter(
+    (entry): entry is Record<string, unknown> & { slug: string } =>
+      isRecord(entry) &&
+      typeof entry.slug === 'string' &&
+      typeof entry.id === 'string' &&
+      typeof entry.title === 'string' &&
+      typeof entry.shortDescription === 'string'
+  );
+  return entries.length === value.length ? entries : null;
 }
 
 function slugFromProjectPath(req: Request): string | null {
@@ -326,6 +346,56 @@ export async function listPublicProjects(
     dataPublicUrl(env, '/projects/v2/projects.json'),
     302
   );
+}
+
+export async function listPublicProjectsPage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const user = await verifiedUser(req, env);
+  if (!user.ok) return user.response;
+
+  try {
+    const path = user.isSuperAdmin
+      ? '/projects/v2/projects.json'
+      : `/projects/v2/by-person/${encodeURIComponent(usernameFromEmail(user.email))}.json`;
+    const result = await fetchPublicJson(env, path);
+    if (result.status === 404) {
+      return createJsonResponse(
+        {
+          version: 1,
+          items: [],
+          page: { nextCursor: null, hasMore: false, total: 0 },
+        },
+        200,
+        origin
+      );
+    }
+    const items = user.isSuperAdmin
+      ? ProjectSchema.array().safeParse(result.value)
+      : { success: true as const, data: parseProjectSummaries(result.value) };
+    if (!items.success || !items.data) {
+      return createJsonErrorResponse('Project data is invalid', 502, origin);
+    }
+    const page = paginateByKey({
+      items: items.data,
+      key: (project) => project.slug,
+      scope: 'public-projects',
+      request: parsePaginationRequest(new URL(req.url)),
+    });
+    return createJsonResponse({ version: 1, ...page }, 200, origin);
+  } catch (error) {
+    if (error instanceof InvalidPaginationCursorError) {
+      return createJsonErrorResponse(
+        'Invalid cursor or page limit',
+        400,
+        origin
+      );
+    }
+    console.error('Error fetching project page:', error);
+    return createJsonErrorResponse('Project data unavailable', 502, origin);
+  }
 }
 
 export async function getPublicProjectSchema(

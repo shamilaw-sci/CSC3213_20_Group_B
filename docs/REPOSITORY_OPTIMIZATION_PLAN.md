@@ -628,8 +628,10 @@ Modify:
   safe read-and-backfill behavior for legacy entries;
 - verified: metadata-backed pages perform no per-row permission reads and the
   legacy full-array contract remains compatible;
-- remaining: proxy pages, additive project/course/offering page envelopes, and
-  their stable-ordering contract tests.
+- complete: additive project, course, and offering page envelopes with stable
+  key ordering, scoped cursors, deletion-tolerant continuation, bounded limits,
+  and cross-resource cursor rejection;
+- remaining: bounded proxy pages.
 
 ### Verification
 

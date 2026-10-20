@@ -89,3 +89,36 @@ export function parsePaginationRequest(url: URL): PaginationRequest {
   if (!result.success) throw new InvalidPaginationCursorError();
   return result.data;
 }
+
+export function paginateByKey<T>(input: {
+  items: readonly T[];
+  key: (item: T) => string;
+  scope: string;
+  request: PaginationRequest;
+}): {
+  items: T[];
+  page: { nextCursor: OpaqueCursor | null; hasMore: boolean; total: number };
+} {
+  const sorted = [...input.items].sort((left, right) =>
+    input.key(left).localeCompare(input.key(right))
+  );
+  const after = input.request.cursor
+    ? decodePaginationCursor(input.scope, input.request.cursor)
+    : null;
+  const start = after
+    ? sorted.findIndex((item) => input.key(item).localeCompare(after) > 0)
+    : 0;
+  const items =
+    start < 0 ? [] : sorted.slice(start, start + input.request.limit);
+  const hasMore = start >= 0 && start + items.length < sorted.length;
+  const last = items.at(-1);
+  const nextCursor =
+    hasMore && last
+      ? encodePaginationCursor(input.scope, input.key(last))
+      : null;
+
+  return {
+    items,
+    page: { nextCursor, hasMore, total: sorted.length },
+  };
+}
