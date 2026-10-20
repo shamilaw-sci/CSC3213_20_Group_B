@@ -3,16 +3,10 @@ import type {
   RepositoryPermissionLevel,
 } from '@/schemas/user-access.schema';
 
-/**
- * Formats optional values for human-readable PR audit bodies.
- */
 function formatOptionalValue(value: string | undefined): string {
   return value && value.length > 0 ? value : 'none';
 }
 
-/**
- * Builds the PR audit body for a repository permission update.
- */
 export function buildRepositoryPermissionPullRequestBody(input: {
   username: string;
   repository: string;

@@ -27,8 +27,10 @@ const config = [
       },
     },
     rules: {
-      // Cloudflare exposes this runtime module virtually; TypeScript validates it
-      // through @cloudflare/workers-types in the worker project.
+      /*
+       * `cloudflare:workers` is a runtime-only module validated by the Worker
+       * TypeScript project, so eslint-plugin-import cannot resolve it on disk.
+       */
       'import/no-unresolved': 'off',
     },
   },

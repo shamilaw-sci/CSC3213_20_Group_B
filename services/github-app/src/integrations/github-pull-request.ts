@@ -7,9 +7,6 @@ import { createGithubClient } from '@/github/github.client';
 import { PullRequestGateway } from '@/github/pull-request.gateway';
 import { RepositoryGateway } from '@/github/repository.gateway';
 
-/**
- * Result returned after a config file change is committed through a PR.
- */
 export interface PullRequestAutomationResult {
   branch: string;
   commitSha: string;
@@ -29,9 +26,6 @@ interface ConfigFileChangeInput {
   branchNamePrefix: string;
 }
 
-/**
- * Creates a unique branch name under the requested automation prefix.
- */
 function createBranchName(prefix: string): string {
   const timestamp = new Date()
     .toISOString()
@@ -48,8 +42,9 @@ function createBranchName(prefix: string): string {
 }
 
 /**
- * Applies a single config file change by creating, opening, merging, and
- * cleaning up an automation pull request.
+ * Uses a unique branch and an expected parent SHA so concurrent automations
+ * fail as conflicts instead of overwriting each other. Branch deletion is
+ * best-effort because a completed merge is the durable outcome.
  */
 export async function applyConfigFileChangeThroughPullRequest(
   input: ConfigFileChangeInput

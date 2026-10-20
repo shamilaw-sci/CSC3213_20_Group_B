@@ -91,14 +91,12 @@ export default function ManageUsersPage({ users }: ManageUsersPageProps) {
     <PageShell width="wide">
       <BackButton fallbackHref="/admin" label="Back to Admin" preferFallback />
 
-      {/* Page header */}
       <PageHeader
         title="Manage Users"
         description="View and manage all registered user accounts."
         icon={<Users className="text-muted-foreground size-6" />}
       />
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
@@ -180,7 +178,6 @@ export default function ManageUsersPage({ users }: ManageUsersPageProps) {
         </Card>
       </div>
 
-      {/* Search & filters */}
       <Card>
         <CardHeader>
           <CardTitle>All Users</CardTitle>
@@ -222,7 +219,6 @@ export default function ManageUsersPage({ users }: ManageUsersPageProps) {
 
           <Separator />
 
-          {/* Users list */}
           {filtered.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center gap-2 py-12 text-center">
               <Users className="size-10 opacity-30" />

@@ -7,8 +7,6 @@ import { AcademicTeachingStaffSchema } from '#schemas/people/staff/academic-teac
 import { NonAcademicPositionSchema } from '#schemas/people/staff/non-academic/non-academic-position.schema';
 import { NonAcademicStaffSchema } from '#schemas/people/staff/non-academic/non-academic-staff.schema';
 
-// ─── Academic Rank ─────────────────────────────────────────────────
-
 describe('AcademicRankSchema', () => {
   it('accepts all valid ranks', () => {
     const ranks = [
@@ -36,8 +34,6 @@ describe('AcademicRankSchema', () => {
     expect(() => AcademicRankSchema.parse('')).toThrow();
   });
 });
-
-// ─── Academic Teaching Staff ──────────────────────────────────────
 
 describe('AcademicTeachingStaffSchema', () => {
   const base = {
@@ -115,8 +111,6 @@ describe('AcademicTeachingStaffSchema', () => {
   });
 });
 
-// ─── Academic Support Position ─────────────────────────────────────
-
 describe('AcademicSupportPositionSchema', () => {
   it('accepts all valid positions', () => {
     const positions = [
@@ -136,8 +130,6 @@ describe('AcademicSupportPositionSchema', () => {
     expect(() => AcademicSupportPositionSchema.parse('CEO')).toThrow();
   });
 });
-
-// ─── Academic Support Staff ───────────────────────────────────────
 
 describe('AcademicSupportStaffSchema', () => {
   const base = {
@@ -184,8 +176,6 @@ describe('AcademicSupportStaffSchema', () => {
   });
 });
 
-// ─── Non-Academic Position ─────────────────────────────────────────
-
 describe('NonAcademicPositionSchema', () => {
   it('accepts all valid positions', () => {
     const positions = [
@@ -210,8 +200,6 @@ describe('NonAcademicPositionSchema', () => {
     expect(() => NonAcademicPositionSchema.parse('DIRECTOR')).toThrow();
   });
 });
-
-// ─── Non-Academic Staff ───────────────────────────────────────────
 
 describe('NonAcademicStaffSchema', () => {
   const base = {

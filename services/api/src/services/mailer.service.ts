@@ -10,14 +10,6 @@ export interface MailerSendResponse {
   error?: string;
 }
 
-/**
- * Sends an email via the custom mailer REST API.
- *
- * @param payload  The email content and recipients.
- * @param apiUrl   Base URL of the mailer API (e.g. "https://mailer.example.com").
- * @param apiKey   Bearer token for authentication.
- * @returns        Parsed response from the mailer API.
- */
 export async function sendEmail(
   payload: MailerSendRequest,
   apiUrl: string,

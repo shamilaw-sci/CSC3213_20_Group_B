@@ -26,12 +26,6 @@ import { verifySessionRequest } from '@/middleware/session';
 import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
 import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 
-/**
- * GET /api/admin/users
- *
- * Returns all registered users. Requires a valid session belonging to a
- * non-blacklisted super-admin.
- */
 export async function listUsers(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';
 
@@ -68,13 +62,6 @@ export async function listUsers(req: Request, env: Env): Promise<Response> {
   });
 }
 
-/**
- * GET /api/admin/users/page
- *
- * Returns one bounded, cursor-addressed user summary page. New permission
- * writes carry the summary as KV metadata; legacy entries are read once and
- * backfilled as they are encountered.
- */
 export async function listUsersPage(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';
   const verifyResponse = await verifySessionRequest(req, env);
@@ -126,12 +113,6 @@ export async function listUsersPage(req: Request, env: Env): Promise<Response> {
   }
 }
 
-/**
- * GET /api/admin/users/:email
- *
- * Returns the permissions for a single user identified by email.
- * Requires a valid session belonging to a non-blacklisted super-admin.
- */
 export async function getUserPermissions(
   req: Request,
   env: Env
@@ -186,12 +167,6 @@ export async function getUserPermissions(
   );
 }
 
-/**
- * PATCH /api/admin/users/:email
- *
- * Updates permissions for a single user identified by email.
- * Requires a valid session belonging to a non-blacklisted super-admin.
- */
 export async function updateUserPermissions(
   req: Request,
   env: Env
@@ -334,12 +309,6 @@ export async function updateUserPermissions(
   });
 }
 
-/**
- * DELETE /api/admin/users/:email
- *
- * Deletes the permission record for a single user identified by email.
- * Requires a valid session belonging to a non-blacklisted super-admin.
- */
 export async function deleteUserPermissions(
   req: Request,
   env: Env

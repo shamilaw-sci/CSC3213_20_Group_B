@@ -5,9 +5,6 @@ import {
   PERMISSION_LIST_PAGE_LIMIT,
 } from '@/config/client.config';
 
-/**
- * Repo-level roles
- */
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
 
 const APP_ROLES = [
@@ -50,71 +47,27 @@ const PROFILE_PICTURE_MODES = [
 export type ProfilePictureMode = (typeof PROFILE_PICTURE_MODES)[number];
 
 /**
- * Permission object stored in KV
+ * Stored in KV. `role` identifies the person category; `accessLevel` is an
+ * independent management grant and must not be inferred from that role.
  */
 export interface Permission {
-  /**
-   * Person/category role.
-   */
   role: AppRole;
-
-  /**
-   * Management access inherited on top of the person role.
-   */
   accessLevel?: AccessLevel;
-
-  /**
-   * Repo allow rules
-   */
   include?: Record<string, RepoRole>;
-
-  /**
-   * Repo deny rules
-   */
   exclude?: string[];
-
-  /**
-   * Blacklist flag (for quick revocation)
-   */
   blacklisted?: boolean;
-
-  /**
-   * Notification preferences
-   */
   notifications?: {
     email?: boolean;
     push?: boolean;
   };
-
-  /**
-   * Display name (from OAuth provider or signup)
-   */
   name?: string;
-
-  /**
-   * Profile picture URL (from OAuth provider or signup)
-   */
   picture?: string;
-
-  /**
-   * Rule that controls how the profile picture URL is updated.
-   */
   pictureMode?: ProfilePictureMode;
-
-  /**
-   * Custom Gravatar email when it differs from the user's university email.
-   */
   gravatarMail?: string;
-
-  /**
-   * Unix timestamp (ms) when the user was first registered
-   */
+  /** Unix epoch milliseconds when the user was first registered. */
   createdAt?: number;
 }
 
-/**
- * User data returned by admin APIs.
- */
 export interface UserData {
   id: string;
   email: string;
@@ -315,16 +268,10 @@ export async function hasOtherSuperAdmin(
   return false;
 }
 
-/**
- * KV key helper
- */
 function key(email: string): string {
   return `permissions:${email.toLowerCase()}`;
 }
 
-/**
- * Get permission
- */
 export async function getUserPermission(
   email: string,
   env: Env
@@ -341,9 +288,6 @@ export async function getUserPermission(
   }
 }
 
-/**
- * Save permission
- */
 export async function setUserPermission(
   email: string,
   permission: Permission,
@@ -358,9 +302,6 @@ export async function setUserPermission(
   );
 }
 
-/**
- * Delete permission
- */
 export async function deleteUserPermission(
   email: string,
   env: Env
@@ -369,9 +310,6 @@ export async function deleteUserPermission(
   await env.PERMISSIONS.delete(key(sanitizedEmail));
 }
 
-/**
- * SetNotifications preferences for a permission
- */
 export async function setNotificationPreferences(
   email: string,
   notifications: { email: boolean; push: boolean },
@@ -386,7 +324,9 @@ export async function setNotificationPreferences(
 }
 
 /**
- * Get all permissions (for admin user list)
+ * Reads summaries from KV key metadata to avoid one KV read per user. Records
+ * written before metadata existed are read once and backfilled in bounded
+ * batches; do not replace this with an unbounded `Promise.all`.
  */
 export async function getUserDataPage(
   env: Env,

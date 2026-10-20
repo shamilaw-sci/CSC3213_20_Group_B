@@ -1,6 +1,3 @@
-/**
- * Detects GitHub API 404 responses without depending on Octokit error classes.
- */
 export function isGitHubNotFoundError(error: unknown): boolean {
   return (
     typeof error === 'object' &&

@@ -6,10 +6,7 @@ import { validateSendBody, ValidationError } from '@/validators/send.validator';
 
 const route = new Hono();
 
-// POST /send — sends a transactional email.
-// Auth is enforced upstream by bearerAuth middleware in app.ts.
 route.post('/', async (c) => {
-  // --- parse JSON body -----------------------------------------------------
   let body: unknown;
   try {
     body = await c.req.json();
@@ -20,7 +17,6 @@ route.post('/', async (c) => {
     );
   }
 
-  // --- validate ------------------------------------------------------------
   try {
     validateSendBody(body);
   } catch (err) {
@@ -30,7 +26,6 @@ route.post('/', async (c) => {
     throw err;
   }
 
-  // --- send ----------------------------------------------------------------
   try {
     const result = await sendMail(body);
     return c.json(result, 200);

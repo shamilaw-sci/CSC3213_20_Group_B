@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-// ---------------------------------------------------------------------------
-// Request / Response
-// ---------------------------------------------------------------------------
-
-/** JSON body accepted by `POST /send`. */
 export const sendRequestSchema = z
   .object({
     to: z.union([
@@ -22,7 +17,6 @@ export const sendRequestSchema = z
 
 export type SendRequest = z.infer<typeof sendRequestSchema>;
 
-/** Unified API response. */
 export const sendResponseSchema = z.discriminatedUnion('ok', [
   z.object({
     ok: z.literal(true),

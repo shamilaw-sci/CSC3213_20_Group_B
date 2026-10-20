@@ -121,7 +121,6 @@
   --sidebar-ring: #f0b429;
 }
 
-/* Typography helpers */
 body {
   font-family:
     var(--font-open-sans),
@@ -140,18 +139,15 @@ body {
   color: var(--muted-foreground);
 }
 
-/* Small utility for subtle card accent */
 .card-accent {
   box-shadow: 0 6px 18px rgba(2, 6, 23, 0.12);
   border: 1px solid var(--border);
 }
 
-/* Hero emphasis */
 .hero-em {
   color: var(--primary);
 }
 
-/* Small UI animations */
 @keyframes floatUp {
   from {
     transform: translateY(6px);
@@ -223,7 +219,6 @@ body {
   }
 }
 
-/* Focus-visible improvement */
 :focus {
   outline: none;
 }
@@ -238,7 +233,6 @@ body {
   outline-offset: 0;
 }
 
-/* Visually hidden helper */
 .sr-only {
   position: absolute !important;
   width: 1px;

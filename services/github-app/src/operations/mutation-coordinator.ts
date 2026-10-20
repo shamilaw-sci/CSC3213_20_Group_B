@@ -1,5 +1,9 @@
 import type { MutationCoordinatorNamespace } from '@/operations/cloudflare.types';
 
+/**
+ * Serializes mutations for one canonical resource key while allowing unrelated
+ * resources to progress independently.
+ */
 export interface MutationCoordinator {
   runExclusive<T>(
     resourceKey: string,

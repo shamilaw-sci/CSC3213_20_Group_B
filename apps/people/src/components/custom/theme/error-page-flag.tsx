@@ -2,10 +2,6 @@
 
 import { useEffect } from 'react';
 
-/**
- * Marks the current page as an error/404 page.
- * so global UI elements (like ThemeToggle) can hide themselves.
- */
 export function ErrorPageFlag() {
   useEffect(() => {
     if (typeof document === 'undefined') return;

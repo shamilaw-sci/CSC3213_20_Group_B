@@ -9,15 +9,6 @@ export class ValidationError extends Error {
   }
 }
 
-/**
- * Validates the parsed JSON body against the SendRequest schema.
- * Uses a TypeScript assertion signature — after a successful call
- * the body is narrowed to `SendRequest`.
- *
- * - `to` must be a valid email string or an array of 1–50 valid email addresses
- * - `subject` must be a non-empty string
- * - At least one of `html` / `text` must be a non-empty string
- */
 export function validateSendBody(body: unknown): asserts body is SendRequest {
   if (!body || typeof body !== 'object') {
     throw new ValidationError('Request body must be a JSON object');
@@ -26,7 +17,6 @@ export function validateSendBody(body: unknown): asserts body is SendRequest {
   const raw = body as Record<string, unknown>;
   const { subject, html, text } = raw;
 
-  // Normalize `to` — accept a single string or an array of strings
   const recipients = Array.isArray(raw.to)
     ? raw.to
     : raw.to !== undefined
@@ -43,7 +33,7 @@ export function validateSendBody(body: unknown): asserts body is SendRequest {
     );
   }
 
-  // Mutate body so the normalized array is used downstream
+  /* Preserve the assertion signature while passing normalized recipients downstream. */
   (body as Record<string, unknown>).to = recipients;
 
   if (!subject || typeof subject !== 'string' || subject.trim().length === 0) {

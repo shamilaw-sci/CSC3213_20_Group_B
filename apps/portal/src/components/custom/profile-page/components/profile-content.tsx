@@ -477,7 +477,6 @@ export default function ProfileContent({
         </TabsTrigger>
       </TabsList>
 
-      {/* Sign-In Settings */}
       <TabsContent value="sign-in" className="space-y-6">
         <Card>
           <CardHeader>
@@ -488,7 +487,6 @@ export default function ProfileContent({
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              {/* Google */}
               <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <svg
@@ -530,7 +528,6 @@ export default function ProfileContent({
                 </Badge>
               </div>
 
-              {/* GitHub */}
               <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <svg
@@ -583,7 +580,6 @@ export default function ProfileContent({
                 </div>
               </div>
 
-              {/* Email (Login with Email) */}
               <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <Mail className="size-5" />
@@ -617,7 +613,6 @@ export default function ProfileContent({
         </Card>
       </TabsContent>
 
-      {/* Passkey Settings */}
       <TabsContent value="passkeys" className="space-y-6">
         <Card>
           <CardHeader>
@@ -883,7 +878,6 @@ export default function ProfileContent({
         </Card>
       </TabsContent>
 
-      {/* Notification Settings */}
       <TabsContent value="notifications" className="space-y-6">
         <Card>
           <CardHeader>

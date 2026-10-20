@@ -5,7 +5,7 @@ import { emailOTP } from 'better-auth/plugins';
 import {
   ALLOWED_ORIGINS,
   COOKIE_DOMAIN,
-  COOKIE_MAX_AGE,
+  COOKIE_MAX_AGE_SECONDS,
   PASSKEY_RP_IDS,
   PASSKEY_RP_NAME,
 } from '@/config/client.config';
@@ -103,7 +103,7 @@ export function createAuth(request: Request, env: Env) {
       },
     },
     session: {
-      expiresIn: COOKIE_MAX_AGE,
+      expiresIn: COOKIE_MAX_AGE_SECONDS,
       updateAge: 60 * 60,
       freshAge: 60 * 60,
       cookieCache: {

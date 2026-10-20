@@ -27,6 +27,11 @@ export interface AtomicCommitResult {
   changedFileShas: ReadonlyMap<string, string | null>;
 }
 
+/**
+ * Writes every file through one Git tree, then advances the ref with a
+ * non-forced compare-and-swap. Do not replace this with per-file content API
+ * calls: partial commits and concurrent overwrites would become possible.
+ */
 export async function createAtomicCommit(
   client: GithubClient,
   input: AtomicCommitInput

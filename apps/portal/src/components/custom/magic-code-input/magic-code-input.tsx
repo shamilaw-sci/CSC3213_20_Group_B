@@ -43,7 +43,6 @@ export function MagicCodeInput({
   }
 
   function handleChange(index: number, value: string) {
-    // Accept only single digits
     const cleaned = value.replace(/\D/g, '').slice(-1);
     if (!cleaned) return;
 
@@ -51,7 +50,6 @@ export function MagicCodeInput({
     newDigits[index] = cleaned;
     setDigits(newDigits);
 
-    // Check if all digits are filled
     const code = newDigits.join('');
     if (code.length === length) {
       onComplete(code);
@@ -64,12 +62,10 @@ export function MagicCodeInput({
     if (e.key === 'Backspace') {
       e.preventDefault();
       if (digits[index]) {
-        // Clear current digit
         const newDigits = [...digits];
         newDigits[index] = '';
         setDigits(newDigits);
       } else {
-        // Move to previous input and clear it
         focusPrev(index);
         if (index > 0) {
           const newDigits = [...digits];
@@ -100,11 +96,9 @@ export function MagicCodeInput({
     }
     setDigits(newDigits);
 
-    // Focus the appropriate input
     const focusIdx = Math.min(pasted.length, length - 1);
     inputRefs.current[focusIdx]?.focus();
 
-    // Auto-submit if all filled
     if (pasted.length === length) {
       onComplete(pasted);
     }

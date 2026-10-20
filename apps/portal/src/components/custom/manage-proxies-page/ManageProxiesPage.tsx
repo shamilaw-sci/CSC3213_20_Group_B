@@ -198,7 +198,6 @@ export default function ManageProxiesPage({
 
   return (
     <PageShell width="wide">
-      {/* Page header */}
       <BackButton fallbackHref="/admin" label="Back to Admin" preferFallback />
 
       <PageHeader
@@ -221,7 +220,6 @@ export default function ManageProxiesPage({
         </CardContent>
       </Card>
 
-      {/* Proxy list */}
       <div className="space-y-4">
         {filteredProxies.length === 0 && (
           <Card>

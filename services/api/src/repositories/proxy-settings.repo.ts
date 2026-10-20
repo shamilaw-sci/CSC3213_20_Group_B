@@ -76,6 +76,10 @@ function defaultProxySettings(email: string): ProxySettings {
   };
 }
 
+/**
+ * Lazily persists an expired attempt-window reset. The compare-and-set guard
+ * prevents a stale read from overwriting an edit that completed concurrently.
+ */
 export async function getProxySettings(
   env: Env,
   email: string
@@ -114,6 +118,12 @@ export async function getProxySettings(
   return toProxySettings(row);
 }
 
+/**
+ * Updates settings and consumes a user's allowance in one D1 statement. Keep
+ * the counter predicate inside this UPSERT; a separate read/update sequence
+ * would allow concurrent requests to exceed the configured allowance. Admin
+ * edits intentionally preserve the target user's remaining attempts.
+ */
 export async function saveProxySettings(input: {
   env: Env;
   email: string;
@@ -217,6 +227,10 @@ export async function listProxySettingsPage(
   };
 }
 
+/**
+ * Imports one legacy row without overwriting D1 state created after cutover.
+ * Repeated migration runs therefore remain safe and report their disposition.
+ */
 export async function importProxySettings(
   env: Env,
   settings: Omit<ProxySettings, 'revision'>

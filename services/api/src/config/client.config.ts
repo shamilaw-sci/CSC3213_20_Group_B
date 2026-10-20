@@ -4,7 +4,7 @@ export const ALLOWED_CLIENTS: Record<string, boolean> = {
 
 export const COOKIE_DOMAIN = '.scs-pdn.space';
 
-export const COOKIE_MAX_AGE = 60 * 60 * 5; // 5 hours
+export const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 5;
 
 export const ALLOWED_GOOGLE_WORKSPACES_DOMAINS = ['sci.pdn.ac.lk', 'pdn.ac.lk'];
 

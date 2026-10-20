@@ -126,7 +126,6 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
   return (
     <PageShell>
-      {/* Breadcrumb / Back navigation */}
       <div className="flex items-center gap-2">
         <BackButton
           fallbackHref={detailHref}
@@ -135,7 +134,6 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
         />
       </div>
 
-      {/* User identity header */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
@@ -153,7 +151,6 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
         </CardContent>
       </Card>
 
-      {/* Edit form */}
       <Card>
         <CardHeader>
           <CardTitle>Edit User</CardTitle>
@@ -282,7 +279,6 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
         </CardContent>
       </Card>
 
-      {/* Save button */}
       <div className="flex justify-end gap-3">
         <BackButton
           fallbackHref={detailHref}

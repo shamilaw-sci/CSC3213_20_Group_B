@@ -534,8 +534,10 @@ export default function CourseManagementPage({
     return () => {
       mounted = false;
     };
-    // The loader is intentionally keyed by route state; helper identities are
-    // kept out so editing local workspace state does not restart the request.
+    /*
+     * Key loading by route state only. Helper identities change with local
+     * editor state and must not restart this network request.
+     */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, newCourse]);
 

@@ -121,6 +121,11 @@ async function readMigrationSource(
   return parseLegacyProxySettings(JSON.parse(body) as unknown);
 }
 
+/**
+ * One-time, insert-only migration from the signed legacy aggregate. Input size
+ * limits protect the Worker from an unexpectedly large or malformed source;
+ * remove this action and its source credentials after production cutover.
+ */
 export async function migrateProxySettings(
   env: Env,
   actorEmail: string

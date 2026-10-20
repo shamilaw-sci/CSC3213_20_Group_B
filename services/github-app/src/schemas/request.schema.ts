@@ -46,9 +46,6 @@ const gitShaSchema = z
   .trim()
   .regex(/^[a-f0-9]{40}$/i);
 
-/**
- * Request body for granting or removing repository access.
- */
 export const updateRepositoryPermissionRequestSchema = z.object({
   repository: repositorySchema,
   username: usernameSchema,

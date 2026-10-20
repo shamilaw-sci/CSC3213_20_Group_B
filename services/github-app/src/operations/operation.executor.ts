@@ -74,6 +74,11 @@ interface OperationExecutorOptions {
   dispatch?: (operationId: string) => Promise<void>;
 }
 
+/**
+ * Persists idempotent commands and serializes execution by logical resource.
+ * Operation IDs intentionally depend only on actor and idempotency key; the
+ * separate input hash detects reuse of that key with a different command.
+ */
 export class OperationExecutor {
   private readonly maxAttempts: number;
   private readonly now: () => Date;

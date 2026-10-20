@@ -16,12 +16,10 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/admin') ||
     pathname.startsWith('/academic');
 
-  // Not logged in → block protected routes
   if (!session && isProtected) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Already logged in → block login/signup
   if (session && isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }

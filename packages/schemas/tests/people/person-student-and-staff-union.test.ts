@@ -10,8 +10,6 @@ import {
   StudentStreamDefinitionListSchema,
 } from '#schemas/people/students/student.schema';
 
-// ─── Person ────────────────────────────────────────────────────────
-
 describe('PersonSchema', () => {
   const validPerson = {
     title: 'Dr' as const,
@@ -68,8 +66,6 @@ describe('PersonSchema', () => {
     }
   });
 });
-
-// ─── Student ───────────────────────────────────────────────────────
 
 describe('StudentSchema', () => {
   const validStudent = {
@@ -320,8 +316,6 @@ describe('StudentSchema', () => {
     ).toThrow();
   });
 });
-
-// ─── Staff (discriminated union) ───────────────────────────────────
 
 describe('StaffSchema', () => {
   it('accepts Academic Teaching staff', () => {

@@ -30,8 +30,6 @@ describe('ConferenceSchema', () => {
   });
 });
 
-// ─── Publication ───────────────────────────────────────────────────
-
 describe('PublicationSchema', () => {
   it('accepts a minimal publication', () => {
     expect(() =>
@@ -71,8 +69,6 @@ describe('PublicationSchema', () => {
   });
 });
 
-// ─── Research ──────────────────────────────────────────────────────
-
 describe('ResearchSchema', () => {
   it('accepts valid research with required fields', () => {
     const r = ResearchSchema.parse({
@@ -99,5 +95,3 @@ describe('ResearchSchema', () => {
     expect(() => ResearchSchema.parse({ title: 'Missing Date' })).toThrow();
   });
 });
-
-// ─── Social Links ──────────────────────────────────────────────────

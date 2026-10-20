@@ -94,7 +94,6 @@ export function LoginForm({
       setLastUsedAuth('passkey');
       window.location.href = result.redirectTo ?? '/dashboard';
     } catch (error) {
-      // API-level passkey errors with status codes
       if (isPasskeyApiError(error)) {
         if (error.status === 401) {
           window.location.href = '/logout';
@@ -119,13 +118,11 @@ export function LoginForm({
           return;
         }
 
-        // fallback to server-provided message
         toast.error(error.message || 'Passkey login failed. Please try again.');
         setPasskeyLoading(false);
         return;
       }
 
-      // Browser-level cancellation or WebAuthn DOMExceptions
       const domEx = error as DOMException | undefined;
       if (domEx && domEx.name === 'NotAllowedError') {
         toast.error(auth_error_messages.passkey_cancelled);
@@ -133,7 +130,6 @@ export function LoginForm({
         return;
       }
 
-      // Generic fallback
       toast.error(
         error instanceof Error
           ? error.message

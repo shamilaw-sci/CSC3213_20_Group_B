@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Repository permission levels supported by this service.
- */
 export const repositoryPermissionLevelSchema = z.enum([
   'read',
   'triage',
@@ -11,18 +8,13 @@ export const repositoryPermissionLevelSchema = z.enum([
   'admin',
 ]);
 
-/**
- * Stored repository permission metadata for one repository.
- */
 const repositoryPermissionSchema = z.object({
   permission: repositoryPermissionLevelSchema,
   updatedAt: z.string(),
   updatedBy: z.string(),
 });
 
-/**
- * Full per-user config stored as `public/{username}.json`.
- */
+/** Contract for `public/config/v1/{username}.json` in the config repository. */
 export const userAccessConfigSchema = z.object({
   permissions: z.object({
     repo: z.record(z.string().min(1), repositoryPermissionSchema),

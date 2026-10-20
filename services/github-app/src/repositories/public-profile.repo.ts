@@ -425,9 +425,11 @@ async function reconcileAggregateFiles(input: {
   aggregatePaths: string[];
   profile: PublicProfile;
 }): Promise<void> {
-  // Compatibility-only path for legacy synchronous callers. New operations
-  // commit only the authoritative user record; the external generator will
-  // replace this projection maintenance before the compatibility path is removed.
+  /*
+   * Synchronous compatibility callers still maintain projections here. New
+   * entity-versioned operations commit only the authoritative user record;
+   * remove this path after the external generator owns every projection.
+   */
   const normalizedUsername = normalizeUsername(input.username);
   const targetPaths = new Set(input.aggregatePaths);
   const candidatePaths = candidateAggregatePathsForIdentity(
@@ -484,8 +486,7 @@ async function reconcileAggregateFiles(input: {
 }
 
 async function regenerateSearchIndex(branch: string): Promise<void> {
-  // Compatibility-only: this whole-directory scan is intentionally excluded
-  // from the entity-versioned operation path.
+  /* This whole-directory scan is intentionally outside entity-versioned operations. */
   const userPaths = await listDirectoryFiles('public/people/v2/users', branch);
   const entries = [];
 

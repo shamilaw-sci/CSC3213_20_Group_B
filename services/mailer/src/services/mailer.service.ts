@@ -5,7 +5,7 @@ import type { SendRequest } from '@/types';
 
 const useSSL = Number(env.SMTP_PORT) === 465;
 
-// Reusable Nodemailer transport — created once at module load.
+/** Reuse one SMTP transport so warm requests can reuse pooled connections. */
 const transporter = createTransport({
   host: env.SMTP_HOST,
   port: Number(env.SMTP_PORT) || (useSSL ? 465 : 587),
@@ -16,11 +16,6 @@ const transporter = createTransport({
   },
 });
 
-/**
- * Sends a single transactional email via the configured SMTP transport.
- * Returns `{ ok: true }` on success; throws on SMTP / network failure
- * (caller is expected to catch and return a 502).
- */
 export async function sendMail(payload: SendRequest): Promise<{ ok: true }> {
   await transporter.sendMail({
     from: env.SMTP_FROM,

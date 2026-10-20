@@ -31,7 +31,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     null
   );
 
-  // --- Countdown timer ---
   useEffect(() => {
     if (expiresAt === null) return;
 
@@ -61,7 +60,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     };
   }, [expiresAt]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (resendTimerRef.current) clearTimeout(resendTimerRef.current);
@@ -70,7 +68,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     };
   }, []);
 
-  // --- Helpers ---
   function isValidEmailDomain(e: string): boolean {
     return /@(pdn\.ac\.lk|sci\.pdn\.ac\.lk)$/.test(e.trim());
   }
@@ -85,7 +82,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     return `${masked}@${domain}`;
   }
 
-  // --- Send magic code ---
   async function sendCode() {
     const e = email.trim().toLowerCase();
     if (!e) {
@@ -138,7 +134,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     }
   }
 
-  // --- Verify magic code ---
   const handleCodeComplete = useCallback(
     async (code: string) => {
       setCodeError('');
@@ -176,7 +171,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     setExpiresAt(null);
   }
 
-  // --- Step 2: Code input ---
   if (step === 'verify' || step === 'verifying') {
     return (
       <div className="space-y-3">
@@ -241,7 +235,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     );
   }
 
-  // --- Step 1: Email input ---
   return (
     <div className="space-y-3">
       <div className="space-y-1">

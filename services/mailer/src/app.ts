@@ -11,7 +11,6 @@ const app = new Hono();
 
 app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
 
-// Bearer-auth guard on the /send route
 app.use('/send', bearerAuth({ token: env.MAILER_API_KEY }));
 
 app.route('/send', sendRoute);

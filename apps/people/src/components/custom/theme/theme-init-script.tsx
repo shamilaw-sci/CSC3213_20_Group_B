@@ -1,8 +1,4 @@
-/**
- * Shared theme initialization script to keep global error/not-found
- * in sync with the next-themes `theme` localStorage key and
- * system preference.
- */
+/** Keeps standalone error pages synchronized with next-themes before hydration. */
 function themeInit() {
   try {
     const root = document.documentElement;
@@ -18,14 +14,12 @@ function themeInit() {
           (storedTheme !== 'light' && systemPrefersDark);
         root.classList.toggle('dark', useDarkTheme);
       } catch {
-        // Fail silently if access to localStorage or matchMedia is blocked.
+        return;
       }
     };
 
-    // Initial apply on load
     applyTheme();
 
-    // Respond to system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', applyTheme);
@@ -33,14 +27,13 @@ function themeInit() {
       mediaQuery.addListener(applyTheme);
     }
 
-    // Respond to theme changes from other tabs/windows
     window.addEventListener('storage', (event) => {
       if (event.key === 'theme') {
         applyTheme();
       }
     });
   } catch {
-    // If anything goes wrong, fail gracefully without blocking render.
+    return;
   }
 }
 

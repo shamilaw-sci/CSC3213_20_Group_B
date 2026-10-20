@@ -35,8 +35,6 @@ describe('AcademicUsernameSchema', () => {
   });
 });
 
-// ─── Conference ────────────────────────────────────────────────────
-
 describe('SNumberSchema', () => {
   it.each(['S21513', 'S21SP001'])('accepts %s', (value: string) => {
     expect(() => SNumberSchema.parse(value)).not.toThrow();

@@ -22,8 +22,8 @@ function credentialFingerprint(input: {
 }
 
 /**
- * Creates an Octokit client authenticated as the configured GitHub App
- * installation.
+ * Cache only while the complete credential fingerprint matches the current
+ * request context; local tests may run different runtime configs concurrently.
  */
 export function getOctokit() {
   const envConfig = getRuntimeConfig();
