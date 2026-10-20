@@ -196,6 +196,7 @@ Exact detail, schema, and PR suffixes are matched by
 | Method                   | Route                             |
 | ------------------------ | --------------------------------- |
 | `GET`                    | `/api/admin/users`                |
+| `GET`                    | `/api/admin/users/page`           |
 | `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`         |
 | `GET`                    | `/api/admin/actions`              |
 | `POST`                   | `/api/admin/actions/:actionId`    |
@@ -207,9 +208,13 @@ Exact detail, schema, and PR suffixes are matched by
 | `POST`                   | `/api/admin/proxy/reset-attempts` |
 | `POST`                   | `/api/admin/proxy/build`          |
 
-Admin routes require a non-blacklisted super-admin. The current user and proxy
-list endpoints are scheduled for bounded cursor pagination; consumers must not
-assume unlimited arrays are permanent contracts.
+Admin routes require a non-blacklisted super-admin. The additive
+`GET /api/admin/users/page` route accepts `cursor` and `limit`, returns the
+standard page envelope, and reads summaries from KV key metadata. Permission
+writes maintain that metadata; older entries are read and backfilled when a
+page first encounters them. The legacy `/api/admin/users` array remains
+available during Portal migration. Proxy listing is still scheduled for
+bounded cursor pagination.
 
 ## Internal GitHub App API
 

@@ -1,6 +1,7 @@
 import {
   deleteUserPermission,
   getAllUserData,
+  getUserDataPage,
   getUserPermission,
   hasOtherSuperAdmin,
   isSuperAdmin,
@@ -9,6 +10,12 @@ import {
   type Permission,
   type UserData,
 } from '@/repositories/permissions.repo';
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  InvalidPaginationCursorError,
+  parsePaginationRequest,
+} from '@/pagination/cursor';
 import {
   createCorsHeaders,
   createJsonErrorResponse,
@@ -58,6 +65,64 @@ export async function listUsers(req: Request, env: Env): Promise<Response> {
   return Response.json(users, {
     headers: createCorsHeaders(origin),
   });
+}
+
+/**
+ * GET /api/admin/users/page
+ *
+ * Returns one bounded, cursor-addressed user summary page. New permission
+ * writes carry the summary as KV metadata; legacy entries are read once and
+ * backfilled as they are encountered.
+ */
+export async function listUsersPage(req: Request, env: Env): Promise<Response> {
+  const origin = req.headers.get('origin') || '';
+  const verifyResponse = await verifySessionJwt(req, env);
+  if (!verifyResponse.ok) return verifyResponse;
+
+  const { email: authUserEmail }: { email: string } =
+    await verifyResponse.json();
+  const authUserPermission = authUserEmail
+    ? await getUserPermission(authUserEmail, env)
+    : null;
+  if (
+    !authUserPermission ||
+    authUserPermission.blacklisted ||
+    !isSuperAdmin(authUserPermission)
+  ) {
+    return createTextErrorResponse('Forbidden', 403, origin);
+  }
+
+  try {
+    const request = parsePaginationRequest(new URL(req.url));
+    const providerCursor = request.cursor
+      ? decodePaginationCursor('admin-users', request.cursor)
+      : undefined;
+    const result = await getUserDataPage(env, {
+      cursor: providerCursor,
+      limit: request.limit,
+    });
+    const nextCursor = result.nextCursor
+      ? encodePaginationCursor('admin-users', result.nextCursor)
+      : null;
+    return Response.json(
+      {
+        version: 1,
+        items: result.users,
+        page: { nextCursor, hasMore: nextCursor !== null },
+      },
+      { headers: createCorsHeaders(origin) }
+    );
+  } catch (error) {
+    if (error instanceof InvalidPaginationCursorError) {
+      return createJsonErrorResponse(
+        'Invalid cursor or page limit',
+        400,
+        origin
+      );
+    }
+    console.error('Error fetching user page:', error);
+    return createTextErrorResponse('Internal Server Error', 500, origin);
+  }
 }
 
 /**

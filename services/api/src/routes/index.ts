@@ -21,8 +21,9 @@ import {
 import { me, updateMe } from '@/services/profile.service';
 import {
   deleteUserPermissions,
-  listUsers,
   getUserPermissions,
+  listUsers,
+  listUsersPage,
   updateUserPermissions,
 } from '@/services/admin.service';
 import {
@@ -452,6 +453,11 @@ const routes: RegisteredRoute[] = [
     method: 'GET',
     match: { kind: 'exact', path: '/api/admin/users' },
     handler: listUsers,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/users/page' },
+    handler: listUsersPage,
   },
   {
     method: 'GET',

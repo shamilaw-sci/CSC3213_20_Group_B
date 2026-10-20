@@ -18,25 +18,38 @@ function createTestD1Database(): D1Database {
 }
 
 function createTestKvNamespace(): KVNamespace {
-  const values = new Map<string, string>();
+  const values = new Map<string, { value: string; metadata?: unknown }>();
 
   return {
     async get(key: string): Promise<string | null> {
-      return values.get(key) ?? null;
+      return values.get(key)?.value ?? null;
     },
-    async put(key: string, value: string): Promise<void> {
-      values.set(key, value);
+    async put(
+      key: string,
+      value: string,
+      options?: KVNamespacePutOptions
+    ): Promise<void> {
+      values.set(key, { value, metadata: options?.metadata });
     },
     async delete(key: string): Promise<void> {
       values.delete(key);
     },
     async list(options?: KVNamespaceListOptions) {
       const prefix = options?.prefix ?? '';
+      const cursor = Number(options?.cursor ?? 0);
+      const limit = options?.limit ?? 1000;
+      const matching = [...values.entries()]
+        .filter(([key]) => key.startsWith(prefix))
+        .sort(([left], [right]) => left.localeCompare(right));
+      const end = Math.min(cursor + limit, matching.length);
+      const listComplete = end >= matching.length;
       return {
-        keys: [...values.keys()]
-          .filter((key) => key.startsWith(prefix))
-          .map((name) => ({ name })),
-        list_complete: true as const,
+        keys: matching.slice(cursor, end).map(([name, entry]) => ({
+          name,
+          metadata: entry.metadata,
+        })),
+        list_complete: listComplete,
+        ...(listComplete ? {} : { cursor: String(end) }),
         cacheStatus: null,
       };
     },

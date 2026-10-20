@@ -164,6 +164,11 @@ export interface UserData {
   createdAt?: number;
 }
 
+export interface UserDataPage {
+  users: UserData[];
+  nextCursor: string | null;
+}
+
 export function isAppRole(value: unknown): value is AppRole {
   return typeof value === 'string' && APP_ROLES.includes(value as AppRole);
 }
@@ -321,6 +326,34 @@ function sanitizePermission(permission: Permission): Permission {
   return sanitized;
 }
 
+function permissionUserData(email: string, permission: Permission): UserData {
+  return {
+    id: email,
+    email,
+    name: permission.name ?? '',
+    picture: permission.picture ?? '',
+    role: getPermissionRole(permission),
+    accessLevel: getPermissionAccessLevel(permission),
+    blacklisted: permission.blacklisted ?? false,
+    createdAt: permission.createdAt,
+  };
+}
+
+function isUserData(value: unknown): value is UserData {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as Partial<UserData>;
+  return (
+    typeof candidate.email === 'string' &&
+    typeof candidate.name === 'string' &&
+    typeof candidate.picture === 'string' &&
+    isAppRole(candidate.role) &&
+    isAccessLevel(candidate.accessLevel) &&
+    typeof candidate.blacklisted === 'boolean'
+  );
+}
+
 export async function hasOtherSuperAdmin(
   email: string,
   env: Env
@@ -386,9 +419,11 @@ export async function setUserPermission(
   env: Env
 ): Promise<void> {
   const sanitizedEmail = email.toLowerCase();
+  const sanitizedPermission = sanitizePermission(permission);
   await env.PERMISSIONS.put(
     key(sanitizedEmail),
-    JSON.stringify(sanitizePermission(permission))
+    JSON.stringify(sanitizedPermission),
+    { metadata: permissionUserData(sanitizedEmail, sanitizedPermission) }
   );
 }
 
@@ -449,60 +484,66 @@ export async function setNotificationPreferences(
 /**
  * Get all permissions (for admin user list)
  */
+export async function getUserDataPage(
+  env: Env,
+  input: { cursor?: string; limit: number }
+): Promise<UserDataPage> {
+  const result = await env.PERMISSIONS.list<UserData>({
+    prefix: 'permissions:',
+    cursor: input.cursor,
+    limit: input.limit,
+  });
+  const users: UserData[] = [];
+
+  for (
+    let start = 0;
+    start < result.keys.length;
+    start += PERMISSION_BATCH_SIZE
+  ) {
+    const keys = result.keys.slice(start, start + PERMISSION_BATCH_SIZE);
+    const fallbackPermissions = await Promise.all(
+      keys.map(async (kvKey) => {
+        if (isUserData(kvKey.metadata)) return null;
+        const email = kvKey.name.slice('permissions:'.length);
+        const permission = await getUserPermission(email, env);
+        if (permission) await setUserPermission(email, permission, env);
+        return permission;
+      })
+    );
+
+    for (let index = 0; index < keys.length; index += 1) {
+      const kvKey = keys[index];
+      if (isUserData(kvKey.metadata)) {
+        users.push(kvKey.metadata);
+        continue;
+      }
+      const permission = fallbackPermissions[index];
+      if (!permission) continue;
+      const email = kvKey.name.slice('permissions:'.length);
+      users.push(permissionUserData(email, permission));
+    }
+  }
+
+  return {
+    users,
+    nextCursor: result.list_complete ? null : result.cursor,
+  };
+}
+
 export async function getAllUserData(env: Env): Promise<UserData[]> {
   const users: UserData[] = [];
   let cursor: string | undefined;
-  let reachedLimit = false;
 
   do {
-    const result = await env.PERMISSIONS.list({
-      prefix: 'permissions:',
+    const remaining = MAX_USERS_PER_REQUEST - users.length;
+    if (remaining <= 0) break;
+    const page = await getUserDataPage(env, {
       cursor,
-      limit: PERMISSION_LIST_PAGE_LIMIT,
+      limit: Math.min(PERMISSION_LIST_PAGE_LIMIT, remaining),
     });
-
-    const emails = result.keys.map((kvKey) =>
-      kvKey.name.slice('permissions:'.length)
-    );
-
-    for (let start = 0; start < emails.length; start += PERMISSION_BATCH_SIZE) {
-      const batchEmails = emails.slice(start, start + PERMISSION_BATCH_SIZE);
-      const batchPermissions = await Promise.all(
-        batchEmails.map((email) => getUserPermission(email, env))
-      );
-
-      for (let i = 0; i < batchEmails.length; i++) {
-        if (users.length >= MAX_USERS_PER_REQUEST) {
-          reachedLimit = true;
-          break;
-        }
-
-        const email = batchEmails[i];
-        const permission = batchPermissions[i];
-        if (!permission) continue;
-
-        users.push({
-          id: email,
-          email,
-          name: permission.name ?? '',
-          picture: permission.picture ?? '',
-          role: getPermissionRole(permission),
-          accessLevel: getPermissionAccessLevel(permission),
-          blacklisted: permission.blacklisted ?? false,
-          createdAt: permission.createdAt,
-        });
-      }
-
-      if (reachedLimit) {
-        break;
-      }
-    }
-
-    if (reachedLimit) {
-      break;
-    }
-
-    cursor = result.list_complete ? undefined : result.cursor;
+    users.push(...page.users.slice(0, remaining));
+    cursor = page.nextCursor ?? undefined;
   } while (cursor);
+
   return users;
 }

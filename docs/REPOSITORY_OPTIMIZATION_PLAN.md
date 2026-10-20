@@ -620,6 +620,17 @@ Modify:
 7. Add stable ordering and cursor invalidation/version behavior to the contract
    tests.
 
+### Status on 2026-10-20
+
+- complete: scoped versioned cursor encoding, strict decoding, defaults, and
+  the shared maximum page size;
+- complete: additive admin-user page envelopes backed by KV metadata, with
+  safe read-and-backfill behavior for legacy entries;
+- verified: metadata-backed pages perform no per-row permission reads and the
+  legacy full-array contract remains compatible;
+- remaining: proxy pages, additive project/course/offering page envelopes, and
+  their stable-ordering contract tests.
+
 ### Verification
 
 ```powershell
