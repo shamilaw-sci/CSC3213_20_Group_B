@@ -519,6 +519,7 @@ Create:
 - `services/github-app/src/domains/projects/project.projection.ts`
 - `services/github-app/src/domains/projects/project.operation.ts`
 - `services/github-app/src/domains/projects/project.repository.ts`
+- `services/github-app/src/domains/academics/academic.projection.ts`
 - `services/github-app/src/domains/academics/academic.operation.ts`
 - `services/github-app/src/domains/academics/academic.repository.ts`
 - focused tests under `services/github-app/tests/`
@@ -553,12 +554,14 @@ Modify:
   coordination keys, authoritative-record revisions, and conflict tests;
 - complete: public API async submission and Portal bounded status polling for
   project, course, offering, and profile mutations;
+- complete: pure project aggregate, manifest, membership, and academic
+  aggregate transformations with direct unit coverage;
 - retained intentionally: synchronous compatibility routes and their existing
   file/branch/PR helpers;
 - deferred to the coordinated projection slice: deterministic aggregate and
   manifest generation, followed by compatibility-helper removal;
-- remaining in this slice: extract the reusable pure project and academic
-  transformations before closing the slice completely.
+- transition gate satisfied: Slice 10 can proceed while compatibility cleanup
+  remains gated on the coordinated projection rollout.
 
 ### Verification
 

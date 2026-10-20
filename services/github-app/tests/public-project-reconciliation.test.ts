@@ -7,7 +7,7 @@ import {
   removeProjectFromAggregate,
   removeProjectManifest,
   upsertProjectManifest,
-} from '@/repositories/public-project.repo';
+} from '@/domains/projects/project.projection';
 import {
   deletePublicProjectRequestSchema,
   updatePublicProjectRequestSchema,

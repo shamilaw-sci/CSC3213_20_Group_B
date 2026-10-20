@@ -1,5 +1,10 @@
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
+import {
+  normalizeAcademicId,
+  removeAcademicRecord,
+  upsertAcademicRecord,
+} from '@/domains/academics/academic.projection';
 import { isGitHubMissingRefError, isGitHubNotFoundError } from '@/utils/github';
 
 type AcademicRegistryKind = 'course' | 'offering';
@@ -89,7 +94,7 @@ function decodeBase64(value: string): string {
 }
 
 function normalizeId(id: string): string {
-  return id.trim().toLowerCase();
+  return normalizeAcademicId(id);
 }
 
 function aggregatePathForKind(kind: AcademicRegistryKind): string {
@@ -126,47 +131,6 @@ function stringifyJson(value: unknown): string {
 
 function parseJson(value: string): unknown {
   return JSON.parse(value) as unknown;
-}
-
-function upsertRecord(
-  existingValue: unknown,
-  record: Record<string, unknown>
-): Record<string, unknown>[] {
-  const id = typeof record.id === 'string' ? record.id : '';
-  const records = Array.isArray(existingValue) ? existingValue : [];
-  const nextRecords = records.filter(
-    (item): item is Record<string, unknown> =>
-      item !== null &&
-      typeof item === 'object' &&
-      !Array.isArray(item) &&
-      (item as { id?: unknown }).id !== id
-  );
-
-  nextRecords.push(record);
-  return nextRecords.sort((left, right) =>
-    String(left.title ?? left.id).localeCompare(String(right.title ?? right.id))
-  );
-}
-
-function removeRecord(
-  existingValue: unknown,
-  id: string
-): Record<string, unknown>[] {
-  const normalizedId = normalizeId(id);
-  const records = Array.isArray(existingValue) ? existingValue : [];
-  return records
-    .filter(
-      (item): item is Record<string, unknown> =>
-        item !== null &&
-        typeof item === 'object' &&
-        !Array.isArray(item) &&
-        (item as { id?: unknown }).id !== normalizedId
-    )
-    .sort((left, right) =>
-      String(left.title ?? left.id).localeCompare(
-        String(right.title ?? right.id)
-      )
-    );
 }
 
 function parsePullRequestBody(body: string): {
@@ -535,7 +499,7 @@ export async function upsertPublicAcademicPr(
   await writeFile({
     path: input.aggregatePath,
     branch,
-    content: stringifyJson(upsertRecord(aggregateJson, input.record)),
+    content: stringifyJson(upsertAcademicRecord(aggregateJson, input.record)),
     message: `Update public ${input.kind} listing for ${normalizedId}`,
   });
 
@@ -616,7 +580,7 @@ export async function deletePublicAcademicPr(
   const updatedAggregate = await writeFile({
     path: input.aggregatePath,
     branch,
-    content: stringifyJson(removeRecord(aggregateJson, normalizedId)),
+    content: stringifyJson(removeAcademicRecord(aggregateJson, normalizedId)),
     message: `Update public ${input.kind} listing for ${normalizedId}`,
   });
 

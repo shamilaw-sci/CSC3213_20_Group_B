@@ -2,6 +2,18 @@ import type { EntityRevision, Project } from '@scs/schemas';
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
+import {
+  buildProjectByPersonIndex,
+  hasProjectInAggregate,
+  hasProjectInManifest,
+  normalizeProjectSlug,
+  projectFromAggregate,
+  removeProjectFromAggregate,
+  removeProjectManifest,
+  upsertProjectAggregate,
+  upsertProjectManifest,
+  usernamesForProject,
+} from '@/domains/projects/project.projection';
 import { isGitHubMissingRefError, isGitHubNotFoundError } from '@/utils/github';
 
 export interface PublicProjectPrStatus {
@@ -63,34 +75,6 @@ interface FileEntry {
   sha?: string;
 }
 
-interface ProjectManifest {
-  version: string;
-  updatedAt?: string;
-  projects: ProjectManifestEntry[];
-}
-
-interface ProjectManifestEntry {
-  id: string;
-  slug: string;
-  title: string;
-  href: string;
-}
-
-interface ProjectByPersonEntry {
-  id: string;
-  slug: string;
-  title: string;
-  shortDescription: string;
-  projectType: Project['projectType'];
-  status: Project['status'];
-  categories: string[];
-  tags: string[];
-  academicYear?: Project['academicYear'];
-  role: Project['people'][number]['role'];
-  href: string;
-  lastUpdatedAt: string;
-}
-
 const PROJECT_LABELS = ['project-update', 'auto-merge-project'];
 const PROJECT_DELETE_LABELS = ['project-delete', 'auto-merge-project'];
 const PROJECTS_AGGREGATE_PATH = 'public/projects/v2/projects.json';
@@ -116,7 +100,7 @@ function decodeBase64(value: string): string {
 }
 
 function normalizeSlug(slug: string): string {
-  return slug.trim().toLowerCase();
+  return normalizeProjectSlug(slug);
 }
 
 function projectPathForSlug(slug: string): string {
@@ -220,242 +204,6 @@ function projectDeletePullRequestBody(input: {
     '',
     'This PR removes the project detail file and reconciles the public indexes.',
   ].join('\n');
-}
-
-function upsertProject(existingValue: unknown, project: Project): Project[] {
-  const records = Array.isArray(existingValue) ? existingValue : [];
-  const nextRecords = records.filter(
-    (record): record is Project =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug !== project.slug
-  );
-
-  nextRecords.push(project);
-  return nextRecords.sort((left, right) =>
-    left.title.localeCompare(right.title)
-  );
-}
-
-function removeProject(existingValue: unknown, slug: string): Project[] {
-  const records = Array.isArray(existingValue) ? existingValue : [];
-  return records
-    .filter(
-      (record): record is Project =>
-        record !== null &&
-        typeof record === 'object' &&
-        !Array.isArray(record) &&
-        (record as { slug?: unknown }).slug !== slug
-    )
-    .sort((left, right) => left.title.localeCompare(right.title));
-}
-
-export function hasProjectInAggregate(
-  existingValue: unknown,
-  slug: string
-): boolean {
-  const normalizedSlug = normalizeSlug(slug);
-  const records = Array.isArray(existingValue) ? existingValue : [];
-
-  return records.some(
-    (record) =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug === normalizedSlug
-  );
-}
-
-export function removeProjectFromAggregate(
-  existingValue: unknown,
-  slug: string
-): Project[] {
-  return removeProject(existingValue, normalizeSlug(slug));
-}
-
-function manifestEntryForProject(project: Project): ProjectManifestEntry {
-  return {
-    id: project.id,
-    slug: project.slug,
-    title: project.title,
-    href: `projects/${project.slug}.json`,
-  };
-}
-
-function usernamesForProject(project: Project | undefined): Set<string> {
-  const usernames = new Set<string>();
-  if (!project) return usernames;
-
-  for (const person of project.people) {
-    if (person.username) {
-      usernames.add(normalizeSlug(person.username));
-    }
-  }
-
-  return usernames;
-}
-
-function byPersonEntryForProject(
-  project: Project,
-  role: ProjectByPersonEntry['role']
-): ProjectByPersonEntry {
-  return {
-    id: project.id,
-    slug: project.slug,
-    title: project.title,
-    shortDescription: project.shortDescription,
-    projectType: project.projectType,
-    status: project.status,
-    categories: project.categories,
-    tags: project.tags,
-    ...(project.academicYear ? { academicYear: project.academicYear } : {}),
-    role,
-    href: `projects/${project.slug}.json`,
-    lastUpdatedAt: project.dates.lastUpdatedAt,
-  };
-}
-
-function buildByPersonIndex(
-  aggregateValue: unknown,
-  username: string
-): ProjectByPersonEntry[] {
-  const normalizedUsername = normalizeSlug(username);
-  const records = Array.isArray(aggregateValue) ? aggregateValue : [];
-  const entries: ProjectByPersonEntry[] = [];
-
-  for (const record of records) {
-    const parsed =
-      record !== null && typeof record === 'object'
-        ? (record as Project)
-        : null;
-    if (!parsed) continue;
-
-    const member = parsed.people.find(
-      (person) =>
-        person.username && normalizeSlug(person.username) === normalizedUsername
-    );
-    if (!member) continue;
-
-    entries.push(byPersonEntryForProject(parsed, member.role));
-  }
-
-  return entries.sort(
-    (left, right) =>
-      left.title.localeCompare(right.title) ||
-      left.slug.localeCompare(right.slug)
-  );
-}
-
-function projectFromAggregate(
-  aggregateValue: unknown,
-  slug: string
-): Project | undefined {
-  const normalizedSlug = normalizeSlug(slug);
-  const records = Array.isArray(aggregateValue) ? aggregateValue : [];
-
-  return records.find(
-    (record): record is Project =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug === normalizedSlug
-  );
-}
-
-function manifestUpdatedAt(
-  existing: Partial<ProjectManifest>,
-  updatedAt?: string
-): string | undefined {
-  if (updatedAt) {
-    return updatedAt;
-  }
-
-  return typeof existing.updatedAt === 'string'
-    ? existing.updatedAt
-    : undefined;
-}
-
-export function upsertProjectManifest(
-  existingValue: unknown,
-  project: Project,
-  updatedAt?: string
-): ProjectManifest {
-  const existing =
-    existingValue !== null &&
-    typeof existingValue === 'object' &&
-    !Array.isArray(existingValue)
-      ? (existingValue as Partial<ProjectManifest>)
-      : {};
-  const records = Array.isArray(existing.projects) ? existing.projects : [];
-  const nextProjects = records.filter(
-    (record): record is ProjectManifestEntry =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug !== project.slug
-  );
-
-  nextProjects.push(manifestEntryForProject(project));
-
-  return {
-    version: typeof existing.version === 'string' ? existing.version : '1',
-    updatedAt: manifestUpdatedAt(existing, updatedAt),
-    projects: nextProjects.sort((left, right) =>
-      left.title.localeCompare(right.title)
-    ),
-  };
-}
-
-export function hasProjectInManifest(
-  existingValue: unknown,
-  slug: string
-): boolean {
-  const normalizedSlug = normalizeSlug(slug);
-  const existing =
-    existingValue !== null &&
-    typeof existingValue === 'object' &&
-    !Array.isArray(existingValue)
-      ? (existingValue as Partial<ProjectManifest>)
-      : {};
-  const records = Array.isArray(existing.projects) ? existing.projects : [];
-
-  return records.some(
-    (record) =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug === normalizedSlug
-  );
-}
-
-export function removeProjectManifest(
-  existingValue: unknown,
-  slug: string,
-  updatedAt?: string
-): ProjectManifest {
-  const existing =
-    existingValue !== null &&
-    typeof existingValue === 'object' &&
-    !Array.isArray(existingValue)
-      ? (existingValue as Partial<ProjectManifest>)
-      : {};
-  const records = Array.isArray(existing.projects) ? existing.projects : [];
-  const nextProjects = records.filter(
-    (record): record is ProjectManifestEntry =>
-      record !== null &&
-      typeof record === 'object' &&
-      !Array.isArray(record) &&
-      (record as { slug?: unknown }).slug !== slug
-  );
-
-  return {
-    version: typeof existing.version === 'string' ? existing.version : '1',
-    updatedAt: manifestUpdatedAt(existing, updatedAt),
-    projects: nextProjects.sort((left, right) =>
-      left.title.localeCompare(right.title)
-    ),
-  };
 }
 
 async function getDefaultBranchSha(): Promise<{
@@ -587,7 +335,7 @@ async function reconcileByPersonIndexes(input: {
   usernames: Set<string>;
 }) {
   for (const username of [...input.usernames].sort()) {
-    const entries = buildByPersonIndex(input.aggregateValue, username);
+    const entries = buildProjectByPersonIndex(input.aggregateValue, username);
     const path = byPersonPathForUsername(username);
 
     if (entries.length === 0) {
@@ -858,7 +606,7 @@ export async function upsertPublicProjectPr(
     ? parseJson(existingAggregate.content)
     : [];
   const previousProject = projectFromAggregate(aggregateJson, normalizedSlug);
-  const nextAggregate = upsertProject(aggregateJson, input.project);
+  const nextAggregate = upsertProjectAggregate(aggregateJson, input.project);
   await writeFile({
     path: input.aggregatePath,
     branch,
@@ -995,7 +743,10 @@ export async function deletePublicProjectPr(
     ? parseJson(existingAggregate.content)
     : [];
   const removedProject = projectFromAggregate(aggregateJson, normalizedSlug);
-  const nextAggregate = removeProject(aggregateJson, normalizedSlug);
+  const nextAggregate = removeProjectFromAggregate(
+    aggregateJson,
+    normalizedSlug
+  );
   const updatedAggregate = await writeFile({
     path: input.aggregatePath,
     branch,
