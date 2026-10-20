@@ -1,19 +1,25 @@
 {
   "recommendations": [
-    "openai.chatgpt",
+    "formulahendry.auto-rename-tag",
+    "shakram02.bash-beautify",
     "oven.bun-vscode",
+    "ms-azuretools.vscode-containers",
+    "ms-vscode-remote.remote-containers",
+    "docker.docker",
     "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "bradlc.vscode-tailwindcss",
-    "chanzhaoyu.hono-snippets",
-    "christian-kohler.path-intellisense",
-    "davidanson.vscode-markdownlint",
-    "bierner.markdown-mermaid",
-    "unifiedjs.vscode-mdx",
-    "github.vscode-pull-request-github",
     "github.vscode-github-actions",
-    "redhat.vscode-yaml",
+    "github.vscode-pull-request-github",
+    "github.remotehub",
+    "bierner.markdown-preview-github-styles",
+    "davidanson.vscode-markdownlint",
+    "pkief.material-icon-theme",
+    "unifiedjs.vscode-mdx",
+    "vstirbu.vscode-mermaid-preview",
+    "christian-kohler.npm-intellisense",
+    "esbenp.prettier-vscode",
     "foxundermoon.shell-format",
-    "pkief.material-icon-theme"
+    "bradlc.vscode-tailwindcss",
+    "redhat.vscode-yaml",
+    "openai.chatgpt"
   ]
 }

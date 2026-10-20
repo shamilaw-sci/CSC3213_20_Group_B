@@ -1,6 +1,9 @@
 {
   "files.autoSave": "afterDelay",
   "files.eol": "\n",
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/.next/**": true,
@@ -26,6 +29,11 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
   "[markdown]": {
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
@@ -35,6 +43,7 @@
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "npm.packageManager": "bun",
+  "npm.scriptRunner": "bun",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   "terminal.integrated.enableMultiLinePasteWarning": "never",
   "explorer.confirmDelete": false,
@@ -42,9 +51,7 @@
   "explorer.compactFolders": false,
   "workbench.iconTheme": "material-icon-theme",
   "chat.agentSkillsLocations": {
-    ".agents/skills": true,
-    ".github/skills": true,
-    ".claude/skills": true
+    ".agents/skills": true
   },
   "json.schemaDownload.trustedDomains": {
     "https://raw.githubusercontent.com": true,
