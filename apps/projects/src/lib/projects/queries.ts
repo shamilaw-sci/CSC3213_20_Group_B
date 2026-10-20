@@ -3,9 +3,11 @@ import {
   projectStatusLabels,
   projectTypeLabels,
   slugify,
-} from './metadata';
-import { getAllProjectData, getProjectDataBySlug } from './projects-data';
-import type { Project, ProjectType } from './types';
+} from '@/lib/projects/metadata';
+import {
+  getAllProjectData,
+  getProjectDataBySlug,
+} from '@/lib/projects/projects-data';
 
 export async function getAllProjects() {
   const projects = await getAllProjectData();
@@ -31,70 +33,6 @@ export async function getProjectsByTag(tag: string) {
   return (await getAllProjects()).filter((project) =>
     project.tags.some((projectTag) => slugify(projectTag) === normalizedTag)
   );
-}
-
-export async function getProjectsByCourse(courseCode: string) {
-  return (await getAllProjects()).filter(
-    (project) => project.course?.code.toLowerCase() === courseCode.toLowerCase()
-  );
-}
-
-export async function filterProjects({
-  query,
-  category,
-  tag,
-  course,
-  status,
-  type,
-}: {
-  query?: string | null;
-  category?: string | null;
-  tag?: string | null;
-  course?: string | null;
-  status?: string | null;
-  type?: string | null;
-}) {
-  let results = await getAllProjects();
-
-  if (category) {
-    results = results.filter((project) =>
-      project.categories.includes(slugify(category))
-    );
-  }
-
-  if (tag) {
-    const normalizedTag = slugify(tag);
-    results = results.filter((project) =>
-      project.tags.some((projectTag) => slugify(projectTag) === normalizedTag)
-    );
-  }
-
-  if (course) {
-    results = results.filter(
-      (project) => project.course?.code.toLowerCase() === course.toLowerCase()
-    );
-  }
-
-  if (status) {
-    results = results.filter(
-      (project) => project.status.toLowerCase() === status.toLowerCase()
-    );
-  }
-
-  if (type) {
-    results = results.filter(
-      (project) => project.projectType.toLowerCase() === type.toLowerCase()
-    );
-  }
-
-  if (query?.trim()) {
-    const projectIds = new Set(
-      (await searchProjects(query)).map((project) => project.id)
-    );
-    results = results.filter((project) => projectIds.has(project.id));
-  }
-
-  return results;
 }
 
 export async function searchProjects(query: string) {
@@ -134,33 +72,6 @@ export async function searchProjects(query: string) {
 
     return terms.every((term) => searchable.includes(term));
   });
-}
-
-export async function getFeaturedProjects() {
-  const priorityTypes: ProjectType[] = [
-    'DEPARTMENT_SYSTEM',
-    'RESEARCH_PROJECT',
-    'PUBLICATION_ARTIFACT',
-    'COURSE_PROJECT',
-  ];
-
-  return (await getAllProjects())
-    .sort((a, b) => {
-      const typeScore =
-        priorityTypes.indexOf(a.projectType) -
-        priorityTypes.indexOf(b.projectType);
-
-      if (typeScore !== 0) {
-        return typeScore;
-      }
-
-      return b.dates.lastUpdatedAt.localeCompare(a.dates.lastUpdatedAt);
-    })
-    .slice(0, 4);
-}
-
-export async function getRecentProjects() {
-  return (await getAllProjects()).slice(0, 6);
 }
 
 export async function getCategories() {
@@ -215,17 +126,6 @@ export async function getProjectStats() {
       (project) => project.projectType === 'OPEN_SOURCE'
     ).length,
   };
-}
-
-export async function getRelatedProjects(project: Project) {
-  return (await getAllProjects())
-    .filter((candidate) => candidate.slug !== project.slug)
-    .filter((candidate) =>
-      candidate.categories.some((category) =>
-        project.categories.includes(category)
-      )
-    )
-    .slice(0, 3);
 }
 
 function countValues(values: string[]) {

@@ -1,6 +1,5 @@
 {
-  "$schema": "https://www.unpkg.com/knip/schema.json",
+  "$schema": "https://unpkg.com/knip/schema.json",
   "entry": ["tests/**/*.test.ts"],
-  "ignoreDependencies": ["cloudflare"],
-  "tags": ["-lintignore"]
+  "ignoreDependencies": ["cloudflare"]
 }

@@ -2,13 +2,7 @@
 
 import { Button } from '@scs/ui/components/button';
 import { cn } from 'cn';
-import {
-  AlertTriangle,
-  ArrowRight,
-  FolderSearch,
-  Loader2,
-  Search,
-} from 'lucide-react';
+import { AlertTriangle, ArrowRight, FolderSearch, Search } from 'lucide-react';
 import Link from 'next/link';
 import type { ComponentType } from 'react';
 
@@ -92,21 +86,6 @@ export function StatePanel({
         </div>
       </div>
     </div>
-  );
-}
-
-export function LoadingPanel({
-  label = 'Loading projects',
-  className,
-}: Readonly<{ label?: string; className?: string }>) {
-  return (
-    <StatePanel
-      title={label}
-      description="Getting the latest published project registry."
-      icon={Loader2}
-      iconClassName="animate-spin"
-      className={className}
-    />
   );
 }
 

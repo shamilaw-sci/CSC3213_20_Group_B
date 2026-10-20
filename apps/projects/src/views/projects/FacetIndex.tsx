@@ -15,8 +15,7 @@ import {
   fetchTags,
   type ProjectFacet,
 } from '@/lib/projects/api-client';
-
-import { PageIntro } from './RegistryUI';
+import { PageIntro } from '@/views/projects/RegistryUI';
 
 type FacetItem = {
   href: string;

@@ -1,4 +1,4 @@
-import type { ProjectStatus, ProjectType } from './types';
+import type { ProjectStatus, ProjectType } from '@/lib/projects/types';
 
 export const projectTypeLabels: Record<ProjectType, string> = {
   COURSE_PROJECT: 'Course Project',

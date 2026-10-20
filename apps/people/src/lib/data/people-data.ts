@@ -15,7 +15,7 @@ import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { isSubjectSlug, type SubjectSlug } from '@/config/subjects';
 
-export type PeopleBatchCategory = 'CURRENT' | 'ALUMNI';
+type PeopleBatchCategory = 'CURRENT' | 'ALUMNI';
 export type StudentSubject = SubjectSlug;
 
 export interface PeopleBatch {
@@ -44,11 +44,6 @@ export interface StudentStreamDefinition {
   label: string;
   directory?: string;
   publicDirectory: boolean;
-}
-
-export interface ProgrammeBatchStudents {
-  batch: PeopleBatch;
-  students: Student[];
 }
 
 export interface StudentDirectoryContext {
@@ -398,7 +393,7 @@ export async function getPersonProjects(
   return PersonProjectsSchema.parse(await response.json());
 }
 
-export function prefetchPerson(identity?: string): void {
+function prefetchPerson(identity?: string): void {
   if (!identity) return;
 
   prefetchPeopleData(
@@ -441,27 +436,6 @@ export function getNonAcademicStaff(): Promise<NonAcademicStaff[]> {
 
 export function prefetchNonAcademicStaff(): void {
   prefetchPeopleData('staff/non-academic.json', NonAcademicStaffListSchema, []);
-}
-
-export function prefetchStaffDirectories(): void {
-  prefetchAcademicStaff();
-  prefetchAcademicSupportStaff();
-  prefetchNonAcademicStaff();
-}
-
-export function getStudent(registrationNo: string): Promise<Student> {
-  return fetchPeopleData(
-    `users/${encodeURIComponent(registrationNo.toLowerCase())}.json`,
-    StudentSchema
-  );
-}
-
-export function getStudentsByBatch(batch: string): Promise<Student[]> {
-  return fetchPeopleData(
-    `students/${encodeURIComponent(batch.toLowerCase())}.json`,
-    StudentListSchema,
-    []
-  );
 }
 
 export function getSpecialStudents(
@@ -566,88 +540,6 @@ export function prefetchPeopleProfiles(
   identities.slice(0, 12).forEach((identity) => {
     prefetchPerson(identity);
   });
-}
-
-function getProgrammeBatchDefinitions(
-  manifest: PeopleManifest,
-  programme: PeopleProgramme,
-  category: PeopleBatchCategory
-): PeopleBatch[] {
-  return getProgrammeBatchesFromManifest(manifest, programme).filter(
-    (batch) => batch.defaultCategory === category
-  );
-}
-
-async function loadProgrammeBatches(
-  programme: PeopleProgramme,
-  batches: PeopleBatch[],
-  category: PeopleBatchCategory
-): Promise<ProgrammeBatchStudents[]> {
-  const results = await Promise.allSettled(
-    batches.map(async (batch) => ({
-      batch,
-      students: (await getSpecialStudents(programme, batch.id)).filter(
-        (student) =>
-          category === 'ALUMNI'
-            ? student.status === 'ALUMNI'
-            : student.status !== 'ALUMNI'
-      ),
-    }))
-  );
-
-  return results.flatMap((result) =>
-    result.status === 'fulfilled' ? [result.value] : []
-  );
-}
-
-export async function getProgrammeCurrentBatches(
-  programme: PeopleProgramme
-): Promise<ProgrammeBatchStudents[]> {
-  const manifest = await getPeopleManifest();
-  const batches = getProgrammeBatchDefinitions(manifest, programme, 'CURRENT');
-  return loadProgrammeBatches(programme, batches, 'CURRENT');
-}
-
-export async function getSubjectCurrentBatches(
-  subject: StudentSubject
-): Promise<Array<{ batch: string; students: Student[] }>> {
-  const programme = await getProgramme(subject);
-  if (!programme) return [];
-
-  const batches = await getProgrammeCurrentBatches(programme);
-  return batches.map(({ batch, students }) => ({
-    batch: batch.id,
-    students,
-  }));
-}
-
-export async function getSubjectPublishedBatches(
-  subject: StudentSubject
-): Promise<ProgrammeBatchStudents[]> {
-  const [manifest, programme] = await Promise.all([
-    getPeopleManifest(),
-    getProgramme(subject),
-  ]);
-  if (!programme) return [];
-
-  const batches = getProgrammeBatchesFromManifest(manifest, programme);
-
-  const results = await Promise.allSettled(
-    batches.map(async (batch) => {
-      const students = await getSpecialStudents(programme, batch.id);
-      return {
-        batch,
-        students:
-          batch.defaultCategory === 'ALUMNI'
-            ? students.filter((student) => student.status === 'ALUMNI')
-            : students.filter((student) => student.status !== 'ALUMNI'),
-      };
-    })
-  );
-
-  return results.flatMap((result) =>
-    result.status === 'fulfilled' ? [result.value] : []
-  );
 }
 
 export async function getSubjectPublishedBatchDefinitions(

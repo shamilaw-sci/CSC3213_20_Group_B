@@ -3,22 +3,16 @@ import {
   type AcademicRank,
   AcademicRankSchema,
   type AcademicSubjectCode,
-  type AcademicSupportPosition,
   AcademicSupportPositionSchema,
   type AcademicSupportStaff,
   type AcademicTeachingStaff,
   type AcademicUnitCode,
-  type Conference,
-  type NonAcademicPosition,
   NonAcademicPositionSchema,
   type NonAcademicStaff,
-  type Person,
   type Publication,
-  type Research,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
   ScienceAcademicUnits,
-  type SocialIcon,
   type SocialLinks,
   type Staff,
   type Student,
@@ -28,39 +22,23 @@ export type {
   AcademicDepartmentCode,
   AcademicRank,
   AcademicSubjectCode,
-  AcademicSupportPosition,
   AcademicSupportStaff,
   AcademicTeachingStaff,
   AcademicUnitCode,
-  Conference,
-  NonAcademicPosition,
   NonAcademicStaff,
-  Person,
   Publication,
-  Research,
-  SocialIcon,
   SocialLinks,
   Staff,
   Student,
 };
 
-export type Title = Person['title'];
 export type StudentLevel = Student['level'];
-export type StudentStatus = Student['status'];
-export type StudentTrack = Student['studentTrack'];
-export type StudentType = Student['studentType'];
 export type HonoursProgramme = NonNullable<Student['honoursProgramme']>;
 export type PostgraduateProgramme = NonNullable<
   Student['postgraduateProgramme']
 >;
 export type SlqfLevel = NonNullable<Student['slqfLevel']>;
-export type Position = NonNullable<Student['positions']>[number];
-export type Qualification = NonNullable<
-  AcademicTeachingStaff['qualifications']
->[number];
-export type Award = NonNullable<AcademicTeachingStaff['awards']>[number];
-
-export function formatDomainValue(value: string): string {
+function formatDomainValue(value: string): string {
   return value
     .toLowerCase()
     .split('_')
@@ -83,25 +61,25 @@ export const ACADEMIC_SUPPORT_POSITION_LABELS = createLabels(
 export const NON_ACADEMIC_POSITION_LABELS = createLabels(
   NonAcademicPositionSchema.options
 );
-export const ACADEMIC_SUBJECT_LABELS = Object.fromEntries(
+const ACADEMIC_SUBJECT_LABELS = Object.fromEntries(
   ScienceAcademicSubjects.map((subject) => [subject.code, subject.name])
 ) as Partial<Record<AcademicSubjectCode, string>>;
-export const ACADEMIC_DEPARTMENT_LABELS = Object.fromEntries(
+const ACADEMIC_DEPARTMENT_LABELS = Object.fromEntries(
   ScienceAcademicDepartments.map((department) => [
     department.code,
     department.name,
   ])
 ) as Partial<Record<AcademicDepartmentCode, string>>;
-export const ACADEMIC_UNIT_LABELS = Object.fromEntries(
+const ACADEMIC_UNIT_LABELS = Object.fromEntries(
   ScienceAcademicUnits.map((unit) => [unit.code, unit.name])
 ) as Partial<Record<AcademicUnitCode, string>>;
-export const STUDENT_LEVEL_LABELS = {
+const STUDENT_LEVEL_LABELS = {
   '1000': '1000 Level',
   '2000': '2000 Level',
   '3000': '3000 Level',
   '4000': '4000 Level',
 } satisfies Record<NonNullable<StudentLevel>, string>;
-export const POSTGRADUATE_PROGRAMME_LABELS = {
+const POSTGRADUATE_PROGRAMME_LABELS = {
   POSTGRADUATE_CERTIFICATE: 'Postgraduate Certificate',
   POSTGRADUATE_DIPLOMA: 'Postgraduate Diploma',
   MASTERS_COURSEWORK: 'Masters by Coursework',

@@ -11,8 +11,7 @@ import {
 } from '@/components/custom/StatePanel';
 import { fetchProjectSearch } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-
-import { ProjectGrid } from './RegistryUI';
+import { ProjectGrid } from '@/views/projects/RegistryUI';
 
 export default function SearchPage() {
   const router = useRouter();

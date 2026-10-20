@@ -2,8 +2,7 @@ import { ProjectSchema } from '@scs/schemas';
 
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
-
-import type { Project } from './types';
+import type { Project } from '@/lib/projects/types';
 
 type Schema<T> = {
   parse(input: unknown): T;
@@ -14,19 +13,6 @@ type CacheEntry<T> = {
   promise: Promise<T>;
 };
 
-type ProjectsManifest = {
-  version: string;
-  projects: Array<{
-    id: string;
-    slug: string;
-    title: string;
-    projectType: Project['projectType'];
-    status: Project['status'];
-    academicYear?: Project['academicYear'];
-    lastUpdatedAt: string;
-  }>;
-};
-
 const projectDataCache = new Map<string, CacheEntry<unknown>>();
 
 const ProjectListSchema = {
@@ -35,47 +21,11 @@ const ProjectListSchema = {
   },
 };
 
-const ProjectsManifestSchema = {
-  parse(input: unknown): ProjectsManifest {
-    if (!input || typeof input !== 'object') {
-      throw new TypeError('Expected projects manifest to be an object');
-    }
-
-    const manifest = input as Partial<ProjectsManifest>;
-    if (
-      typeof manifest.version !== 'string' ||
-      !Array.isArray(manifest.projects)
-    ) {
-      throw new TypeError('Invalid projects manifest');
-    }
-
-    return {
-      version: manifest.version,
-      projects: manifest.projects.map((project) => ({
-        id: project.id,
-        slug: project.slug,
-        title: project.title,
-        projectType: project.projectType,
-        status: project.status,
-        academicYear: project.academicYear,
-        lastUpdatedAt: project.lastUpdatedAt,
-      })),
-    };
-  },
-};
-
 const ProjectProfileSchema = {
   parse(input: unknown): Project {
     return ProjectSchema.parse(input);
   },
 };
-
-function getEmptyManifest(): ProjectsManifest {
-  return {
-    version: 'published',
-    projects: [],
-  };
-}
 
 async function fetchProjectData<T>(
   path: string,
@@ -128,14 +78,6 @@ async function fetchProjectDataUncached<T>(
   }
 
   return schema.parse(await response.json());
-}
-
-export function getProjectsManifest(): Promise<ProjectsManifest> {
-  return fetchProjectData(
-    'manifest.json',
-    ProjectsManifestSchema,
-    getEmptyManifest()
-  );
 }
 
 export function getAllProjectData(): Promise<Project[]> {

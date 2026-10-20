@@ -11,8 +11,7 @@ import {
 } from '@/components/custom/StatePanel';
 import { fetchProjectsByUsername } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-
-import { ProjectGrid } from './RegistryUI';
+import { ProjectGrid } from '@/views/projects/RegistryUI';
 
 function normalizeUsername(value: string) {
   return value.trim().toLowerCase();

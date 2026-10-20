@@ -112,7 +112,7 @@ function PersonImage({
   );
 }
 
-export function getRoleLabel(staff: Staff): string {
+function getRoleLabel(staff: Staff): string {
   if (staff.staffType === 'ACADEMIC_TEACHING') {
     return ACADEMIC_RANK_LABELS[staff.academicRank];
   }
@@ -122,7 +122,7 @@ export function getRoleLabel(staff: Staff): string {
   return NON_ACADEMIC_POSITION_LABELS[staff.designation];
 }
 
-export function getStaffLink(staff: Staff): string | undefined {
+function getStaffLink(staff: Staff): string | undefined {
   const username = staff.email?.split('@')[0];
   if (!username) return undefined;
 
@@ -184,7 +184,7 @@ function PersonTile({
   );
 }
 
-export function PeopleCardSkeleton() {
+function PeopleCardSkeleton() {
   return (
     <div
       aria-hidden="true"

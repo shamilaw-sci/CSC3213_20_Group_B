@@ -1,5 +1,3 @@
 {
-  "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreBinaries": ["prettier"],
-  "tags": ["-lintignore"]
+  "$schema": "https://unpkg.com/knip/schema.json"
 }

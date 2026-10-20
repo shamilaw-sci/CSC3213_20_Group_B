@@ -8,8 +8,7 @@ import {
 } from '@/components/custom/StatePanel';
 import { fetchProjects } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-
-import { FacetRail, PageIntro, ProjectGrid } from './RegistryUI';
+import { FacetRail, PageIntro, ProjectGrid } from '@/views/projects/RegistryUI';
 
 export default function ProjectCollection({
   eyebrow,

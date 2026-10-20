@@ -2,14 +2,13 @@ import { ProjectSchema } from '@scs/schemas';
 
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
-
 import {
   labelFromSlug,
   projectStatusLabels,
   projectTypeLabels,
   slugify,
-} from './metadata';
-import type { Project } from './types';
+} from '@/lib/projects/metadata';
+import type { Project } from '@/lib/projects/types';
 
 export type ProjectFacet = {
   slug: string;

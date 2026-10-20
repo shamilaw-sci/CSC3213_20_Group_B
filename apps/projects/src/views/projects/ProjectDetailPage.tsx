@@ -13,8 +13,7 @@ import {
   ProjectDataNotFoundError,
 } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-
-import { ProjectDetail, ProjectGrid } from './RegistryUI';
+import { ProjectDetail, ProjectGrid } from '@/views/projects/RegistryUI';
 
 function getRelatedProjects(project: Project, projects: Project[]) {
   return projects
