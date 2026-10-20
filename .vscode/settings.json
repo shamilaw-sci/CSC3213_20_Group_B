@@ -42,6 +42,7 @@
   },
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "npm.packageManager": "bun",
   "npm.scriptRunner": "bun",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
