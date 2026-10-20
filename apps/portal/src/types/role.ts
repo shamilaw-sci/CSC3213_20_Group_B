@@ -43,22 +43,22 @@ export const ACCESS_LEVEL_LABEL: Record<AccessLevel, string> = {
   [ACCESS_LEVEL.SUPER_ADMIN]: 'Super Admin',
 };
 
-export function isAppRole(value: unknown): value is AppRole {
+function isAppRole(value: unknown): value is AppRole {
   return typeof value === 'string' && APP_ROLES.includes(value as AppRole);
 }
 
-export function normalizeAppRole(value: unknown): AppRole | null {
+function normalizeAppRole(value: unknown): AppRole | null {
   if (isAppRole(value)) return value;
   return null;
 }
 
-export function isAccessLevel(value: unknown): value is AccessLevel {
+function isAccessLevel(value: unknown): value is AccessLevel {
   return (
     typeof value === 'string' && ACCESS_LEVELS.includes(value as AccessLevel)
   );
 }
 
-export function normalizeAccessLevel(value: unknown): AccessLevel | null {
+function normalizeAccessLevel(value: unknown): AccessLevel | null {
   if (isAccessLevel(value)) return value;
   return null;
 }
@@ -77,7 +77,7 @@ export function isSuperAdminRole(user: { accessLevel?: unknown }): boolean {
   return getUserAccessLevel(user) === ACCESS_LEVEL.SUPER_ADMIN;
 }
 
-export function isAdminRole(user: { accessLevel?: unknown }): boolean {
+function isAdminRole(user: { accessLevel?: unknown }): boolean {
   const accessLevel = getUserAccessLevel(user);
   return (
     accessLevel === ACCESS_LEVEL.ADMIN ||

@@ -498,19 +498,19 @@ refactor(profiles): use entity-versioned operations
 Before Slice 9, complete the approved authentication interlude: introduce
 Better Auth on the API Worker with D1-backed state, migrate the Portal client,
 provide a reviewed legacy-identity/passkey migration path, and remove the
-legacy auth routes only after compatibility validation. Keep this work in
-separate verification-gated commits so it does not weaken the registry slices.
+legacy auth routes after compatibility validation. Keep this work in separate
+verification-gated commits so it does not weaken the registry slices.
 
-Interlude status on 2026-10-19:
+Interlude status on 2026-10-20:
 
-- complete: D1-backed Better Auth foundation, hardened cookies/origins/rate
-  limits, Portal Google/email OTP/passkey/sign-out clients, and dual-session
-  verification for existing protected API routes;
-- retained intentionally: legacy GitHub sign-in/linking and all legacy auth
-  routes;
-- remaining gate: design and validate the production identity/passkey backfill
-  before deleting compatibility storage or routes, then rerun the root and
-  per-workspace verification gates.
+- Better Auth with D1 is the sole runtime authentication implementation for
+  Google, GitHub, email OTP, passkeys, sessions, account linking, and sign-out;
+- legacy JWT, custom OAuth, magic-code KV, token blacklist, and custom WebAuthn
+  routes and bindings are removed;
+- a confirmation-gated super-admin action performs the one-time GitHub
+  identity and passkey migration, cleans migrated permission records, and
+  reports conflicts without deleting their source fields;
+- remove the migration action after the production migration is reviewed.
 
 ### Files
 

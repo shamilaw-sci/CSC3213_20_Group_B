@@ -8,12 +8,7 @@ import ManageUserPage from '@/components/custom/manage-user-page/ManageUserPage'
 import { adminUserApiUrl, apiHeaders } from '@/lib/api';
 import { AdminUserData } from '@/types/user';
 
-type AdminUserResponse = Partial<AdminUserData> & {
-  oAuthProviders?: {
-    google?: boolean;
-    github?: boolean;
-  };
-};
+type AdminUserResponse = Partial<AdminUserData>;
 
 function normalizeAdminUser(data: AdminUserResponse, email: string) {
   return {
@@ -22,8 +17,8 @@ function normalizeAdminUser(data: AdminUserResponse, email: string) {
     email: data.email ?? email,
     name: data.name ?? '',
     picture: data.picture ?? '',
-    googleOAuth: data.googleOAuth ?? data.oAuthProviders?.google ?? false,
-    githubOAuth: data.githubOAuth ?? data.oAuthProviders?.github ?? false,
+    googleOAuth: data.googleOAuth ?? false,
+    githubOAuth: data.githubOAuth ?? false,
     githubUserID: data.githubUserID ?? null,
   } as AdminUserData;
 }

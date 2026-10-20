@@ -17,17 +17,13 @@ import {
   getRequestOrigin,
 } from '@/http/responses';
 import {
-  getAllUserData,
   getUserPermission,
   isSuperAdmin,
   isUserRole,
   type Permission,
 } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
-import {
-  hasSessionCookie,
-  verifyIdentitySessionToken,
-} from '@/middleware/session';
+import { hasSessionCookie, verifyIdentitySession } from '@/middleware/session';
 
 interface ProxySession {
   email: string;
@@ -47,11 +43,6 @@ interface UserAccessConfig {
   permissions?: {
     repo?: Record<string, unknown>;
   };
-}
-
-interface AdminProxyEntry extends ProxyConfig {
-  email: string;
-  username: string;
 }
 
 const USER_PROXY_READ_TOKEN_TTL_SECONDS = 120;
@@ -80,7 +71,7 @@ async function createConfigReadToken(input: {
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(input.email)
-    .setIssuer(input.env.JWT_ISSUER)
+    .setIssuer(input.env.CONFIG_ACCESS_TOKEN_ISSUER)
     .setAudience('config.scs.pdn.ac.lk')
     .setIssuedAt()
     .setExpirationTime(`${input.ttlSeconds}s`)
@@ -235,7 +226,7 @@ async function requireProxySession(
     return createTextErrorResponse('Missing X-Client-Id header', 400, origin);
   }
 
-  const payload = await verifyIdentitySessionToken(req, env, clientId);
+  const payload = await verifyIdentitySession(req, env, clientId);
   if (payload instanceof Response) return payload;
 
   const permission = await getUserPermission(payload.email, env);
@@ -455,53 +446,6 @@ export async function getOrCreateUserProxy(
   return createJsonResponse({ success: true, proxy: saved.proxy }, 200, origin);
 }
 
-export async function listUserProxies(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const session = await requireAdminProxySession(req, env);
-  if (session instanceof Response) return session;
-
-  const requestedPage = Number(new URL(req.url).searchParams.get('page') ?? 1);
-  const page =
-    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-  const users = await getAllUserData(env);
-  const entries: AdminProxyEntry[] = [];
-
-  for (const user of users) {
-    const config = await getUserAccessConfig(
-      emailToUsername(user.email),
-      env,
-      origin
-    );
-    if (!config.ok) continue;
-    const proxy = config.proxy;
-    if (!proxy.active && !proxy.url && !proxy.updatedAt) continue;
-    entries.push({
-      email: user.email,
-      username: emailToUsername(user.email),
-      ...proxy,
-    });
-  }
-
-  const sortedEntries = entries.sort((a, b) => a.email.localeCompare(b.email));
-  const total = sortedEntries.length;
-  const totalPages = Math.max(1, Math.ceil(total / 100));
-  const start = (page - 1) * 100;
-
-  return createJsonResponse(
-    {
-      proxies: sortedEntries.slice(start, start + 100),
-      page,
-      totalPages,
-      total,
-    },
-    200,
-    origin
-  );
-}
-
 export async function resetUserProxyAttempts(
   req: Request,
   env: Env
@@ -621,40 +565,4 @@ export async function resetAdminProxyAttempts(
   if (!saved.ok) return saved.response;
 
   return createJsonResponse({ success: true, proxy: saved.proxy }, 200, origin);
-}
-
-export async function buildAdminProxyManifest(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const session = await requireAdminProxySession(req, env);
-  if (session instanceof Response) return session;
-
-  const users = await getAllUserData(env);
-  const proxies: AdminProxyEntry[] = [];
-
-  for (const user of users) {
-    const config = await getUserAccessConfig(
-      emailToUsername(user.email),
-      env,
-      origin
-    );
-    if (!config.ok || !config.proxy.active) continue;
-    proxies.push({
-      email: user.email,
-      username: emailToUsername(user.email),
-      ...config.proxy,
-    });
-  }
-
-  return createJsonResponse(
-    {
-      success: true,
-      generatedAt: Date.now(),
-      proxies,
-    },
-    200,
-    origin
-  );
 }

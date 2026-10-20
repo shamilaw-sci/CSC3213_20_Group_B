@@ -37,11 +37,10 @@ not make it safe.
 - Passkey registration requires an authenticated session, user verification,
   an allowed origin, and the origin-specific relying-party ID.
 - Email/password authentication is not enabled. Better Auth owns passwordless
-  email OTP, passkey, and Google flows. GitHub sign-in remains on the legacy
-  compatibility route until existing linked identities have reviewed Better
-  Auth account rows; implicit email-based linking stays disabled.
-- Session tokens are verified on every protected request and checked against
-  revocation/blacklist state.
+  email OTP, passkey, Google, and GitHub flows. Implicit email-based account
+  linking stays disabled.
+- Better Auth sessions are verified on every protected request. The current
+  permission record is also checked so blacklisting takes effect immediately.
 - Administrative routes require the appropriate role at the time of action.
 - Mutation authorization is checked independently of client-visible UI state.
 - Internal GitHub App requests require service authentication; the browser
@@ -52,13 +51,12 @@ not make it safe.
 - Passkey challenges must be short-lived and tied to the configured origin and
   relying party.
 
-The legacy `/auth/*` JWT/KV routes remain only for a staged rollout. Portal
-Google, email OTP, passkey management, and logout now use `/api/auth/*`; the
-API accepts both legacy and Better Auth session cookies while protected routes
-move across. Do not remove the compatibility routes until existing GitHub
-links and passkeys have a reviewed D1 migration/backfill path and the root
-verification gates pass. Rotate the legacy and Better Auth secrets
-independently.
+Legacy JWT, magic-code KV, token-blacklist KV, custom OAuth, and custom
+WebAuthn routes are removed. A super-admin-only, confirmation-gated action
+migrates existing GitHub identities and passkeys into D1 and removes the old
+auth fields from permission records. Normal requests never read those legacy
+fields. Remove the migration action after production migration and review are
+complete.
 
 ## Input and Output
 

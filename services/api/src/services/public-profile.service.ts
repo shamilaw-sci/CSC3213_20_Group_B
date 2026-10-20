@@ -26,7 +26,7 @@ import {
   isSuperAdmin,
   type AppRole,
 } from '@/repositories/permissions.repo';
-import { verifySessionJwt } from '@/services/auth.service';
+import { verifySessionRequest } from '@/middleware/session';
 import {
   actorSubjectId,
   submitMutationOperation,
@@ -508,7 +508,7 @@ async function verifiedUser(
   | { ok: false; response: Response }
 > {
   const origin = getRequestOrigin(req);
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return { ok: false, response: verifyResponse };
   }

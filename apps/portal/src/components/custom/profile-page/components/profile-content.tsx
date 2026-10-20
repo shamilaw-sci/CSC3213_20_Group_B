@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 
 import { authConfig } from '@/config/auth.config';
 import publicEnvConfig from '@/config/public.env.config';
-import { authProviderApiUrl } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 import {
   deletePasskeyCredential,
   isPasskeyApiError,
@@ -101,23 +101,6 @@ function buildPasskeyDrafts(credentials: PasskeyCredential[]) {
   }, {});
 }
 
-async function disconnectGithub() {
-  const apiUrl = new URL(
-    '/api/me/oauth/github',
-    publicEnvConfig.NEXT_PUBLIC_BASE_API_URL
-  );
-  const res = await fetch(apiUrl, {
-    method: 'DELETE',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Client-Id': 'portal',
-    },
-    body: JSON.stringify({}),
-  });
-  return res;
-}
-
 export default function ProfileContent({
   googleOAuth,
   githubOAuth: initialGithubOAuth,
@@ -189,28 +172,41 @@ export default function ProfileContent({
     };
   }, [passkeySupported]);
 
-  function connectGithub() {
-    const oAuthUrl = authProviderApiUrl('github');
-    oAuthUrl.searchParams.set('client_id', 'portal');
-    const redirectUri = new URL(
-      '/user/me',
-      publicEnvConfig.NEXT_PUBLIC_SITE_URL
-    ).toString();
-    oAuthUrl.searchParams.set('redirect_uri', redirectUri);
-    oAuthUrl.searchParams.set('connect', 'true');
-    window.location.href = oAuthUrl.toString();
+  async function connectGithub() {
+    const { error } = await authClient.linkSocial({
+      provider: 'github',
+      callbackURL: new URL(
+        '/user/me',
+        publicEnvConfig.NEXT_PUBLIC_SITE_URL
+      ).toString(),
+      errorCallbackURL: new URL(
+        '/user/me',
+        publicEnvConfig.NEXT_PUBLIC_SITE_URL
+      ).toString(),
+    });
+    if (error) toast.error(error.message ?? 'Failed to connect GitHub');
   }
 
   async function handleDisconnectGithub() {
     if (oauthActionLoading) return;
     setOauthActionLoading(true);
     try {
-      const res = await disconnectGithub();
-      if (res.status === 401) {
+      const accountsResult = await authClient.listAccounts();
+      if (accountsResult.error?.status === 401) {
         window.location.href = '/logout';
         return;
       }
-      if (!res.ok) {
+      const githubAccount = accountsResult.data?.find(
+        (account) => account.providerId === 'github'
+      );
+      if (!githubAccount) {
+        setGithubOAuth(false);
+        return;
+      }
+      const { error } = await authClient.unlinkAccount({
+        accountId: githubAccount.id,
+      });
+      if (error) {
         toast.error('Failed to disconnect GitHub');
         return;
       }

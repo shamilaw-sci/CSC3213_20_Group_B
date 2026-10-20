@@ -1,8 +1,5 @@
 import type { Env } from '@/types/env';
-import {
-  hasSessionCookie,
-  verifyIdentitySessionToken,
-} from '@/middleware/session';
+import { hasSessionCookie, verifyIdentitySession } from '@/middleware/session';
 import {
   getPermissionAccessLevel,
   getPermissionRole,
@@ -17,6 +14,7 @@ import {
 } from '@/http/responses';
 import { PROFILE_NAME_MAX_LENGTH } from '@/config/client.config';
 import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
+import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 
 async function getVerifiedProfile(
   req: Request,
@@ -51,7 +49,7 @@ async function getVerifiedProfile(
     };
   }
 
-  const payload = await verifyIdentitySessionToken(req, env, clientId);
+  const payload = await verifyIdentitySession(req, env, clientId);
   if (payload instanceof Response) {
     return {
       ok: false,
@@ -82,6 +80,8 @@ export async function me(req: Request, env: Env): Promise<Response> {
       req.headers.get('origin') || ''
     );
   }
+  const authIdentity = await getAuthIdentityByEmail(verified.email, env);
+
   const profileData = {
     email: verified.email,
     name: permission.name ?? verified.name,
@@ -89,10 +89,9 @@ export async function me(req: Request, env: Env): Promise<Response> {
     role: getPermissionRole(permission),
     accessLevel: getPermissionAccessLevel(permission),
     blacklisted: permission.blacklisted || false,
-    lastPasswordChanged: permission.lastPasswordChanged || null,
-    googleOAuth: permission.oAuthProviders?.google || false,
-    githubOAuth: permission.oAuthProviders?.github || false,
-    githubUserID: permission.githubUserID ?? null,
+    googleOAuth: authIdentity?.providers.has('google') ?? false,
+    githubOAuth: authIdentity?.providers.has('github') ?? false,
+    githubUserID: authIdentity?.githubUserId ?? null,
     pictureMode: permission.pictureMode ?? null,
     gravatarMail: permission.gravatarMail ?? null,
     isEmailNotificationEnabled: permission.notifications?.email || false,
@@ -124,6 +123,8 @@ export async function updateMe(req: Request, env: Env): Promise<Response> {
     return createTextErrorResponse('Forbidden', 403, origin);
   }
 
+  const authIdentity = await getAuthIdentityByEmail(verified.email, env);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -154,7 +155,12 @@ export async function updateMe(req: Request, env: Env): Promise<Response> {
     const resolvedPicture = await resolveProfilePictureUpdate(
       { pictureMode, picture, gravatarMail },
       permission,
-      verified.email
+      verified.email,
+      {
+        googleConnected: authIdentity?.providers.has('google') ?? false,
+        githubUserId: authIdentity?.githubUserId,
+        providerPicture: authIdentity?.image,
+      }
     );
     if (!resolvedPicture.ok) {
       return createJsonErrorResponse(resolvedPicture.message, 400, origin);

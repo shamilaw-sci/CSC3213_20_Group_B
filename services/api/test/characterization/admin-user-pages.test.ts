@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
 import type { Page } from '@scs/schemas';
-import { SignJWT } from 'jose';
 
 import {
   ACCESS_LEVEL,
@@ -11,26 +10,11 @@ import {
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const ORIGIN = 'https://portal.scs-pdn.space';
 const ADMIN_EMAIL = 'admin@pdn.ac.lk';
-
-async function sessionToken(env: Env): Promise<string> {
-  return new SignJWT({
-    email: ADMIN_EMAIL,
-    role: APP_ROLE.ACADEMIC,
-    accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(ADMIN_EMAIL)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience('portal')
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
-}
 
 function countKvGets(env: Env): () => number {
   const namespace = env.PERMISSIONS;
@@ -51,7 +35,7 @@ async function requestPage(env: Env, query: string): Promise<Response> {
     `/api/admin/users/page${query}`,
     {
       headers: {
-        Cookie: `session=${await sessionToken(env)}`,
+        Cookie: await createTestSessionCookie(env, ADMIN_EMAIL),
         Origin: ORIGIN,
         'X-Client-Id': 'portal',
       },
@@ -92,7 +76,7 @@ describe('admin user pages', () => {
     expect(first.items).toHaveLength(10);
     expect(first.page.hasMore).toBe(true);
     expect(first.page.nextCursor).toBeString();
-    expect(getCount()).toBe(1);
+    expect(getCount()).toBe(2);
 
     const secondResponse = await requestPage(
       env,
@@ -104,7 +88,7 @@ describe('admin user pages', () => {
     expect(
       new Set([...first.items, ...second.items].map((user) => user.email)).size
     ).toBe(20);
-    expect(getCount()).toBe(2);
+    expect(getCount()).toBe(4);
   });
 
   test('rejects page sizes above the shared maximum', async () => {

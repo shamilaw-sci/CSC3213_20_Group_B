@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
-import { SignJWT } from 'jose';
 
 import { PROXY_ATTEMPTS_RESET_WINDOW_MS } from '@/config/client.config';
 import {
@@ -10,6 +9,7 @@ import {
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const ALLOWED_ORIGIN = 'https://portal.scs-pdn.space';
@@ -29,18 +29,6 @@ interface ProxyConfig {
   availableAttempts: number;
   updatedAt?: string;
   updatedBy?: string;
-}
-
-async function createSessionToken(env: Env, email: string): Promise<string> {
-  return new SignJWT({ email })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(email)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience(ALLOWED_CLIENT_ID)
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
 }
 
 async function setPermission(
@@ -66,7 +54,7 @@ function proxyRequest(
 ): Promise<Response> {
   const headers: Record<string, string> = { Origin: ALLOWED_ORIGIN };
   if (options.token) {
-    headers.Cookie = `session=${options.token}`;
+    headers.Cookie = options.token;
   }
   if (options.clientId !== null) {
     headers['X-Client-Id'] = options.clientId ?? ALLOWED_CLIENT_ID;
@@ -97,7 +85,7 @@ function proxyPathRequest(
 ): Promise<Response> {
   const headers: Record<string, string> = { Origin: ALLOWED_ORIGIN };
   if (options.token) {
-    headers.Cookie = `session=${options.token}`;
+    headers.Cookie = options.token;
   }
   if (options.clientId !== null) {
     headers['X-Client-Id'] = options.clientId ?? ALLOWED_CLIENT_ID;
@@ -187,7 +175,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('returns the current user proxy config from the GitHub App', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
     const { writes } = installGithubAppMock({
       student: {
         active: true,
@@ -223,7 +211,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('decrements a non-admin edit attempt and writes the config PR payload', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
     const { writes } = installGithubAppMock({
       student: {
         active: false,
@@ -266,7 +254,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('rejects a non-admin edit when attempts are exhausted', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
     const { writes } = installGithubAppMock({
       student: {
         active: true,
@@ -293,7 +281,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('resets stale attempts before a non-admin edit', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
     const { writes } = installGithubAppMock({
       student: {
         active: true,
@@ -320,7 +308,7 @@ describe('/user/proxy repo-backed config characterization', () => {
       role: APP_ROLE.ACADEMIC,
     });
     await setPermission(env, OTHER_EMAIL, {});
-    const token = await createSessionToken(env, ADMIN_EMAIL);
+    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
     const { writes } = installGithubAppMock({
       other: {
         active: false,
@@ -361,7 +349,7 @@ describe('/user/proxy repo-backed config characterization', () => {
       role: APP_ROLE.ACADEMIC,
     });
     await setPermission(env, OTHER_EMAIL, {});
-    const token = await createSessionToken(env, ADMIN_EMAIL);
+    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
     const { writes } = installGithubAppMock({
       other: {
         active: true,
@@ -399,7 +387,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('rejects legacy proxyUrl update bodies', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
     installGithubAppMock({});
 
     const response = await proxyRequest('PATCH', env, {
@@ -416,7 +404,7 @@ describe('/user/proxy repo-backed config characterization', () => {
   test('returns a short-lived signed read URL for the current user proxy file', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
-    const token = await createSessionToken(env, USER_EMAIL);
+    const token = await createTestSessionCookie(env, USER_EMAIL);
 
     const response = await proxyPathRequest(
       '/user/proxy/read-url',
@@ -443,7 +431,7 @@ describe('/user/proxy repo-backed config characterization', () => {
       accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
       role: APP_ROLE.ACADEMIC,
     });
-    const token = await createSessionToken(env, ADMIN_EMAIL);
+    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
 
     const response = await proxyPathRequest('/user/proxy/all-url', 'GET', env, {
       token,

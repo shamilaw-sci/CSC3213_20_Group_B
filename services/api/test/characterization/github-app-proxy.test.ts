@@ -1,37 +1,21 @@
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
-import { SignJWT } from 'jose';
 
 import { ACCESS_LEVEL, APP_ROLE } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const ORIGIN = 'https://portal.scs-pdn.space';
 const ADMIN_EMAIL = 'admin@pdn.ac.lk';
-
-async function sessionToken(env: Env): Promise<string> {
-  return new SignJWT({
-    email: ADMIN_EMAIL,
-    role: APP_ROLE.ACADEMIC,
-    accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(ADMIN_EMAIL)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience('portal')
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
-}
 
 async function projectPrRequest(env: Env): Promise<Response> {
   return invokeWorker(
     '/api/projects/v2/projects/example/pr',
     {
       headers: {
-        Cookie: `session=${await sessionToken(env)}`,
+        Cookie: await createTestSessionCookie(env, ADMIN_EMAIL),
         Origin: ORIGIN,
         'X-Client-Id': 'portal',
       },

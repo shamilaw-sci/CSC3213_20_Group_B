@@ -27,7 +27,7 @@ issues, or pull-request bodies.
 Configure from `services/api`:
 
 ```powershell
-wrangler secret put JWT_SECRET
+wrangler secret put BETTER_AUTH_SECRET
 wrangler secret put GOOGLE_CLIENT_SECRET
 wrangler secret put GITHUB_CLIENT_SECRET
 wrangler secret put MAILER_API_KEY
@@ -35,8 +35,19 @@ wrangler secret put GITHUB_APP_INTERNAL_SECRET
 wrangler secret put CONFIG_ACCESS_TOKEN_SECRET
 ```
 
-Non-secret client IDs, redirect URIs, public service URLs, and KV binding IDs
-are defined in `services/api/wrangler.jsonc`.
+Non-secret client IDs, public service URLs, the config-token issuer, and
+resource binding IDs are defined in `services/api/wrangler.jsonc`.
+
+### One-Time Authentication Migration
+
+After applying the D1 migrations and deploying the Better Auth-only API, a
+super-admin can run the `migrate-legacy-auth` action from the Portal admin
+actions interface. The action requires the displayed confirmation phrase,
+uses deterministic identifiers and conflict-safe inserts, and can be retried.
+It copies GitHub identities and passkeys into D1, removes migrated auth fields
+from permission records, and reports conflicts without cleaning their source
+records. Review every conflict before retrying, then remove the action after
+production migration is confirmed.
 
 ### GitHub App
 

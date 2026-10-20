@@ -4,8 +4,6 @@ import publicEnvConfig from '@/config/public.env.config';
 import serverEnvConfig from '@/config/server.env.config';
 
 const AUTH_COOKIE_NAMES = [
-  'session',
-  'oauth_state',
   'scs-auth.session_token',
   '__Secure-scs-auth.session_token',
   'scs-auth.session_data',

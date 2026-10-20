@@ -1,7 +1,4 @@
-import {
-  PROFILE_PICTURE_MAX_LENGTH,
-  PROFILE_NAME_MAX_LENGTH,
-} from '@/config/client.config';
+import { PROFILE_PICTURE_MAX_LENGTH } from '@/config/client.config';
 import {
   isProfilePictureMode,
   type Permission,
@@ -27,11 +24,11 @@ export type ProfilePictureUpdateResult =
     }
   | { ok: false; message: string };
 
-export function buildGithubAvatarUrl(githubUserID: number): string {
+function buildGithubAvatarUrl(githubUserID: number): string {
   return `https://avatars.githubusercontent.com/u/${githubUserID}?v=4`;
 }
 
-export async function buildGravatarAvatarUrl(email: string): Promise<string> {
+async function buildGravatarAvatarUrl(email: string): Promise<string> {
   const normalizedEmail = email.trim().toLowerCase();
   const bytes = new TextEncoder().encode(normalizedEmail);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -42,7 +39,7 @@ export async function buildGravatarAvatarUrl(email: string): Promise<string> {
   return `https://www.gravatar.com/avatar/${hash}`;
 }
 
-export function isValidEmail(value: string): boolean {
+function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
@@ -68,7 +65,7 @@ async function fetchProfilePictureMetadata(
   }
 }
 
-export async function validateManualProfilePictureUrl(
+async function validateManualProfilePictureUrl(
   value: unknown
 ): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
   if (typeof value !== 'string') {
@@ -164,7 +161,12 @@ export async function validateManualProfilePictureUrl(
 export async function resolveProfilePictureUpdate(
   input: ProfilePictureUpdateInput,
   permission: Permission,
-  email: string
+  email: string,
+  authIdentity: {
+    googleConnected: boolean;
+    githubUserId?: number;
+    providerPicture?: string;
+  }
 ): Promise<ProfilePictureUpdateResult> {
   if (!isProfilePictureMode(input.pictureMode)) {
     return { ok: false, message: 'Invalid picture mode' };
@@ -173,14 +175,14 @@ export async function resolveProfilePictureUpdate(
   const pictureMode: ProfilePictureMode = input.pictureMode;
 
   if (pictureMode === 'google') {
-    if (!permission.oAuthProviders?.google) {
+    if (!authIdentity.googleConnected) {
       return { ok: false, message: 'Google OAuth is not connected' };
     }
 
     return {
       ok: true,
       patch: {
-        picture: permission.picture,
+        picture: authIdentity.providerPicture ?? permission.picture,
         pictureMode,
         gravatarMail: undefined,
       },
@@ -188,14 +190,14 @@ export async function resolveProfilePictureUpdate(
   }
 
   if (pictureMode === 'github') {
-    if (!permission.githubUserID) {
+    if (!authIdentity.githubUserId) {
       return { ok: false, message: 'GitHub OAuth is not connected' };
     }
 
     return {
       ok: true,
       patch: {
-        picture: buildGithubAvatarUrl(permission.githubUserID),
+        picture: buildGithubAvatarUrl(authIdentity.githubUserId),
         pictureMode,
         gravatarMail: undefined,
       },
@@ -231,13 +233,4 @@ export async function resolveProfilePictureUpdate(
       gravatarMail: rawGravatarMail || undefined,
     },
   };
-}
-
-export function sanitizeProfileName(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) return undefined;
-
-  return trimmed.slice(0, PROFILE_NAME_MAX_LENGTH);
 }

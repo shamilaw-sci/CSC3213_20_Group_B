@@ -10,12 +10,12 @@ import {
 } from '@/repositories/permissions.repo';
 import { createCorsHeaders, createTextErrorResponse } from '@/http/responses';
 import type { Env } from '@/types/env';
-import { verifySessionJwt } from '@/services/auth.service';
+import { verifySessionRequest } from '@/middleware/session';
 
 export async function updatePermissions(req: Request, env: Env) {
   const body: { email: string; permission: Partial<Permission> } =
     await req.json();
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -124,7 +124,6 @@ export async function updatePermissions(req: Request, env: Env) {
     headers: createCorsHeaders(req.headers.get('origin') || ''),
   });
 }
-
 interface NotificationsPreference {
   email: boolean;
   push: boolean;
@@ -132,7 +131,7 @@ interface NotificationsPreference {
 
 export async function updateMyNotificationsPreference(req: Request, env: Env) {
   const body: { notifications: NotificationsPreference } = await req.json();
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -190,53 +189,5 @@ export async function updateMyNotificationsPreference(req: Request, env: Env) {
   return new Response('Permission updated', {
     status: 200,
     headers: createCorsHeaders(req.headers.get('origin') || ''),
-  });
-}
-
-export async function removeMyGithubOAuthPermission(req: Request, env: Env) {
-  const origin = req.headers.get('origin') || '';
-
-  const verifyResponse = await verifySessionJwt(req, env);
-  if (!verifyResponse.ok) {
-    return verifyResponse;
-  }
-
-  const { email }: { email: string } = await verifyResponse.json();
-  if (!email) {
-    return createTextErrorResponse('Unauthorized', 401, origin);
-  }
-
-  const existingPermission = await getUserPermission(email, env);
-  if (!existingPermission) {
-    return createTextErrorResponse('User not found', 404, origin);
-  }
-
-  if (existingPermission.blacklisted) {
-    return createTextErrorResponse('Forbidden', 403, origin);
-  }
-
-  if (isUserRole(existingPermission)) {
-    return createTextErrorResponse('Forbidden', 403, origin);
-  }
-
-  const updatedPermission: Permission = {
-    ...existingPermission,
-    oAuthProviders: {
-      ...existingPermission.oAuthProviders,
-      github: false,
-    },
-  };
-  delete updatedPermission.githubUserID;
-
-  try {
-    await setUserPermission(email, updatedPermission, env);
-  } catch (error) {
-    console.error('Error removing GitHub OAuth permission:', error);
-    return createTextErrorResponse('Internal Server Error', 500, origin);
-  }
-
-  return new Response('GitHub OAuth removed', {
-    status: 200,
-    headers: createCorsHeaders(origin),
   });
 }

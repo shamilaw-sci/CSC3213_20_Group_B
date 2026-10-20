@@ -1,20 +1,4 @@
 import {
-  completeGoogleOAuth,
-  startGoogleOAuth,
-} from '@/services/google-auth.service';
-import {
-  registerUserAndIssueSession,
-  revokeSession,
-  sendMagicCode,
-  verifySessionJwt,
-  verifyMagicCodeAndIssueSession,
-} from '@/services/auth.service';
-import {
-  completeGitHubOAuth,
-  startGitHubOAuth,
-} from '@/services/github-auth.service';
-import {
-  removeMyGithubOAuthPermission,
   updateMyNotificationsPreference,
   updatePermissions,
 } from '@/services/permissions.service';
@@ -76,16 +60,6 @@ import {
   upsertPublicCoursePr,
   upsertPublicOfferingPr,
 } from '@/services/public-course.service';
-import {
-  passkeyAuthenticationOptions,
-  passkeyAuthenticationVerification,
-  passkeyDeleteCredential,
-  passkeyListCredentials,
-  passkeyRegistrationOptions,
-  passkeyRegistrationVerification,
-  passkeyRevoke,
-  passkeyUpdateCredential,
-} from '@/services/passkey-auth.service';
 import type { Env } from '@/types/env';
 import {
   createMethodNotAllowedResponse,
@@ -159,46 +133,6 @@ const routes: RegisteredRoute[] = [
     match: { kind: 'exact', path: '/api/admin/proxy/build' },
     handler: getAdminProxyAllReadUrl,
   },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/google' },
-    handler: startGoogleOAuth,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/google/callback' },
-    handler: completeGoogleOAuth,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/github' },
-    handler: startGitHubOAuth,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/github/callback' },
-    handler: completeGitHubOAuth,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/logout' },
-    handler: revokeSession,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/logout' },
-    handler: revokeSession,
-  },
-  {
-    method: 'PATCH',
-    match: { kind: 'exact', path: '/auth/logout' },
-    handler: revokeSession,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/verify' },
-    handler: verifySessionJwt,
-  },
   { method: 'GET', match: { kind: 'exact', path: '/api/me' }, handler: me },
   {
     method: 'PATCH',
@@ -209,11 +143,6 @@ const routes: RegisteredRoute[] = [
     method: 'PATCH',
     match: { kind: 'exact', path: '/api/me/notifications' },
     handler: updateMyNotificationsPreference,
-  },
-  {
-    method: 'DELETE',
-    match: { kind: 'exact', path: '/api/me/oauth/github' },
-    handler: removeMyGithubOAuthPermission,
   },
   {
     method: 'GET',
@@ -473,66 +402,6 @@ const routes: RegisteredRoute[] = [
     method: 'DELETE',
     match: { kind: 'prefix', path: '/api/admin/users/' },
     handler: deleteUserPermissions,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/signup' },
-    handler: registerUserAndIssueSession,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/magic-code' },
-    handler: sendMagicCode,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/magic-code/verify' },
-    handler: verifyMagicCodeAndIssueSession,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/passkey/register/options' },
-    handler: passkeyRegistrationOptions,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/passkey/register/verify' },
-    handler: passkeyRegistrationVerification,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/passkey/login/options' },
-    handler: passkeyAuthenticationOptions,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/passkey/login/verify' },
-    handler: passkeyAuthenticationVerification,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/auth/passkey/revoke' },
-    handler: passkeyRevoke,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/auth/passkey/credentials' },
-    handler: passkeyListCredentials,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'prefix', path: '/auth/passkey/credentials/' },
-    handler: passkeyUpdateCredential,
-  },
-  {
-    method: 'PATCH',
-    match: { kind: 'prefix', path: '/auth/passkey/credentials/' },
-    handler: passkeyUpdateCredential,
-  },
-  {
-    method: 'DELETE',
-    match: { kind: 'prefix', path: '/auth/passkey/credentials/' },
-    handler: passkeyDeleteCredential,
   },
 ];
 

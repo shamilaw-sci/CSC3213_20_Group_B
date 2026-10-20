@@ -1,8 +1,6 @@
-import { jwtVerify } from 'jose';
-
 import { createAuth } from '@/auth/auth';
+import { ALLOWED_CLIENTS } from '@/config/client.config';
 import type { Env } from '@/types/env';
-import { isTokenRevoked } from '@/repositories/token-blacklist.repo';
 import {
   ACCESS_LEVEL,
   getPermissionAccessLevel,
@@ -14,19 +12,18 @@ import {
 import { parseCookies } from '@/utils/cookies';
 import { createTextErrorResponse } from '@/http/responses';
 
-export type SessionPayload = {
+type SessionPayload = {
   sub?: string;
   email: string;
   name?: string;
   picture?: string;
   role: string;
   accessLevel: string;
-  jti?: string;
   aud?: string;
   exp?: number;
 };
 
-export type SessionIdentity = Omit<SessionPayload, 'role' | 'accessLevel'> & {
+type SessionIdentity = Omit<SessionPayload, 'role' | 'accessLevel'> & {
   role?: unknown;
   accessLevel?: unknown;
 };
@@ -38,15 +35,12 @@ const BETTER_AUTH_SESSION_COOKIE_NAMES = [
 
 export function hasSessionCookie(req: Request): boolean {
   const cookies = parseCookies(req.headers.get('Cookie'));
-  return (
-    typeof cookies.session === 'string' ||
-    BETTER_AUTH_SESSION_COOKIE_NAMES.some(
-      (cookieName) => typeof cookies[cookieName] === 'string'
-    )
+  return BETTER_AUTH_SESSION_COOKIE_NAMES.some(
+    (cookieName) => typeof cookies[cookieName] === 'string'
   );
 }
 
-async function verifyBetterAuthSession(
+export async function verifyIdentitySession(
   req: Request,
   env: Env,
   clientId: string
@@ -78,7 +72,7 @@ async function verifyBetterAuthSession(
       role: getPermissionRole(permission),
       accessLevel: getPermissionAccessLevel(permission),
       aud: clientId,
-      exp: Math.floor(authSession.session.expiresAt.getTime() / 1000),
+      exp: Math.floor(new Date(authSession.session.expiresAt).getTime() / 1000),
     };
   } catch (error: unknown) {
     console.error('Better Auth session verification failed:', error);
@@ -86,83 +80,12 @@ async function verifyBetterAuthSession(
   }
 }
 
-export async function verifyIdentitySessionToken(
-  req: Request,
-  env: Env,
-  clientId: string
-): Promise<SessionIdentity | Response> {
-  const cookies = parseCookies(req.headers.get('Cookie'));
-  const session = cookies.session;
-  if (!session) {
-    const hasBetterAuthCookie = BETTER_AUTH_SESSION_COOKIE_NAMES.some(
-      (cookieName) => typeof cookies[cookieName] === 'string'
-    );
-    if (hasBetterAuthCookie) {
-      return verifyBetterAuthSession(req, env, clientId);
-    }
-
-    return createTextErrorResponse(
-      'Missing token',
-      401,
-      req.headers.get('origin') || ''
-    );
-  }
-
-  try {
-    const { payload } = await jwtVerify(
-      session,
-      new TextEncoder().encode(env.JWT_SECRET),
-      {
-        issuer: env.JWT_ISSUER,
-        audience: clientId,
-      }
-    );
-
-    const jti = payload.jti;
-    if (typeof jti === 'string' && (await isTokenRevoked(jti, env))) {
-      return createTextErrorResponse(
-        'Token revoked',
-        401,
-        req.headers.get('origin') || ''
-      );
-    }
-
-    if (typeof payload.email !== 'string') {
-      return createTextErrorResponse(
-        'Invalid token',
-        401,
-        req.headers.get('origin') || ''
-      );
-    }
-
-    return {
-      sub: typeof payload.sub === 'string' ? payload.sub : undefined,
-      email: payload.email,
-      name: typeof payload.name === 'string' ? payload.name : undefined,
-      picture:
-        typeof payload.picture === 'string' ? payload.picture : undefined,
-      role: payload.role,
-      accessLevel: payload.accessLevel,
-      jti: typeof payload.jti === 'string' ? payload.jti : undefined,
-      aud: typeof payload.aud === 'string' ? payload.aud : undefined,
-      exp: typeof payload.exp === 'number' ? payload.exp : undefined,
-    };
-  } catch (error: unknown) {
-    console.error('JWT verification failed:', error);
-    return createTextErrorResponse(
-      'Invalid token',
-      401,
-      req.headers.get('origin') || ''
-    );
-  }
-}
-
-export async function verifySessionToken(
+async function verifySession(
   req: Request,
   env: Env,
   clientId: string
 ): Promise<SessionPayload | Response> {
-  const payload = await verifyIdentitySessionToken(req, env, clientId);
+  const payload = await verifyIdentitySession(req, env, clientId);
   if (payload instanceof Response) return payload;
 
   const role = normalizeAppRole(payload.role);
@@ -181,7 +104,25 @@ export async function verifySessionToken(
   };
 }
 
-export function requireAllowedClientId(
+export async function verifySessionRequest(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const clientId = requireAllowedClientId(req, ALLOWED_CLIENTS);
+  if (clientId instanceof Response) return clientId;
+
+  const payload = await verifySession(req, env, clientId);
+  if (payload instanceof Response) return payload;
+
+  return Response.json({
+    valid: true,
+    email: payload.email,
+    role: payload.role,
+    accessLevel: payload.accessLevel,
+  });
+}
+
+function requireAllowedClientId(
   req: Request,
   allowed: Record<string, boolean>
 ): string | Response {

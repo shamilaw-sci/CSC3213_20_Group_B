@@ -60,9 +60,10 @@ directly.
 
 ### API
 
-`services/api` is a Cloudflare Worker. It owns authentication, sessions,
+`services/api` is a Cloudflare Worker. It owns Better Auth, sessions,
 permissions, passkeys, user/admin APIs, validation, and the public gateway used
-by Portal. KV namespaces store permissions, token revocation, and magic codes.
+by Portal. D1 stores authentication state; KV stores application permissions
+and profile preferences.
 
 ### GitHub App
 

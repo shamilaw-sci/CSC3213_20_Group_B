@@ -1,30 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { SignJWT } from 'jose';
 
 import { ACCESS_LEVEL, APP_ROLE } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const ORIGIN = 'https://portal.scs-pdn.space';
 const ADMIN_EMAIL = 'admin@pdn.ac.lk';
-
-async function sessionToken(env: Env): Promise<string> {
-  return new SignJWT({
-    email: ADMIN_EMAIL,
-    role: APP_ROLE.ACADEMIC,
-    accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(ADMIN_EMAIL)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience('portal')
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
-}
 
 describe('list endpoint characterization before cursor pagination', () => {
   test('admin users returns one bare array containing every seeded user', async () => {
@@ -55,7 +39,7 @@ describe('list endpoint characterization before cursor pagination', () => {
       '/api/admin/users?limit=10',
       {
         headers: {
-          Cookie: `session=${await sessionToken(env)}`,
+          Cookie: await createTestSessionCookie(env, ADMIN_EMAIL),
           Origin: ORIGIN,
           'X-Client-Id': 'portal',
         },

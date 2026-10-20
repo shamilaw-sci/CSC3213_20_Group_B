@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, mock, spyOn, test } from 'bun:test';
-import { SignJWT } from 'jose';
 
 import {
   ACCESS_LEVEL,
@@ -9,6 +8,7 @@ import {
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const ALLOWED_ORIGIN = 'https://portal.scs-pdn.space';
@@ -24,23 +24,9 @@ afterEach(() => {
 async function createSessionToken(
   env: Env,
   email: string,
-  claims: Record<string, unknown> = {}
+  _claims: Record<string, unknown> = {}
 ): Promise<string> {
-  const payload = { email, ...claims };
-
-  if (!('role' in payload)) {
-    Object.assign(payload, { role: APP_ROLE.USER });
-  }
-
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(email)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience(ALLOWED_CLIENT_ID)
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
+  return createTestSessionCookie(env, email);
 }
 
 async function setPermission(
@@ -75,7 +61,7 @@ function apiRequest(
   const headers: Record<string, string> = { Origin: ALLOWED_ORIGIN };
 
   if (options.token) {
-    headers.Cookie = `session=${options.token}`;
+    headers.Cookie = options.token;
   }
 
   if (options.clientId !== null) {
@@ -129,12 +115,12 @@ describe('/api/me characterization', () => {
     const consoleError = spyOn(console, 'error').mockImplementation(() => {});
     try {
       const response = await apiRequest('/api/me', 'GET', createTestEnv(), {
-        token: 'not-a-jwt',
+        token: '__Secure-scs-auth.session_token=invalid',
       });
 
       expect(response.status).toBe(401);
       expect(await response.text()).toBe('Invalid token');
-      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledTimes(0);
     } finally {
       consoleError.mockRestore();
     }
@@ -149,12 +135,11 @@ describe('/api/me characterization', () => {
     expect(await response.text()).toBe('User not found');
   });
 
-  test('reports a blacklisted profile instead of forbidding the request', async () => {
+  test('forbids a blacklisted profile before exposing account data', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {
       role: APP_ROLE.USER,
       blacklisted: true,
-      oAuthProviders: { google: true, github: false },
       notifications: { email: true, push: false },
     });
     const token = await createSessionToken(env, USER_EMAIL, {
@@ -164,23 +149,8 @@ describe('/api/me characterization', () => {
 
     const response = await apiRequest('/api/me', 'GET', env, { token });
 
-    expect(response.status).toBe(200);
-    expect((await response.json()) as unknown).toEqual({
-      email: USER_EMAIL,
-      name: 'Test Student',
-      picture: 'https://images.example/student.png',
-      role: APP_ROLE.USER,
-      accessLevel: ACCESS_LEVEL.NONE,
-      blacklisted: true,
-      lastPasswordChanged: null,
-      googleOAuth: true,
-      githubOAuth: false,
-      githubUserID: null,
-      pictureMode: null,
-      gravatarMail: null,
-      isEmailNotificationEnabled: true,
-      isPushNotificationEnabled: false,
-    });
+    expect(response.status).toBe(403);
+    expect(await response.text()).toBe('Forbidden');
   });
 
   test('forbids profile edits for restricted user-role accounts', async () => {
@@ -373,57 +343,6 @@ describe('/api/me/notifications characterization', () => {
   });
 });
 
-describe('/api/me/oauth/github characterization', () => {
-  test('forbids GitHub unlink for restricted user-role accounts', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {
-      role: APP_ROLE.USER,
-      githubUserID: 12345,
-      oAuthProviders: { github: true },
-    });
-    const token = await createSessionToken(env, USER_EMAIL);
-
-    const response = await apiRequest('/api/me/oauth/github', 'DELETE', env, {
-      token,
-    });
-
-    expect(response.status).toBe(403);
-    expect(await response.text()).toBe('Forbidden');
-    expect(await getPermission(env, USER_EMAIL)).toEqual({
-      role: APP_ROLE.USER,
-      githubUserID: 12345,
-      oAuthProviders: { github: true },
-    });
-  });
-
-  test('removes the GitHub ID and disables only the GitHub provider', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {
-      role: APP_ROLE.STUDENT,
-      githubUserID: 12345,
-      oAuthProviders: { google: true, github: true },
-      name: 'Test Student',
-    });
-    const token = await createSessionToken(env, USER_EMAIL);
-
-    const response = await apiRequest('/api/me/oauth/github', 'DELETE', env, {
-      token,
-    });
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe('GitHub OAuth removed');
-
-    const permission = await getPermission(env, USER_EMAIL);
-    expect(permission).toEqual({
-      role: APP_ROLE.STUDENT,
-      accessLevel: ACCESS_LEVEL.NONE,
-      oAuthProviders: { google: true, github: false },
-      name: 'Test Student',
-    });
-    expect('githubUserID' in permission).toBe(false);
-  });
-});
-
 describe('/api/admin/users characterization', () => {
   test('forbids an authenticated non-admin', async () => {
     const env = createTestEnv();
@@ -467,7 +386,6 @@ describe('/api/admin/users characterization', () => {
       blacklisted: true,
       createdAt: 2000,
       notifications: { email: true },
-      githubUserID: 12345,
     });
 
     const response = await apiRequest('/api/admin/users', 'GET', env, {
@@ -527,7 +445,6 @@ describe('/api/admin/users/:email characterization', () => {
       accessLevel: ACCESS_LEVEL.NONE,
       include: { portal: 'EDITOR' },
       notifications: { email: true, push: false },
-      githubUserID: 12345,
       createdAt: 2000,
     };
     await setPermission(env, USER_EMAIL, targetPermission);
@@ -540,7 +457,12 @@ describe('/api/admin/users/:email characterization', () => {
     );
 
     expect(response.status).toBe(200);
-    expect((await response.json()) as unknown).toEqual(targetPermission);
+    expect((await response.json()) as unknown).toEqual({
+      ...targetPermission,
+      googleOAuth: false,
+      githubOAuth: false,
+      githubUserID: null,
+    });
   });
 
   test('shallow-merges a permission patch and returns the stored result', async () => {
@@ -652,7 +574,65 @@ describe('/api/admin/actions characterization', () => {
       actions: Array<{ id: string; requestSchema: unknown }>;
     };
     expect(body.schemaVersion).toBe(1);
-    expect(body.actions).toEqual([]);
+    expect(body.actions.map((action) => action.id)).toEqual([
+      'migrate-legacy-auth',
+    ]);
+    expect(body.actions[0]?.requestSchema).toBeDefined();
+  });
+
+  test('requires confirmation and runs the legacy auth migration', async () => {
+    const env = createTestEnv();
+    const token = await createAdminContext(env);
+    await env.PERMISSIONS.put(
+      `permissions:${USER_EMAIL}`,
+      JSON.stringify({
+        role: APP_ROLE.STUDENT,
+        name: 'Test Student',
+        githubUserID: 12345,
+      })
+    );
+
+    const rejected = await apiRequest(
+      '/api/admin/actions/migrate-legacy-auth',
+      'POST',
+      env,
+      { token, body: { confirmation: 'migrate' } }
+    );
+    expect(rejected.status).toBe(400);
+
+    const response = await apiRequest(
+      '/api/admin/actions/migrate-legacy-auth',
+      'POST',
+      env,
+      {
+        token,
+        body: {
+          confirmation:
+            'Migrate legacy GitHub identities and passkeys into Better Auth.',
+        },
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()) as unknown).toMatchObject({
+      scanned: 2,
+      usersCreated: 1,
+      githubAccountsCreated: 1,
+      permissionsCleaned: 1,
+      conflicts: [],
+    });
+    expect(
+      await env.AUTH_DB.prepare(
+        'SELECT accountId FROM account WHERE providerId = ?'
+      )
+        .bind('github')
+        .first<{ accountId: string }>()
+    ).toEqual({ accountId: '12345' });
+    expect(await getPermission(env, USER_EMAIL)).toEqual({
+      role: APP_ROLE.STUDENT,
+      accessLevel: ACCESS_LEVEL.NONE,
+      name: 'Test Student',
+    });
   });
 
   test('returns not found for unknown admin actions', async () => {

@@ -10,7 +10,7 @@ import {
  */
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
 
-export const APP_ROLES = [
+const APP_ROLES = [
   'USER',
   'OTHER',
   'STUDENT',
@@ -30,7 +30,7 @@ export const APP_ROLE = {
   ACADEMIC_SUPPORT: 'ACADEMIC_SUPPORT',
 } as const satisfies Record<AppRole, AppRole>;
 
-export const ACCESS_LEVELS = ['NONE', 'ADMIN', 'SUPER_ADMIN'] as const;
+const ACCESS_LEVELS = ['NONE', 'ADMIN', 'SUPER_ADMIN'] as const;
 
 export type AccessLevel = (typeof ACCESS_LEVELS)[number];
 
@@ -40,7 +40,7 @@ export const ACCESS_LEVEL = {
   SUPER_ADMIN: 'SUPER_ADMIN',
 } as const satisfies Record<AccessLevel, AccessLevel>;
 
-export const PROFILE_PICTURE_MODES = [
+const PROFILE_PICTURE_MODES = [
   'google',
   'github',
   'manual',
@@ -48,21 +48,6 @@ export const PROFILE_PICTURE_MODES = [
 ] as const;
 
 export type ProfilePictureMode = (typeof PROFILE_PICTURE_MODES)[number];
-
-export interface PasskeyCredential {
-  id: string;
-  publicKey: string;
-  counter: number;
-  transports?: (
-    'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb'
-  )[];
-  backedUp: boolean;
-  deviceType: 'singleDevice' | 'multiDevice';
-  rpId: string;
-  createdAt: number;
-  lastUsedAt?: number;
-  name?: string;
-}
 
 /**
  * Permission object stored in KV
@@ -94,35 +79,12 @@ export interface Permission {
   blacklisted?: boolean;
 
   /**
-   * GitHub userID (for alternative auth)
-   */
-  githubUserID?: number;
-
-  /**
    * Notification preferences
    */
   notifications?: {
     email?: boolean;
     push?: boolean;
   };
-
-  /**
-   * Timestamp of last password change
-   */
-  lastPasswordChanged?: number;
-
-  /**
-   * Enabled OAuth providers
-   */
-  oAuthProviders?: {
-    google?: boolean;
-    github?: boolean;
-  };
-
-  /**
-   * Registered WebAuthn passkeys
-   */
-  passkeys?: PasskeyCredential[];
 
   /**
    * Display name (from OAuth provider or signup)
@@ -151,7 +113,7 @@ export interface Permission {
 }
 
 /**
- * User data returned by admin APIs (excluding sensitive info like lastPasswordChanged)
+ * User data returned by admin APIs.
  */
 export interface UserData {
   id: string;
@@ -169,7 +131,7 @@ export interface UserDataPage {
   nextCursor: string | null;
 }
 
-export function isAppRole(value: unknown): value is AppRole {
+function isAppRole(value: unknown): value is AppRole {
   return typeof value === 'string' && APP_ROLES.includes(value as AppRole);
 }
 
@@ -178,7 +140,7 @@ export function normalizeAppRole(value: unknown): AppRole | null {
   return null;
 }
 
-export function isAccessLevel(value: unknown): value is AccessLevel {
+function isAccessLevel(value: unknown): value is AccessLevel {
   return (
     typeof value === 'string' && ACCESS_LEVELS.includes(value as AccessLevel)
   );
@@ -217,23 +179,8 @@ export function defaultRoleForEmail(email: string): AppRole {
   return APP_ROLE.ACADEMIC;
 }
 
-export function hasAppRole(
-  permission: Permission | null | undefined,
-  roles: AppRole[]
-): boolean {
-  return roles.includes(getPermissionRole(permission));
-}
-
 export function isSuperAdmin(permission?: Permission | null): boolean {
   return getPermissionAccessLevel(permission) === ACCESS_LEVEL.SUPER_ADMIN;
-}
-
-export function isAdmin(permission?: Permission | null): boolean {
-  const accessLevel = getPermissionAccessLevel(permission);
-  return (
-    accessLevel === ACCESS_LEVEL.ADMIN ||
-    accessLevel === ACCESS_LEVEL.SUPER_ADMIN
-  );
 }
 
 export function isUserRole(permission?: Permission | null): boolean {
@@ -269,14 +216,7 @@ export function normalizePermissionPatch(
   if ('include' in patch) normalized.include = patch.include;
   if ('exclude' in patch) normalized.exclude = patch.exclude;
   if ('blacklisted' in patch) normalized.blacklisted = patch.blacklisted;
-  if ('githubUserID' in patch) normalized.githubUserID = patch.githubUserID;
   if ('notifications' in patch) normalized.notifications = patch.notifications;
-  if ('lastPasswordChanged' in patch) {
-    normalized.lastPasswordChanged = patch.lastPasswordChanged;
-  }
-  if ('oAuthProviders' in patch)
-    normalized.oAuthProviders = patch.oAuthProviders;
-  if ('passkeys' in patch) normalized.passkeys = patch.passkeys;
   if ('name' in patch) normalized.name = patch.name;
   if ('picture' in patch) normalized.picture = patch.picture;
   if ('pictureMode' in patch) {
@@ -302,18 +242,9 @@ function sanitizePermission(permission: Permission): Permission {
   if ('exclude' in permission) sanitized.exclude = permission.exclude;
   if ('blacklisted' in permission)
     sanitized.blacklisted = permission.blacklisted;
-  if ('githubUserID' in permission)
-    sanitized.githubUserID = permission.githubUserID;
   if ('notifications' in permission) {
     sanitized.notifications = permission.notifications;
   }
-  if ('lastPasswordChanged' in permission) {
-    sanitized.lastPasswordChanged = permission.lastPasswordChanged;
-  }
-  if ('oAuthProviders' in permission) {
-    sanitized.oAuthProviders = permission.oAuthProviders;
-  }
-  if ('passkeys' in permission) sanitized.passkeys = permission.passkeys;
   if ('name' in permission) sanitized.name = permission.name;
   if ('picture' in permission) sanitized.picture = permission.picture;
   if (isProfilePictureMode(permission.pictureMode)) {
@@ -436,33 +367,6 @@ export async function deleteUserPermission(
 ): Promise<void> {
   const sanitizedEmail = email.toLowerCase();
   await env.PERMISSIONS.delete(key(sanitizedEmail));
-}
-
-/**
- * Set github user ID for a permission
- */
-export async function setGithubUserID(
-  email: string,
-  githubUserID: number,
-  env: Env
-): Promise<void> {
-  const permission = await getUserPermission(email, env);
-  if (!permission) {
-    throw new Error(`Permission for ${email} not found`);
-  }
-
-  await setUserPermission(
-    email,
-    {
-      ...permission,
-      githubUserID,
-      oAuthProviders: {
-        ...permission.oAuthProviders,
-        github: true,
-      },
-    },
-    env
-  );
 }
 
 /**

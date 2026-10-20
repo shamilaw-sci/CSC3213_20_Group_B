@@ -119,46 +119,23 @@ included when it is cheap and consistent, but clients must not require it.
 ## Authentication and Account Routes
 
 Better Auth is mounted at `/api/auth/*` and owns Google, email OTP, passkey,
-session, and sign-out endpoints used by the Portal. The explicit `/auth/*`
-routes below are compatibility contracts during the staged identity rollout;
-GitHub sign-in remains on that contract until linked accounts are backfilled.
+session, account linking, and sign-out endpoints used by the Portal. There are
+no parallel `/auth/*` JWT, OAuth, magic-code, or WebAuthn routes.
 
-| Method                 | Route                     | Purpose                          |
-| ---------------------- | ------------------------- | -------------------------------- |
-| `POST`                 | `/auth/signup`            | Begin account signup             |
-| `POST`                 | `/auth/magic-code`        | Request a sign-in code           |
-| `POST`                 | `/auth/magic-code/verify` | Verify a sign-in code            |
-| `GET`                  | `/auth/verify`            | Verify the current session       |
-| `GET`, `POST`, `PATCH` | `/auth/logout`            | Clear or revoke sessions         |
-| `GET`                  | `/auth/google`            | Start Google OAuth               |
-| `GET`                  | `/auth/google/callback`   | Complete Google OAuth            |
-| `GET`                  | `/auth/github`            | Start GitHub OAuth               |
-| `GET`                  | `/auth/github/callback`   | Complete GitHub OAuth            |
-| `GET`, `PATCH`         | `/api/me`                 | Read or update current user      |
-| `PATCH`                | `/api/me/notifications`   | Update notification preferences  |
-| `DELETE`               | `/api/me/oauth/github`    | Disconnect GitHub OAuth          |
-| `PATCH`                | `/api/user/permissions`   | Update permitted user attributes |
+The Portal uses Better Auth client methods for social sign-in, email OTP,
+passkey registration and authentication, account listing, social-account
+linking and unlinking, session reads, and sign-out. Registration and account
+management require the session and origin protections enforced by Better
+Auth. Allowed account domains and trusted origins are configured centrally in
+the API Worker.
 
-OAuth redirect targets must be validated against registered clients. Allowed
-account domains are defined in API source configuration and are not inferred
-from arbitrary request input.
-
-## Passkey Routes
-
-| Method   | Route                            |
-| -------- | -------------------------------- |
-| `POST`   | `/auth/passkey/register/options` |
-| `POST`   | `/auth/passkey/register/verify`  |
-| `POST`   | `/auth/passkey/login/options`    |
-| `POST`   | `/auth/passkey/login/verify`     |
-| `GET`    | `/auth/passkey/credentials`      |
-| `GET`    | `/auth/passkey/credentials/:id`  |
-| `PATCH`  | `/auth/passkey/credentials/:id`  |
-| `DELETE` | `/auth/passkey/credentials/:id`  |
-| `POST`   | `/auth/passkey/revoke`           |
-
-Registration and management require an authorized session. Login challenges
-are short-lived and bound to the relying-party configuration.
+| Method         | Route                                    | Purpose                         |
+| -------------- | ---------------------------------------- | ------------------------------- |
+| `GET`, `PATCH` | `/api/me`                                | Read or update current user     |
+| `PATCH`        | `/api/me/notifications`                  | Update notification preferences |
+| `PATCH`        | `/api/user/permissions`                  | Update permitted user fields    |
+| `GET`          | `/api/admin/actions`                     | List reviewed admin actions     |
+| `POST`         | `/api/admin/actions/migrate-legacy-auth` | Run the one-time auth migration |
 
 ## People Routes
 

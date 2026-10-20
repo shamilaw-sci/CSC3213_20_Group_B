@@ -22,8 +22,9 @@ import {
   createTextErrorResponse,
 } from '@/http/responses';
 import type { Env } from '@/types/env';
-import { verifySessionJwt } from '@/services/auth.service';
+import { verifySessionRequest } from '@/middleware/session';
 import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
+import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 
 /**
  * GET /api/admin/users
@@ -34,7 +35,7 @@ import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
 export async function listUsers(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';
 
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -76,7 +77,7 @@ export async function listUsers(req: Request, env: Env): Promise<Response> {
  */
 export async function listUsersPage(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) return verifyResponse;
 
   const { email: authUserEmail }: { email: string } =
@@ -137,7 +138,7 @@ export async function getUserPermissions(
 ): Promise<Response> {
   const origin = req.headers.get('origin') || '';
 
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -171,9 +172,18 @@ export async function getUserPermissions(
     return createJsonErrorResponse('User not found', 404, origin);
   }
 
-  return Response.json(permission, {
-    headers: createCorsHeaders(origin),
-  });
+  const authIdentity = await getAuthIdentityByEmail(email, env);
+  return Response.json(
+    {
+      ...permission,
+      googleOAuth: authIdentity?.providers.has('google') ?? false,
+      githubOAuth: authIdentity?.providers.has('github') ?? false,
+      githubUserID: authIdentity?.githubUserId ?? null,
+    },
+    {
+      headers: createCorsHeaders(origin),
+    }
+  );
 }
 
 /**
@@ -188,7 +198,7 @@ export async function updateUserPermissions(
 ): Promise<Response> {
   const origin = req.headers.get('origin') || '';
 
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -251,6 +261,7 @@ export async function updateUserPermissions(
   }
 
   if ('pictureMode' in patch || 'picture' in patch || 'gravatarMail' in patch) {
+    const authIdentity = await getAuthIdentityByEmail(email, env);
     const resolvedPicture = await resolveProfilePictureUpdate(
       {
         pictureMode: patch.pictureMode,
@@ -258,7 +269,12 @@ export async function updateUserPermissions(
         gravatarMail: patch.gravatarMail,
       },
       existingPermission,
-      email
+      email,
+      {
+        googleConnected: authIdentity?.providers.has('google') ?? false,
+        githubUserId: authIdentity?.githubUserId,
+        providerPicture: authIdentity?.image,
+      }
     );
     if (!resolvedPicture.ok) {
       return createJsonErrorResponse(resolvedPicture.message, 400, origin);
@@ -330,7 +346,7 @@ export async function deleteUserPermissions(
 ): Promise<Response> {
   const origin = req.headers.get('origin') || '';
 
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }

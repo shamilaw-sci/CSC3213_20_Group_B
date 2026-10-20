@@ -8,7 +8,8 @@ import {
   createTextErrorResponse,
 } from '@/http/responses';
 import type { Env } from '@/types/env';
-import { verifySessionJwt } from '@/services/auth.service';
+import { verifySessionRequest } from '@/middleware/session';
+import { migrateLegacyAuth } from '@/services/legacy-auth-migration.service';
 
 type AdminActionDefinition = {
   id: string;
@@ -22,14 +23,46 @@ type AdminActionDefinition = {
   resultSchema: Record<string, unknown>;
 };
 
-const ADMIN_ACTIONS: AdminActionDefinition[] = [];
+const LEGACY_AUTH_MIGRATION_CONFIRMATION =
+  'Migrate legacy GitHub identities and passkeys into Better Auth.';
+
+const ADMIN_ACTIONS: AdminActionDefinition[] = [
+  {
+    id: 'migrate-legacy-auth',
+    title: 'Migrate legacy authentication',
+    description:
+      'Idempotently backfill legacy GitHub identities and WebAuthn credentials into Better Auth D1 tables.',
+    method: 'POST',
+    href: '/api/admin/actions/migrate-legacy-auth',
+    danger: true,
+    confirmation: LEGACY_AUTH_MIGRATION_CONFIRMATION,
+    requestSchema: {
+      type: 'object',
+      required: ['confirmation'],
+      properties: { confirmation: { type: 'string' } },
+      additionalProperties: false,
+    },
+    resultSchema: {
+      type: 'object',
+      properties: {
+        scanned: { type: 'integer' },
+        usersCreated: { type: 'integer' },
+        githubAccountsCreated: { type: 'integer' },
+        passkeysCreated: { type: 'integer' },
+        permissionsCleaned: { type: 'integer' },
+        skipped: { type: 'integer' },
+        conflicts: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+];
 
 async function requireSuperAdminSession(
   req: Request,
   env: Env
 ): Promise<{ email: string } | Response> {
   const origin = req.headers.get('origin') || '';
-  const verifyResponse = await verifySessionJwt(req, env);
+  const verifyResponse = await verifySessionRequest(req, env);
   if (!verifyResponse.ok) {
     return verifyResponse;
   }
@@ -75,7 +108,18 @@ export async function runAdminAction(
     new URL(req.url).pathname.slice('/api/admin/actions/'.length)
   );
 
-  void actionId;
+  if (actionId === 'migrate-legacy-auth') {
+    const body = (await req.json().catch(() => ({}))) as {
+      confirmation?: unknown;
+    };
+    if (body.confirmation !== LEGACY_AUTH_MIGRATION_CONFIRMATION) {
+      return createJsonErrorResponse('Confirmation required', 400, origin);
+    }
+    const result = await migrateLegacyAuth(env);
+    return Response.json(result, {
+      headers: createCorsHeaders(origin),
+    });
+  }
 
   return createJsonErrorResponse('Action not found', 404, origin);
 }

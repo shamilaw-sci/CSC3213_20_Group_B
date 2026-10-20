@@ -9,7 +9,7 @@ const ALLOWED_HEADERS = 'Content-Type, Authorization, X-Client-Id';
 
 describe('edge routing and CORS characterization', () => {
   test('allows preflight requests from an allowed origin', async () => {
-    const response = await invokeWorker('/auth/signup', {
+    const response = await invokeWorker('/api/me', {
       method: 'OPTIONS',
       headers: { Origin: ALLOWED_ORIGIN },
     });
@@ -31,7 +31,7 @@ describe('edge routing and CORS characterization', () => {
   });
 
   test('rejects disallowed preflight while echoing its origin', async () => {
-    const response = await invokeWorker('/auth/signup', {
+    const response = await invokeWorker('/api/me', {
       method: 'OPTIONS',
       headers: { Origin: DISALLOWED_ORIGIN },
     });
@@ -67,7 +67,7 @@ describe('edge routing and CORS characterization', () => {
   });
 
   test('returns 405 without CORS for an unsupported method', async () => {
-    const response = await invokeWorker('/auth/signup', {
+    const response = await invokeWorker('/api/me', {
       method: 'DELETE',
       headers: { Origin: ALLOWED_ORIGIN },
     });
@@ -81,13 +81,13 @@ describe('edge routing and CORS characterization', () => {
   });
 
   test('adds CORS headers to an allowed-origin dispatched response', async () => {
-    const response = await invokeWorker('/auth/google', {
+    const response = await invokeWorker('/api/me', {
       method: 'GET',
       headers: { Origin: ALLOWED_ORIGIN },
     });
 
-    expect(response.status).toBe(400);
-    expect(await response.text()).toBe('Missing client_id');
+    expect(response.status).toBe(401);
+    expect(await response.text()).toBe('Unauthorized');
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
       ALLOWED_ORIGIN
     );

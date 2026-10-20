@@ -16,7 +16,7 @@ describe('Portal Better Auth integration', () => {
     expect(client).toContain("credentials: 'include'");
   });
 
-  test('moves Google, email OTP, passkeys, and logout to Better Auth', () => {
+  test('moves all sign-in, account linking, passkeys, and logout to Better Auth', () => {
     const login = source('src/components/custom/login-form/login-form.tsx');
     const magicCode = source(
       'src/components/custom/magic-code-form/magic-code-form.tsx'
@@ -25,13 +25,20 @@ describe('Portal Better Auth integration', () => {
     const logout = source(
       'src/components/custom/logout-button/logout-button.tsx'
     );
+    const profile = source(
+      'src/components/custom/profile-page/components/profile-content.tsx'
+    );
 
     expect(login).toContain('authClient.signIn.social');
+    expect(login).not.toContain('authProviderApiUrl');
     expect(magicCode).toContain('authClient.emailOtp.sendVerificationOtp');
     expect(magicCode).toContain('authClient.signIn.emailOtp');
     expect(passkeys).toContain('authClient.signIn.passkey');
     expect(passkeys).toContain('authClient.passkey.addPasskey');
     expect(logout).toContain('authClient.signOut');
+    expect(profile).toContain('authClient.linkSocial');
+    expect(profile).toContain('authClient.unlinkAccount');
+    expect(profile).not.toContain('/api/me/oauth/github');
   });
 
   test('recognizes Better Auth session cookies in route protection', () => {
@@ -41,5 +48,6 @@ describe('Portal Better Auth integration', () => {
     expect(proxy).toContain(
       "request.cookies.get('__Secure-scs-auth.session_token')"
     );
+    expect(proxy).not.toContain("request.cookies.get('session')");
   });
 });

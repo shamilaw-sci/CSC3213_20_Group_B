@@ -42,7 +42,6 @@ const workspaceVariables = {
     'GITHUB_APP_INTERNAL_SECRET',
     'GITHUB_CLIENT_SECRET',
     'GOOGLE_CLIENT_SECRET',
-    'JWT_SECRET',
     'MAILER_API_KEY',
   ],
   'services/github-app/.env.example': [

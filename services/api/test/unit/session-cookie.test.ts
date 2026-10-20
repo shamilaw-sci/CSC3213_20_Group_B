@@ -8,10 +8,10 @@ function requestWithCookie(cookie?: string): Request {
   });
 }
 
-describe('session cookie compatibility', () => {
-  test('recognizes the legacy JWT session cookie', () => {
+describe('Better Auth session cookies', () => {
+  test('rejects the removed legacy JWT session cookie', () => {
     expect(hasSessionCookie(requestWithCookie('session=legacy-token'))).toBe(
-      true
+      false
     );
   });
 

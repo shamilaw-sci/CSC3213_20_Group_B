@@ -1,27 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { SignJWT } from 'jose';
 
 import { APP_ROLE } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
+import { createTestSessionCookie } from 'test/helpers/create-test-session';
 import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const EMAIL = 'academic@pdn.ac.lk';
 const OPERATION_ID = 'op_12345678901234567890';
 type ServiceRequest = Parameters<NonNullable<Env['GITHUB_APP']>['fetch']>[0];
-
-async function session(env: Env): Promise<string> {
-  return new SignJWT({ email: EMAIL, role: APP_ROLE.ACADEMIC })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(EMAIL)
-    .setIssuer(env.JWT_ISSUER)
-    .setAudience('portal')
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
-}
 
 async function setup() {
   const upstream: Array<{ path: string; body: Promise<unknown> }> = [];
@@ -56,11 +44,11 @@ async function setup() {
     `permissions:${EMAIL}`,
     JSON.stringify({ role: APP_ROLE.ACADEMIC, createdAt: 1 })
   );
-  const token = await session(env);
+  const sessionCookie = await createTestSessionCookie(env, EMAIL);
   const headers = {
     Origin: 'https://portal.scs-pdn.space',
     'X-Client-Id': 'portal',
-    Cookie: `session=${token}`,
+    Cookie: sessionCookie,
     'Content-Type': 'application/json',
     Prefer: 'respond-async',
   };

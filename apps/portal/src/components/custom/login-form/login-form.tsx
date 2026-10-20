@@ -17,7 +17,6 @@ import { toast } from 'sonner';
 
 import { MagicCodeForm } from '@/components/custom/magic-code-form/magic-code-form';
 import publicEnvConfig from '@/config/public.env.config';
-import { authProviderApiUrl } from '@/lib/api';
 import { authClient } from '@/lib/auth-client';
 import {
   authenticateWithPasskey,
@@ -60,19 +59,6 @@ export function LoginForm({
           : 'github';
       localStorage.setItem('lastUsedAuth', lastUsed);
       setLastUsedAuth(lastUsed);
-
-      // GitHub remains on the compatibility flow until existing linked
-      // university identities have Better Auth account rows.
-      if (provider === 'github') {
-        const oAuthUrl = authProviderApiUrl('github');
-        oAuthUrl.searchParams.set('client_id', 'portal');
-        oAuthUrl.searchParams.set(
-          'redirect_uri',
-          new URL('/login', publicEnvConfig.NEXT_PUBLIC_SITE_URL).toString()
-        );
-        window.location.href = oAuthUrl.toString();
-        return;
-      }
 
       const { error } = await authClient.signIn.social({
         provider,
