@@ -85,6 +85,14 @@ synchronous response during the compatibility period. Profile revisions are
 the authoritative user-record blob SHA; `missing` is the expected revision
 when the user record does not yet exist.
 
+Project, course, and course-offering editors use the same opt-in contract on
+their existing PR mutation routes. Their expected revisions are the blob SHA
+of the authoritative entity record, or `missing` for a new record. The public
+API forwards accepted mutations to the GitHub App operation gateway and
+exposes their status through the shared operation resource. Legacy synchronous
+behavior remains available to clients that omit `Prefer: respond-async` until
+projection generation and compatibility removal are completed.
+
 ## Cursor Pagination Contract
 
 List routes accept `cursor` and `limit` values through

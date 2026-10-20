@@ -10,6 +10,7 @@ export interface PublicAcademicPrStatus {
   url?: string;
   branch?: string;
   headSha?: string;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   targetRecordFile?: string;
@@ -28,6 +29,7 @@ export interface PublicAcademicListResult {
 
 export interface PublicAcademicRecordResult {
   record: Record<string, unknown>;
+  revision?: string;
   targetRecordFile: string;
   targetAggregateFile: string;
 }
@@ -444,6 +446,7 @@ export async function getPublicAcademicRecord(
 
   return {
     record,
+    revision: entry.sha,
     targetRecordFile: recordPath,
     targetAggregateFile: aggregatePathForKind(kind),
   };
@@ -472,6 +475,7 @@ export async function getPublicAcademicPrStatus(
       url: openPull.html_url,
       branch: openPull.head.ref,
       headSha: openPull.head.sha,
+      revision: draftEntry?.sha,
       canEdit: true,
       updatedAt: openPull.updated_at,
       targetRecordFile,
@@ -482,8 +486,10 @@ export async function getPublicAcademicPrStatus(
   }
 
   const latestPull = await findPullRequest(kind, normalizedId, 'closed');
+  const publishedEntry = await readFile(recordPathForKind(kind, normalizedId));
+  const revision = publishedEntry?.sha ?? 'missing';
   if (!latestPull) {
-    return { status: 'none', canEdit: false };
+    return { status: 'none', canEdit: false, revision };
   }
 
   return {
@@ -491,6 +497,7 @@ export async function getPublicAcademicPrStatus(
     number: latestPull.number,
     url: latestPull.html_url,
     branch: latestPull.head.ref,
+    revision,
     canEdit: false,
     updatedAt: latestPull.updated_at,
   };

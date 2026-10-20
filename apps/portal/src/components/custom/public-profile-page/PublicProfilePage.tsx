@@ -19,7 +19,6 @@ import {
   type NonAcademicStaff,
   NonAcademicStaffSchema,
   normalizeKnownSocialUrl,
-  type OperationStatusResponse,
   PersonSchema,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
@@ -95,6 +94,10 @@ import {
   profileToolBackRoute,
   type ProfileToolSource,
 } from '@/lib/back-routes';
+import {
+  assertMutationSucceeded,
+  waitForMutationOperation,
+} from '@/lib/mutation-operation';
 
 type ProfileKind = 'academic' | 'academic-support' | 'non-academic' | 'student';
 
@@ -169,34 +172,6 @@ interface PublicProfilePr {
   targetUserFile?: string;
   targetAggregateFiles?: string[];
   draftProfile?: ProfileRecord | null;
-}
-
-type TerminalOperationStatus = Exclude<
-  OperationStatusResponse,
-  { status: 'queued' | 'running' }
->;
-
-async function waitForOperation(
-  accepted: MutationAccepted
-): Promise<TerminalOperationStatus> {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    await new Promise((resolve) =>
-      window.setTimeout(resolve, accepted.retryAfterMs)
-    );
-    const response = await fetch(accepted.statusUrl, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: apiHeaders(),
-    });
-    if (!response.ok) throw new Error((await readApiError(response)).message);
-    const operation = (await response.json()) as OperationStatusResponse;
-    if (operation.status !== 'queued' && operation.status !== 'running') {
-      return operation as TerminalOperationStatus;
-    }
-  }
-  throw new Error(
-    'Profile update is still queued. Refresh to check its status.'
-  );
 }
 
 interface PublicProfileResponse {
@@ -2502,13 +2477,11 @@ export default function PublicProfilePage({
         return;
       }
 
-      const operation = await waitForOperation(
-        (await res.json()) as MutationAccepted
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Profile update is still queued. Refresh to check its status.'
       );
-      if (operation.status !== 'succeeded') {
-        toast.error(operation.outcome.error.message);
-        return;
-      }
+      assertMutationSucceeded(operation);
       await refresh();
       toast.success(
         operation.outcome.pullRequest?.number

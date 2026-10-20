@@ -7,7 +7,6 @@ import {
   type AcademicSupportStaff,
   type AcademicTeachingStaff,
   type NonAcademicStaff,
-  type MutationAccepted,
   type OperationStatusResponse,
   type Student,
 } from '@scs/schemas';
@@ -28,6 +27,10 @@ import {
   type AppRole,
 } from '@/repositories/permissions.repo';
 import { verifySessionJwt } from '@/services/auth.service';
+import {
+  actorSubjectId,
+  submitMutationOperation,
+} from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
 const PROFILE_KINDS = [
@@ -154,16 +157,6 @@ interface ProfilePatchRequest {
   };
 }
 
-async function actorSubjectId(email: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(email.trim().toLowerCase())
-  );
-  return `usr_${[...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')}`;
-}
-
 async function submitProfileOperation(input: {
   env: Env;
   origin: string;
@@ -171,27 +164,19 @@ async function submitProfileOperation(input: {
   request: Record<string, unknown>;
   control?: ProfilePatchRequest['control'];
 }): Promise<Response> {
-  const idempotencyKey = input.control?.idempotencyKey ?? crypto.randomUUID();
-  const response = await callGithubApp<MutationAccepted>(
-    input.env,
-    input.origin,
-    '/people/public-profile/operations',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        request: {
-          ...input.request,
-          expectedRevision: input.control?.expectedRevision,
-        },
-        actorSubjectId: await actorSubjectId(input.actorEmail),
-        idempotencyKey,
-        correlationId: crypto.randomUUID(),
-      }),
-    }
-  );
-  if (!response.ok) return response.response;
-  return createJsonResponse(response.value, 202, input.origin);
+  return submitMutationOperation({
+    env: input.env,
+    origin: input.origin,
+    path: '/people/public-profile/operations',
+    actorEmail: input.actorEmail,
+    control: input.control,
+    envelope: {
+      request: {
+        ...input.request,
+        expectedRevision: input.control?.expectedRevision,
+      },
+    },
+  });
 }
 
 interface StudentPlacementRequest {

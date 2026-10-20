@@ -15,6 +15,10 @@ import {
   type AppRole,
 } from '@/repositories/permissions.repo';
 import { verifySessionJwt } from '@/services/auth.service';
+import {
+  mutationControl,
+  submitMutationOperation,
+} from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
 type AcademicRegistryKind = 'course' | 'offering';
@@ -33,6 +37,7 @@ interface PublicAcademicPr {
   url?: string;
   branch?: string;
   headSha?: string;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   targetRecordFile?: string;
@@ -342,20 +347,34 @@ export async function upsertPublicCoursePr(
   }
 
   const paths = targetPathsForCourse(id);
+  const control = mutationControl(body.control);
+  const mutationRequest = {
+    id,
+    updatedBy: user.email,
+    expectedHeadSha: body.expectedHeadSha,
+    expectedRevision: control.expectedRevision,
+    recordPath: paths.recordPath,
+    aggregatePath: paths.aggregatePath,
+    course: parseResult.data,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/academic/public-course/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { operation: 'course.upsert', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicAcademicPr;
   }>(env, origin, '/academic/public-course/pr', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id,
-      updatedBy: user.email,
-      expectedHeadSha: body.expectedHeadSha,
-      recordPath: paths.recordPath,
-      aggregatePath: paths.aggregatePath,
-      course: parseResult.data,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
@@ -422,20 +441,34 @@ export async function upsertPublicOfferingPr(
   }
 
   const paths = targetPathsForOffering(id);
+  const control = mutationControl(body.control);
+  const mutationRequest = {
+    id,
+    updatedBy: user.email,
+    expectedHeadSha: body.expectedHeadSha,
+    expectedRevision: control.expectedRevision,
+    recordPath: paths.recordPath,
+    aggregatePath: paths.aggregatePath,
+    offering: parseResult.data,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/academic/public-course-offering/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { operation: 'offering.upsert', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicAcademicPr;
   }>(env, origin, '/academic/public-course-offering/pr', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id,
-      updatedBy: user.email,
-      expectedHeadSha: body.expectedHeadSha,
-      recordPath: paths.recordPath,
-      aggregatePath: paths.aggregatePath,
-      offering: parseResult.data,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
@@ -465,19 +498,33 @@ export async function deletePublicCoursePr(
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const paths = targetPathsForCourse(id);
+  const control = mutationControl(body.control);
+  const mutationRequest = {
+    id,
+    updatedBy: user.email,
+    expectedHeadSha: body.expectedHeadSha,
+    expectedRevision: control.expectedRevision,
+    recordPath: paths.recordPath,
+    aggregatePath: paths.aggregatePath,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/academic/public-course/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { operation: 'course.delete', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicAcademicPr;
   }>(env, origin, '/academic/public-course/pr', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id,
-      updatedBy: user.email,
-      expectedHeadSha: body.expectedHeadSha,
-      recordPath: paths.recordPath,
-      aggregatePath: paths.aggregatePath,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
@@ -507,19 +554,33 @@ export async function deletePublicOfferingPr(
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const paths = targetPathsForOffering(id);
+  const control = mutationControl(body.control);
+  const mutationRequest = {
+    id,
+    updatedBy: user.email,
+    expectedHeadSha: body.expectedHeadSha,
+    expectedRevision: control.expectedRevision,
+    recordPath: paths.recordPath,
+    aggregatePath: paths.aggregatePath,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/academic/public-course-offering/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { operation: 'offering.delete', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicAcademicPr;
   }>(env, origin, '/academic/public-course-offering/pr', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id,
-      updatedBy: user.email,
-      expectedHeadSha: body.expectedHeadSha,
-      recordPath: paths.recordPath,
-      aggregatePath: paths.aggregatePath,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 

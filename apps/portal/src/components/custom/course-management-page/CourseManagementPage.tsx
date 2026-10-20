@@ -4,6 +4,7 @@ import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
   CourseCodeSchema,
+  type MutationAccepted,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
@@ -66,6 +67,10 @@ import {
   publicOfferingsApiUrl,
   readApiError,
 } from '@/lib/api';
+import {
+  assertMutationSucceeded,
+  waitForMutationOperation,
+} from '@/lib/mutation-operation';
 import { canEditCoursesRole } from '@/types/role';
 
 type EditorMode = 'form' | 'json-view' | 'json-edit';
@@ -110,6 +115,7 @@ interface AcademicPr {
   url?: string;
   branch?: string;
   headSha?: string;
+  revision?: string;
   canEdit: boolean;
   updatedAt?: string;
   draftRecord?: Record<string, unknown> | null;
@@ -586,22 +592,29 @@ export default function CourseManagementPage({
       const res = await fetch(publicCoursePrApiUrl(normalizedId), {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          ...Object.fromEntries(apiHeaders().entries()),
+        headers: apiHeaders({
           'Content-Type': 'application/json',
-        },
+          Prefer: 'respond-async',
+        }),
         body: JSON.stringify({
           course: validatedCourse,
           ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision: pr?.revision ?? 'missing',
+          },
         }),
       });
 
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const nextPr = (await res.json()) as AcademicPr;
-      setPr(nextPr);
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Course update is still queued. Refresh to check its status.'
+      );
+      assertMutationSucceeded(operation);
       setCourse(validatedCourse);
       syncJson(validatedCourse);
-      await loadCatalog();
+      await Promise.all([loadCatalog(), loadCourse(normalizedId)]);
       toast.success('Course PR submitted.');
       if (newCourse) router.push(`/academic/courses/${validatedCourse.id}`);
     } catch (saveError) {
@@ -619,23 +632,53 @@ export default function CourseManagementPage({
       return;
     }
 
-    const res = await fetch(publicOfferingPrApiUrl(slugify(offering.id)), {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        ...Object.fromEntries(apiHeaders().entries()),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ offering }),
-    });
-
-    if (!res.ok) {
-      toast.error((await readApiError(res)).message);
-      return;
+    setSaving(true);
+    try {
+      const offeringUrl = publicOfferingPrApiUrl(slugify(offering.id));
+      const statusResponse = await fetch(offeringUrl, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: apiHeaders(),
+      });
+      if (!statusResponse.ok) {
+        throw new Error((await readApiError(statusResponse)).message);
+      }
+      const offeringPr = (await statusResponse.json()) as AcademicPr;
+      const res = await fetch(offeringUrl, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: apiHeaders({
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        }),
+        body: JSON.stringify({
+          offering,
+          ...(offeringPr.headSha
+            ? { expectedHeadSha: offeringPr.headSha }
+            : {}),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision: offeringPr.revision ?? 'missing',
+          },
+        }),
+      });
+      if (!res.ok) throw new Error((await readApiError(res)).message);
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Course offering update is still queued. Refresh to check its status.'
+      );
+      assertMutationSucceeded(operation);
+      await loadCatalog();
+      toast.success('Course offering PR submitted.');
+    } catch (operationError) {
+      toast.error(
+        operationError instanceof Error
+          ? operationError.message
+          : 'Course offering update failed.'
+      );
+    } finally {
+      setSaving(false);
     }
-
-    await loadCatalog();
-    toast.success('Course offering PR submitted.');
   }
 
   async function deleteCourse() {
@@ -645,12 +688,24 @@ export default function CourseManagementPage({
       const res = await fetch(publicCoursePrApiUrl(slugify(courseId)), {
         method: 'DELETE',
         credentials: 'include',
-        headers: apiHeaders(),
+        headers: apiHeaders({
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        }),
         body: JSON.stringify({
           ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision: pr?.revision ?? 'missing',
+          },
         }),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Course deletion is still queued. Refresh to check its status.'
+      );
+      assertMutationSucceeded(operation);
       toast.success('Course deletion PR submitted.');
       router.push('/academic/courses');
     } catch (deleteError) {

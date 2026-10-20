@@ -14,6 +14,10 @@ import {
   type AppRole,
 } from '@/repositories/permissions.repo';
 import { verifySessionJwt } from '@/services/auth.service';
+import {
+  mutationControl,
+  submitMutationOperation,
+} from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
 type ProjectPrStatus =
@@ -31,6 +35,7 @@ interface PublicProjectPr {
   url?: string;
   branch?: string;
   headSha?: EntityRevision;
+  revision?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;
@@ -472,22 +477,36 @@ export async function upsertPublicProjectPr(
   }
 
   const paths = targetPathsForProject(slug);
+  const control = mutationControl(body.control);
+  const mutationRequest = {
+    slug,
+    updatedBy: user.email,
+    updatedByType: user.isSuperAdmin ? ('admin' as const) : ('owner' as const),
+    expectedHeadSha: body.expectedHeadSha,
+    expectedRevision: control.expectedRevision,
+    projectPath: paths.projectPath,
+    aggregatePath: paths.aggregatePath,
+    manifestPath: paths.manifestPath,
+    project: parseResult.data,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/projects/public-project/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { action: 'upsert', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicProjectPr;
   }>(env, origin, '/projects/public-project/pr', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      slug,
-      updatedBy: user.email,
-      updatedByType: user.isSuperAdmin ? 'admin' : 'owner',
-      expectedHeadSha: isRecord(body) ? body.expectedHeadSha : undefined,
-      projectPath: paths.projectPath,
-      aggregatePath: paths.aggregatePath,
-      manifestPath: paths.manifestPath,
-      project: parseResult.data,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 
@@ -523,21 +542,35 @@ export async function deletePublicProjectPr(
   }
 
   const paths = targetPathsForProject(slug);
+  const control = mutationControl(isRecord(body) ? body.control : undefined);
+  const mutationRequest = {
+    slug,
+    updatedBy: user.email,
+    updatedByType: 'admin' as const,
+    expectedHeadSha: isRecord(body) ? body.expectedHeadSha : undefined,
+    expectedRevision: control.expectedRevision,
+    projectPath: paths.projectPath,
+    aggregatePath: paths.aggregatePath,
+    manifestPath: paths.manifestPath,
+  };
+  if (req.headers.get('Prefer')?.includes('respond-async')) {
+    return submitMutationOperation({
+      env,
+      origin,
+      path: '/projects/public-project/operations',
+      actorEmail: user.email,
+      control,
+      envelope: { action: 'delete', request: mutationRequest },
+    });
+  }
+
   const response = await callGithubApp<{
     success: boolean;
     pullRequest: PublicProjectPr;
   }>(env, origin, '/projects/public-project/pr', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      slug,
-      updatedBy: user.email,
-      updatedByType: 'admin',
-      expectedHeadSha: isRecord(body) ? body.expectedHeadSha : undefined,
-      projectPath: paths.projectPath,
-      aggregatePath: paths.aggregatePath,
-      manifestPath: paths.manifestPath,
-    }),
+    body: JSON.stringify(mutationRequest),
   });
   if (!response.ok) return response.response;
 

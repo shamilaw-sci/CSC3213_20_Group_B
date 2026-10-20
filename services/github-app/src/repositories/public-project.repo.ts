@@ -10,6 +10,7 @@ export interface PublicProjectPrStatus {
   url?: string;
   branch?: string;
   headSha?: EntityRevision;
+  revision?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;
@@ -30,6 +31,7 @@ export interface PublicProjectsResult {
 
 export interface PublicProjectResult {
   project: Record<string, unknown>;
+  revision?: EntityRevision;
   targetProjectFile: string;
   targetAggregateFile: string;
   targetManifestFile: string;
@@ -769,6 +771,7 @@ export async function getPublicProject(
 
   return {
     project,
+    revision: entry.sha,
     targetProjectFile: path,
     targetAggregateFile: PROJECTS_AGGREGATE_PATH,
     targetManifestFile: PROJECTS_MANIFEST_PATH,
@@ -797,6 +800,7 @@ export async function getPublicProjectPrStatus(
       url: openPull.html_url,
       branch: openPull.head.ref,
       headSha: openPull.head.sha,
+      revision: draftEntry?.sha,
       canEdit: true,
       updatedAt: openPull.updated_at,
       targetProjectFile,
@@ -808,8 +812,10 @@ export async function getPublicProjectPrStatus(
   }
 
   const latestPull = await findProjectPullRequest(normalizedSlug, 'closed');
+  const publishedEntry = await readFile(projectPathForSlug(normalizedSlug));
+  const revision = publishedEntry?.sha ?? 'missing';
   if (!latestPull) {
-    return { status: 'none', canEdit: false };
+    return { status: 'none', canEdit: false, revision };
   }
 
   return {
@@ -817,6 +823,7 @@ export async function getPublicProjectPrStatus(
     number: latestPull.number,
     url: latestPull.html_url,
     branch: latestPull.head.ref,
+    revision,
     canEdit: false,
     updatedAt: latestPull.updated_at,
   };

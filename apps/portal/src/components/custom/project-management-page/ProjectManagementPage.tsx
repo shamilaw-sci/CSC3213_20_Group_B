@@ -4,6 +4,7 @@ import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
   type EntityRevision,
+  type MutationAccepted,
   type ProjectLinks,
   type ProjectPerson,
   type ProjectPersonRole,
@@ -94,6 +95,10 @@ import {
   publicProjectSchemaApiUrl,
   readApiError,
 } from '@/lib/api';
+import {
+  assertMutationSucceeded,
+  waitForMutationOperation,
+} from '@/lib/mutation-operation';
 import { isSuperAdminRole } from '@/types/role';
 
 type WorkspaceMode = 'list' | 'edit' | 'new';
@@ -201,6 +206,7 @@ interface ProjectPr {
   url?: string;
   branch?: string;
   headSha?: EntityRevision;
+  revision?: EntityRevision;
   canEdit: boolean;
   updatedAt?: string;
   targetProjectFile?: string;
@@ -1975,12 +1981,19 @@ export default function ProjectManagementPage({
       const res = await fetch(publicProjectPrApiUrl(targetSlug), {
         method: 'PUT',
         credentials: 'include',
-        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        headers: apiHeaders({
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        }),
         body: JSON.stringify({
           project: validation.data,
           ...(mutationPr?.status === 'open' && mutationPr.headSha
             ? { expectedHeadSha: mutationPr.headSha }
             : {}),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision: mutationPr?.revision ?? 'missing',
+          },
         }),
       });
 
@@ -1988,8 +2001,13 @@ export default function ProjectManagementPage({
         throw new Error((await readApiError(res)).message);
       }
 
-      const nextPr = await readProjectPrResponse(res);
-      setPr(nextPr);
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Project update is still queued. Refresh to check its status.'
+      );
+      assertMutationSucceeded(operation);
+      const nextPr = await loadProjectPr(targetSlug, { throwOnError: true });
+      if (!nextPr) throw new Error('Project PR status is unavailable.');
       setPrError(null);
       setSelectedSlug(targetSlug);
       latestProjectRef.current = validation.data;
@@ -2069,11 +2087,18 @@ export default function ProjectManagementPage({
       const res = await fetch(publicProjectPrApiUrl(slugToDelete), {
         method: 'DELETE',
         credentials: 'include',
-        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        headers: apiHeaders({
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        }),
         body: JSON.stringify({
           ...(mutationPr?.status === 'open' && mutationPr.headSha
             ? { expectedHeadSha: mutationPr.headSha }
             : {}),
+          control: {
+            idempotencyKey: crypto.randomUUID(),
+            expectedRevision: mutationPr?.revision ?? 'missing',
+          },
         }),
       });
 
@@ -2081,8 +2106,15 @@ export default function ProjectManagementPage({
         throw new Error((await readApiError(res)).message);
       }
 
-      const nextPr = await readProjectPrResponse(res);
-      setPr(nextPr);
+      const operation = await waitForMutationOperation(
+        (await res.json()) as MutationAccepted,
+        'Project deletion is still queued. Refresh to check its status.'
+      );
+      assertMutationSucceeded(operation);
+      const nextPr = await loadProjectPr(slugToDelete, {
+        throwOnError: true,
+      });
+      if (!nextPr) throw new Error('Project PR status is unavailable.');
       setPrError(null);
       setDeleteDialogOpen(false);
       setDeleteConfirmation('');

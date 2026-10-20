@@ -547,6 +547,19 @@ Modify:
 7. Keep student placement and config mutations on the gateway, with resource
    keys that serialize their genuinely shared files.
 
+### Status on 2026-10-20
+
+- complete: project, course, and offering operation definitions, entity-scoped
+  coordination keys, authoritative-record revisions, and conflict tests;
+- complete: public API async submission and Portal bounded status polling for
+  project, course, offering, and profile mutations;
+- retained intentionally: synchronous compatibility routes and their existing
+  file/branch/PR helpers;
+- deferred to the coordinated projection slice: deterministic aggregate and
+  manifest generation, followed by compatibility-helper removal;
+- remaining in this slice: extract the reusable pure project and academic
+  transformations before closing the slice completely.
+
 ### Verification
 
 ```powershell
