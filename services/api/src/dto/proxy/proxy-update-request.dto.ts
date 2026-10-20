@@ -52,8 +52,8 @@ export const proxyUpdateRequestSchema = z
       .string({ error: 'Enter a valid target email.' })
       .min(1, 'Enter a valid target email.')
       .optional(),
-    active: z.boolean({ error: 'active must be a boolean.' }).optional(),
-    url: proxyUrlSchema.optional(),
+    active: z.boolean({ error: 'active must be a boolean.' }),
+    url: proxyUrlSchema,
   })
   .strict();
 

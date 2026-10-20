@@ -11,6 +11,7 @@ flowchart LR
   Browser --> Web[Web applications]
   Browser --> API[API Worker]
   API --> KV[Cloudflare KV]
+  API --> D1[Cloudflare D1]
   API --> Mailer[Mailer service]
   API --> GitHubApp[GitHub App service]
   Web --> Data[Public data service]
@@ -21,8 +22,9 @@ flowchart LR
 ```
 
 `data.scs.pdn.ac.lk` publishes people, project, course, and offering records.
-`config.scs.pdn.ac.lk` publishes access and proxy configuration. They remain
-external repositories rather than monorepo workspaces.
+`config.scs.pdn.ac.lk` publishes repository-access configuration. Proxy
+settings are owned by the API D1 database. The data and config repositories
+remain external rather than monorepo workspaces.
 
 ## Applications
 
@@ -61,9 +63,9 @@ directly.
 ### API
 
 `services/api` is a Cloudflare Worker. It owns Better Auth, sessions,
-permissions, passkeys, user/admin APIs, validation, and the public gateway used
-by Portal. D1 stores authentication state; KV stores application permissions
-and profile preferences.
+permissions, passkeys, proxy settings, user/admin APIs, validation, and the
+public gateway used by Portal. D1 stores authentication and proxy state; KV
+stores application permissions and profile preferences.
 
 ### GitHub App
 

@@ -1,7 +1,6 @@
 import type {
   RepositoryPermission,
   RepositoryPermissionLevel,
-  UserAccessConfig,
 } from '@/schemas/user-access.schema';
 
 /**
@@ -9,42 +8,6 @@ import type {
  */
 function formatOptionalValue(value: string | undefined): string {
   return value && value.length > 0 ? value : 'none';
-}
-
-/**
- * Builds the PR audit body for a proxy settings update.
- */
-export function buildProxySettingsPullRequestBody(input: {
-  username: string;
-  updatedBy: string;
-  updatedAt: string;
-  path: string;
-  previousProxy: UserAccessConfig['proxy'];
-  nextProxy: UserAccessConfig['proxy'];
-}): string {
-  return [
-    `Triggered by: ${input.updatedBy}`,
-    `Changed by: ${input.updatedBy}`,
-    `Changed for user: ${input.username}`,
-    `Changed at: ${input.updatedAt}`,
-    `Config file: ${input.path}`,
-    '',
-    'Change type: proxy settings',
-    '',
-    'Before:',
-    `- proxy.active: ${input.previousProxy.active}`,
-    `- proxy.url: ${formatOptionalValue(input.previousProxy.url)}`,
-    `- proxy.availableAttempts: ${input.previousProxy.availableAttempts}`,
-    `- proxy.updatedAt: ${formatOptionalValue(input.previousProxy.updatedAt)}`,
-    `- proxy.updatedBy: ${formatOptionalValue(input.previousProxy.updatedBy)}`,
-    '',
-    'After:',
-    `- proxy.active: ${input.nextProxy.active}`,
-    `- proxy.url: ${formatOptionalValue(input.nextProxy.url)}`,
-    `- proxy.availableAttempts: ${input.nextProxy.availableAttempts}`,
-    `- proxy.updatedAt: ${formatOptionalValue(input.nextProxy.updatedAt)}`,
-    `- proxy.updatedBy: ${formatOptionalValue(input.nextProxy.updatedBy)}`,
-  ].join('\n');
 }
 
 /**

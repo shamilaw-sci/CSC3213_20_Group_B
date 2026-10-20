@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { PageLoading } from '@/components/custom/loading/PageLoading';
 import ProxySettingsPage from '@/components/custom/proxy-settings-page/ProxySettingsPage';
-import { userProxyReadUrlApiUrl } from '@/lib/api';
-import { ConfigFetchError, fetchUserProxyConfig } from '@/lib/proxy-config';
+import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 
 export default function ProxySettings() {
   const [proxy, setProxy] = useState<{
@@ -18,12 +17,27 @@ export default function ProxySettings() {
     let mounted = true;
 
     async function loadProxy() {
-      const data = await fetchUserProxyConfig(userProxyReadUrlApiUrl());
-      const proxyData = data?.proxy ?? {
-        active: false,
-        url: '',
-        availableAttempts: 5,
+      const response = await fetch(userProxyApiUrl(), {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: apiHeaders(),
+      });
+      if (response.status === 401) {
+        window.location.href = '/logout';
+        return;
+      }
+      if (!response.ok) {
+        const error = await readApiError(response);
+        throw new Error(error.message ?? 'Failed to fetch proxy settings');
+      }
+      const data = (await response.json()) as {
+        proxy: {
+          active: boolean;
+          url: string;
+          availableAttempts: number;
+        };
       };
+      const proxyData = data.proxy;
 
       if (mounted) {
         setProxy({
@@ -34,11 +48,7 @@ export default function ProxySettings() {
       }
     }
 
-    loadProxy().catch((error: unknown) => {
-      if (error instanceof ConfigFetchError && error.status === 401) {
-        window.location.href = '/logout';
-        return;
-      }
+    loadProxy().catch(() => {
       window.location.href = '/?error=fetch_failed';
     });
 

@@ -52,20 +52,21 @@ export default function ProxySettingsPage({
   const [proxyUrl, setProxyUrl] = useState(initialUrl);
   const [savedActive, setSavedActive] = useState(initialActive);
   const [savedProxyUrl, setSavedProxyUrl] = useState(initialUrl);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(availableAttempts);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [proxyUrlError, setProxyUrlError] = useState<string | null>(null);
 
-  const canEdit = availableAttempts > 0;
+  const canEdit = attemptsRemaining > 0;
   const isProxyUrlValid = getProxyUrlError(proxyUrl) === null;
   const attemptsTone =
-    availableAttempts <= 0
+    attemptsRemaining <= 0
       ? {
           label: 'No attempts left',
           className:
             'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400',
         }
-      : availableAttempts <= 1
+      : attemptsRemaining <= 1
         ? {
             label: 'Last attempt',
             className:
@@ -103,9 +104,13 @@ export default function ProxySettingsPage({
         toast.error(body.message ?? 'Failed to update proxy settings');
         return;
       }
+      const result = (await res.json()) as {
+        proxy: { availableAttempts: number };
+      };
       setSavedActive(active);
       setProxyUrl(parsedProxyUrl.data);
       setSavedProxyUrl(parsedProxyUrl.data);
+      setAttemptsRemaining(result.proxy.availableAttempts);
       toast.success('Proxy settings updated successfully');
       setIsEditing(false);
       router.refresh();
@@ -152,7 +157,7 @@ export default function ProxySettingsPage({
         <div className="space-y-1">
           <p className="text-sm font-medium">Edit Attempts Remaining</p>
           <p className="text-sm">
-            {availableAttempts} attempt{availableAttempts !== 1 ? 's' : ''}{' '}
+            {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''}{' '}
             remaining today.
           </p>
         </div>
@@ -171,13 +176,14 @@ export default function ProxySettingsPage({
         </div>
       )}
 
-      {canEdit && availableAttempts <= 1 && (
+      {canEdit && attemptsRemaining <= 1 && (
         <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
           <AlertCircle className="size-4 shrink-0" />
           <p className="text-sm">
             You have{' '}
             <strong>
-              {availableAttempts} attempt{availableAttempts !== 1 ? 's' : ''}
+              {attemptsRemaining} attempt
+              {attemptsRemaining !== 1 ? 's' : ''}
             </strong>{' '}
             remaining today.
           </p>

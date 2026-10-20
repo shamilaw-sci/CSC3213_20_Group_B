@@ -9,7 +9,6 @@ import {
 import { upsertPublicAcademicPr } from '@/repositories/public-course.repo';
 import { upsertPublicProfilePr } from '@/repositories/public-profile.repo';
 import { upsertPublicProjectPr } from '@/repositories/public-project.repo';
-import { updateUserProxySettings } from '@/repositories/user.repo';
 
 type CallCounts = Record<string, number>;
 
@@ -222,14 +221,6 @@ describe('GitHub mutation call characterization', () => {
     };
 
     await runWithRuntimeConfig(runtimeConfig, async () => {
-      await updateUserProxySettings(
-        'student',
-        'student@pdn.ac.lk',
-        'admin@pdn.ac.lk',
-        { active: true, url: 'https://proxy.example', availableAttempts: 4 }
-      );
-      snapshot('config');
-
       await upsertPublicAcademicPr({
         kind: 'course',
         id: 'csc3213',
@@ -278,16 +269,6 @@ describe('GitHub mutation call characterization', () => {
     });
 
     expect(snapshots).toEqual({
-      config: {
-        'git.createRef': 1,
-        'git.getRef': 1,
-        'issues.addLabels': 2,
-        'pulls.create': 1,
-        'pulls.list': 2,
-        'repos.createOrUpdateFileContents': 2,
-        'repos.get': 1,
-        'repos.getContent': 4,
-      },
       course: {
         'git.createRef': 1,
         'git.getRef': 1,

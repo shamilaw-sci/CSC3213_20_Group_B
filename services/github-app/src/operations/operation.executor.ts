@@ -35,7 +35,7 @@ function digest(value: unknown): string {
     .digest('hex');
 }
 
-export function operationIdentity(command: OperationCommand): {
+function operationIdentity(command: OperationCommand): {
   operationId: string;
   idempotencyHash: string;
 } {

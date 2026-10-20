@@ -15,11 +15,9 @@ import {
   runAdminAction,
 } from '@/services/admin-actions.service';
 import {
-  getAdminProxyAllReadUrl,
   getOrCreateUserProxy,
-  getUserProxyReadUrl,
+  listAdminProxiesPage,
   resetAdminProxyAttempts,
-  resetUserProxyAttempts,
 } from '@/services/proxy.service';
 import {
   discardAdminUserPublicProfilePr,
@@ -93,48 +91,23 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
-    match: { kind: 'exact', path: '/user/proxy/all' },
-    handler: getAdminProxyAllReadUrl,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/user/proxy/all-url' },
-    handler: getAdminProxyAllReadUrl,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/user/proxy/read-url' },
-    handler: getUserProxyReadUrl,
-  },
-  {
-    method: 'GET',
     match: { kind: 'exact', path: '/user/proxy' },
     handler: getOrCreateUserProxy,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/proxies/page' },
+    handler: listAdminProxiesPage,
   },
   {
     method: 'POST',
     match: { kind: 'exact', path: '/user/proxy' },
     handler: getOrCreateUserProxy,
-  },
-  {
-    method: 'PATCH',
-    match: { kind: 'exact', path: '/user/proxy' },
-    handler: getOrCreateUserProxy,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/user/proxy/reset' },
-    handler: resetUserProxyAttempts,
   },
   {
     method: 'POST',
     match: { kind: 'exact', path: '/api/admin/proxy/reset-attempts' },
     handler: resetAdminProxyAttempts,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'exact', path: '/api/admin/proxy/build' },
-    handler: getAdminProxyAllReadUrl,
   },
   { method: 'GET', match: { kind: 'exact', path: '/api/me' }, handler: me },
   {

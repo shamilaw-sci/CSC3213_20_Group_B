@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import baseConfig from '../base';
 import nextConfig from '../next';
+import { typescriptProjectRoot } from '../project';
 import workerConfig from '../worker';
 import githubAppConfig from '../../../services/github-app/eslint.config';
 
@@ -12,6 +13,11 @@ type FlatConfig = {
     parserOptions?: { project?: boolean; projectService?: boolean };
   };
   rules?: Record<string, unknown>;
+  settings?: {
+    'import/resolver'?: {
+      typescript?: { project?: string[] };
+    };
+  };
 };
 
 function mergedRules(config: FlatConfig[]) {
@@ -51,6 +57,16 @@ describe('shared ESLint exports', () => {
     expect(rules['import/no-unresolved']).toBe('error');
     expect(rules['@typescript-eslint/no-floating-promises']).toBe('error');
     expect(rules['@typescript-eslint/no-misused-promises']).toBe('error');
+  });
+
+  test('workspace project roots pin import resolution to their TSConfig', () => {
+    const config = typescriptProjectRoot(
+      'C:\\workspace\\services\\github-app'
+    ) as FlatConfig;
+
+    expect(config.settings?.['import/resolver']?.typescript?.project).toEqual([
+      'C:/workspace/services/github-app/tsconfig.json',
+    ]);
   });
 
   test('GitHub App tests retain the non-type-aware override', () => {

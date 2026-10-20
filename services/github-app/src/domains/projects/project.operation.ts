@@ -4,8 +4,8 @@ import type {
   OperationHandler,
 } from '@/operations/operation.types';
 
-export const PROJECT_UPSERT_ACTION = 'project.upsert';
-export const PROJECT_DELETE_ACTION = 'project.delete';
+const PROJECT_UPSERT_ACTION = 'project.upsert';
+const PROJECT_DELETE_ACTION = 'project.delete';
 
 export interface ProjectOperationRequest {
   action: 'upsert' | 'delete';

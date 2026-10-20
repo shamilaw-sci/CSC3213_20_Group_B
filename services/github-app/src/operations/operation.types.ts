@@ -89,10 +89,7 @@ export function requestOperationCancellation(
   };
 }
 
-export type OperationSuccess = Extract<
-  OperationOutcome,
-  { status: 'succeeded' }
->;
+type OperationSuccess = Extract<OperationOutcome, { status: 'succeeded' }>;
 
 export type OperationHandler = (
   command: OperationCommand,

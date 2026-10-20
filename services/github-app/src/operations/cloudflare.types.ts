@@ -4,7 +4,7 @@ import type {
   OperationRecord,
 } from '@/operations/operation.types';
 
-export interface OperationStateStub {
+interface OperationStateStub {
   create(operation: OperationRecord): Promise<CreateOperationResult>;
   get(): Promise<OperationRecord | null>;
   save(operation: OperationRecord): Promise<void>;
@@ -15,7 +15,7 @@ export interface OperationStateNamespace {
   getByName(name: string): OperationStateStub;
 }
 
-export interface MutationCoordinatorStub {
+interface MutationCoordinatorStub {
   acquire(operationId: string, leaseMs: number): Promise<boolean>;
   release(operationId: string): Promise<void>;
 }

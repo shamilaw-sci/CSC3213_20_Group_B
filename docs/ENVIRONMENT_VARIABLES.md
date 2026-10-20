@@ -56,7 +56,6 @@ instead of being copied into `process.env`.
 | `NEXT_PUBLIC_BASE_API_URL`                 | public     | API base URL                            |
 | `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`         | public     | people v2 data base URL                 |
 | `NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH` | public     | positive integer, default `6`           |
-| `NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS`   | public     | non-negative integer, default `5`       |
 | `NEXT_PUBLIC_API_CLIENT_ID`                | public     | API client identifier, default `portal` |
 | `COOKIE_DOMAIN`                            | server     | shared authentication cookie domain     |
 
@@ -66,21 +65,24 @@ can safely and predictably include them in client bundles.
 ## API Worker
 
 Non-secret string variables live in `services/api/wrangler.jsonc`:
-`BETTER_AUTH_URL`, `CONFIG_ACCESS_TOKEN_ISSUER`, OAuth client IDs,
-`MAILER_API_URL`, `GITHUB_APP_API_URL`, `CONFIG_DATA_BASE_URL`, and
-`DATA_PUBLIC_BASE_URL`.
+`BETTER_AUTH_URL`, OAuth client IDs, `MAILER_API_URL`, `GITHUB_APP_API_URL`,
+and `DATA_PUBLIC_BASE_URL`. `CONFIG_ACCESS_TOKEN_ISSUER` and
+`CONFIG_DATA_BASE_URL` are migration-only inputs for the proxy import action.
 
 Secrets copied from `services/api/.dev.vars.example` are `BETTER_AUTH_SECRET`,
 `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_SECRET`, `MAILER_API_KEY`,
 `GITHUB_APP_INTERNAL_SECRET`, and `CONFIG_ACCESS_TOKEN_SECRET`. Configure them
 as Worker secrets outside local development.
 
+`CONFIG_ACCESS_TOKEN_SECRET` is also migration-only. Remove these three config
+values after the production proxy import is verified and its action is removed.
+
 Resource bindings are not environment strings:
 
 - `AUTH_DB` is the D1 source of truth for Better Auth users, accounts,
-  sessions, verification records, rate limits, and passkeys. Its provisioned
-  database ID is configured in `services/api/wrangler.jsonc`; apply
-  `services/api/migrations/` with Wrangler before deployment.
+  sessions, verification records, rate limits, passkeys, and proxy settings.
+  Its provisioned database ID is configured in `services/api/wrangler.jsonc`;
+  apply `services/api/migrations/` with Wrangler before deployment.
 - `PERMISSIONS` is the KV namespace for application authorization and profile
   preferences. It does not store sessions, verification codes, OAuth account
   state, or passkeys.

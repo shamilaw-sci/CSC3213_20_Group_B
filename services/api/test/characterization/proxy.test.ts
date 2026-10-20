@@ -18,18 +18,6 @@ const USER_EMAIL = 'student@pdn.ac.lk';
 const OTHER_EMAIL = 'other@pdn.ac.lk';
 const ADMIN_EMAIL = 'admin@pdn.ac.lk';
 const FIXED_NOW = Date.parse('2026-07-28T12:00:00.000Z');
-const RECENT_UPDATED_AT = new Date(FIXED_NOW - 60_000).toISOString();
-const EXPIRED_UPDATED_AT = new Date(
-  FIXED_NOW - PROXY_ATTEMPTS_RESET_WINDOW_MS - 60_000
-).toISOString();
-
-interface ProxyConfig {
-  active: boolean;
-  url: string;
-  availableAttempts: number;
-  updatedAt?: string;
-  updatedBy?: string;
-}
 
 async function setPermission(
   env: Env,
@@ -42,117 +30,51 @@ async function setPermission(
   );
 }
 
-function proxyRequest(
-  method: string,
+async function seedProxy(
   env: Env,
-  options: {
-    query?: string;
-    token?: string;
-    clientId?: string | null;
-    body?: unknown;
-  } = {}
-): Promise<Response> {
-  const headers: Record<string, string> = { Origin: ALLOWED_ORIGIN };
-  if (options.token) {
-    headers.Cookie = options.token;
+  input: {
+    email: string;
+    active?: boolean;
+    url?: string;
+    availableAttempts?: number;
+    attemptWindowStartedAt?: number | null;
+    updatedAt?: number | null;
+    updatedBy?: string | null;
   }
-  if (options.clientId !== null) {
-    headers['X-Client-Id'] = options.clientId ?? ALLOWED_CLIENT_ID;
-  }
-
-  let body: string | undefined;
-  if (options.body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    body = JSON.stringify(options.body);
-  }
-
-  return invokeWorker(
-    `/user/proxy${options.query ?? ''}`,
-    { method, headers, body },
-    env
-  );
+): Promise<void> {
+  await env.AUTH_DB.prepare(
+    'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
+  )
+    .bind(
+      input.email,
+      input.email.split('@')[0],
+      input.active ?? false,
+      input.url ?? '',
+      input.availableAttempts ?? 5,
+      input.attemptWindowStartedAt ?? null,
+      input.updatedAt ?? null,
+      input.updatedBy ?? null
+    )
+    .run();
 }
 
-function proxyPathRequest(
+function proxyRequest(
   path: string,
   method: string,
   env: Env,
-  options: {
-    token?: string;
-    clientId?: string | null;
-    body?: unknown;
-  } = {}
+  options: { token?: string; body?: unknown } = {}
 ): Promise<Response> {
-  const headers: Record<string, string> = { Origin: ALLOWED_ORIGIN };
-  if (options.token) {
-    headers.Cookie = options.token;
-  }
-  if (options.clientId !== null) {
-    headers['X-Client-Id'] = options.clientId ?? ALLOWED_CLIENT_ID;
-  }
-
+  const headers: Record<string, string> = {
+    Origin: ALLOWED_ORIGIN,
+    'X-Client-Id': ALLOWED_CLIENT_ID,
+  };
+  if (options.token) headers.Cookie = options.token;
   let body: string | undefined;
   if (options.body !== undefined) {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(options.body);
   }
-
   return invokeWorker(path, { method, headers, body }, env);
-}
-
-function installGithubAppMock(configs: Record<string, ProxyConfig>) {
-  const writes: Array<{ username: string; body: Record<string, unknown> }> = [];
-  const mock = (
-    spyOn(globalThis, 'fetch') as unknown as {
-      mockImplementation: (
-        implementation: (
-          input: RequestInfo | URL,
-          init?: RequestInit
-        ) => Promise<Response>
-      ) => unknown;
-    }
-  ).mockImplementation(async (input, init) => {
-    const url = new URL(input.toString());
-    expect(init?.headers).toBeDefined();
-
-    if (url.pathname === '/user/access-config') {
-      const username = url.searchParams.get('username') ?? '';
-      return Response.json({
-        proxy: configs[username] ?? {
-          active: false,
-          url: '',
-          availableAttempts: 5,
-        },
-        permissions: { repo: {} },
-      });
-    }
-
-    if (url.pathname === '/user/proxy-settings') {
-      const body = JSON.parse(String(init?.body ?? '{}')) as Record<
-        string,
-        unknown
-      >;
-      const username = String(body.username);
-      writes.push({ username, body });
-      configs[username] = {
-        active: body.active === true,
-        url: String(body.url ?? ''),
-        availableAttempts: Number(body.availableAttempts),
-        updatedAt: new Date().toISOString(),
-        updatedBy: String(body.updatedBy ?? ''),
-      };
-      return Response.json({
-        success: true,
-        automation: {
-          pullRequest: { number: 1, url: 'https://example.com/pr/1' },
-        },
-      });
-    }
-
-    return Response.json({ error: 'Not found' }, { status: 404 });
-  });
-
-  return { mock, writes };
 }
 
 beforeEach(() => {
@@ -161,165 +83,117 @@ beforeEach(() => {
 
 afterEach(() => {
   (Date.now as unknown as { mockRestore?: () => void }).mockRestore?.();
-  (globalThis.fetch as unknown as { mockRestore?: () => void }).mockRestore?.();
 });
 
-describe('/user/proxy repo-backed config characterization', () => {
+describe('D1-backed proxy settings', () => {
   test('requires authentication', async () => {
-    const response = await proxyRequest('GET', createTestEnv());
-
+    const response = await proxyRequest('/user/proxy', 'GET', createTestEnv());
     expect(response.status).toBe(401);
-    expect(await response.text()).toBe('Unauthorized');
   });
 
-  test('returns the current user proxy config from the GitHub App', async () => {
+  test('returns default settings without creating a row', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
-    const { writes } = installGithubAppMock({
-      student: {
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 4,
-        updatedAt: '2026-07-28T00:00:00.000Z',
-        updatedBy: USER_EMAIL,
-      },
-    });
 
-    const response = await proxyRequest('GET', env, { token });
+    const response = await proxyRequest('/user/proxy', 'GET', env, { token });
     const body = (await response.json()) as {
-      isAllowed: boolean;
-      canEdit: boolean;
-      proxy: ProxyConfig;
+      proxy: { email: string; active: boolean; availableAttempts: number };
+    };
+    const count = await env.AUTH_DB.prepare(
+      'SELECT count(*) AS total FROM proxySettings'
+    ).first<{ total: number }>();
+
+    expect(response.status).toBe(200);
+    expect(body.proxy).toMatchObject({
+      email: USER_EMAIL,
+      active: false,
+      availableAttempts: 5,
+    });
+    expect(count?.total).toBe(0);
+  });
+
+  test('atomically consumes one edit attempt and persists settings', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {});
+    const token = await createTestSessionCookie(env, USER_EMAIL);
+
+    const update = await proxyRequest('/user/proxy', 'POST', env, {
+      token,
+      body: { active: true, url: 'https://proxy.example/student' },
+    });
+    const read = await proxyRequest('/user/proxy', 'GET', env, { token });
+    const body = (await read.json()) as {
+      proxy: { active: boolean; url: string; availableAttempts: number };
+    };
+
+    expect(update.status).toBe(200);
+    expect(body.proxy).toMatchObject({
+      active: true,
+      url: 'https://proxy.example/student',
+      availableAttempts: 4,
+    });
+  });
+
+  test('never allows concurrent edits to consume more than five attempts', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {});
+    const token = await createTestSessionCookie(env, USER_EMAIL);
+
+    const responses = await Promise.all(
+      Array.from({ length: 6 }, (_, index) =>
+        proxyRequest('/user/proxy', 'POST', env, {
+          token,
+          body: { active: true, url: `https://proxy.example/${index}` },
+        })
+      )
+    );
+    const statuses = responses.map((response) => response.status).sort();
+    const row = await env.AUTH_DB.prepare(
+      'SELECT availableAttempts FROM proxySettings WHERE email = ?'
+    )
+      .bind(USER_EMAIL)
+      .first<{ availableAttempts: number }>();
+
+    expect(statuses).toEqual([200, 200, 200, 200, 200, 409]);
+    expect(row?.availableAttempts).toBe(0);
+  });
+
+  test('starts a fresh attempt window after the previous window expires', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {});
+    await seedProxy(env, {
+      email: USER_EMAIL,
+      active: false,
+      availableAttempts: 0,
+      attemptWindowStartedAt:
+        FIXED_NOW - PROXY_ATTEMPTS_RESET_WINDOW_MS - 60_000,
+    });
+    const token = await createTestSessionCookie(env, USER_EMAIL);
+
+    const response = await proxyRequest('/user/proxy', 'POST', env, {
+      token,
+      body: { active: true, url: 'https://proxy.example/refreshed' },
+    });
+    const body = (await response.json()) as {
+      proxy: { availableAttempts: number };
     };
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({
-      isAllowed: true,
-      canEdit: true,
-      proxy: {
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 4,
-        updatedAt: '2026-07-28T00:00:00.000Z',
-        updatedBy: USER_EMAIL,
-      },
-    });
-    expect(writes).toEqual([]);
+    expect(body.proxy.availableAttempts).toBe(4);
   });
 
-  test('decrements a non-admin edit attempt and writes the config PR payload', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {});
-    const token = await createTestSessionCookie(env, USER_EMAIL);
-    const { writes } = installGithubAppMock({
-      student: {
-        active: false,
-        url: '',
-        availableAttempts: 5,
-        updatedAt: '2026-07-28T00:00:00.000Z',
-        updatedBy: USER_EMAIL,
-      },
-    });
-
-    const response = await proxyRequest('PATCH', env, {
-      token,
-      body: { active: true, url: 'https://proxy.example/updated' },
-    });
-    const body = (await response.json()) as { proxy: ProxyConfig };
-
-    expect(response.status).toBe(200);
-    expect(body.proxy).toEqual({
-      active: true,
-      url: 'https://proxy.example/updated',
-      availableAttempts: 4,
-      updatedAt: '2026-07-28T00:00:00.000Z',
-      updatedBy: USER_EMAIL,
-    });
-    expect(writes).toEqual([
-      {
-        username: 'student',
-        body: {
-          username: 'student',
-          email: USER_EMAIL,
-          updatedBy: USER_EMAIL,
-          active: true,
-          url: 'https://proxy.example/updated',
-          availableAttempts: 4,
-        },
-      },
-    ]);
-  });
-
-  test('rejects a non-admin edit when attempts are exhausted', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {});
-    const token = await createTestSessionCookie(env, USER_EMAIL);
-    const { writes } = installGithubAppMock({
-      student: {
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 0,
-        updatedAt: RECENT_UPDATED_AT,
-        updatedBy: USER_EMAIL,
-      },
-    });
-
-    const response = await proxyRequest('PATCH', env, {
-      token,
-      body: { active: true, url: 'https://proxy.example/updated' },
-    });
-
-    expect(response.status).toBe(409);
-    expect((await response.json()) as unknown).toEqual({
-      code: 'proxy_attempts_exhausted',
-      message: 'You have used all your editing attempts for today.',
-    });
-    expect(writes).toEqual([]);
-  });
-
-  test('resets stale attempts before a non-admin edit', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {});
-    const token = await createTestSessionCookie(env, USER_EMAIL);
-    const { writes } = installGithubAppMock({
-      student: {
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 0,
-        updatedAt: EXPIRED_UPDATED_AT,
-        updatedBy: USER_EMAIL,
-      },
-    });
-
-    const response = await proxyRequest('PATCH', env, {
-      token,
-      body: { active: true, url: 'https://proxy.example/updated' },
-    });
-
-    expect(response.status).toBe(200);
-    expect(writes[0]?.body.availableAttempts).toBe(4);
-  });
-
-  test('allows a super-admin to edit another user without decrementing attempts', async () => {
+  test('allows an admin edit without consuming the target attempts', async () => {
     const env = createTestEnv();
     await setPermission(env, ADMIN_EMAIL, {
       accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
       role: APP_ROLE.ACADEMIC,
     });
     await setPermission(env, OTHER_EMAIL, {});
+    await seedProxy(env, { email: OTHER_EMAIL, availableAttempts: 2 });
     const token = await createTestSessionCookie(env, ADMIN_EMAIL);
-    const { writes } = installGithubAppMock({
-      other: {
-        active: false,
-        url: '',
-        availableAttempts: 2,
-        updatedAt: RECENT_UPDATED_AT,
-        updatedBy: OTHER_EMAIL,
-      },
-    });
 
-    const response = await proxyRequest('POST', env, {
+    const response = await proxyRequest('/user/proxy', 'POST', env, {
       token,
       body: {
         email: OTHER_EMAIL,
@@ -327,125 +201,139 @@ describe('/user/proxy repo-backed config characterization', () => {
         url: 'https://proxy.example/admin-updated',
       },
     });
+    const body = (await response.json()) as {
+      proxy: { availableAttempts: number; updatedBy: string };
+    };
 
     expect(response.status).toBe(200);
-    expect(writes[0]).toEqual({
-      username: 'other',
-      body: {
-        username: 'other',
-        email: OTHER_EMAIL,
-        updatedBy: ADMIN_EMAIL,
-        active: true,
-        url: 'https://proxy.example/admin-updated',
-        availableAttempts: 2,
-      },
+    expect(body.proxy).toMatchObject({
+      availableAttempts: 2,
+      updatedBy: ADMIN_EMAIL,
     });
   });
 
-  test('resets attempts through the admin reset endpoint', async () => {
+  test('resets attempts through the admin endpoint', async () => {
     const env = createTestEnv();
     await setPermission(env, ADMIN_EMAIL, {
       accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
       role: APP_ROLE.ACADEMIC,
     });
     await setPermission(env, OTHER_EMAIL, {});
+    await seedProxy(env, { email: OTHER_EMAIL, availableAttempts: 0 });
     const token = await createTestSessionCookie(env, ADMIN_EMAIL);
-    const { writes } = installGithubAppMock({
-      other: {
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 0,
-        updatedAt: '2026-07-28T00:00:00.000Z',
-        updatedBy: OTHER_EMAIL,
-      },
-    });
 
-    const response = await proxyPathRequest(
+    const response = await proxyRequest(
       '/api/admin/proxy/reset-attempts',
       'POST',
       env,
-      {
-        token,
-        body: { email: OTHER_EMAIL },
-      }
+      { token, body: { email: OTHER_EMAIL } }
     );
+    const body = (await response.json()) as {
+      proxy: { availableAttempts: number; updatedBy: string };
+    };
 
     expect(response.status).toBe(200);
-    expect(writes[0]).toEqual({
-      username: 'other',
-      body: {
-        username: 'other',
-        email: OTHER_EMAIL,
-        updatedBy: ADMIN_EMAIL,
-        active: true,
-        url: 'https://proxy.example/current',
-        availableAttempts: 5,
-      },
+    expect(body.proxy).toMatchObject({
+      availableAttempts: 5,
+      updatedBy: ADMIN_EMAIL,
     });
+  });
+
+  test('does not expose a self-service attempt reset route', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {});
+    const token = await createTestSessionCookie(env, USER_EMAIL);
+
+    const response = await proxyRequest('/user/proxy/reset', 'POST', env, {
+      token,
+      body: { email: USER_EMAIL },
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  test('forbids non-admin access to proxy pages', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {});
+    const token = await createTestSessionCookie(env, USER_EMAIL);
+
+    const response = await proxyRequest('/api/admin/proxies/page', 'GET', env, {
+      token,
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  test('returns stable bounded D1 pages without upstream fetches', async () => {
+    const env = createTestEnv();
+    await setPermission(env, ADMIN_EMAIL, {
+      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+      role: APP_ROLE.ACADEMIC,
+    });
+    await seedProxy(env, { email: 'zulu@pdn.ac.lk' });
+    await seedProxy(env, { email: 'alpha@pdn.ac.lk' });
+    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
+    const fetchMock = spyOn(globalThis, 'fetch');
+
+    const firstResponse = await proxyRequest(
+      '/api/admin/proxies/page?limit=1',
+      'GET',
+      env,
+      { token }
+    );
+    const first = (await firstResponse.json()) as {
+      items: Array<{ email: string }>;
+      page: { nextCursor: string; hasMore: boolean; total: number };
+    };
+    const secondResponse = await proxyRequest(
+      `/api/admin/proxies/page?limit=1&cursor=${encodeURIComponent(first.page.nextCursor)}`,
+      'GET',
+      env,
+      { token }
+    );
+    const second = (await secondResponse.json()) as {
+      items: Array<{ email: string }>;
+      page: { nextCursor: null; hasMore: boolean; total: number };
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(first.items.map(({ email }) => email)).toEqual(['alpha@pdn.ac.lk']);
+    expect(first.page).toMatchObject({ hasMore: true, total: 2 });
+    expect(secondResponse.status).toBe(200);
+    expect(second.items.map(({ email }) => email)).toEqual(['zulu@pdn.ac.lk']);
+    expect(second.page).toEqual({
+      nextCursor: null,
+      hasMore: false,
+      total: 2,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    fetchMock.mockRestore();
+  });
+
+  test('rejects page sizes above the shared maximum', async () => {
+    const env = createTestEnv();
+    await setPermission(env, ADMIN_EMAIL, {
+      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+      role: APP_ROLE.ACADEMIC,
+    });
+    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
+    const response = await proxyRequest(
+      '/api/admin/proxies/page?limit=101',
+      'GET',
+      env,
+      { token }
+    );
+    expect(response.status).toBe(400);
   });
 
   test('rejects legacy proxyUrl update bodies', async () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
-    installGithubAppMock({});
-
-    const response = await proxyRequest('PATCH', env, {
+    const response = await proxyRequest('/user/proxy', 'POST', env, {
       token,
       body: { active: true, proxyUrl: 'https://proxy.example/legacy' },
     });
-
     expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({
-      code: 'invalid_proxy_update',
-    });
-  });
-
-  test('returns a short-lived signed read URL for the current user proxy file', async () => {
-    const env = createTestEnv();
-    await setPermission(env, USER_EMAIL, {});
-    const token = await createTestSessionCookie(env, USER_EMAIL);
-
-    const response = await proxyPathRequest(
-      '/user/proxy/read-url',
-      'GET',
-      env,
-      { token }
-    );
-    const body = (await response.json()) as {
-      url: string;
-      expiresAt: string;
-    };
-    const signedUrl = new URL(body.url);
-
-    expect(response.status).toBe(200);
-    expect(signedUrl.origin).toBe('https://config.test.scs-pdn.space');
-    expect(signedUrl.pathname).toBe('/config/v1/student.json');
-    expect(signedUrl.searchParams.get('access_token')).toBeTruthy();
-    expect(Date.parse(body.expiresAt)).toBeGreaterThan(Date.now());
-  });
-
-  test('returns a short-lived signed all.json URL for super-admins only', async () => {
-    const env = createTestEnv();
-    await setPermission(env, ADMIN_EMAIL, {
-      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-      role: APP_ROLE.ACADEMIC,
-    });
-    const token = await createTestSessionCookie(env, ADMIN_EMAIL);
-
-    const response = await proxyPathRequest('/user/proxy/all-url', 'GET', env, {
-      token,
-    });
-    const body = (await response.json()) as {
-      url: string;
-      expiresAt: string;
-    };
-    const signedUrl = new URL(body.url);
-
-    expect(response.status).toBe(200);
-    expect(signedUrl.origin).toBe('https://config.test.scs-pdn.space');
-    expect(signedUrl.pathname).toBe('/config/v1/all.json');
-    expect(signedUrl.searchParams.get('access_token')).toBeTruthy();
-    expect(Date.parse(body.expiresAt)).toBeGreaterThan(Date.now());
   });
 });

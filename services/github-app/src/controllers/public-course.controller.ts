@@ -13,7 +13,6 @@ import {
   getPublicAcademicPrStatus,
   getPublicAcademicRecord,
   listPublicAcademicRecords,
-  publicAcademicPaths,
   PublicAcademicConflictError,
   upsertPublicAcademicPr,
 } from '@/repositories/public-course.repo';
@@ -240,10 +239,6 @@ export async function handleDeletePublicCourseOfferingPr(
     }
     throw error;
   }
-}
-
-export function academicRegistryPaths() {
-  return publicAcademicPaths;
 }
 
 export async function handleSubmitPublicAcademicOperation(

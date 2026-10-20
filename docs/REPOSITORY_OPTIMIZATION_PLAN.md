@@ -631,7 +631,14 @@ Modify:
 - complete: additive project, course, and offering page envelopes with stable
   key ordering, scoped cursors, deletion-tolerant continuation, bounded limits,
   and cross-resource cursor rejection;
-- remaining: bounded proxy pages.
+- complete: D1-owned proxy settings, atomic concurrent attempt consumption,
+  stable email-ordered cursor pages, and admin-only attempt resets;
+- complete: Portal proxy reads and edits use the API directly, while the GitHub
+  App no longer exposes proxy configuration routes or creates proxy PRs;
+- complete: an idempotent, conflict-reporting admin action imports the legacy
+  signed proxy aggregate before its migration-only credentials are retired;
+- verified: proxy pages perform bounded D1 queries without upstream fetches,
+  and concurrent edits cannot consume more than the allowed attempt count.
 
 ### Verification
 

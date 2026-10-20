@@ -11,7 +11,7 @@ import { OperationExecutor } from '@/operations/operation.executor';
 import type { OperationHandler } from '@/operations/operation.types';
 import type { GithubAppEnv } from '@/types/env';
 
-export function createCloudflareOperationExecutor(
+function createCloudflareOperationExecutor(
   env: GithubAppEnv,
   handlers: Record<string, OperationHandler>
 ): OperationExecutor {

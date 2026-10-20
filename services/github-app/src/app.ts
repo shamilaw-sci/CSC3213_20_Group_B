@@ -35,10 +35,6 @@ import {
   handleUpsertPublicCoursePr,
 } from '@/controllers/public-course.controller';
 import {
-  handleGetUserAccessConfig,
-  handleUpdateProxySettings,
-} from '@/controllers/user-access.controller';
-import {
   handleDiscardStudentPlacementPrs,
   handleGetStudentPlacementPrStatus,
   handleUpsertStudentPlacementPr,
@@ -59,12 +55,6 @@ app.delete('/operations/:operationId', async (c) =>
   handleCancelOperation(c.req.raw, c.env, c.req.param('operationId'))
 );
 
-app.get('/user/access-config', async (c) =>
-  handleGetUserAccessConfig(c.req.raw)
-);
-app.post('/user/proxy-settings', async (c) =>
-  handleUpdateProxySettings(c.req.raw)
-);
 app.post('/user/repository-permission', async (c) =>
   handleUpdateRepositoryPermission(c.req.raw)
 );

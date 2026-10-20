@@ -8,7 +8,7 @@ import type {
 export type ProfileKind =
   'academic' | 'academic-support' | 'non-academic' | 'student';
 
-export type ProfileByKind = {
+type ProfileByKind = {
   academic: AcademicTeachingStaff;
   'academic-support': AcademicSupportStaff;
   'non-academic': NonAcademicStaff;

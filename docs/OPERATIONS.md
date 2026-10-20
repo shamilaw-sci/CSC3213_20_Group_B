@@ -49,6 +49,28 @@ from permission records, and reports conflicts without cleaning their source
 records. Review every conflict before retrying, then remove the action after
 production migration is confirmed.
 
+### D1 and Proxy Settings Migration
+
+Run the manual `Migrate API D1` workflow with its exact confirmation phrase.
+The workflow is serialized, uses the protected `production` environment,
+verifies the API workspace, shows pending migrations, and then applies them to
+`scs-portal-auth`. Configure `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` as production environment secrets.
+
+After migration `0003_proxy_settings.sql` is applied and the API containing the
+new table is deployed, a super-admin runs `migrate-proxy-settings` from the
+Portal admin actions interface using this confirmation phrase:
+
+```text
+Migrate legacy proxy settings into D1.
+```
+
+The action imports the signed legacy aggregate with conflict-safe inserts and
+does not overwrite a D1 row. Review the reported counts and conflicts, verify
+Portal proxy reads, edits, pagination, and admin resets, and only then remove
+the migration action and its three config-source variables. Normal proxy
+traffic never reads the legacy aggregate or calls the GitHub App.
+
 ### GitHub App
 
 Configure from `services/github-app`:

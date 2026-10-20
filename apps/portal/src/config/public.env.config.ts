@@ -13,11 +13,6 @@ const publicEnvConfig = createEnv({
       .int()
       .positive()
       .default(6),
-    NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .default(5),
     NEXT_PUBLIC_API_CLIENT_ID: z.string().min(1).default('portal'),
   },
   runtimeEnv: {
@@ -27,8 +22,6 @@ const publicEnvConfig = createEnv({
       process.env.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL,
     NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH:
       process.env.NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH,
-    NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS:
-      process.env.NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS,
     NEXT_PUBLIC_API_CLIENT_ID: process.env.NEXT_PUBLIC_API_CLIENT_ID,
   },
   emptyStringAsUndefined: true,

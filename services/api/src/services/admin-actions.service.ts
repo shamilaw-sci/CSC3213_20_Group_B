@@ -10,6 +10,7 @@ import {
 import type { Env } from '@/types/env';
 import { verifySessionRequest } from '@/middleware/session';
 import { migrateLegacyAuth } from '@/services/legacy-auth-migration.service';
+import { migrateProxySettings } from '@/services/proxy-settings-migration.service';
 
 type AdminActionDefinition = {
   id: string;
@@ -25,6 +26,8 @@ type AdminActionDefinition = {
 
 const LEGACY_AUTH_MIGRATION_CONFIRMATION =
   'Migrate legacy GitHub identities and passkeys into Better Auth.';
+const PROXY_SETTINGS_MIGRATION_CONFIRMATION =
+  'Migrate legacy proxy settings into D1.';
 
 const ADMIN_ACTIONS: AdminActionDefinition[] = [
   {
@@ -51,6 +54,31 @@ const ADMIN_ACTIONS: AdminActionDefinition[] = [
         passkeysCreated: { type: 'integer' },
         permissionsCleaned: { type: 'integer' },
         skipped: { type: 'integer' },
+        conflicts: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+  {
+    id: 'migrate-proxy-settings',
+    title: 'Migrate proxy settings',
+    description:
+      'Idempotently import the legacy proxy aggregate into the D1 proxy settings table without overwriting existing rows.',
+    method: 'POST',
+    href: '/api/admin/actions/migrate-proxy-settings',
+    danger: true,
+    confirmation: PROXY_SETTINGS_MIGRATION_CONFIRMATION,
+    requestSchema: {
+      type: 'object',
+      required: ['confirmation'],
+      properties: { confirmation: { type: 'string' } },
+      additionalProperties: false,
+    },
+    resultSchema: {
+      type: 'object',
+      properties: {
+        scanned: { type: 'integer' },
+        created: { type: 'integer' },
+        alreadyPresent: { type: 'integer' },
         conflicts: { type: 'array', items: { type: 'string' } },
       },
     },
@@ -119,6 +147,26 @@ export async function runAdminAction(
     return Response.json(result, {
       headers: createCorsHeaders(origin),
     });
+  }
+
+  if (actionId === 'migrate-proxy-settings') {
+    const body = (await req.json().catch(() => ({}))) as {
+      confirmation?: unknown;
+    };
+    if (body.confirmation !== PROXY_SETTINGS_MIGRATION_CONFIRMATION) {
+      return createJsonErrorResponse('Confirmation required', 400, origin);
+    }
+    try {
+      const result = await migrateProxySettings(env, session.email);
+      return Response.json(result, { headers: createCorsHeaders(origin) });
+    } catch {
+      console.error('Proxy settings migration failed');
+      return createJsonErrorResponse(
+        'Proxy settings migration failed',
+        502,
+        origin
+      );
+    }
   }
 
   return createJsonErrorResponse('Action not found', 404, origin);

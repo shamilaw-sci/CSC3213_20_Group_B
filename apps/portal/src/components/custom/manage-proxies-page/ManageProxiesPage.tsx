@@ -33,7 +33,6 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
-import publicEnvConfig from '@/config/public.env.config';
 import {
   adminProxyResetAttemptsApiUrl,
   apiHeaders,
@@ -45,8 +44,8 @@ import { AdminProxyEntry } from '@/types/proxy';
 
 interface ManageProxiesPageProps {
   proxies: AdminProxyEntry[];
-  page: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasPrevious: boolean;
   total: number;
 }
 
@@ -87,8 +86,8 @@ async function toastApiError(response: Response, fallback: string) {
 
 export default function ManageProxiesPage({
   proxies: initialProxies,
-  page,
-  totalPages,
+  nextCursor,
+  hasPrevious,
   total,
 }: ManageProxiesPageProps) {
   const router = useRouter();
@@ -157,15 +156,10 @@ export default function ManageProxiesPage({
         await toastApiError(res, 'Failed to update proxy settings');
         return;
       }
+      const result = (await res.json()) as { proxy: AdminProxyEntry };
       setProxies((prev) =>
-        prev.map((p) =>
-          p.email === editing.email
-            ? {
-                ...p,
-                active: editing.active,
-                url: parsedProxyUrl.data,
-              }
-            : p
+        prev.map((proxy) =>
+          proxy.email === editing.email ? result.proxy : proxy
         )
       );
       toast.success('Proxy settings updated');
@@ -190,16 +184,9 @@ export default function ManageProxiesPage({
         await toastApiError(res, 'Failed to reset attempts');
         return;
       }
+      const result = (await res.json()) as { proxy: AdminProxyEntry };
       setProxies((prev) =>
-        prev.map((p) =>
-          p.email === email
-            ? {
-                ...p,
-                availableAttempts:
-                  publicEnvConfig.NEXT_PUBLIC_DEFAULT_AVAILABLE_ATTEMPTS,
-              }
-            : p
-        )
+        prev.map((proxy) => (proxy.email === email ? result.proxy : proxy))
       );
       toast.success('Attempts reset successfully');
     } catch {
@@ -410,26 +397,27 @@ export default function ManageProxiesPage({
         })}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {(hasPrevious || nextCursor) && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/admin/proxies?page=${page - 1}`)}
-            disabled={page <= 1}
+            onClick={() => router.back()}
+            disabled={!hasPrevious}
           >
             <ChevronLeft className="size-4" />
             Previous
           </Button>
-          <span className="text-muted-foreground text-sm">
-            Page {page} of {totalPages}
-          </span>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/admin/proxies?page=${page + 1}`)}
-            disabled={page >= totalPages}
+            onClick={() =>
+              nextCursor &&
+              router.push(
+                `/admin/proxies?cursor=${encodeURIComponent(nextCursor)}`
+              )
+            }
+            disabled={!nextCursor}
           >
             Next
             <ChevronRight className="size-4" />

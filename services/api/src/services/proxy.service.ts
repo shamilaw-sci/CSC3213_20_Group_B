@@ -1,10 +1,3 @@
-import { SignJWT } from 'jose';
-
-import { callGithubApp } from '@/clients/github-app.client';
-import {
-  PROXY_ATTEMPTS_RESET_WINDOW_MS,
-  PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
-} from '@/config/client.config';
 import {
   proxyUpdateRequestSchema,
   type ProxyUpdateRequestDto,
@@ -16,200 +9,30 @@ import {
   createTextErrorResponse,
   getRequestOrigin,
 } from '@/http/responses';
+import { hasSessionCookie, verifyIdentitySession } from '@/middleware/session';
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  InvalidPaginationCursorError,
+  parsePaginationRequest,
+} from '@/pagination/cursor';
 import {
   getUserPermission,
   isSuperAdmin,
   isUserRole,
   type Permission,
 } from '@/repositories/permissions.repo';
+import {
+  getProxySettings,
+  listProxySettingsPage,
+  resetProxyAttempts,
+  saveProxySettings,
+} from '@/repositories/proxy-settings.repo';
 import type { Env } from '@/types/env';
-import { hasSessionCookie, verifyIdentitySession } from '@/middleware/session';
 
 interface ProxySession {
   email: string;
   permission: Permission;
-}
-
-interface ProxyConfig {
-  active: boolean;
-  url: string;
-  availableAttempts: number;
-  updatedAt?: string;
-  updatedBy?: string;
-}
-
-interface UserAccessConfig {
-  proxy: ProxyConfig;
-  permissions?: {
-    repo?: Record<string, unknown>;
-  };
-}
-
-const USER_PROXY_READ_TOKEN_TTL_SECONDS = 120;
-const ADMIN_PROXY_READ_TOKEN_TTL_SECONDS = 60;
-
-function emailToUsername(email: string): string {
-  return email.split('@')[0]?.toLowerCase() ?? email.toLowerCase();
-}
-
-function configDataUrl(env: Env, path: string, accessToken: string): string {
-  const url = new URL(path, env.CONFIG_DATA_BASE_URL);
-  url.searchParams.set('access_token', accessToken);
-  return url.toString();
-}
-
-async function createConfigReadToken(input: {
-  env: Env;
-  email: string;
-  path: string;
-  scope: 'proxy:read:self' | 'proxy:read:all';
-  ttlSeconds: number;
-}): Promise<string> {
-  return await new SignJWT({
-    scope: input.scope,
-    path: input.path,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(input.email)
-    .setIssuer(input.env.CONFIG_ACCESS_TOKEN_ISSUER)
-    .setAudience('config.scs.pdn.ac.lk')
-    .setIssuedAt()
-    .setExpirationTime(`${input.ttlSeconds}s`)
-    .setJti(crypto.randomUUID())
-    .sign(new TextEncoder().encode(input.env.CONFIG_ACCESS_TOKEN_SECRET));
-}
-
-async function createSignedConfigReadUrl(input: {
-  env: Env;
-  email: string;
-  path: string;
-  scope: 'proxy:read:self' | 'proxy:read:all';
-  ttlSeconds: number;
-}): Promise<{ url: string; expiresAt: string }> {
-  const token = await createConfigReadToken(input);
-  return {
-    url: configDataUrl(input.env, input.path, token),
-    expiresAt: new Date(Date.now() + input.ttlSeconds * 1000).toISOString(),
-  };
-}
-
-function defaultProxyConfig(): ProxyConfig {
-  return {
-    active: false,
-    url: '',
-    availableAttempts: PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
-  };
-}
-
-function normalizeProxyConfig(
-  value: Partial<ProxyConfig> | undefined
-): ProxyConfig {
-  return {
-    ...defaultProxyConfig(),
-    ...value,
-    availableAttempts:
-      typeof value?.availableAttempts === 'number'
-        ? value.availableAttempts
-        : PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
-  };
-}
-
-function shouldResetAttempts(proxy: ProxyConfig): boolean {
-  if (!proxy.updatedAt) return false;
-  const updatedAt = Date.parse(proxy.updatedAt);
-  return (
-    Number.isFinite(updatedAt) &&
-    Date.now() - updatedAt > PROXY_ATTEMPTS_RESET_WINDOW_MS
-  );
-}
-
-async function getUserAccessConfig(
-  username: string,
-  env: Env,
-  origin: string
-): Promise<
-  { ok: true; proxy: ProxyConfig } | { ok: false; response: Response }
-> {
-  const response = await callGithubApp<UserAccessConfig>(
-    env,
-    origin,
-    `/user/access-config?username=${encodeURIComponent(username)}`
-  );
-  if (!response.ok) return response;
-
-  return {
-    ok: true,
-    proxy: normalizeProxyConfig(response.value.proxy),
-  };
-}
-
-async function saveUserProxyConfig(input: {
-  username: string;
-  email: string;
-  updatedBy: string;
-  proxy: ProxyConfig;
-  env: Env;
-  origin: string;
-}): Promise<
-  { ok: true; proxy: ProxyConfig } | { ok: false; response: Response }
-> {
-  const response = await callGithubApp<{
-    success: boolean;
-    automation: unknown;
-  }>(input.env, input.origin, '/user/proxy-settings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: input.username,
-      email: input.email,
-      updatedBy: input.updatedBy,
-      active: input.proxy.active,
-      url: input.proxy.url,
-      availableAttempts: input.proxy.availableAttempts,
-    }),
-  });
-  if (!response.ok) return response;
-
-  return { ok: true, proxy: input.proxy };
-}
-
-export async function getUserProxyReadUrl(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const session = await requireProxySession(req, env);
-  if (session instanceof Response) return session;
-
-  const path = `/config/v1/${emailToUsername(session.email)}.json`;
-  const signed = await createSignedConfigReadUrl({
-    env,
-    email: session.email,
-    path,
-    scope: 'proxy:read:self',
-    ttlSeconds: USER_PROXY_READ_TOKEN_TTL_SECONDS,
-  });
-
-  return createJsonResponse(signed, 200, origin);
-}
-
-export async function getAdminProxyAllReadUrl(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const session = await requireAdminProxySession(req, env);
-  if (session instanceof Response) return session;
-
-  const signed = await createSignedConfigReadUrl({
-    env,
-    email: session.email,
-    path: '/config/v1/all.json',
-    scope: 'proxy:read:all',
-    ttlSeconds: ADMIN_PROXY_READ_TOKEN_TTL_SECONDS,
-  });
-
-  return createJsonResponse(signed, 200, origin);
 }
 
 async function requireProxySession(
@@ -220,12 +43,10 @@ async function requireProxySession(
   if (!hasSessionCookie(req)) {
     return createTextErrorResponse('Unauthorized', 401, origin);
   }
-
   const clientId = req.headers.get('X-Client-Id');
   if (!clientId) {
     return createTextErrorResponse('Missing X-Client-Id header', 400, origin);
   }
-
   const payload = await verifyIdentitySession(req, env, clientId);
   if (payload instanceof Response) return payload;
 
@@ -233,11 +54,9 @@ async function requireProxySession(
   if (!permission) {
     return createTextErrorResponse('User not found', 404, origin);
   }
-
   if (permission.blacklisted || isUserRole(permission)) {
     return createTextErrorResponse('Forbidden', 403, origin);
   }
-
   return { email: payload.email.toLowerCase(), permission };
 }
 
@@ -247,11 +66,9 @@ async function requireAdminProxySession(
 ): Promise<ProxySession | Response> {
   const session = await requireProxySession(req, env);
   if (session instanceof Response) return session;
-
   if (!isSuperAdmin(session.permission)) {
     return createTextErrorResponse('Forbidden', 403, getRequestOrigin(req));
   }
-
   return session;
 }
 
@@ -259,21 +76,15 @@ function parseTargetEmail(input: {
   actorEmail: string;
   actorIsAdmin: boolean;
   requestedEmail?: string;
-  action: 'edit' | 'view' | 'reset';
+  action: 'edit' | 'view';
   origin: string;
 }): { ok: true; email: string } | { ok: false; response: Response } {
   const requestedEmail = input.requestedEmail?.trim().toLowerCase();
   if (!requestedEmail || requestedEmail === input.actorEmail) {
     return { ok: true, email: input.actorEmail };
   }
-
   if (!input.actorIsAdmin) {
-    const verb =
-      input.action === 'view'
-        ? 'view'
-        : input.action === 'reset'
-          ? 'reset'
-          : 'edit';
+    const verb = input.action === 'view' ? 'view' : 'edit';
     return {
       ok: false,
       response: createTextErrorResponse(
@@ -283,7 +94,6 @@ function parseTargetEmail(input: {
       ),
     };
   }
-
   return { ok: true, email: requestedEmail };
 }
 
@@ -292,7 +102,6 @@ function parseProxyBodyError(
   origin: string
 ): Response | null {
   if (body.success) return null;
-
   const issue = body.error.issues[0];
   const field = typeof issue.path[0] === 'string' ? issue.path[0] : undefined;
   return createJsonResponse(
@@ -318,10 +127,7 @@ function attemptsExhaustedResponse(origin: string): Response {
       code: 'proxy_attempts_exhausted',
       message: 'You have used all your editing attempts for today.',
     }),
-    {
-      status: 409,
-      headers: createCorsHeaders(origin),
-    }
+    { status: 409, headers: createCorsHeaders(origin) }
   );
 }
 
@@ -336,15 +142,27 @@ async function readUpdateBody(
     console.error('Failed to parse JSON body:', error);
     return createTextErrorResponse('Invalid JSON body', 400, origin);
   }
-
   const validatedBody = proxyUpdateRequestSchema.safeParse(parsed);
   const errorResponse = parseProxyBodyError(validatedBody, origin);
   if (errorResponse) return errorResponse;
   if (!validatedBody.success) {
     return createJsonErrorResponse('Invalid proxy update', 400, origin);
   }
-
   return validatedBody.data;
+}
+
+async function requireEligibleTarget(
+  email: string,
+  env: Env,
+  origin: string
+): Promise<Response | null> {
+  const permission = await getUserPermission(email, env);
+  if (!permission)
+    return createTextErrorResponse('User not found', 404, origin);
+  if (permission.blacklisted || isUserRole(permission)) {
+    return createTextErrorResponse('Forbidden', 403, origin);
+  }
+  return null;
 }
 
 export async function getOrCreateUserProxy(
@@ -354,33 +172,25 @@ export async function getOrCreateUserProxy(
   const origin = getRequestOrigin(req);
   const session = await requireProxySession(req, env);
   if (session instanceof Response) return session;
-
   const actorIsAdmin = isSuperAdmin(session.permission);
 
   if (req.method === 'GET') {
-    const requestedEmail =
-      new URL(req.url).searchParams.get('email') ?? undefined;
     const target = parseTargetEmail({
       actorEmail: session.email,
       actorIsAdmin,
-      requestedEmail,
+      requestedEmail: new URL(req.url).searchParams.get('email') ?? undefined,
       action: 'view',
       origin,
     });
     if (!target.ok) return target.response;
-
-    const config = await getUserAccessConfig(
-      emailToUsername(target.email),
-      env,
-      origin
-    );
-    if (!config.ok) return config.response;
-
+    const targetError = await requireEligibleTarget(target.email, env, origin);
+    if (targetError) return targetError;
+    const proxy = await getProxySettings(env, target.email);
     return createJsonResponse(
       {
         isAllowed: true,
         canEdit: actorIsAdmin || target.email === session.email,
-        proxy: config.proxy,
+        proxy,
       },
       200,
       origin
@@ -389,7 +199,6 @@ export async function getOrCreateUserProxy(
 
   const body = await readUpdateBody(req);
   if (body instanceof Response) return body;
-
   const target = parseTargetEmail({
     actorEmail: session.email,
     actorIsAdmin,
@@ -398,106 +207,24 @@ export async function getOrCreateUserProxy(
     origin,
   });
   if (!target.ok) return target.response;
-
-  const targetPermission = await getUserPermission(target.email, env);
-  if (!targetPermission) {
-    return createTextErrorResponse('User not found', 404, origin);
-  }
-  if (targetPermission.blacklisted || isUserRole(targetPermission)) {
-    return createTextErrorResponse('Forbidden', 403, origin);
-  }
-
-  const current = await getUserAccessConfig(
-    emailToUsername(target.email),
+  const targetError = await requireEligibleTarget(target.email, env, origin);
+  if (targetError) return targetError;
+  const saved = await saveProxySettings({
     env,
-    origin
-  );
-  if (!current.ok) return current.response;
-
-  const shouldDecreaseAttempt = !actorIsAdmin;
-  const resetAttempts = shouldResetAttempts(current.proxy);
-  const availableAttempts = resetAttempts
-    ? PROXY_DEFAULT_AVAILABLE_ATTEMPTS
-    : current.proxy.availableAttempts;
-
-  if (shouldDecreaseAttempt && availableAttempts <= 0) {
+    email: target.email,
+    actorEmail: session.email,
+    actorIsAdmin,
+    active: body.active,
+    url: body.url,
+  });
+  if (saved.status === 'attempts_exhausted') {
     return attemptsExhaustedResponse(origin);
   }
-
-  const nextProxy: ProxyConfig = {
-    ...current.proxy,
-    availableAttempts: shouldDecreaseAttempt
-      ? availableAttempts - 1
-      : availableAttempts,
-    active: 'active' in body ? !!body.active : current.proxy.active,
-    url: 'url' in body && body.url !== undefined ? body.url : current.proxy.url,
-  };
-
-  const saved = await saveUserProxyConfig({
-    username: emailToUsername(target.email),
-    email: target.email,
-    updatedBy: session.email,
-    proxy: nextProxy,
-    env,
-    origin,
-  });
-  if (!saved.ok) return saved.response;
-
-  return createJsonResponse({ success: true, proxy: saved.proxy }, 200, origin);
-}
-
-export async function resetUserProxyAttempts(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const session = await requireProxySession(req, env);
-  if (session instanceof Response) return session;
-
-  let parsed: unknown = {};
-  try {
-    parsed = await req.json();
-  } catch {
-    parsed = {};
-  }
-
-  const validatedBody = proxyUpdateRequestSchema.safeParse(parsed);
-  const errorResponse = parseProxyBodyError(validatedBody, origin);
-  if (errorResponse) return errorResponse;
-  if (!validatedBody.success) {
-    return createJsonErrorResponse('Invalid proxy update', 400, origin);
-  }
-
-  const target = parseTargetEmail({
-    actorEmail: session.email,
-    actorIsAdmin: isSuperAdmin(session.permission),
-    requestedEmail: validatedBody.data.email,
-    action: 'reset',
-    origin,
-  });
-  if (!target.ok) return target.response;
-
-  const current = await getUserAccessConfig(
-    emailToUsername(target.email),
-    env,
+  return createJsonResponse(
+    { success: true, proxy: saved.settings },
+    200,
     origin
   );
-  if (!current.ok) return current.response;
-
-  const saved = await saveUserProxyConfig({
-    username: emailToUsername(target.email),
-    email: target.email,
-    updatedBy: session.email,
-    proxy: {
-      ...current.proxy,
-      availableAttempts: PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
-    },
-    env,
-    origin,
-  });
-  if (!saved.ok) return saved.response;
-
-  return createJsonResponse({ success: true, proxy: saved.proxy }, 200, origin);
 }
 
 export async function resetAdminProxyAttempts(
@@ -507,18 +234,7 @@ export async function resetAdminProxyAttempts(
   const origin = getRequestOrigin(req);
   const session = await requireAdminProxySession(req, env);
   if (session instanceof Response) return session;
-
-  let parsed: unknown;
-  try {
-    parsed = await req.json();
-  } catch {
-    return createJsonResponse(
-      { code: 'invalid_json_body', message: 'Invalid JSON body' },
-      400,
-      origin
-    );
-  }
-
+  const parsed: unknown = await req.json().catch(() => null);
   const email =
     parsed &&
     typeof parsed === 'object' &&
@@ -526,7 +242,6 @@ export async function resetAdminProxyAttempts(
     typeof parsed.email === 'string'
       ? parsed.email.trim().toLowerCase()
       : '';
-
   if (!email) {
     return createJsonResponse(
       { code: 'missing_email', message: 'Email is required.' },
@@ -534,35 +249,54 @@ export async function resetAdminProxyAttempts(
       origin
     );
   }
+  const targetError = await requireEligibleTarget(email, env, origin);
+  if (targetError) return targetError;
+  const proxy = await resetProxyAttempts(env, email, session.email);
+  return createJsonResponse({ success: true, proxy }, 200, origin);
+}
 
-  const targetPermission = await getUserPermission(email, env);
-  if (!targetPermission) {
+export async function listAdminProxiesPage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const session = await requireAdminProxySession(req, env);
+  if (session instanceof Response) return session;
+
+  try {
+    const request = parsePaginationRequest(new URL(req.url));
+    const afterEmail = request.cursor
+      ? decodePaginationCursor('admin-proxies', request.cursor)
+      : undefined;
+    const result = await listProxySettingsPage(env, {
+      afterEmail,
+      limit: request.limit,
+    });
+    const nextCursor = result.nextEmail
+      ? encodePaginationCursor('admin-proxies', result.nextEmail)
+      : null;
     return createJsonResponse(
-      { code: 'proxy_not_found', message: 'Proxy entry not found.' },
-      404,
+      {
+        version: 1,
+        items: result.settings,
+        page: {
+          nextCursor,
+          hasMore: nextCursor !== null,
+          total: result.total,
+        },
+      },
+      200,
       origin
     );
+  } catch (error) {
+    if (error instanceof InvalidPaginationCursorError) {
+      return createJsonErrorResponse(
+        'Invalid cursor or page limit',
+        400,
+        origin
+      );
+    }
+    console.error('Error fetching proxy page:', error);
+    return createJsonErrorResponse('Proxy data unavailable', 502, origin);
   }
-
-  const current = await getUserAccessConfig(
-    emailToUsername(email),
-    env,
-    origin
-  );
-  if (!current.ok) return current.response;
-
-  const saved = await saveUserProxyConfig({
-    username: emailToUsername(email),
-    email,
-    updatedBy: session.email,
-    proxy: {
-      ...current.proxy,
-      availableAttempts: PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
-    },
-    env,
-    origin,
-  });
-  if (!saved.ok) return saved.response;
-
-  return createJsonResponse({ success: true, proxy: saved.proxy }, 200, origin);
 }

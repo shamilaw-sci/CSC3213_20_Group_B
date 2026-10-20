@@ -3,11 +3,9 @@ import ManageProxies from '@/views/manage/ManageProxies';
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ cursor?: string }>;
 }) {
-  const { page } = await searchParams;
-  const pageNumber = page ? parseInt(page, 10) : 1;
-  const validPage = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber;
+  const { cursor } = await searchParams;
 
-  return <ManageProxies page={validPage} />;
+  return <ManageProxies cursor={cursor} />;
 }

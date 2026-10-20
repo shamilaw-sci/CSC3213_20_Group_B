@@ -4,10 +4,10 @@ import type {
   OperationHandler,
 } from '@/operations/operation.types';
 
-export type AcademicRegistryKind = 'course' | 'offering';
+type AcademicRegistryKind = 'course' | 'offering';
 
-export const ACADEMIC_UPSERT_ACTION = 'academic.upsert';
-export const ACADEMIC_DELETE_ACTION = 'academic.delete';
+const ACADEMIC_UPSERT_ACTION = 'academic.upsert';
+const ACADEMIC_DELETE_ACTION = 'academic.delete';
 
 export interface AcademicOperationRequest {
   action: 'upsert' | 'delete';

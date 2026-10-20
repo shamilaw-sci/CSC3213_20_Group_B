@@ -6,11 +6,15 @@ export interface AdminProxyEntry {
   availableAttempts: number;
   updatedBy?: string;
   updatedAt?: string;
+  revision: number;
 }
 
-export interface AdminProxyListResponse {
-  proxies: AdminProxyEntry[];
-  page: number;
-  totalPages: number;
-  total: number;
+export interface AdminProxyPageResponse {
+  version: 1;
+  items: AdminProxyEntry[];
+  page: {
+    nextCursor: string | null;
+    hasMore: boolean;
+    total: number;
+  };
 }

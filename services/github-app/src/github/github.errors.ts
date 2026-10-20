@@ -1,4 +1,4 @@
-export type GithubErrorCategory =
+type GithubErrorCategory =
   | 'not_found'
   | 'missing_ref'
   | 'compare_conflict'

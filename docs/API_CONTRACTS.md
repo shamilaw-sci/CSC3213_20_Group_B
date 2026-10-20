@@ -129,13 +129,14 @@ management require the session and origin protections enforced by Better
 Auth. Allowed account domains and trusted origins are configured centrally in
 the API Worker.
 
-| Method         | Route                                    | Purpose                         |
-| -------------- | ---------------------------------------- | ------------------------------- |
-| `GET`, `PATCH` | `/api/me`                                | Read or update current user     |
-| `PATCH`        | `/api/me/notifications`                  | Update notification preferences |
-| `PATCH`        | `/api/user/permissions`                  | Update permitted user fields    |
-| `GET`          | `/api/admin/actions`                     | List reviewed admin actions     |
-| `POST`         | `/api/admin/actions/migrate-legacy-auth` | Run the one-time auth migration |
+| Method         | Route                                       | Purpose                         |
+| -------------- | ------------------------------------------- | ------------------------------- |
+| `GET`, `PATCH` | `/api/me`                                   | Read or update current user     |
+| `PATCH`        | `/api/me/notifications`                     | Update notification preferences |
+| `PATCH`        | `/api/user/permissions`                     | Update permitted user fields    |
+| `GET`          | `/api/admin/actions`                        | List reviewed admin actions     |
+| `POST`         | `/api/admin/actions/migrate-legacy-auth`    | Run the one-time auth migration |
+| `POST`         | `/api/admin/actions/migrate-proxy-settings` | Import proxy settings into D1   |
 
 ## People Routes
 
@@ -180,24 +181,24 @@ adopts the page routes.
 | ------------------------ | --------------------------------- |
 | `GET`                    | `/api/admin/users`                |
 | `GET`                    | `/api/admin/users/page`           |
+| `GET`                    | `/api/admin/proxies/page`         |
 | `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`         |
 | `GET`                    | `/api/admin/actions`              |
 | `POST`                   | `/api/admin/actions/:actionId`    |
-| `GET`                    | `/user/proxy/all`                 |
-| `GET`                    | `/user/proxy/all-url`             |
-| `GET`                    | `/user/proxy/read-url`            |
-| `GET`, `POST`, `PATCH`   | `/user/proxy`                     |
-| `POST`                   | `/user/proxy/reset`               |
+| `GET`, `POST`            | `/user/proxy`                     |
 | `POST`                   | `/api/admin/proxy/reset-attempts` |
-| `POST`                   | `/api/admin/proxy/build`          |
 
 Admin routes require a non-blacklisted super-admin. The additive
 `GET /api/admin/users/page` route accepts `cursor` and `limit`, returns the
 standard page envelope, and reads summaries from KV key metadata. Permission
 writes maintain that metadata; older entries are read and backfilled when a
 page first encounters them. The legacy `/api/admin/users` array remains
-available during Portal migration. Proxy listing is still scheduled for
-bounded cursor pagination.
+available during Portal migration. `GET /api/admin/proxies/page` reads stable,
+bounded email-ordered pages directly from D1. Proxy edits consume attempts with
+one atomic SQL statement, while admin edits and resets preserve their separate
+authorization rules. Users cannot reset their own attempts. The one-time
+`migrate-proxy-settings` action imports the previous signed aggregate without
+overwriting D1 rows and reports conflicts for review.
 
 ## Internal GitHub App API
 
@@ -205,8 +206,6 @@ Every route requires `X-Internal-Secret`. It is not a browser API.
 
 Route groups:
 
-- `/user/access-config`
-- `/user/proxy-settings`
 - `/user/repository-permission`
 - `/people/public-profile` and `/people/public-profile/pr`
 - `/people/student-placement/pr`

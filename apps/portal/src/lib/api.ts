@@ -92,12 +92,11 @@ export function userProxyApiUrl() {
   return apiUrl('/user/proxy');
 }
 
-export function userProxyReadUrlApiUrl() {
-  return apiUrl('/user/proxy/read-url');
-}
-
-export function userProxyAllReadUrlApiUrl() {
-  return apiUrl('/user/proxy/all-url');
+export function adminProxiesPageApiUrl(cursor?: string, limit = 100) {
+  const url = apiUrl('/api/admin/proxies/page');
+  url.searchParams.set('limit', String(limit));
+  if (cursor) url.searchParams.set('cursor', cursor);
+  return url;
 }
 
 export function adminUsersApiUrl() {

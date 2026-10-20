@@ -11,6 +11,8 @@ function createTestD1Database(): D1Database {
     CREATE TABLE "verification" ("id" text NOT NULL PRIMARY KEY, "identifier" text NOT NULL, "value" text NOT NULL, "expiresAt" integer NOT NULL, "createdAt" integer NOT NULL, "updatedAt" integer NOT NULL);
     CREATE TABLE "passkey" ("id" text NOT NULL PRIMARY KEY, "name" text, "publicKey" text NOT NULL, "userId" text NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE, "credentialID" text NOT NULL, "counter" integer NOT NULL, "deviceType" text NOT NULL, "backedUp" integer NOT NULL, "transports" text, "createdAt" integer, "aaguid" text);
     CREATE TABLE "rateLimit" ("id" text NOT NULL PRIMARY KEY, "key" text NOT NULL UNIQUE, "count" integer NOT NULL, "lastRequest" integer NOT NULL);
+    CREATE TABLE "proxySettings" ("email" text NOT NULL PRIMARY KEY, "username" text NOT NULL, "active" integer NOT NULL DEFAULT 0 CHECK ("active" IN (0, 1)), "url" text NOT NULL DEFAULT '', "availableAttempts" integer NOT NULL DEFAULT 5 CHECK ("availableAttempts" BETWEEN 0 AND 5), "attemptWindowStartedAt" integer, "updatedAt" integer, "updatedBy" text, "revision" integer NOT NULL DEFAULT 1);
+    CREATE INDEX "proxySettings_updatedAt_idx" ON "proxySettings" ("updatedAt");
     CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("providerId", "accountId");
     CREATE UNIQUE INDEX "passkey_credentialID_unique" ON "passkey" ("credentialID");
   `);

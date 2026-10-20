@@ -576,6 +576,7 @@ describe('/api/admin/actions characterization', () => {
     expect(body.schemaVersion).toBe(1);
     expect(body.actions.map((action) => action.id)).toEqual([
       'migrate-legacy-auth',
+      'migrate-proxy-settings',
     ]);
     expect(body.actions[0]?.requestSchema).toBeDefined();
   });
@@ -632,6 +633,70 @@ describe('/api/admin/actions characterization', () => {
       role: APP_ROLE.STUDENT,
       accessLevel: ACCESS_LEVEL.NONE,
       name: 'Test Student',
+    });
+  });
+
+  test('idempotently migrates legacy proxy settings into D1', async () => {
+    const env = createTestEnv();
+    const token = await createAdminContext(env);
+    globalThis.fetch = mock(async () =>
+      Response.json({
+        schemaVersion: 1,
+        generatedAt: '2026-07-28T12:00:00.000Z',
+        users: {
+          [USER_EMAIL]: {
+            username: 'student',
+            proxy: {
+              active: true,
+              url: 'https://proxy.example/student',
+              availableAttempts: 3,
+              updatedAt: '2026-07-28T11:00:00.000Z',
+              updatedBy: ADMIN_EMAIL,
+            },
+          },
+        },
+      })
+    ) as unknown as typeof fetch;
+
+    const run = () =>
+      apiRequest('/api/admin/actions/migrate-proxy-settings', 'POST', env, {
+        token,
+        body: { confirmation: 'Migrate legacy proxy settings into D1.' },
+      });
+    const first = await run();
+    const second = await run();
+    const row = await env.AUTH_DB.prepare(
+      'SELECT active, url, availableAttempts, attemptWindowStartedAt, updatedBy FROM proxySettings WHERE email = ?'
+    )
+      .bind(USER_EMAIL)
+      .first<{
+        active: number;
+        url: string;
+        availableAttempts: number;
+        attemptWindowStartedAt: number;
+        updatedBy: string;
+      }>();
+
+    expect(first.status).toBe(200);
+    expect(await first.json()).toMatchObject({
+      scanned: 1,
+      created: 1,
+      alreadyPresent: 0,
+      conflicts: [],
+    });
+    expect(second.status).toBe(200);
+    expect(await second.json()).toMatchObject({
+      scanned: 1,
+      created: 0,
+      alreadyPresent: 1,
+      conflicts: [],
+    });
+    expect(row).toEqual({
+      active: 1,
+      url: 'https://proxy.example/student',
+      availableAttempts: 3,
+      attemptWindowStartedAt: Date.parse('2026-07-28T11:00:00.000Z'),
+      updatedBy: ADMIN_EMAIL,
     });
   });
 

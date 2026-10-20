@@ -26,7 +26,6 @@ const repositorySchema = z
   .regex(/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?$/);
 
 const actorSchema = z.string().trim().min(1);
-const emailSchema = z.string().trim().toLowerCase().email();
 const dataRepoPathSchema = z
   .string()
   .trim()
@@ -46,57 +45,6 @@ const gitShaSchema = z
   .string()
   .trim()
   .regex(/^[a-f0-9]{40}$/i);
-
-const httpUrlSchema = z
-  .string()
-  .trim()
-  .refine((value) => value === '' || URL.canParse(value), {
-    message: 'Expected an empty string or absolute HTTP(S) URL',
-  })
-  .refine((value) => {
-    if (value === '') return true;
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  }, 'Expected an absolute HTTP(S) URL');
-
-/**
- * Query params for reading a user access config.
- */
-export const getUserAccessConfigQuerySchema = z.object({
-  username: usernameSchema,
-});
-
-/**
- * Request body for updating proxy settings.
- */
-export const updateProxySettingsRequestSchema = z
-  .object({
-    username: usernameSchema,
-    email: emailSchema,
-    updatedBy: actorSchema,
-    active: z.boolean(),
-    url: httpUrlSchema,
-    availableAttempts: z.number().int().min(0).max(5),
-  })
-  .superRefine((value, ctx) => {
-    if (
-      value.email.split('@')[0]?.toLowerCase() !== value.username.toLowerCase()
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['email'],
-        message: 'Email local-part must match username',
-      });
-    }
-
-    if (value.active && value.url === '') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['url'],
-        message: 'Expected a proxy URL when proxy access is active',
-      });
-    }
-  });
 
 /**
  * Request body for granting or removing repository access.
