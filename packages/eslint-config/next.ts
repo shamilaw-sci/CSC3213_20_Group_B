@@ -1,7 +1,7 @@
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 
-import baseConfig from './base';
+import baseConfig from '@scs/eslint-config/base';
 
 const nextConfig = [
   ...nextTs,

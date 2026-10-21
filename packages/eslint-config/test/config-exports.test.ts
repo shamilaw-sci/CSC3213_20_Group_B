@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
-import baseConfig from '../base';
-import nextConfig from '../next';
-import { typescriptProjectRoot } from '../project';
-import workerConfig from '../worker';
+import baseConfig from '@scs/eslint-config/base';
+import nextConfig from '@scs/eslint-config/next';
+import { typescriptProjectRoot } from '@scs/eslint-config/project';
+import workerConfig from '@scs/eslint-config/worker';
 import githubAppConfig from '../../../services/github-app/eslint.config';
 
 type FlatConfig = {

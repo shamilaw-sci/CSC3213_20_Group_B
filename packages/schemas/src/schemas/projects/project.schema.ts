@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-import { AcademicDepartmentCodeSchema } from '../academics/academic-organization.schema';
-import { AcademicYearSchema } from '../academics/academic-year.schema';
-import { CourseCodeSchema } from '../courses/course-code.schema';
-import { CourseOfferingIdSchema } from '../courses/course-offering.schema';
-import { AcademicUsernameSchema } from '../people/identifiers/academic-username.schema';
-import { SNumberSchema } from '../people/identifiers/s-number.schema';
+import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
+import { AcademicYearSchema } from '#schemas/academics/academic-year.schema';
+import { CourseCodeSchema } from '#schemas/courses/course-code.schema';
+import { CourseOfferingIdSchema } from '#schemas/courses/course-offering.schema';
+import { AcademicUsernameSchema } from '#schemas/people/identifiers/academic-username.schema';
+import { SNumberSchema } from '#schemas/people/identifiers/s-number.schema';
 
 export const ProjectTypeSchema = z.enum([
   'COURSE_PROJECT',

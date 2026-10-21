@@ -1,11 +1,10 @@
+import { Badge, badgeVariants } from '@scs/ui/components/badge';
+import { buttonVariants } from '@scs/ui/components/button';
+import { Card } from '@scs/ui/components/card';
+import { Toaster } from '@scs/ui/components/sonner';
+import { Tabs, TabsList, TabsTrigger } from '@scs/ui/components/tabs';
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-
-import { Badge, badgeVariants } from '../src/components/badge';
-import { buttonVariants } from '../src/components/button';
-import { Card } from '../src/components/card';
-import { Toaster } from '../src/components/sonner';
-import { Tabs, TabsList, TabsTrigger } from '../src/components/tabs';
 
 describe('shared UI component contracts', () => {
   test('preserves badge variants and custom classes', () => {

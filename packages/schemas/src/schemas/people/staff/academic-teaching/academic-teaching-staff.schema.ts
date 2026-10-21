@@ -3,14 +3,14 @@ import { z } from 'zod';
 import {
   AcademicDepartmentCodeSchema,
   AcademicUnitCodeSchema,
-} from '../../../academics/academic-organization.schema';
-import { CourseCodeSchema } from '../../../courses/course-code.schema';
-import { ConferenceSchema } from '../../../research/conference.schema';
-import { ResearchSchema } from '../../../research/research.schema';
-import { PublicationSchema } from '../../../research/research-publication.schema';
-import { PersonSchema } from '../../person.schema';
-import { SocialLinksSchema } from '../../social-links.schema';
-import { AcademicRankSchema } from './academic-rank.schema';
+} from '#schemas/academics/academic-organization.schema';
+import { CourseCodeSchema } from '#schemas/courses/course-code.schema';
+import { PersonSchema } from '#schemas/people/person.schema';
+import { SocialLinksSchema } from '#schemas/people/social-links.schema';
+import { AcademicRankSchema } from '#schemas/people/staff/academic-teaching/academic-rank.schema';
+import { ConferenceSchema } from '#schemas/research/conference.schema';
+import { ResearchSchema } from '#schemas/research/research.schema';
+import { PublicationSchema } from '#schemas/research/research-publication.schema';
 
 export const AcademicTeachingStaffSchema = PersonSchema.extend({
   staffType: z.literal('ACADEMIC_TEACHING'),

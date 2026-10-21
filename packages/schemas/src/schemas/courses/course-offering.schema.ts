@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import { AcademicDepartmentCodeSchema } from '../academics/academic-organization.schema';
-import { AcademicYearSchema } from '../academics/academic-year.schema';
-import { CourseIdSchema } from './course.schema';
-import { CourseStaffSchema } from './course-staff.schema';
+import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
+import { AcademicYearSchema } from '#schemas/academics/academic-year.schema';
+import { CourseIdSchema } from '#schemas/courses/course.schema';
+import { CourseStaffSchema } from '#schemas/courses/course-staff.schema';
 
 export const CourseOfferingIdSchema = z
   .string()

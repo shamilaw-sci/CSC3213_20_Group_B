@@ -25,8 +25,7 @@ describe('AcademicUsernameSchema', () => {
     expect(() => AcademicUsernameSchema.parse('1jdoe')).toThrow();
   });
 
-  it('rejects a username with uppercase after parsing', () => {
-    // toLowerCase runs first, so uppercase becomes lowercase
+  it('normalizes uppercase before validating', () => {
     expect(() => AcademicUsernameSchema.parse('VALID')).not.toThrow();
   });
 

@@ -6,7 +6,7 @@ import {
   AcademicSubjectSelectionSchema,
   HonoursProgrammeCodeSchema,
   SpecialDegreeSubjectCodes,
-} from './academic-organization.schema';
+} from '#schemas/academics/academic-organization.schema';
 
 export const HonoursStreamSchema = HonoursProgrammeCodeSchema;
 

@@ -6,11 +6,11 @@ import {
   AcademicSubjectSelectionSchema,
   HonoursProgrammeCodeSchema,
   SpecialDegreeSubjectCodes,
-} from '../../academics/academic-organization.schema';
-import { PublicationSchema } from '../../research/research-publication.schema';
-import { SNumberSchema } from '../identifiers/s-number.schema';
-import { PersonSchema } from '../person.schema';
-import { SocialLinksSchema } from '../social-links.schema';
+} from '#schemas/academics/academic-organization.schema';
+import { SNumberSchema } from '#schemas/people/identifiers/s-number.schema';
+import { PersonSchema } from '#schemas/people/person.schema';
+import { SocialLinksSchema } from '#schemas/people/social-links.schema';
+import { PublicationSchema } from '#schemas/research/research-publication.schema';
 
 export const StudentTypeSchema = z.enum(['UNDERGRADUATE', 'POSTGRADUATE']);
 export const StudentTrackSchema = z.enum(['GENERAL', 'HONOURS']);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { AcademicDepartmentCodeSchema } from '../academics/academic-organization.schema';
-import { CourseCodeSchema } from './course-code.schema';
+import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
+import { CourseCodeSchema } from '#schemas/courses/course-code.schema';
 
 export const CourseIdSchema = z
   .string()

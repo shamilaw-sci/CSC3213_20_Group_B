@@ -3,9 +3,9 @@ import { z } from 'zod';
 import {
   AcademicDepartmentCodeSchema,
   AcademicUnitCodeSchema,
-} from '../../../academics/academic-organization.schema';
-import { PersonSchema } from '../../person.schema';
-import { AcademicSupportPositionSchema } from './academic-support-position.schema';
+} from '#schemas/academics/academic-organization.schema';
+import { PersonSchema } from '#schemas/people/person.schema';
+import { AcademicSupportPositionSchema } from '#schemas/people/staff/academic-support/academic-support-position.schema';
 
 export const AcademicSupportStaffSchema = PersonSchema.extend({
   staffType: z.literal('ACADEMIC_SUPPORT'),
