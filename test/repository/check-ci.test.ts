@@ -24,8 +24,9 @@ describe('monorepo CI workflow', () => {
     );
   });
 
-  test('caches Bun downloads and Turbo output', () => {
-    expect(workflow).toContain('uses: actions/cache@v4');
+  test('uses Node 24 actions and caches Bun downloads and Turbo output', () => {
+    expect(workflow).toContain('uses: actions/checkout@v7');
+    expect(workflow).toContain('uses: actions/cache@v6');
     expect(workflow).toContain('~/.bun/install/cache');
     expect(workflow).toContain('.turbo');
     expect(workflow).toContain("hashFiles('bun.lock')");

@@ -59,6 +59,10 @@ operation suite passed 17 tests, and its call-characterization test passed.
 Workspace Knip scans for Web, People, Projects, Portal, API, and GitHub App
 reported no findings.
 
+The final CI observation also identified Node 20 deprecation warnings from
+`actions/checkout@v4` and `actions/cache@v4`. The workflows now use the current
+Node 24 action majors, `actions/checkout@v7` and `actions/cache@v6`.
+
 The targeted operation command exercised:
 
 - duplicate delivery and idempotency-key reuse;
