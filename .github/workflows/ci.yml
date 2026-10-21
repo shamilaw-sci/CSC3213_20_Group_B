@@ -58,12 +58,13 @@ jobs:
 
       - name: Verify affected workspaces
         if: github.event_name == 'pull_request'
-        run: bunx turbo run lint typecheck test build --affected
+        run: bunx turbo run lint typecheck typecheck:test test build --affected
 
       - name: Verify complete monorepo
         if: github.event_name != 'pull_request'
         run: |
           bun run lint
           bun run typecheck
+          bun run typecheck:test
           bun run test
           bun run build

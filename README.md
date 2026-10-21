@@ -52,6 +52,7 @@ bun run docs:check
 bun run format:check
 bun run lint
 bun run typecheck
+bun run typecheck:test
 bun run test
 bun run build
 ```

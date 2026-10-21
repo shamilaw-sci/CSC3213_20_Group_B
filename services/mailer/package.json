@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
+    "lint": "eslint \"src/**/*.ts\" --cache --cache-strategy content --cache-location .cache/eslint/",
+    "lint:fix": "eslint \"src/**/*.ts\" --cache --cache-strategy content --cache-location .cache/eslint/ --fix",
     "typecheck": "tsc --noEmit",
     "check": "bun run typecheck && prettier --check .",
     "format": "prettier --write ."
@@ -17,9 +19,12 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@scs/eslint-config": "workspace:*",
     "@scs/tsconfig": "workspace:*",
     "@types/bun": "^1.4.3",
     "@types/nodemailer": "^8.0.1",
+    "eslint": "^9.39.5",
+    "globals": "^17.7.0",
     "prettier": "^3.9.10",
     "typescript": "^6.0.3"
   }

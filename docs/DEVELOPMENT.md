@@ -23,6 +23,7 @@ bun run docs:check
 bun run format:check
 bun run lint
 bun run typecheck
+bun run typecheck:test
 bun run test
 bun run build
 ```
@@ -33,6 +34,7 @@ Filter one package when iterating:
 bun --filter '@scs/portal' dev
 bun --filter '@scs/api' test
 bun --filter '@scs/github-app' typecheck
+bun --filter '@scs/github-app' typecheck:test
 ```
 
 Inspect each workspace's `package.json` for additional commands such as Knip,
@@ -95,8 +97,9 @@ comes from the `cn` package or the shared UI re-export; do not recreate
 ## Tests
 
 Use the runner declared by the workspace. Bun tests use `bun test`; do not use
-Bun's runner to judge a Vitest suite. A missing test script means coverage is
-absent.
+Bun's runner to judge a Vitest suite. Run `typecheck:test` where declared so
+test-only paths and runtime globals are checked. A missing test script means
+coverage is absent.
 
 For behavior changes:
 

@@ -14,7 +14,8 @@ least expensive repository-wide checks before workspace compilation:
 2. repository policy tests;
 3. formatting validation;
 4. pull request title validation using Conventional Commits;
-5. workspace lint, typecheck, test, and build tasks.
+5. workspace lint, source typecheck, test-source typecheck, test, and build
+   tasks.
 
 Pull requests use Turbo's affected-workspace selection. Merge queue entries
 and pushes to `main` run the complete monorepo gate. Superseded pull request
@@ -40,6 +41,7 @@ or release-critical behavior:
 ```powershell
 bun run lint
 bun run typecheck
+bun run typecheck:test
 bun run test
 bun run build
 ```
@@ -47,8 +49,12 @@ bun run build
 To inspect Turbo's planned tasks without running them:
 
 ```powershell
-bunx turbo run lint typecheck test build --dry=json
+bunx turbo run lint typecheck typecheck:test test build --dry=json
 ```
+
+A workspace-specific `typecheck:test` task keeps test-only imports, fixtures,
+and runtime types inside the CI type boundary. It currently applies to the API,
+GitHub App, Projects app, and schema package.
 
 A workspace without a `test` task has missing automated coverage; it is not a
 passing test result. Add the task and meaningful tests before relying on CI as
