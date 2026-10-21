@@ -99,8 +99,11 @@ export function adminProxiesPageApiUrl(cursor?: string, limit = 100) {
   return url;
 }
 
-export function adminUsersApiUrl() {
-  return apiUrl('/api/admin/users');
+export function adminUsersPageApiUrl(cursor?: string, limit = 50) {
+  const url = apiUrl('/api/admin/users/page');
+  url.searchParams.set('limit', String(limit));
+  if (cursor) url.searchParams.set('cursor', cursor);
+  return url;
 }
 
 export function adminUserApiUrl(email: string) {
@@ -115,8 +118,11 @@ export function adminActionApiUrl(actionId: string) {
   return apiUrl(`/api/admin/actions/${encodeURIComponent(actionId)}`);
 }
 
-export function publicProjectsApiUrl() {
-  return apiUrl('/api/projects/v2/projects');
+export function publicProjectsPageApiUrl(cursor?: string, limit = 24) {
+  const url = apiUrl('/api/projects/v2/projects/page');
+  url.searchParams.set('limit', String(limit));
+  if (cursor) url.searchParams.set('cursor', cursor);
+  return url;
 }
 
 export function publicProjectApiUrl(slug: string) {
@@ -133,6 +139,13 @@ export function publicProjectPrApiUrl(slug: string) {
 
 export function publicCoursesApiUrl() {
   return apiUrl('/api/academic/v2/courses');
+}
+
+export function publicCoursesPageApiUrl(cursor?: string, limit = 24) {
+  const url = apiUrl('/api/academic/v2/courses/page');
+  url.searchParams.set('limit', String(limit));
+  if (cursor) url.searchParams.set('cursor', cursor);
+  return url;
 }
 
 export function publicCourseApiUrl(id: string) {

@@ -7,18 +7,53 @@ export type TerminalOperationStatus = Exclude<
   { status: 'queued' | 'running' }
 >;
 
+interface MutationPollingOptions {
+  signal?: AbortSignal;
+  maxAttempts?: number;
+  fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  wait?: (delayMs: number, signal?: AbortSignal) => Promise<void>;
+}
+
+const MAX_POLL_DELAY_MS = 10_000;
+
+function waitForDelay(delayMs: number, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
+
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(resolve, delayMs);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeout);
+        reject(signal.reason);
+      },
+      { once: true }
+    );
+  });
+}
+
 export async function waitForMutationOperation(
   accepted: MutationAccepted,
-  pendingMessage: string
+  pendingMessage: string,
+  options: MutationPollingOptions = {}
 ): Promise<TerminalOperationStatus> {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    await new Promise((resolve) =>
-      window.setTimeout(resolve, accepted.retryAfterMs)
+  const maxAttempts = options.maxAttempts ?? 40;
+  const fetcher = options.fetcher ?? fetch;
+  const wait = options.wait ?? waitForDelay;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const delayMs = Math.min(
+      accepted.retryAfterMs * 2 ** Math.min(attempt, 4),
+      MAX_POLL_DELAY_MS
     );
-    const response = await fetch(accepted.statusUrl, {
+    await wait(delayMs, options.signal);
+    options.signal?.throwIfAborted();
+
+    const response = await fetcher(accepted.statusUrl, {
       credentials: 'include',
       cache: 'no-store',
       headers: apiHeaders(),
+      signal: options.signal,
     });
     if (!response.ok) throw new Error((await readApiError(response)).message);
     const operation = (await response.json()) as OperationStatusResponse;
@@ -27,6 +62,10 @@ export async function waitForMutationOperation(
     }
   }
   throw new Error(pendingMessage);
+}
+
+export function isOperationPollingAbort(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 export function assertMutationSucceeded(

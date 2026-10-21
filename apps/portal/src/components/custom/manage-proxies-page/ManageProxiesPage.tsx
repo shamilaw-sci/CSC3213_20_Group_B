@@ -15,8 +15,6 @@ import { Separator } from '@scs/ui/components/separator';
 import { Switch } from '@scs/ui/components/switch';
 import {
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   Edit,
   Globe,
   RefreshCw,
@@ -33,6 +31,7 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
+import { Pagination } from '@/components/custom/pagination/Pagination';
 import {
   adminProxyResetAttemptsApiUrl,
   apiHeaders,
@@ -44,8 +43,8 @@ import { AdminProxyEntry } from '@/types/proxy';
 
 interface ManageProxiesPageProps {
   proxies: AdminProxyEntry[];
-  nextCursor: string | null;
-  hasPrevious: boolean;
+  previousHref?: string;
+  nextHref?: string;
   total: number;
 }
 
@@ -86,8 +85,8 @@ async function toastApiError(response: Response, fallback: string) {
 
 export default function ManageProxiesPage({
   proxies: initialProxies,
-  nextCursor,
-  hasPrevious,
+  previousHref,
+  nextHref,
   total,
 }: ManageProxiesPageProps) {
   const router = useRouter();
@@ -395,33 +394,7 @@ export default function ManageProxiesPage({
         })}
       </div>
 
-      {(hasPrevious || nextCursor) && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}
-            disabled={!hasPrevious}
-          >
-            <ChevronLeft className="size-4" />
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              nextCursor &&
-              router.push(
-                `/admin/proxies?cursor=${encodeURIComponent(nextCursor)}`
-              )
-            }
-            disabled={!nextCursor}
-          >
-            Next
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-      )}
+      <Pagination previousHref={previousHref} nextHref={nextHref} />
     </PageShell>
   );
 }

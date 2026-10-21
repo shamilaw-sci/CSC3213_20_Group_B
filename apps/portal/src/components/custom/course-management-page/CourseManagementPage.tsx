@@ -1,6 +1,5 @@
 'use client';
 
-import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
   CourseCodeSchema,
@@ -26,10 +25,6 @@ import {
   SelectValue,
 } from '@scs/ui/components/select';
 import { Separator } from '@scs/ui/components/separator';
-import CodeMirror from '@uiw/react-codemirror';
-import JsonView from '@uiw/react-json-view';
-import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
-import { githubLightTheme } from '@uiw/react-json-view/githubLight';
 import { cn } from 'cn';
 import {
   BookOpen,
@@ -40,9 +35,9 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -56,22 +51,40 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
+import { Pagination } from '@/components/custom/pagination/Pagination';
 import {
   apiHeaders,
   meApiUrl,
   publicCourseApiUrl,
   publicCoursePrApiUrl,
-  publicCoursesApiUrl,
   publicCourseSchemaApiUrl,
+  publicCoursesPageApiUrl,
   publicOfferingPrApiUrl,
   publicOfferingsApiUrl,
   readApiError,
 } from '@/lib/api';
 import {
   assertMutationSucceeded,
+  isOperationPollingAbort,
   waitForMutationOperation,
 } from '@/lib/mutation-operation';
+import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { canEditCoursesRole } from '@/types/role';
+
+const JsonEditor = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonEditor').then(
+      (module) => module.JsonEditor
+    ),
+  { ssr: false }
+);
+const JsonPreview = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonPreview').then(
+      (module) => module.JsonPreview
+    ),
+  { ssr: false }
+);
 
 type EditorMode = 'form' | 'json-view' | 'json-edit';
 type CourseTab = 'draft' | 'published';
@@ -79,6 +92,14 @@ type CourseTab = 'draft' | 'published';
 interface CourseManagementPageProps {
   courseId?: string;
   newCourse?: boolean;
+  initialUser?: Record<string, unknown>;
+  initialCourses?: unknown[];
+  initialSchema?: SchemaResponse;
+  initialCourse?: unknown;
+  initialPullRequest?: unknown;
+  initialOfferings?: unknown[];
+  previousHref?: string;
+  nextHref?: string;
 }
 
 interface CourseRecord {
@@ -261,60 +282,6 @@ function emptyOffering(course: CourseRecord): OfferingRecord {
   };
 }
 
-function JsonPreview({ value }: { value: object }) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="overflow-auto rounded-md border bg-[#f6f8fa] p-4 text-sm dark:bg-[#0d1117]">
-      <JsonView
-        value={value}
-        style={{
-          ...(isDark ? githubDarkTheme : githubLightTheme),
-          backgroundColor: 'transparent',
-          fontSize: '0.875rem',
-        }}
-        displayDataTypes={false}
-        enableClipboard={false}
-        collapsed={2}
-      />
-    </div>
-  );
-}
-
-function JsonEditor({
-  value,
-  onChange,
-  readOnly,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  readOnly: boolean;
-}) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="max-w-full overflow-x-auto rounded-md border">
-      <CodeMirror
-        className="w-full max-w-full"
-        value={value}
-        minHeight="420px"
-        height="min(58vh, 680px)"
-        extensions={[json()]}
-        basicSetup={{
-          lineNumbers: true,
-          foldGutter: true,
-          highlightActiveLine: true,
-        }}
-        theme={isDark ? 'dark' : 'light'}
-        editable={!readOnly}
-        onChange={onChange}
-      />
-    </div>
-  );
-}
-
 function prBadgeClass(status: AcademicPr['status']) {
   if (status === 'open') {
     return 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300';
@@ -331,24 +298,58 @@ function prBadgeClass(status: AcademicPr['status']) {
 export default function CourseManagementPage({
   courseId,
   newCourse = false,
+  initialUser,
+  initialCourses = [],
+  initialSchema,
+  initialCourse,
+  initialPullRequest,
+  initialOfferings = [],
+  previousHref,
+  nextHref,
 }: CourseManagementPageProps) {
   const router = useRouter();
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
-  const [schema, setSchema] = useState<SchemaResponse | null>(null);
-  const [courses, setCourses] = useState<CourseRecord[]>([]);
-  const [offerings, setOfferings] = useState<OfferingRecord[]>([]);
-  const [course, setCourse] = useState<CourseRecord>(() => emptyCourse());
-  const [publishedCourse, setPublishedCourse] = useState<CourseRecord | null>(
-    null
+  const beginOperationPolling = useOperationPollingSignal();
+  const [user, setUser] = useState<Record<string, unknown> | null>(
+    initialUser ?? null
   );
-  const [pr, setPr] = useState<AcademicPr | null>(null);
+  const [schema, setSchema] = useState<SchemaResponse | null>(
+    initialSchema ?? null
+  );
+  const [courses, setCourses] = useState<CourseRecord[]>(() =>
+    initialCourses
+      .map(courseFromRecord)
+      .filter((item): item is CourseRecord => Boolean(item))
+  );
+  const [offerings, setOfferings] = useState<OfferingRecord[]>(() =>
+    initialOfferings
+      .map(offeringFromRecord)
+      .filter((item): item is OfferingRecord => Boolean(item))
+  );
+  const initialPublishedCourse = courseFromRecord(initialCourse);
+  const initialPr = isRecord(initialPullRequest)
+    ? (initialPullRequest as unknown as AcademicPr)
+    : null;
+  const initialDraftCourse = courseFromRecord(initialPr?.draftRecord);
+  const [course, setCourse] = useState<CourseRecord>(
+    initialDraftCourse ?? initialPublishedCourse ?? emptyCourse()
+  );
+  const [publishedCourse, setPublishedCourse] = useState<CourseRecord | null>(
+    initialPublishedCourse
+  );
+  const [pr, setPr] = useState<AcademicPr | null>(initialPr);
   const [query, setQuery] = useState('');
   const [jsonText, setJsonText] = useState(
-    JSON.stringify(emptyCourse(), null, 2)
+    JSON.stringify(
+      initialDraftCourse ?? initialPublishedCourse ?? emptyCourse(),
+      null,
+      2
+    )
   );
   const [editorMode, setEditorMode] = useState<EditorMode>('form');
   const [activeTab, setActiveTab] = useState<CourseTab>('draft');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    !initialUser || ((Boolean(courseId) || newCourse) && !initialSchema)
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -401,37 +402,41 @@ export default function CourseManagementPage({
     return nextUser;
   }
 
-  async function loadCatalog() {
-    const [coursesRes, offeringsRes] = await Promise.all([
-      fetch(publicCoursesApiUrl(), {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: apiHeaders(),
-      }),
-      fetch(publicOfferingsApiUrl(), {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: apiHeaders(),
-      }),
-    ]);
+  async function loadCoursePage() {
+    const coursesRes = await fetch(publicCoursesPageApiUrl(), {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: apiHeaders(),
+    });
 
     if (!coursesRes.ok)
       throw new Error((await readApiError(coursesRes)).message);
-    if (!offeringsRes.ok) {
-      throw new Error((await readApiError(offeringsRes)).message);
-    }
-
-    const coursesValue = (await coursesRes.json().catch(() => [])) as unknown;
-    const offeringsValue = (await offeringsRes
-      .json()
-      .catch(() => [])) as unknown;
+    const coursesValue = (await coursesRes.json().catch(() => ({}))) as {
+      items?: unknown[];
+    };
     setCourses(
-      Array.isArray(coursesValue)
-        ? coursesValue
+      Array.isArray(coursesValue.items)
+        ? coursesValue.items
             .map(courseFromRecord)
             .filter((item): item is CourseRecord => Boolean(item))
         : []
     );
+  }
+
+  async function loadOfferings() {
+    const offeringsRes = await fetch(publicOfferingsApiUrl(), {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: apiHeaders(),
+    });
+
+    if (!offeringsRes.ok) {
+      throw new Error((await readApiError(offeringsRes)).message);
+    }
+
+    const offeringsValue = (await offeringsRes
+      .json()
+      .catch(() => [])) as unknown;
     setOfferings(
       Array.isArray(offeringsValue)
         ? offeringsValue
@@ -483,6 +488,8 @@ export default function CourseManagementPage({
   }
 
   useEffect(() => {
+    if (initialUser && (!courseId && !newCourse ? true : initialSchema)) return;
+
     let mounted = true;
 
     async function load() {
@@ -516,7 +523,10 @@ export default function CourseManagementPage({
                 syncJson(nextCourse);
               })()
             : Promise.resolve();
-        await Promise.all([loadCatalog(), detailPromise]);
+        await Promise.all([
+          courseId || newCourse ? loadOfferings() : loadCoursePage(),
+          detailPromise,
+        ]);
       } catch (loadError) {
         if (mounted) {
           setError(
@@ -539,7 +549,7 @@ export default function CourseManagementPage({
      * editor state and must not restart this network request.
      */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, newCourse]);
+  }, [courseId, initialSchema, initialUser, newCourse]);
 
   function parseJsonEditor() {
     try {
@@ -611,15 +621,18 @@ export default function CourseManagementPage({
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Course update is still queued. Refresh to check its status.'
+        'Course update is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
       setCourse(validatedCourse);
       syncJson(validatedCourse);
-      await Promise.all([loadCatalog(), loadCourse(normalizedId)]);
+      await loadCourse(normalizedId);
+      router.refresh();
       toast.success('Course PR submitted.');
       if (newCourse) router.push(`/academic/courses/${validatedCourse.id}`);
     } catch (saveError) {
+      if (isOperationPollingAbort(saveError)) return;
       toast.error(
         saveError instanceof Error ? saveError.message : 'Course save failed.'
       );
@@ -667,12 +680,14 @@ export default function CourseManagementPage({
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Course offering update is still queued. Refresh to check its status.'
+        'Course offering update is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
-      await loadCatalog();
+      await loadOfferings();
       toast.success('Course offering PR submitted.');
     } catch (operationError) {
+      if (isOperationPollingAbort(operationError)) return;
       toast.error(
         operationError instanceof Error
           ? operationError.message
@@ -705,12 +720,14 @@ export default function CourseManagementPage({
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Course deletion is still queued. Refresh to check its status.'
+        'Course deletion is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
       toast.success('Course deletion PR submitted.');
       router.push('/academic/courses');
     } catch (deleteError) {
+      if (isOperationPollingAbort(deleteError)) return;
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
@@ -826,6 +843,8 @@ export default function CourseManagementPage({
             )}
           </CardContent>
         </Card>
+
+        <Pagination previousHref={previousHref} nextHref={nextHref} />
       </PageShell>
     );
   }
@@ -845,7 +864,7 @@ export default function CourseManagementPage({
             <Button
               variant="outline"
               onClick={() =>
-                void (courseId ? loadCourse(courseId) : loadCatalog())
+                void (courseId ? loadCourse(courseId) : loadCoursePage())
               }
             >
               <RefreshCw data-icon="inline-start" />
@@ -921,6 +940,8 @@ export default function CourseManagementPage({
                   value={jsonText}
                   onChange={setJsonText}
                   readOnly={!canEdit || activeTab === 'published'}
+                  minHeight="420px"
+                  height="min(58vh, 680px)"
                 />
               ) : (
                 <CourseForm

@@ -705,6 +705,25 @@ Modify:
 10. Add focused pure-function/component tests and verify real list/detail routes
     at mobile and desktop widths through the Next development loop.
 
+### Status on 2026-10-21
+
+- complete: project, course, user, proxy, and profile routes render their
+  initial bounded data on the server;
+- complete: cursor navigation preserves query state and exposes accessible
+  previous and next links;
+- complete: project lists request only the project page endpoint, while the
+  selected project editor loads its course and offering references;
+- complete: selected project, course, user, and profile routes load one entity
+  instead of their complete registries;
+- complete: JSON and CodeMirror views load on demand, while mutation polling
+  uses bounded backoff and stops on terminal outcomes or component unmount;
+- verified with a local API fixture: navigating to the next project page changed
+  the URL and issued one bounded page request; the project detail issued no
+  project-list request;
+- verified through the Next development MCP and browser runtime: there were no
+  compilation or session errors, and the list/detail layouts had no horizontal
+  overflow at 360, 768, or 1440 CSS pixels.
+
 ### Verification
 
 ```powershell

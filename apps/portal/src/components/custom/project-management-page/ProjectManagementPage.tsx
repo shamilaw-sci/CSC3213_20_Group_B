@@ -1,6 +1,5 @@
 'use client';
 
-import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
   type EntityRevision,
@@ -42,10 +41,6 @@ import {
   SelectValue,
 } from '@scs/ui/components/select';
 import { Separator } from '@scs/ui/components/separator';
-import CodeMirror from '@uiw/react-codemirror';
-import JsonView from '@uiw/react-json-view';
-import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
-import { githubLightTheme } from '@uiw/react-json-view/githubLight';
 import { cn } from 'cn';
 import {
   Archive,
@@ -63,9 +58,9 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -82,6 +77,7 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
+import { Pagination } from '@/components/custom/pagination/Pagination';
 import { projectConfig } from '@/config/project.config';
 import publicEnvConfig from '@/config/public.env.config';
 import {
@@ -91,15 +87,32 @@ import {
   publicOfferingsApiUrl,
   publicProjectApiUrl,
   publicProjectPrApiUrl,
-  publicProjectsApiUrl,
   publicProjectSchemaApiUrl,
+  publicProjectsPageApiUrl,
   readApiError,
 } from '@/lib/api';
 import {
   assertMutationSucceeded,
+  isOperationPollingAbort,
   waitForMutationOperation,
 } from '@/lib/mutation-operation';
+import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { isSuperAdminRole } from '@/types/role';
+
+const JsonEditor = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonEditor').then(
+      (module) => module.JsonEditor
+    ),
+  { ssr: false }
+);
+const JsonPreview = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonPreview').then(
+      (module) => module.JsonPreview
+    ),
+  { ssr: false }
+);
 
 type WorkspaceMode = 'list' | 'edit' | 'new';
 type ProjectRecord = Record<string, unknown>;
@@ -109,6 +122,14 @@ type ProjectTab = 'draft' | 'published';
 interface ProjectManagementPageProps {
   admin?: boolean;
   projectSlug?: string;
+  initialUser?: UserContext;
+  initialProjects?: ProjectRecord[];
+  initialSchema?: ProjectSchemaResponse;
+  initialProject?: ProjectRecord | null;
+  initialCourses?: unknown[];
+  initialOfferings?: unknown[];
+  previousHref?: string;
+  nextHref?: string;
 }
 
 interface UserContext {
@@ -116,10 +137,6 @@ interface UserContext {
   name?: string;
   role?: string;
   accessLevel?: unknown;
-}
-
-interface ProjectsResponse {
-  projects: ProjectRecord[];
 }
 
 interface CourseCatalogRecord {
@@ -163,22 +180,6 @@ function normalizeProjectResponse(value: unknown): ProjectResponse {
   return {
     project: isRecord(value) ? value : null,
   };
-}
-
-function normalizeProjectsResponse(value: unknown): ProjectsResponse {
-  if (Array.isArray(value)) {
-    return {
-      projects: value.filter(isRecord),
-    };
-  }
-
-  if (isRecord(value) && Array.isArray(value.projects)) {
-    return {
-      projects: value.projects.filter(isRecord),
-    };
-  }
-
-  return { projects: [] };
 }
 
 interface ProjectSchemaResponse {
@@ -527,57 +528,6 @@ function userCanEditProject(
       (sNumber !== null && person.sNumber?.toLowerCase() === sNumber)
     );
   });
-}
-
-function JsonPreview({ value }: { value: object | undefined }) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="max-w-full overflow-x-auto rounded-md border bg-[#f6f8fa] p-3 text-sm sm:p-4 dark:bg-[#0d1117]">
-      <JsonView
-        value={value}
-        style={{
-          ...(isDark ? githubDarkTheme : githubLightTheme),
-          backgroundColor: 'transparent',
-          fontSize: '0.875rem',
-        }}
-        displayDataTypes={false}
-        enableClipboard={false}
-        collapsed={2}
-      />
-    </div>
-  );
-}
-
-function JsonEditor({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="max-w-full overflow-x-auto rounded-md border">
-      <CodeMirror
-        className="w-full max-w-full"
-        value={value}
-        minHeight="520px"
-        height="min(62vh, 720px)"
-        extensions={[json()]}
-        basicSetup={{
-          lineNumbers: true,
-          foldGutter: true,
-          highlightActiveLine: true,
-        }}
-        theme={isDark ? 'dark' : 'light'}
-        onChange={onChange}
-      />
-    </div>
-  );
 }
 
 function TextField({
@@ -1446,16 +1396,37 @@ function ProjectForm({
 export default function ProjectManagementPage({
   admin = false,
   projectSlug,
+  initialUser,
+  initialProjects = [],
+  initialSchema,
+  initialProject,
+  initialCourses = [],
+  initialOfferings = [],
+  previousHref,
+  nextHref,
 }: ProjectManagementPageProps) {
   const router = useRouter();
-  const [user, setUser] = useState<UserContext | null>(null);
-  const [schema, setSchema] = useState<ProjectSchemaResponse | null>(null);
-  const [projects, setProjects] = useState<ProjectRecord[]>([]);
-  const [courses, setCourses] = useState<CourseCatalogRecord[]>([]);
-  const [offerings, setOfferings] = useState<CourseOfferingRecord[]>([]);
+  const beginOperationPolling = useOperationPollingSignal();
+  const [user, setUser] = useState<UserContext | null>(initialUser ?? null);
+  const [schema, setSchema] = useState<ProjectSchemaResponse | null>(
+    initialSchema ?? null
+  );
+  const [projects, setProjects] = useState<ProjectRecord[]>(initialProjects);
+  const [courses, setCourses] = useState<CourseCatalogRecord[]>(() =>
+    initialCourses
+      .map(courseCatalogRecord)
+      .filter((item): item is CourseCatalogRecord => Boolean(item))
+  );
+  const [offerings, setOfferings] = useState<CourseOfferingRecord[]>(() =>
+    initialOfferings
+      .map(courseOfferingRecord)
+      .filter((item): item is CourseOfferingRecord => Boolean(item))
+  );
   const [publishedProject, setPublishedProject] =
-    useState<ProjectRecord | null>(null);
-  const [project, setProject] = useState<ProjectRecord>(() => emptyProject());
+    useState<ProjectRecord | null>(initialProject ?? null);
+  const [project, setProject] = useState<ProjectRecord>(
+    () => initialProject ?? emptyProject(initialSchema?.identity)
+  );
   const latestProjectRef = useRef(project);
   const [pr, setPr] = useState<ProjectPr | null>(null);
   const routeProjectSlug = projectSlug ? slugify(projectSlug) : null;
@@ -1469,7 +1440,9 @@ export default function ProjectManagementPage({
   const [activeTab, setActiveTab] = useState<ProjectTab>('draft');
   const [jsonText, setJsonText] = useState('');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    !initialUser || (Boolean(projectSlug) && !initialSchema)
+  );
   const [projectLoading, setProjectLoading] = useState(false);
   const [prLoading, setPrLoading] = useState(false);
   const [prError, setPrError] = useState<string | null>(null);
@@ -1531,12 +1504,22 @@ export default function ProjectManagementPage({
   }
 
   async function loadProjectList(nextUser?: UserContext) {
-    const [projectsRes, coursesRes, offeringsRes] = await Promise.all([
-      fetch(publicProjectsApiUrl(), {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: apiHeaders(),
-      }),
+    const projectsRes = await fetch(publicProjectsPageApiUrl(), {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: apiHeaders(),
+    });
+    if (!projectsRes.ok) {
+      throw new Error((await readApiError(projectsRes)).message);
+    }
+    const body = (await projectsRes.json()) as { items?: unknown[] };
+    setProjects(Array.isArray(body.items) ? body.items.filter(isRecord) : []);
+
+    if (nextUser) setUser(nextUser);
+  }
+
+  async function loadProjectReferences() {
+    const [coursesRes, offeringsRes] = await Promise.all([
       fetch(publicCoursesApiUrl(), {
         credentials: 'include',
         cache: 'no-store',
@@ -1548,21 +1531,16 @@ export default function ProjectManagementPage({
         headers: apiHeaders(),
       }),
     ]);
-    if (!projectsRes.ok) {
-      throw new Error((await readApiError(projectsRes)).message);
-    }
     if (!coursesRes.ok) {
       throw new Error((await readApiError(coursesRes)).message);
     }
     if (!offeringsRes.ok) {
       throw new Error((await readApiError(offeringsRes)).message);
     }
-    const body = normalizeProjectsResponse(await projectsRes.json());
     const coursesBody = (await coursesRes.json().catch(() => [])) as unknown;
     const offeringsBody = (await offeringsRes
       .json()
       .catch(() => [])) as unknown;
-    setProjects(body.projects ?? []);
     setCourses(
       Array.isArray(coursesBody)
         ? coursesBody
@@ -1577,10 +1555,6 @@ export default function ProjectManagementPage({
             .filter((item): item is CourseOfferingRecord => Boolean(item))
         : []
     );
-
-    if (nextUser) {
-      setUser(nextUser);
-    }
   }
 
   async function load() {
@@ -1603,10 +1577,11 @@ export default function ProjectManagementPage({
         throw new Error('Only super admins can use the admin projects area.');
       }
 
-      await Promise.all([
-        loadProjectList(nextUser),
-        routeProjectSlug ? loadProject(routeProjectSlug) : Promise.resolve(),
-      ]);
+      await Promise.all(
+        routeProjectSlug
+          ? [loadProjectReferences(), loadProject(routeProjectSlug)]
+          : [loadProjectList(nextUser)]
+      );
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -1794,23 +1769,47 @@ export default function ProjectManagementPage({
   }
 
   useEffect(() => {
+    if (!routeProjectSlug && initialUser) return;
+
+    if (routeProjectSlug && initialUser && initialSchema) {
+      const timeout = window.setTimeout(() => {
+        void (async () => {
+          const nextPr = await loadProjectPr(routeProjectSlug, {
+            applyDraft: true,
+            draftBaseProject: initialProject ?? undefined,
+          });
+          if (
+            !initialProject &&
+            (!isRecord(nextPr?.draftProject) || nextPr.status !== 'open')
+          ) {
+            toast.info('Project is no longer available.');
+            returnToProjectList();
+          }
+        })();
+      }, 0);
+      return () => window.clearTimeout(timeout);
+    }
+
     const timeout = window.setTimeout(() => {
       void load();
     }, 0);
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [admin, routeProjectSlug]);
+  }, [admin, initialProject, initialSchema, initialUser, routeProjectSlug]);
 
   async function startNewProject() {
     setProjectLoading(true);
     setError(null);
 
     try {
-      const schemaRes = await fetch(publicProjectSchemaApiUrl('new-project'), {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: apiHeaders(),
-      });
+      const [schemaRes] = await Promise.all([
+        fetch(publicProjectSchemaApiUrl('new-project'), {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: apiHeaders(),
+        }),
+        loadProjectReferences(),
+      ]);
       if (!schemaRes.ok) {
         throw new Error((await readApiError(schemaRes)).message);
       }
@@ -2003,7 +2002,8 @@ export default function ProjectManagementPage({
 
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Project update is still queued. Refresh to check its status.'
+        'Project update is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
       const nextPr = await loadProjectPr(targetSlug, { throwOnError: true });
@@ -2015,9 +2015,10 @@ export default function ProjectManagementPage({
       syncJson(validation.data);
       setWorkspaceMode('edit');
       setActiveTab('draft');
-      await loadProjectList();
+      router.refresh();
       toast.success('Project PR submitted.');
     } catch (saveError) {
+      if (isOperationPollingAbort(saveError)) return;
       setError(
         saveError instanceof Error
           ? saveError.message
@@ -2108,7 +2109,8 @@ export default function ProjectManagementPage({
 
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Project deletion is still queued. Refresh to check its status.'
+        'Project deletion is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
       const nextPr = await loadProjectPr(slugToDelete, {
@@ -2118,7 +2120,7 @@ export default function ProjectManagementPage({
       setPrError(null);
       setDeleteDialogOpen(false);
       setDeleteConfirmation('');
-      await loadProjectList();
+      router.refresh();
       toast.success(
         nextPr.status === 'none'
           ? 'Project is already removed.'
@@ -2126,6 +2128,7 @@ export default function ProjectManagementPage({
       );
       returnToProjectList();
     } catch (deleteError) {
+      if (isOperationPollingAbort(deleteError)) return;
       setError(
         deleteError instanceof Error
           ? deleteError.message
@@ -2221,90 +2224,96 @@ export default function ProjectManagementPage({
 
       <div className="grid gap-5">
         {showRegistry ? (
-          <Card>
-            <CardHeader className="px-4 sm:px-6">
-              <CardTitle>Project Registry</CardTitle>
-              <CardDescription>
-                Open a project workspace or start a new registry draft.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 px-4 sm:px-6">
-              <div className="relative">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                <Input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search projects..."
-                  className="pl-9"
-                />
-              </div>
-              <Separator />
-              {filteredProjects.length === 0 ? (
-                <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-center">
-                  <FolderKanban className="size-10 opacity-30" />
-                  <p className="text-sm">No projects found.</p>
+          <>
+            <Card>
+              <CardHeader className="px-4 sm:px-6">
+                <CardTitle>Project Registry</CardTitle>
+                <CardDescription>
+                  Open a project workspace or start a new registry draft.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 px-4 sm:px-6">
+                <div className="relative">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search projects..."
+                    className="pl-9"
+                  />
                 </div>
-              ) : (
-                <ul className="divide-border divide-y">
-                  {filteredProjects.map((item) => {
-                    const itemSlug =
-                      typeof item.slug === 'string' ? item.slug : '';
-                    const selected = itemSlug === selectedSlug;
-                    const canEditItem = userCanEditProject(
-                      user,
-                      item,
-                      effectiveAdmin
-                    );
+                <Separator />
+                {filteredProjects.length === 0 ? (
+                  <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-center">
+                    <FolderKanban className="size-10 opacity-30" />
+                    <p className="text-sm">No projects found.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-border divide-y">
+                    {filteredProjects.map((item) => {
+                      const itemSlug =
+                        typeof item.slug === 'string' ? item.slug : '';
+                      const selected = itemSlug === selectedSlug;
+                      const canEditItem = userCanEditProject(
+                        user,
+                        item,
+                        effectiveAdmin
+                      );
 
-                    return (
-                      <li key={itemSlug} className="py-3 first:pt-0 last:pb-0">
-                        <article
-                          className={cn(
-                            'w-full rounded-md border p-3 text-left transition hover:border-foreground/25 hover:bg-muted/30',
-                            selected && 'border-foreground/30 bg-muted/40'
-                          )}
+                      return (
+                        <li
+                          key={itemSlug}
+                          className="py-3 first:pt-0 last:pb-0"
                         >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <span className="min-w-0 flex-1 wrap-break-word font-medium sm:truncate">
-                              {projectTitle(item)}
-                            </span>
-                            {typeof item.status === 'string' ? (
-                              <Badge variant="secondary">
-                                {enumLabel(item.status)}
-                              </Badge>
-                            ) : null}
-                          </div>
-                          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-6">
-                            {typeof item.shortDescription === 'string'
-                              ? item.shortDescription
-                              : itemSlug}
-                          </p>
-                          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                            <Button
-                              asChild
-                              size="sm"
-                              className="w-full sm:w-auto"
-                            >
-                              <Link href={`${projectsHref}/${itemSlug}`}>
-                                {canEditItem ? (
-                                  <Pencil className="size-4" />
-                                ) : (
-                                  <Eye className="size-4" />
-                                )}
-                                {canEditItem
-                                  ? 'Manage Project'
-                                  : 'View Project'}
-                              </Link>
-                            </Button>
-                          </div>
-                        </article>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                          <article
+                            className={cn(
+                              'w-full rounded-md border p-3 text-left transition hover:border-foreground/25 hover:bg-muted/30',
+                              selected && 'border-foreground/30 bg-muted/40'
+                            )}
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                              <span className="min-w-0 flex-1 wrap-break-word font-medium sm:truncate">
+                                {projectTitle(item)}
+                              </span>
+                              {typeof item.status === 'string' ? (
+                                <Badge variant="secondary">
+                                  {enumLabel(item.status)}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-6">
+                              {typeof item.shortDescription === 'string'
+                                ? item.shortDescription
+                                : itemSlug}
+                            </p>
+                            <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                              <Button
+                                asChild
+                                size="sm"
+                                className="w-full sm:w-auto"
+                              >
+                                <Link href={`${projectsHref}/${itemSlug}`}>
+                                  {canEditItem ? (
+                                    <Pencil className="size-4" />
+                                  ) : (
+                                    <Eye className="size-4" />
+                                  )}
+                                  {canEditItem
+                                    ? 'Manage Project'
+                                    : 'View Project'}
+                                </Link>
+                              </Button>
+                            </div>
+                          </article>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+            <Pagination previousHref={previousHref} nextHref={nextHref} />
+          </>
         ) : null}
 
         {showWorkspace ? (

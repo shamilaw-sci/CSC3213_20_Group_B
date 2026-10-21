@@ -30,8 +30,9 @@ describe('registry operation clients', () => {
   });
 
   test('keeps bounded operation polling in one shared client utility', () => {
-    expect(operationSource).toContain('attempt < 40');
+    expect(operationSource).toContain('options.maxAttempts ?? 40');
     expect(operationSource).toContain('accepted.retryAfterMs');
+    expect(operationSource).toContain('options.signal?.throwIfAborted()');
     expect(operationSource).toContain('assertMutationSucceeded');
   });
 });

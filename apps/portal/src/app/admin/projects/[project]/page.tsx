@@ -1,4 +1,8 @@
+import { redirect } from 'next/navigation';
+
 import ProjectManagementPage from '@/components/custom/project-management-page/ProjectManagementPage';
+import { loadProjectEditorData } from '@/lib/server/project-editor';
+import { isSuperAdminRole } from '@/types/role';
 
 interface PageProps {
   params: Promise<{
@@ -8,6 +12,18 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { project } = await params;
+  const data = await loadProjectEditorData(project);
+  if (!isSuperAdminRole(data.user)) redirect('/dashboard');
 
-  return <ProjectManagementPage admin projectSlug={project} />;
+  return (
+    <ProjectManagementPage
+      admin
+      projectSlug={project}
+      initialUser={data.user}
+      initialSchema={data.schema}
+      initialProject={data.project}
+      initialCourses={data.courses}
+      initialOfferings={data.offerings}
+    />
+  );
 }

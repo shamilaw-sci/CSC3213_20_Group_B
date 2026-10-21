@@ -1,6 +1,5 @@
 'use client';
 
-import { json } from '@codemirror/lang-json';
 import {
   AcademicDepartmentCodeSchema,
   AcademicRankSchema,
@@ -48,10 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
-import CodeMirror from '@uiw/react-codemirror';
-import JsonView from '@uiw/react-json-view';
-import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
-import { githubLightTheme } from '@uiw/react-json-view/githubLight';
 import { cn } from 'cn';
 import {
   ExternalLink,
@@ -62,8 +57,8 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { z } from 'zod';
@@ -96,14 +91,32 @@ import {
 } from '@/lib/back-routes';
 import {
   assertMutationSucceeded,
+  isOperationPollingAbort,
   waitForMutationOperation,
 } from '@/lib/mutation-operation';
+import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 
-type ProfileKind = 'academic' | 'academic-support' | 'non-academic' | 'student';
+const JsonProfileEditor = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonEditor').then(
+      (module) => module.JsonEditor
+    ),
+  { ssr: false }
+);
+const JsonProfileView = dynamic(
+  () =>
+    import('@/components/custom/json-editor/JsonPreview').then(
+      (module) => module.JsonPreview
+    ),
+  { ssr: false }
+);
+
+export type ProfileKind =
+  'academic' | 'academic-support' | 'non-academic' | 'student';
 
 type EditorMode = 'form' | 'json-view' | 'json-edit';
 type ProfileTab = 'draft' | 'published';
-type ProfileRecord = Record<string, unknown>;
+export type ProfileRecord = Record<string, unknown>;
 type PostgraduateProgramme =
   | 'POSTGRADUATE_CERTIFICATE'
   | 'POSTGRADUATE_DIPLOMA'
@@ -127,7 +140,7 @@ type ProfileSchemaMap = {
   [Kind in ProfileKind]: z.ZodType<ProfileByKind[Kind]>;
 };
 
-interface ProfileSchemaResponse {
+export interface ProfileSchemaResponse {
   allowedKinds: ProfileKind[];
   specialStreams: string[];
   identity?: {
@@ -150,7 +163,7 @@ interface StudentPlacementResponse {
   lockedFields: string[];
 }
 
-interface PublicProfilePr {
+export interface PublicProfilePr {
   status:
     | 'none'
     | 'open'
@@ -174,12 +187,18 @@ interface PublicProfilePr {
   draftProfile?: ProfileRecord | null;
 }
 
-interface PublicProfileResponse {
+export interface PublicProfileResponse {
   profile: ProfileRecord | null;
   profileKind?: ProfileKind;
   stream?: string;
   targetUserFile?: string;
   targetAggregateFiles?: string[];
+}
+
+export interface PublicProfileInitialData {
+  schema: ProfileSchemaResponse;
+  profile: PublicProfileResponse;
+  pr: PublicProfilePr;
 }
 
 function normalizePublicProfileResponse(value: unknown): PublicProfileResponse {
@@ -1983,71 +2002,8 @@ function PublicationArray({ label, value, onChange }: PublicationArrayProps) {
   );
 }
 
-interface JsonProfileViewProps {
-  value: ProfileRecord;
-}
-
-function JsonProfileView({ value }: JsonProfileViewProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="overflow-auto rounded-md border bg-[#f6f8fa] p-4 text-sm dark:bg-[#0d1117]">
-      <JsonView
-        value={value}
-        style={{
-          ...(isDark ? githubDarkTheme : githubLightTheme),
-          backgroundColor: 'transparent',
-          fontFamily:
-            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-          fontSize: '13px',
-        }}
-        displayDataTypes={false}
-        displayObjectSize
-        enableClipboard
-        collapsed={2}
-      />
-    </div>
-  );
-}
-
-interface JsonProfileEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  readOnly?: boolean;
-}
-
-function JsonProfileEditor({
-  value,
-  onChange,
-  readOnly,
-}: JsonProfileEditorProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <div className="max-w-full overflow-x-auto rounded-md border">
-      <CodeMirror
-        className="w-full max-w-full"
-        value={value}
-        minHeight="520px"
-        height="min(62vh, 720px)"
-        basicSetup={{
-          foldGutter: true,
-          lineNumbers: true,
-          highlightActiveLine: !readOnly,
-        }}
-        extensions={[json()]}
-        theme={isDark ? 'dark' : 'light'}
-        readOnly={readOnly}
-        editable={!readOnly}
-        onChange={onChange}
-      />
-    </div>
-  );
-}
-
 interface PublicProfilePageProps {
+  initialData: PublicProfileInitialData;
   targetEmail?: string;
   targetName?: string;
   from?: ProfileToolSource;
@@ -2056,6 +2012,7 @@ interface PublicProfilePageProps {
 }
 
 export default function PublicProfilePage({
+  initialData,
   targetEmail,
   targetName,
   from = 'profile',
@@ -2063,24 +2020,50 @@ export default function PublicProfilePage({
   backLabel,
 }: PublicProfilePageProps) {
   const router = useRouter();
+  const beginOperationPolling = useOperationPollingSignal();
   const fallbackBackRoute = profileToolBackRoute(from);
   const resolvedBackHref = backHref ?? fallbackBackRoute.href;
   const resolvedBackLabel = backLabel ?? fallbackBackRoute.label;
-  const [schema, setSchema] = useState<ProfileSchemaResponse | null>(null);
-  const [pr, setPr] = useState<PublicProfilePr | null>(null);
-  const [publishedProfile, setPublishedProfile] =
-    useState<ProfileRecord | null>(null);
-  const [draftProfile, setDraftProfile] = useState<ProfileRecord | null>(null);
-  const [activeTab, setActiveTab] = useState<ProfileTab>('draft');
-  const [profileKind, setProfileKind] = useState<ProfileKind>('student');
-  const [stream, setStream] = useState('cs');
-  const [profile, setProfile] = useState<ProfileRecord>(
-    emptyProfile('student')
+  const initialFallbackKind = defaultKindForEmptyProfile(
+    initialData.schema.allowedKinds
   );
+  const initialPublishedProfile = initialData.profile.profile;
+  const initialDraftProfile = isRecord(initialData.pr.draftProfile)
+    ? initialData.pr.draftProfile
+    : null;
+  const initialEditableProfile =
+    initialDraftProfile ??
+    initialPublishedProfile ??
+    emptyProfile(initialData.pr.profileKind ?? initialFallbackKind);
+  const initialProfileKind =
+    initialData.pr.profileKind ??
+    initialData.profile.profileKind ??
+    inferProfileKind(initialEditableProfile, initialFallbackKind);
+  const [schema, setSchema] = useState<ProfileSchemaResponse>(
+    initialData.schema
+  );
+  const [pr, setPr] = useState<PublicProfilePr>(initialData.pr);
+  const [publishedProfile, setPublishedProfile] =
+    useState<ProfileRecord | null>(initialPublishedProfile);
+  const [draftProfile, setDraftProfile] = useState<ProfileRecord | null>(
+    initialDraftProfile
+  );
+  const [activeTab, setActiveTab] = useState<ProfileTab>('draft');
+  const [profileKind, setProfileKind] =
+    useState<ProfileKind>(initialProfileKind);
+  const [stream, setStream] = useState(
+    initialData.pr.stream ??
+      initialData.profile.stream ??
+      initialData.schema.specialStreams[0] ??
+      'cs'
+  );
+  const [profile, setProfile] = useState<ProfileRecord>(initialEditableProfile);
   const [mode, setMode] = useState<EditorMode>('form');
-  const [jsonDraft, setJsonDraft] = useState('{}');
+  const [jsonDraft, setJsonDraft] = useState(
+    JSON.stringify(initialEditableProfile, null, 2)
+  );
   const [jsonDirty, setJsonDirty] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [placementLoading, setPlacementLoading] = useState(false);
@@ -2210,11 +2193,6 @@ export default function PublicProfilePage({
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    void Promise.resolve().then(refresh);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function handleKindChange(kind: ProfileKind) {
     setProfileKind(kind);
@@ -2479,7 +2457,8 @@ export default function PublicProfilePage({
 
       const operation = await waitForMutationOperation(
         (await res.json()) as MutationAccepted,
-        'Profile update is still queued. Refresh to check its status.'
+        'Profile update is still queued. Refresh to check its status.',
+        { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
       await refresh();
@@ -2489,6 +2468,7 @@ export default function PublicProfilePage({
           : 'Profile PR is ready'
       );
     } catch (error) {
+      if (isOperationPollingAbort(error)) return;
       toast.error(
         error instanceof Error ? error.message : 'Failed to submit profile PR'
       );
@@ -2663,7 +2643,11 @@ export default function PublicProfilePage({
                         Use published as edit base
                       </Button>
                     </div>
-                    <JsonProfileView value={publishedProfile} />
+                    <JsonProfileView
+                      value={publishedProfile}
+                      enableClipboard
+                      monospace
+                    />
                   </>
                 ) : (
                   <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -2707,7 +2691,7 @@ export default function PublicProfilePage({
                     />
                   </>
                 ) : mode === 'json-view' ? (
-                  <JsonProfileView value={profile} />
+                  <JsonProfileView value={profile} enableClipboard monospace />
                 ) : (
                   <div className="space-y-4">
                     <JsonProfileEditor

@@ -1,17 +1,26 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
-const source = readFileSync(
-  resolve(import.meta.dir, '../src/views/manage/ManageUsers.tsx'),
-  'utf8'
-);
+const pageSource = await Bun.file(
+  new URL('../src/app/admin/users/page.tsx', import.meta.url)
+).text();
+const componentSource = await Bun.file(
+  new URL(
+    '../src/components/custom/manage-users-page/ManageUsersPage.tsx',
+    import.meta.url
+  )
+).text();
 
-describe('admin user list loading characterization', () => {
-  test('the client requests and stores the complete user collection', () => {
-    expect(source).toContain('fetch(adminUsersApiUrl()');
-    expect(source).toContain('useState<UserData[] | null>(null)');
-    expect(source).toContain('setUsers(Array.isArray(data)');
-    expect(source).not.toMatch(/[?&](?:limit|cursor)=/);
+describe('admin user list loading', () => {
+  test('requests one bounded page from the server component', () => {
+    expect(pageSource).toContain('adminUsersPageApiUrl(cursor)');
+    expect(pageSource).toContain('serverApiJson<AdminUserPageResponse>');
+    expect(pageSource).toContain('searchParams: Promise<PageSearchParams>');
+  });
+
+  test('keeps current-page filtering in the interactive client island', () => {
+    expect(componentSource).not.toContain('fetch(');
+    expect(componentSource).not.toContain('useEffect');
+    expect(componentSource).toContain('Pagination');
+    expect(componentSource).toContain('users.filter');
   });
 });

@@ -21,6 +21,7 @@ import {
   PageHeader,
   PageShell,
 } from '@/components/custom/page-shell/page-shell';
+import { Pagination } from '@/components/custom/pagination/Pagination';
 import { emailPathSegment } from '@/lib/email';
 import {
   ACCESS_LEVEL,
@@ -32,15 +33,21 @@ import {
   isSuperAdminRole,
   ROLE_LABEL,
 } from '@/types/role';
-import { UserData } from '@/views/manage/ManageUsers';
+import type { AdminUserData } from '@/types/user';
 
 interface ManageUsersPageProps {
-  users: UserData[];
+  users: AdminUserData[];
+  previousHref?: string;
+  nextHref?: string;
 }
 
 type FilterStatus = 'all' | 'active' | 'blacklisted' | 'has-access';
 
-export default function ManageUsersPage({ users }: ManageUsersPageProps) {
+export default function ManageUsersPage({
+  users,
+  previousHref,
+  nextHref,
+}: ManageUsersPageProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterStatus>('all');
 
@@ -93,7 +100,7 @@ export default function ManageUsersPage({ users }: ManageUsersPageProps) {
 
       <PageHeader
         title="Manage Users"
-        description="View and manage all registered user accounts."
+        description="View and manage registered user accounts one bounded page at a time."
         icon={<Users className="text-muted-foreground size-6" />}
       />
 
@@ -309,11 +316,13 @@ export default function ManageUsersPage({ users }: ManageUsersPageProps) {
 
           {filtered.length > 0 && (
             <p className="text-muted-foreground text-right text-xs">
-              Showing {filtered.length} of {users.length} users
+              Showing {filtered.length} of {users.length} users on this page
             </p>
           )}
         </CardContent>
       </Card>
+
+      <Pagination previousHref={previousHref} nextHref={nextHref} />
     </PageShell>
   );
 }
