@@ -18,8 +18,5 @@
     "ui": "#components",
     "lib": "#lib",
     "hooks": "#hooks"
-  },
-  "registries": {
-    "@scs-pdn": "https://shadcn.scs-pdn.workers.dev/r/{name}.json"
   }
 }

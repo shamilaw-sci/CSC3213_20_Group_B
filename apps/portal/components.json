@@ -18,8 +18,5 @@
     "ui": "@scs/ui/components",
     "lib": "@scs/ui/lib",
     "hooks": "@scs/ui/hooks"
-  },
-  "registries": {
-    "@scs-pdn": "https://shadcn.scs-pdn.workers.dev/r/{name}.json"
   }
 }
