@@ -857,9 +857,12 @@ settings and a real merge-group run are verified.
 - local config verification passed typecheck, 4 tests, config validation,
   formatting, Wrangler build, and diff checks;
 - remote ruleset requirements, merge-queue execution, auto-merge, recovery PR
-  publication, and event-driven deployment remain unverified operator tasks;
-- the scheduled data deployment remains as a recovery path until a successful
-  event-driven production deployment is observed.
+  publication remain unverified operator tasks;
+- GitHub Actions run `39565486965` successfully validated and deployed exact
+  data commit `12966fb` through the event-driven `workflow_run` path;
+- data commits `b6f3375` and `e085f76` remove the observed polling fallback and
+  make deployment-workflow changes trigger the public-data validation gate;
+- manual dispatch remains the explicit deployment recovery path.
 
 ## Slice 13: Remove Compatibility Debt and Run Final Gates
 

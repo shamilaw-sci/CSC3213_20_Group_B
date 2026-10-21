@@ -170,8 +170,9 @@ manifest, student, staff, academic, project, and `by-person` projections. Run
 publication. CI checks projections without modifying pull-request branches.
 A serialized recovery workflow opens or refreshes the single
 `automation/public-projections` pull request when `main` is stale. Deployment
-uses the exact successful `Validate Public Data` commit; the schedule remains
-only as a recovery path until an event-driven production run is observed.
+uses the exact successful `Validate Public Data` commit. Run `39565486965`
+successfully deployed data commit `12966fb`, so the polling schedule was
+removed; manual dispatch remains the recovery path.
 
 The data and config rulesets must require their validation workflows for pull
 requests and merge groups. Auto-merge and GitHub Actions pull-request creation
