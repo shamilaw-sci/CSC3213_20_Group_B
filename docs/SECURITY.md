@@ -52,8 +52,10 @@ Required properties:
 - CSRF and origin checks remain enabled;
 - session cookies are HTTP-only and use environment-appropriate secure and
   same-site settings;
-- OAuth account linking requires an authenticated user action; matching email
-  alone is insufficient;
+- OAuth sign-in may link an exact email match only when both the existing local
+  identity and the provider email are verified. No provider bypasses email
+  verification, different-email linking remains disabled, and other links
+  require an authenticated user action;
 - passkey registration requires a session, user verification, allowed origin,
   and correct relying-party ID;
 - verification identifiers and OTP values are not stored as reusable plaintext;

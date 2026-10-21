@@ -8,6 +8,8 @@ export const auth_error_messages: Record<string, string> = {
   google_access_denied: 'Google login was cancelled.',
   google_oauth_not_allowed: 'Google login is not allowed for this account.',
   workspace_account_required: 'Use your university Google account.',
+  account_not_linked:
+    'This sign-in method is not linked. Use your verified university email or an existing provider, then link it in Account Settings.',
 
   // GitHub account policy
   github_account_mismatch: 'This GitHub account is not linked to your account.',

@@ -97,7 +97,15 @@ export function createAuth(request: Request, env: Env) {
       storeStateStrategy: 'database',
       accountLinking: {
         enabled: true,
-        disableImplicitLinking: true,
+        /*
+         * Existing Portal users were migrated with verified local emails and
+         * may not yet have every OAuth identity attached. Better Auth may link
+         * an exact email match only when the provider also verifies the email.
+         * No provider bypasses that verification requirement.
+         */
+        disableImplicitLinking: false,
+        requireLocalEmailVerified: true,
+        trustedProviders: [],
         allowDifferentEmails: false,
         allowUnlinkingAll: false,
       },
