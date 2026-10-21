@@ -94,6 +94,10 @@ Configure the secrets listed in [Environment Variables](ENVIRONMENT_VARIABLES.md
 before deployment. `AUTH_DB` and `GITHUB_APP` bindings must point
 to the intended environment.
 
+Both Worker configurations declare required secret names. A deployment fails
+instead of silently publishing an unusable Worker when one is missing. Set
+values with `wrangler secret put`; never add secret values to `wrangler.jsonc`.
+
 ### D1 Migrations
 
 The preferred production path is the manual `Migrate API D1` GitHub workflow.
@@ -240,6 +244,22 @@ Monitor at minimum:
 - Check that unrelated apps/services were not redeployed unnecessarily.
 - Review logs and queue state without exposing sensitive data.
 - Record remaining production-only checks instead of describing them as passed.
+
+## Workers Builds Credential Recovery
+
+Cloudflare's repository-connected Workers Builds uses a build token that is
+separate from GitHub Actions secrets and runtime Worker secrets. If a build
+reports that its selected token was deleted or rolled:
+
+1. Open the affected Worker in Cloudflare.
+2. Go to **Settings > Builds > Build Configuration**.
+3. Under **API token**, create or select a current user-owned token.
+4. Save the build configuration, then retry the failed build.
+
+Do not change `CLOUDFLARE_API_TOKEN` in GitHub merely to repair this error; that
+secret is used by the manually dispatched D1 migration workflow. After token
+recovery, confirm the Worker build uses the workspace root directory and the
+checked-in Wrangler configuration before relying on automatic deployment.
 
 See [Security](SECURITY.md) for incident response and
 [Continuous Integration](CI.md) for repository verification.

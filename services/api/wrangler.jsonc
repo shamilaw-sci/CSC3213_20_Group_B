@@ -21,6 +21,15 @@
     "GITHUB_APP_API_URL": "https://gh.scs-pdn.space",
     "DATA_PUBLIC_BASE_URL": "https://data.scs-pdn.space"
   },
+  "secrets": {
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "GOOGLE_CLIENT_SECRET",
+      "GITHUB_CLIENT_SECRET",
+      "MAILER_API_KEY",
+      "GITHUB_APP_INTERNAL_SECRET"
+    ]
+  },
   "d1_databases": [
     {
       "binding": "AUTH_DB",

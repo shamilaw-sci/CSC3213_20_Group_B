@@ -133,6 +133,12 @@ wrangler secret put MAILER_API_KEY
 wrangler secret put GITHUB_APP_INTERNAL_SECRET
 ```
 
+The API `wrangler.jsonc` declares these names under `secrets.required`.
+Wrangler therefore checks that deployed secrets exist and loads only those
+declared names from `.dev.vars` during local development. Values stay in local
+ignored files or Cloudflare's encrypted secret store and must never be added to
+the Wrangler configuration.
+
 ### Bindings
 
 | Binding      | Type            | Ownership                                            |
@@ -162,6 +168,10 @@ Production non-secrets and Cloudflare resources are defined in
 wrangler secret put GITHUB_PRIVATE_KEY
 wrangler secret put X_INTERNAL_SECRET
 ```
+
+The GitHub App `wrangler.jsonc` declares both names under
+`secrets.required`. The declaration contains names only; secret values remain
+in Cloudflare or the ignored local environment file.
 
 Never store a PEM file in the repository.
 

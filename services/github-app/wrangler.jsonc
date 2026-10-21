@@ -21,6 +21,9 @@
     "GITHUB_PROJECTS_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
     "PORT": "3000"
   },
+  "secrets": {
+    "required": ["GITHUB_PRIVATE_KEY", "X_INTERNAL_SECRET"]
+  },
   "durable_objects": {
     "bindings": [
       {
