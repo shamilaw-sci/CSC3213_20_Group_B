@@ -843,6 +843,24 @@ ci: serialize validated configuration updates
 Do not report merge queue or ruleset completion until the remote repository
 settings and a real merge-group run are verified.
 
+### Status on 2026-10-21
+
+- data repository commit `12966fb` adds deterministic projection generation,
+  check-only validation, idempotence and deletion-cascade tests, merge-group
+  validation, serialized recovery publication, and deployment from the exact
+  successfully validated main commit;
+- config repository commit `450a4f0` makes validation check-only, adds
+  merge-group validation, restricts validation permissions, and documents the
+  same-repository auto-merge boundary;
+- local data verification passed typecheck, 20 tests, projection freshness,
+  all three domain validators, formatting, Wrangler build, and diff checks;
+- local config verification passed typecheck, 4 tests, config validation,
+  formatting, Wrangler build, and diff checks;
+- remote ruleset requirements, merge-queue execution, auto-merge, recovery PR
+  publication, and event-driven deployment remain unverified operator tasks;
+- the scheduled data deployment remains as a recovery path until a successful
+  event-driven production deployment is observed.
+
 ## Slice 13: Remove Compatibility Debt and Run Final Gates
 
 ### Files

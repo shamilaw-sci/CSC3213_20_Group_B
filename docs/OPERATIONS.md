@@ -140,6 +140,7 @@ bun run docs:check
 bun run format:check
 bun run lint
 bun run typecheck
+bun run typecheck:test
 bun run test
 bun run build
 ```
@@ -163,9 +164,21 @@ OAuth, KV, queue, or repository-ruleset behavior.
   bounded error category; verify the GitHub ref/PR state before replaying the
   original idempotency key. Never edit Durable Object state by hand.
 
-Projection regeneration and stale PR reconciliation procedures are added with
-the corresponding registry migrations. Queue backlog and dead-letter counts
-must be monitored before and after GitHub App releases.
+The public-data repository generates deterministic v2 collection, search,
+manifest, student, staff, academic, project, and `by-person` projections. Run
+`bun run generate` after an entity change and `bun run generate:check` before
+publication. CI checks projections without modifying pull-request branches.
+A serialized recovery workflow opens or refreshes the single
+`automation/public-projections` pull request when `main` is stale. Deployment
+uses the exact successful `Validate Public Data` commit; the schedule remains
+only as a recovery path until an event-driven production run is observed.
+
+The data and config rulesets must require their validation workflows for pull
+requests and merge groups. Auto-merge and GitHub Actions pull-request creation
+must be enabled for projection recovery. These settings and the event-driven
+deployment path are operator-controlled and must not be reported as verified
+until real remote runs succeed. Queue backlog and dead-letter counts must be
+monitored before and after GitHub App releases.
 
 ## Observability
 
