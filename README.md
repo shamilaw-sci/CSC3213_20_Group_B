@@ -84,6 +84,7 @@ Commitlint validates commit messages.
 - [Security](docs/SECURITY.md)
 - [Optimization design](docs/REPOSITORY_OPTIMIZATION_DESIGN.md)
 - [Optimization plan](docs/REPOSITORY_OPTIMIZATION_PLAN.md)
+- [Optimization completion report](docs/OPTIMIZATION_COMPLETION_REPORT.md)
 
 Tracked Markdown belongs in the repository root or root `docs` directory and
 uses uppercase snake-case filenames. Installed agent skills and generated
