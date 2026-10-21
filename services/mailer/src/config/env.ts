@@ -5,7 +5,6 @@ const processEnv = createEnv({
   server: {
     MAILER_API_KEY: z.string().min(1),
     SMTP_HOST: z.string().min(1).default('smtp.example.com'),
-    SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
     SMTP_SECURE: z
       .enum(['true', 'false'])
       .default('false')

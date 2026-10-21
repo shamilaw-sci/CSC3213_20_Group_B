@@ -58,7 +58,6 @@ const workspaceVariables = {
     'SMTP_FROM',
     'SMTP_HOST',
     'SMTP_PASS',
-    'SMTP_PORT',
     'SMTP_SECURE',
     'SMTP_USER',
     'VERCEL_EXPERIMENTAL_BACKENDS',

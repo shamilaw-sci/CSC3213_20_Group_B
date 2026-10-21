@@ -3,13 +3,11 @@ import { createTransport } from 'nodemailer';
 import { env } from '@/config/env';
 import type { SendRequest } from '@/types';
 
-const useSSL = Number(env.SMTP_PORT) === 465;
-
 /** Reuse one SMTP transport so warm requests can reuse pooled connections. */
 const transporter = createTransport({
   host: env.SMTP_HOST,
-  port: Number(env.SMTP_PORT) || (useSSL ? 465 : 587),
-  secure: useSSL,
+  port: env.SMTP_SECURE ? 465 : 587,
+  secure: env.SMTP_SECURE,
   auth: {
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,

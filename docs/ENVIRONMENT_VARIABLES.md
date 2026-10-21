@@ -181,7 +181,6 @@ Never store a PEM file in the repository.
 | ------------------------------ | -------------------- | ------------------------------ |
 | `MAILER_API_KEY`               | secret               | required                       |
 | `SMTP_HOST`                    | configuration        | `smtp.example.com`             |
-| `SMTP_PORT`                    | configuration        | `587`                          |
 | `SMTP_SECURE`                  | configuration        | `false`                        |
 | `SMTP_USER`                    | secret/configuration | empty by default               |
 | `SMTP_PASS`                    | secret               | empty by default               |
