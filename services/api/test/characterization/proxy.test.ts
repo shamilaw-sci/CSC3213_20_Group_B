@@ -87,7 +87,11 @@ afterEach(() => {
 
 describe('D1-backed proxy settings', () => {
   test('requires authentication', async () => {
-    const response = await proxyRequest('/user/proxy', 'GET', createTestEnv());
+    const response = await proxyRequest(
+      '/api/me/proxy',
+      'GET',
+      createTestEnv()
+    );
     expect(response.status).toBe(401);
   });
 
@@ -96,7 +100,7 @@ describe('D1-backed proxy settings', () => {
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
 
-    const response = await proxyRequest('/user/proxy', 'GET', env, { token });
+    const response = await proxyRequest('/api/me/proxy', 'GET', env, { token });
     const body = (await response.json()) as {
       proxy: { email: string; active: boolean; availableAttempts: number };
     };
@@ -118,11 +122,11 @@ describe('D1-backed proxy settings', () => {
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
 
-    const update = await proxyRequest('/user/proxy', 'POST', env, {
+    const update = await proxyRequest('/api/me/proxy', 'POST', env, {
       token,
       body: { active: true, url: 'https://proxy.example/student' },
     });
-    const read = await proxyRequest('/user/proxy', 'GET', env, { token });
+    const read = await proxyRequest('/api/me/proxy', 'GET', env, { token });
     const body = (await read.json()) as {
       proxy: { active: boolean; url: string; availableAttempts: number };
     };
@@ -142,7 +146,7 @@ describe('D1-backed proxy settings', () => {
 
     const responses = await Promise.all(
       Array.from({ length: 6 }, (_, index) =>
-        proxyRequest('/user/proxy', 'POST', env, {
+        proxyRequest('/api/me/proxy', 'POST', env, {
           token,
           body: { active: true, url: `https://proxy.example/${index}` },
         })
@@ -171,7 +175,7 @@ describe('D1-backed proxy settings', () => {
     });
     const token = await createTestSessionCookie(env, USER_EMAIL);
 
-    const response = await proxyRequest('/user/proxy', 'POST', env, {
+    const response = await proxyRequest('/api/me/proxy', 'POST', env, {
       token,
       body: { active: true, url: 'https://proxy.example/refreshed' },
     });
@@ -193,7 +197,7 @@ describe('D1-backed proxy settings', () => {
     await seedProxy(env, { email: OTHER_EMAIL, availableAttempts: 2 });
     const token = await createTestSessionCookie(env, ADMIN_EMAIL);
 
-    const response = await proxyRequest('/user/proxy', 'POST', env, {
+    const response = await proxyRequest('/api/me/proxy', 'POST', env, {
       token,
       body: {
         email: OTHER_EMAIL,
@@ -223,7 +227,7 @@ describe('D1-backed proxy settings', () => {
     const token = await createTestSessionCookie(env, ADMIN_EMAIL);
 
     const response = await proxyRequest(
-      '/api/admin/proxy/reset-attempts',
+      '/api/admin/proxies/reset-attempts',
       'POST',
       env,
       { token, body: { email: OTHER_EMAIL } }
@@ -244,7 +248,7 @@ describe('D1-backed proxy settings', () => {
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
 
-    const response = await proxyRequest('/user/proxy/reset', 'POST', env, {
+    const response = await proxyRequest('/api/me/proxy/reset', 'POST', env, {
       token,
       body: { email: USER_EMAIL },
     });
@@ -330,7 +334,7 @@ describe('D1-backed proxy settings', () => {
     const env = createTestEnv();
     await setPermission(env, USER_EMAIL, {});
     const token = await createTestSessionCookie(env, USER_EMAIL);
-    const response = await proxyRequest('/user/proxy', 'POST', env, {
+    const response = await proxyRequest('/api/me/proxy', 'POST', env, {
       token,
       body: { active: true, proxyUrl: 'https://proxy.example/legacy' },
     });

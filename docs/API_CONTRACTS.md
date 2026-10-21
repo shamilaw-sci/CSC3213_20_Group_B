@@ -177,16 +177,16 @@ adopts the page routes.
 
 ## Administration and Proxy Routes
 
-| Method                   | Route                             |
-| ------------------------ | --------------------------------- |
-| `GET`                    | `/api/admin/users`                |
-| `GET`                    | `/api/admin/users/page`           |
-| `GET`                    | `/api/admin/proxies/page`         |
-| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`         |
-| `GET`                    | `/api/admin/actions`              |
-| `POST`                   | `/api/admin/actions/:actionId`    |
-| `GET`, `POST`            | `/user/proxy`                     |
-| `POST`                   | `/api/admin/proxy/reset-attempts` |
+| Method                   | Route                               |
+| ------------------------ | ----------------------------------- |
+| `GET`                    | `/api/admin/users`                  |
+| `GET`                    | `/api/admin/users/page`             |
+| `GET`                    | `/api/admin/proxies/page`           |
+| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           |
+| `GET`                    | `/api/admin/actions`                |
+| `POST`                   | `/api/admin/actions/:actionId`      |
+| `GET`, `POST`            | `/api/me/proxy`                     |
+| `POST`                   | `/api/admin/proxies/reset-attempts` |
 
 Admin routes require a non-blacklisted super-admin. The additive
 `GET /api/admin/users/page` route accepts `cursor` and `limit`, returns the
@@ -199,6 +199,11 @@ one atomic SQL statement, while admin edits and resets preserve their separate
 authorization rules. Users cannot reset their own attempts. The one-time
 `migrate-proxy-settings` action imports the previous signed aggregate without
 overwriting D1 rows and reports conflicts for review.
+
+Browser-facing API routes stay under `/api`. Current-user resources use the
+`/api/me` namespace, while administrator-only proxy operations use the plural
+`/api/admin/proxies` collection. Portal page URLs such as `/user/proxy` are UI
+routes and are intentionally separate from these API contracts.
 
 ## Internal GitHub App API
 

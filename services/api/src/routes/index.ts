@@ -91,7 +91,7 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
-    match: { kind: 'exact', path: '/user/proxy' },
+    match: { kind: 'exact', path: '/api/me/proxy' },
     handler: getOrCreateUserProxy,
   },
   {
@@ -101,12 +101,12 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'POST',
-    match: { kind: 'exact', path: '/user/proxy' },
+    match: { kind: 'exact', path: '/api/me/proxy' },
     handler: getOrCreateUserProxy,
   },
   {
     method: 'POST',
-    match: { kind: 'exact', path: '/api/admin/proxy/reset-attempts' },
+    match: { kind: 'exact', path: '/api/admin/proxies/reset-attempts' },
     handler: resetAdminProxyAttempts,
   },
   { method: 'GET', match: { kind: 'exact', path: '/api/me' }, handler: me },

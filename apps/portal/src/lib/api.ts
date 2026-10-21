@@ -89,7 +89,7 @@ export function adminPublicProfilePrApiUrl(email: string) {
 }
 
 export function userProxyApiUrl() {
-  return apiUrl('/user/proxy');
+  return apiUrl('/api/me/proxy');
 }
 
 export function adminProxiesPageApiUrl(cursor?: string, limit = 100) {
@@ -169,5 +169,5 @@ export function publicOfferingPrApiUrl(id: string) {
 }
 
 export function adminProxyResetAttemptsApiUrl() {
-  return apiUrl('/api/admin/proxy/reset-attempts');
+  return apiUrl('/api/admin/proxies/reset-attempts');
 }
