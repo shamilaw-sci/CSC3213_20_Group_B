@@ -56,6 +56,8 @@ Required properties:
   identity and the provider email are verified. No provider bypasses email
   verification, different-email linking remains disabled, and other links
   require an authenticated user action;
+- after a GitHub identity is linked, sign-in resolves the stable GitHub account
+  ID and does not re-qualify or replace the Portal user's university email;
 - passkey registration requires a session, user verification, allowed origin,
   and correct relying-party ID;
 - verification identifiers and OTP values are not stored as reusable plaintext;

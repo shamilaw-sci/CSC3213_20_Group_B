@@ -23,6 +23,40 @@ import { isAllowedEmailDomain } from '@/utils/email-domains';
 const AUTH_BASE_PATH = '/api/auth';
 const OTP_EXPIRES_IN_SECONDS = 300;
 
+interface AuthUserValidationInput {
+  user: { email?: string | null };
+  source: {
+    action: string;
+    method: string;
+    oauth?: { providerId: string };
+  };
+}
+
+export function validateAuthUserInfo({
+  user,
+  source,
+}: AuthUserValidationInput):
+  { error: string; errorDescription: string } | undefined {
+  const isLinkedGitHubSignIn =
+    source.action === 'sign-in' &&
+    source.method === 'oauth' &&
+    source.oauth?.providerId === 'github';
+
+  /*
+   * Better Auth labels this branch "sign-in" only after resolving an existing
+   * provider/account binding. GitHub may return a personal primary email, but
+   * that must not replace or re-qualify the Portal identity's university email.
+   */
+  if (isLinkedGitHubSignIn) return;
+
+  if (!user.email || !isAllowedEmailDomain(user.email)) {
+    return {
+      error: 'university_email_required',
+      errorDescription: 'Use a University of Peradeniya email address.',
+    };
+  }
+}
+
 function requestOrigin(request: Request): string {
   return request.headers.get('origin') ?? 'https://portal.scs-pdn.space';
 }
@@ -49,14 +83,7 @@ export function createAuth(request: Request, env: Env) {
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: ALLOWED_ORIGINS,
     user: {
-      validateUserInfo: ({ user }) => {
-        if (!user.email || !isAllowedEmailDomain(user.email)) {
-          return {
-            error: 'university_email_required',
-            errorDescription: 'Use a University of Peradeniya email address.',
-          };
-        }
-      },
+      validateUserInfo: validateAuthUserInfo,
     },
     databaseHooks: {
       user: {
