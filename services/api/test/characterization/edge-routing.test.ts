@@ -8,6 +8,19 @@ const ALLOWED_METHODS = 'PATCH, POST, GET, OPTIONS, PUT, DELETE';
 const ALLOWED_HEADERS = 'Content-Type, Authorization, X-Client-Id';
 
 describe('edge routing and CORS characterization', () => {
+  test('mounts Better Auth before the application route fallback', async () => {
+    const response = await invokeWorker('/api/auth/ok', {
+      method: 'GET',
+      headers: {
+        Origin: ALLOWED_ORIGIN,
+        'X-Client-Id': 'portal',
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()) as unknown).toEqual({ ok: true });
+  });
+
   test('allows preflight requests from an allowed origin', async () => {
     const response = await invokeWorker('/api/me', {
       method: 'OPTIONS',
