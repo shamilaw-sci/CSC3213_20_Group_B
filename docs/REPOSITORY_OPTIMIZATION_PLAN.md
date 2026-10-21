@@ -941,6 +941,23 @@ git status --short
 refactor: complete repository optimization program
 ```
 
+### Status on 2026-10-21
+
+- workspace Knip scans completed without findings for Web, People, Projects,
+  Portal, API, and GitHub App;
+- Portal has no consumer of the unbounded project or admin-user list routes,
+  so those routes and their repository accumulation helper were removed;
+- the unused singular `/api/user/permissions` mutation was removed in favor of
+  the canonical `/api/admin/users/:email` contract;
+- characterization tests now require all three retired routes to return `404`;
+- academic course and offering array routes remain temporarily because the
+  project and course editors still consume them as reference data;
+- synchronous mutation adapters remain behind the documented compatibility
+  boundary because no production access evidence was available to prove that
+  every non-Portal caller has migrated;
+- one-time authentication and proxy migration actions remain until an operator
+  confirms their production migrations and reviews any reported conflicts.
+
 ## Completion Report
 
 The final report must include:

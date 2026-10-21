@@ -1,12 +1,8 @@
-import {
-  updateMyNotificationsPreference,
-  updatePermissions,
-} from '@/services/permissions.service';
+import { updateMyNotificationsPreference } from '@/services/permissions.service';
 import { me, updateMe } from '@/services/profile.service';
 import {
   deleteUserPermissions,
   getUserPermissions,
-  listUsers,
   listUsersPage,
   updateUserPermissions,
 } from '@/services/admin.service';
@@ -42,7 +38,6 @@ import {
   getPublicProject,
   getPublicProjectPr,
   getPublicProjectSchema,
-  listPublicProjects,
   listPublicProjectsPage,
   upsertPublicProjectPr,
 } from '@/services/public-project.service';
@@ -207,11 +202,6 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
-    match: { kind: 'exact', path: '/api/projects/v2/projects' },
-    handler: listPublicProjects,
-  },
-  {
-    method: 'GET',
     match: { kind: 'exact', path: '/api/projects/v2/projects/page' },
     handler: listPublicProjectsPage,
   },
@@ -355,11 +345,6 @@ const routes: RegisteredRoute[] = [
     },
   },
   {
-    method: 'PATCH',
-    match: { kind: 'exact', path: '/api/user/permissions' },
-    handler: updatePermissions,
-  },
-  {
     method: 'GET',
     match: { kind: 'exact', path: '/api/admin/actions' },
     handler: listAdminActions,
@@ -368,11 +353,6 @@ const routes: RegisteredRoute[] = [
     method: 'POST',
     match: { kind: 'prefix', path: '/api/admin/actions/' },
     handler: runAdminAction,
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/api/admin/users' },
-    handler: listUsers,
   },
   {
     method: 'GET',

@@ -1,6 +1,5 @@
 import {
   deleteUserPermission,
-  getAllUserData,
   getUserDataPage,
   getUserPermission,
   hasOtherSuperAdmin,
@@ -8,7 +7,6 @@ import {
   normalizePermissionPatch,
   setUserPermission,
   type Permission,
-  type UserData,
 } from '@/repositories/permissions.repo';
 import {
   decodePaginationCursor,
@@ -25,42 +23,6 @@ import type { Env } from '@/types/env';
 import { verifySessionRequest } from '@/middleware/session';
 import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
 import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
-
-export async function listUsers(req: Request, env: Env): Promise<Response> {
-  const origin = req.headers.get('origin') || '';
-
-  const verifyResponse = await verifySessionRequest(req, env);
-  if (!verifyResponse.ok) {
-    return verifyResponse;
-  }
-
-  const { email: authUserEmail }: { email: string } =
-    await verifyResponse.json();
-  if (!authUserEmail) {
-    return createTextErrorResponse('Unauthorized', 401, origin);
-  }
-
-  const authUserPermission = await getUserPermission(authUserEmail, env);
-  if (!authUserPermission || authUserPermission.blacklisted) {
-    return createTextErrorResponse('Forbidden', 403, origin);
-  }
-
-  if (!isSuperAdmin(authUserPermission)) {
-    return createTextErrorResponse('Forbidden', 403, origin);
-  }
-
-  let users: UserData[];
-  try {
-    users = await getAllUserData(env);
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-    return createTextErrorResponse('Internal Server Error', 500, origin);
-  }
-
-  return Response.json(users, {
-    headers: createCorsHeaders(origin),
-  });
-}
 
 export async function listUsersPage(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';

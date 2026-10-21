@@ -133,7 +133,6 @@ the API Worker.
 | -------------- | ------------------------------------------- | ------------------------------- |
 | `GET`, `PATCH` | `/api/me`                                   | Read or update current user     |
 | `PATCH`        | `/api/me/notifications`                     | Update notification preferences |
-| `PATCH`        | `/api/user/permissions`                     | Update permitted user fields    |
 | `GET`          | `/api/admin/actions`                        | List reviewed admin actions     |
 | `POST`         | `/api/admin/actions/migrate-legacy-auth`    | Run the one-time auth migration |
 | `POST`         | `/api/admin/actions/migrate-proxy-settings` | Import proxy settings into D1   |
@@ -158,7 +157,6 @@ the API Worker.
 
 | Methods                        | Route                                 |
 | ------------------------------ | ------------------------------------- |
-| `GET`                          | `/api/projects/v2/projects`           |
 | `GET`                          | `/api/projects/v2/projects/page`      |
 | `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/...` |
 | `GET`                          | `/api/academic/v2/courses`            |
@@ -172,14 +170,15 @@ Exact detail, schema, and PR suffixes are matched by
 `services/api/src/routes/index.ts`. Mutations validate records with
 `@scs/schemas` before calling the GitHub App.
 The additive `/page` routes return stable key-ordered page envelopes and use
-resource-scoped cursors. The legacy list routes remain available until Portal
-adopts the page routes.
+resource-scoped cursors. Portal uses the project page route. The unbounded
+`/api/projects/v2/projects` route has been retired. Course and offering array
+routes remain because the project and course editors still load those bounded
+reference sets; remove them only after those consumers use page traversal.
 
 ## Administration and Proxy Routes
 
 | Method                   | Route                               |
 | ------------------------ | ----------------------------------- |
-| `GET`                    | `/api/admin/users`                  |
 | `GET`                    | `/api/admin/users/page`             |
 | `GET`                    | `/api/admin/proxies/page`           |
 | `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           |
@@ -192,18 +191,20 @@ Admin routes require a non-blacklisted super-admin. The additive
 `GET /api/admin/users/page` route accepts `cursor` and `limit`, returns the
 standard page envelope, and reads summaries from KV key metadata. Permission
 writes maintain that metadata; older entries are read and backfilled when a
-page first encounters them. The legacy `/api/admin/users` array remains
-available during Portal migration. `GET /api/admin/proxies/page` reads stable,
-bounded email-ordered pages directly from D1. Proxy edits consume attempts with
-one atomic SQL statement, while admin edits and resets preserve their separate
-authorization rules. Users cannot reset their own attempts. The one-time
-`migrate-proxy-settings` action imports the previous signed aggregate without
-overwriting D1 rows and reports conflicts for review.
+page first encounters them. The unbounded `/api/admin/users` array has been
+retired. `GET /api/admin/proxies/page` reads stable, bounded email-ordered pages
+directly from D1. Proxy edits consume attempts with one atomic SQL statement,
+while admin edits and resets preserve their separate authorization rules. Users
+cannot reset their own attempts. The one-time `migrate-proxy-settings` action
+imports the previous signed aggregate without overwriting D1 rows and reports
+conflicts for review.
 
 Browser-facing API routes stay under `/api`. Current-user resources use the
 `/api/me` namespace, while administrator-only proxy operations use the plural
 `/api/admin/proxies` collection. Portal page URLs such as `/user/proxy` are UI
-routes and are intentionally separate from these API contracts.
+routes and are intentionally separate from these API contracts. The duplicate
+`PATCH /api/user/permissions` route has been retired; administrators update one
+user through `PATCH /api/admin/users/:email`.
 
 ## Internal GitHub App API
 
@@ -221,9 +222,12 @@ Route groups:
 - `/academic/public-course-offering` and its PR route
 - `/academic/public-course-offerings`
 
-The current mutations are synchronous. The approved target adds idempotent
-`202 Accepted` operation resources while retaining compatibility during Portal
-migration.
+Portal mutations use the idempotent operation routes and receive `202 Accepted`
+operation resources. The synchronous internal routes remain compatibility
+adapters for clients that do not send `Prefer: respond-async`; no confirmed
+external consumer was found during the final inventory. Remove them only with
+a coordinated contract change, or after production access evidence confirms
+that no caller depends on them.
 
 ## Mailer API
 

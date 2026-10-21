@@ -325,29 +325,6 @@ export async function getPublicProject(
   return createJsonResponse(parsed.data, 200, origin);
 }
 
-export async function listPublicProjects(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const user = await verifiedUser(req, env);
-  if (!user.ok) return user.response;
-
-  if (!user.isSuperAdmin) {
-    return Response.redirect(
-      dataPublicUrl(
-        env,
-        `/projects/v2/by-person/${encodeURIComponent(usernameFromEmail(user.email))}.json`
-      ),
-      302
-    );
-  }
-
-  return Response.redirect(
-    dataPublicUrl(env, '/projects/v2/projects.json'),
-    302
-  );
-}
-
 export async function listPublicProjectsPage(
   req: Request,
   env: Env

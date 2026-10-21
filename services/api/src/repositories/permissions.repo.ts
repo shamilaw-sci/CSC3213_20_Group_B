@@ -1,6 +1,5 @@
 import type { Env } from '@/types/env';
 import {
-  MAX_USERS_PER_REQUEST,
   PERMISSION_BATCH_SIZE,
   PERMISSION_LIST_PAGE_LIMIT,
 } from '@/config/client.config';
@@ -372,22 +371,4 @@ export async function getUserDataPage(
     users,
     nextCursor: result.list_complete ? null : result.cursor,
   };
-}
-
-export async function getAllUserData(env: Env): Promise<UserData[]> {
-  const users: UserData[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const remaining = MAX_USERS_PER_REQUEST - users.length;
-    if (remaining <= 0) break;
-    const page = await getUserDataPage(env, {
-      cursor,
-      limit: Math.min(PERMISSION_LIST_PAGE_LIMIT, remaining),
-    });
-    users.push(...page.users.slice(0, remaining));
-    cursor = page.nextCursor ?? undefined;
-  } while (cursor);
-
-  return users;
 }

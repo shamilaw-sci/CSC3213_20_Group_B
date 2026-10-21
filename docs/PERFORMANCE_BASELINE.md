@@ -53,6 +53,23 @@ bun --filter '@scs/api' test test/characterization/paginated-lists.test.ts
 bun --filter '@scs/portal' test test/project-data.test.ts test/user-list.test.ts
 ```
 
+### Post-Migration List Contract
+
+Verified on 2026-10-21:
+
+- the Portal project list requests one 24-record page and loads course and
+  offering reference data only after an editor opens;
+- the Portal admin-user page requests one 50-record server-rendered page;
+- the API limits every page to at most 100 records and rejects larger limits;
+- the old unbounded project and admin-user list routes return `404`;
+- admin-user pages read KV metadata in bounded batches instead of issuing one
+  value read per listed user.
+
+The original byte count above remains a reproducible historical baseline. A
+single replacement byte count would be misleading because the new response
+size depends on the requested page size and record contents; the enforced
+record bounds and request-shape tests are the stable comparison.
+
 ## Source Size Baseline
 
 Source size is reported because large client components couple fetching,
