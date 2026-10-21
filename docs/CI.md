@@ -1,33 +1,63 @@
 # Continuous Integration
 
-The monorepo uses one verification workflow for every pull request, merge
-queue entry, and push to `main`. It deliberately has no path filters: changes
-to shared configuration, documentation, or repository policy can affect every
-workspace and must not bypass required checks.
+The monorepo uses `.github/workflows/ci.yml` as its required verification
+workflow. It runs for pull requests, merge-queue entries, and pushes to `main`.
+There are no path filters because shared packages and repository policy can
+affect any workspace.
 
-## Execution Model
+## Workflow
 
-Each run installs the locked Bun dependency graph once, then executes the
-least expensive repository-wide checks before workspace compilation:
+```mermaid
+flowchart TD
+  Event{GitHub event}
+  Event -->|pull request| PR[Affected workspace gate]
+  Event -->|merge group| Full[Complete monorepo gate]
+  Event -->|push to main| Full
 
-1. documentation policy and link validation;
-2. repository policy tests;
-3. formatting validation;
-4. pull request title validation using Conventional Commits;
-5. workspace lint, source typecheck, test-source typecheck, test, and build
-   tasks.
+  PR --> Install[Install frozen lockfile]
+  Full --> Install
+  Install --> Docs[Documentation policy]
+  Docs --> Repo[Repository policy tests]
+  Repo --> Format[Formatting check]
+  Format --> Title{Pull request?}
+  Title -->|yes| Commitlint[Validate PR title]
+  Title -->|no| Verify[Lint + source/test typecheck + tests + builds]
+  Commitlint --> Verify
+```
 
-Pull requests use Turbo's affected-workspace selection. Merge queue entries
-and pushes to `main` run the complete monorepo gate. Superseded pull request
-runs are cancelled, while merge queue and `main` runs are never cancelled by
-concurrency policy.
+Pull requests use Turbo's `--affected` selection. Merge groups and `main` run
+the complete gate against the integrated repository state.
 
-The workflow caches Bun downloads and Turbo task output. The lockfile remains
-the source of truth; dependency installation always uses `--frozen-lockfile`.
+## Checks and Their Purpose
 
-## Local Verification
+| Check                           | What it catches                                                    |
+| ------------------------------- | ------------------------------------------------------------------ |
+| `bun install --frozen-lockfile` | manifest/lockfile drift and unavailable dependencies               |
+| `bun run docs:check`            | misplaced docs, invalid filenames, and broken local Markdown links |
+| `bun run test:repo`             | CI, dependency, documentation, and env-template policy regressions |
+| `bun run format:check`          | files not formatted by repository Prettier policy                  |
+| `bun run lint`                  | correctness, security, imports, and unused-code issues             |
+| `bun run typecheck`             | production-source TypeScript errors                                |
+| `bun run typecheck:test`        | test aliases, fixtures, and runner type errors                     |
+| `bun run test`                  | declared workspace behavior suites                                 |
+| `bun run build`                 | Next.js, schema, and Worker production compilation                 |
 
-Run the repository policy checks before opening a pull request:
+`typecheck:test` currently exists in API, GitHub App, Projects, and Schemas.
+Add it when another workspace gains test-only compiler requirements.
+
+## Caching and Concurrency
+
+CI caches Bun downloads and `.turbo` output. Cache keys include the lockfile
+hash and commit SHA; restore keys allow reuse without making stale output
+authoritative. Installation still uses the frozen lockfile.
+
+Superseded pull-request runs are cancelled. Merge-group and `main` runs are not
+cancelled because they prove a specific integration state. The workflow uses
+Node 24-compatible `actions/checkout@v7` and `actions/cache@v6`.
+
+## Local Reproduction
+
+For repository policy failures:
 
 ```powershell
 bun run docs:check
@@ -35,34 +65,66 @@ bun run test:repo
 bun run format:check
 ```
 
-Run the complete workspace gate when changing shared packages, configuration,
-or release-critical behavior:
+For a complete CI-equivalent workspace gate:
 
 ```powershell
+bun install --frozen-lockfile
 bun run lint
 bun run typecheck
 bun run typecheck:test
 bun run test
 bun run build
+git diff --check
 ```
 
-To inspect Turbo's planned tasks without running them:
+Preview Turbo's task graph without executing it:
 
 ```powershell
 bunx turbo run lint typecheck typecheck:test test build --dry=json
 ```
 
-A workspace-specific `typecheck:test` task keeps test-only imports, fixtures,
-and runtime types inside the CI type boundary. It currently applies to the API,
-GitHub App, Projects app, and schema package.
+## Diagnosing Failures
 
-A workspace without a `test` task has missing automated coverage; it is not a
-passing test result. Add the task and meaningful tests before relying on CI as
-evidence for that workspace.
+| Failure                  | First action                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| install                  | compare `package.json`, `bun.lock`, `.bun-version`, and `bunfig.toml`                           |
+| documentation            | run `bun run docs:check`, then inspect the exact path/link violation                            |
+| repository policy        | run only the named test under `test/repository`                                                 |
+| lint                     | run the owning workspace lint without `--fix`, understand the rule, then use `lint:fix` if safe |
+| source typecheck         | run the workspace `typecheck` and inspect its production TSConfig                               |
+| test typecheck           | run `typecheck:test` and inspect aliases/types in the test TSConfig                             |
+| tests                    | use the workspace runner and reproduce the focused test locally                                 |
+| build                    | distinguish compile failure from unavailable external build-time data                           |
+| affected set looks wrong | inspect Turbo's dry JSON and package dependency graph                                           |
 
-## Concurrent Contributions
+Do not weaken a rule or add a Knip/ESLint ignore merely to make CI green. First
+determine whether the code is dead, dynamically loaded, a framework entry
+point, or incorrectly configured.
 
-Keep changes scoped and rebase or merge the latest target branch before final
-verification. Do not force-push over another contributor's work. The merge
-queue is the final authority for detecting conflicts and cross-branch failures
-against the current `main` state.
+## Pull Requests and Merge Queue
+
+- Use a Conventional Commit-style pull-request title.
+- Keep the branch current enough to resolve known conflicts before queueing.
+- Treat the merge-group run as the final integration authority.
+- Never force-push a shared branch over another contributor's work.
+- Required-check and merge-queue settings live in GitHub and need operator
+  verification; repository code cannot prove those settings are enabled.
+
+## Production Migration Workflow
+
+`.github/workflows/migrate-api-d1.yml` is a separate manual workflow. It uses a
+protected `production` environment, exact confirmation text, serialized
+execution, API verification, a pending-migration listing, and then remote D1
+application. It is not part of ordinary pull-request CI and requires production
+Cloudflare credentials. See [Operations](OPERATIONS.md).
+
+## Changing CI
+
+When changing a workflow:
+
+1. keep permissions least-privileged;
+2. preserve pull-request, merge-group, and `main` coverage;
+3. update repository policy tests with the workflow;
+4. avoid write credentials when running untrusted pull-request code;
+5. update this guide;
+6. observe the next real GitHub Actions run before claiming remote success.

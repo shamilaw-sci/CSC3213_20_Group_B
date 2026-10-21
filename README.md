@@ -1,53 +1,78 @@
 # SCS PDN Monorepo
 
-The SCS PDN monorepo contains independently deployable websites and services
-for the Department of Statistics and Computer Science, University of
-Peradeniya. Bun manages the workspace and Turborepo coordinates shared quality
-gates without merging deployment boundaries.
+Websites and services for the Department of Statistics and Computer Science,
+University of Peradeniya. The repository uses Bun workspaces and Turborepo,
+but every application and service remains independently deployable.
+
+## Start Here
+
+Install the pinned Bun version shown in `.bun-version`, then run:
+
+```powershell
+git clone <repository-url>
+Set-Location scs-pdn-monorepo
+bun install --frozen-lockfile
+bun --filter '@scs/web' dev
+```
+
+Open the URL printed by Next.js. Most public applications can start with their
+checked-in defaults. Portal, API, GitHub automation, and mail delivery need the
+environment files described in
+[Environment Variables](docs/ENVIRONMENT_VARIABLES.md).
+
+## What Runs Where
+
+```mermaid
+flowchart LR
+  Visitor[Browser] --> Web[Department website]
+  Visitor --> People[People directory]
+  Visitor --> Projects[Project directory]
+  Member[Authenticated browser] --> Portal[Management portal]
+  Portal --> API[API Worker]
+  API --> Auth[(D1: auth and proxy state)]
+  API --> Permissions[(KV: permissions)]
+  API --> Mailer[Mailer]
+  API --> Automation[GitHub App Worker]
+  Automation --> DataRepo[data repository]
+  Automation --> ConfigRepo[config repository]
+  Web --> PublicData[Published public data]
+  People --> PublicData
+  Projects --> PublicData
+```
+
+Read [Architecture](docs/ARCHITECTURE.md) before changing a boundary between
+workspaces.
 
 ## Workspaces
 
-| Path                     | Package              | Purpose                             |
-| ------------------------ | -------------------- | ----------------------------------- |
-| `apps/web`               | `@scs/web`           | Department website                  |
-| `apps/people`            | `@scs/people`        | Public people directory             |
-| `apps/projects`          | `@scs/projects`      | Public project directory            |
-| `apps/portal`            | `@scs/portal`        | Authenticated management portal     |
-| `services/api`           | `@scs/api`           | Public and authenticated API        |
-| `services/github-app`    | `@scs/github-app`    | Git-backed change automation        |
-| `services/mailer`        | `@scs/mailer`        | Transactional email service         |
-| `packages/schemas`       | `@scs/schemas`       | Shared runtime and TypeScript types |
-| `packages/ui`            | `@scs/ui`            | Shared shadcn UI primitives         |
-| `packages/eslint-config` | `@scs/eslint-config` | Shared ESLint presets               |
-| `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets           |
+| Path                     | Package              | Responsibility                                   |
+| ------------------------ | -------------------- | ------------------------------------------------ |
+| `apps/web`               | `@scs/web`           | Department website                               |
+| `apps/people`            | `@scs/people`        | Public staff, student, alumni, and profile pages |
+| `apps/projects`          | `@scs/projects`      | Public project discovery and project details     |
+| `apps/portal`            | `@scs/portal`        | Authentication and management workflows          |
+| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, D1, and KV      |
+| `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
+| `services/mailer`        | `@scs/mailer`        | Authenticated SMTP delivery API                  |
+| `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
+| `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
+| `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
+| `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets                        |
 
-Public data and access configuration remain separate Git-backed systems. They
-are consumed by this monorepo but are not workspaces inside it.
+The public data and repository-access configuration repositories are separate
+systems. They are not Bun workspaces in this repository.
 
-## Setup
-
-Requirements:
-
-- Bun 1.4.3
-- Git
-- provider credentials only for integration or deployment work
+## Daily Commands
 
 ```powershell
-bun install --frozen-lockfile
+# Run every declared development task.
 bun run dev
-```
 
-Run one workspace by package name:
-
-```powershell
+# Run one workspace.
 bun --filter '@scs/portal' dev
-bun --filter '@scs/api' dev
-bun --filter '@scs/github-app' dev
-```
+bun --filter '@scs/api' test
 
-## Verification
-
-```powershell
+# Complete local quality gate.
 bun run docs:check
 bun run format:check
 bun run lint
@@ -57,41 +82,47 @@ bun run test
 bun run build
 ```
 
-Turbo invokes only scripts declared by each workspace. A workspace without a
-test script has missing automated coverage; it is not treated as a passing test
-suite.
+`typecheck` covers production source. `typecheck:test` covers test-only aliases,
+fixtures, and runner globals. A workspace without a test script has no test
+coverage; Turbo does not treat it as a passing suite.
 
-Commits use Conventional Commits. Husky runs lint-staged before commits and
-Commitlint validates commit messages.
+## Repository Rules
 
-## Shared Foundations
+- Use Bun only. The lockfile and `.bun-version` are authoritative.
+- Keep deployables independent; do not make an unrelated app a runtime
+  dependency.
+- Put shared runtime contracts in `@scs/schemas` and reusable shadcn primitives
+  in `@scs/ui`.
+- Keep product-specific components inside their application.
+- Parse environment variables in typed config modules; do not scatter
+  `process.env` access or operational constants through components.
+- Put tests under `test` or `tests`, following the owning workspace.
+- Use `@/` or package aliases for cross-directory imports when the workspace
+  supports them.
+- Use Conventional Commits. Husky validates staged files and commit messages.
+- Docker is not part of the current development or verification workflow.
 
-- `packages/ui` is the only source of reusable shadcn primitives.
-- `packages/schemas` owns shared domain and transport contracts.
-- `packages/tsconfig` owns compiler presets.
-- `packages/eslint-config` owns lint presets.
-- Product-specific components and domain behavior stay in their owning app or
-  service until reuse is proven.
+Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [API contracts](docs/API_CONTRACTS.md)
-- [Development](docs/DEVELOPMENT.md)
-- [Environment variables](docs/ENVIRONMENT_VARIABLES.md)
-- [Operations](docs/OPERATIONS.md)
-- [Schemas](docs/SCHEMAS.md)
-- [Security](docs/SECURITY.md)
-- [Optimization design](docs/REPOSITORY_OPTIMIZATION_DESIGN.md)
-- [Optimization plan](docs/REPOSITORY_OPTIMIZATION_PLAN.md)
-- [Optimization completion report](docs/OPTIMIZATION_COMPLETION_REPORT.md)
+| Guide                                                  | Read it when you need to…                                       |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| [Development](docs/DEVELOPMENT.md)                     | set up the repository, make a change, or diagnose local tooling |
+| [Architecture](docs/ARCHITECTURE.md)                   | understand boundaries, data ownership, and request flows        |
+| [API Contracts](docs/API_CONTRACTS.md)                 | call or change HTTP endpoints and durable operations            |
+| [Schemas](docs/SCHEMAS.md)                             | add or evolve shared domain contracts                           |
+| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) | configure local or deployed runtimes                            |
+| [Continuous Integration](docs/CI.md)                   | understand required checks and merge behavior                   |
+| [Operations](docs/OPERATIONS.md)                       | deploy, migrate, observe, or recover a service                  |
+| [Security](docs/SECURITY.md)                           | handle authentication, secrets, permissions, or incidents       |
 
-Tracked Markdown belongs in the repository root or root `docs` directory and
-uses uppercase snake-case filenames. Installed agent skills and generated
-assistant work are local-only. Restore the locked skill set from the root with:
+Documentation is maintained with the code. Run `bun run docs:check` after
+adding, renaming, linking, or removing a Markdown file.
 
-```powershell
-bunx skills experimental_install
-```
+## Getting Help
 
-Docker is not part of the current development or verification workflow.
+Start with the relevant guide and the nearest workspace `package.json`. When
+reporting a problem, include the workspace, command, error output, commit SHA,
+and whether the failure is local or from GitHub Actions. Report suspected
+security issues privately as described in [Security](docs/SECURITY.md).

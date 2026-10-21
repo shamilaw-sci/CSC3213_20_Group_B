@@ -1,105 +1,180 @@
 # Security
 
+Security is a boundary property, not a final review step. This guide documents
+the current trust model, required safeguards, and incident response process.
+
 ## Trust Boundaries
 
-- Browsers are untrusted clients of `services/api`.
-- `services/api` is the only browser-facing caller of private GitHub App
-  routes.
-- `services/github-app` is trusted to create controlled changes in configured
-  repositories but must still validate every request.
-- Public data is untrusted until parsed with the applicable schema.
-- SMTP, OAuth providers, GitHub, KV, and deployment platforms are external
-  systems whose errors and responses require validation.
+```mermaid
+flowchart LR
+  Browser[Untrusted browser]
+  PublicData[Untrusted public JSON]
+  API[API Worker]
+  GitHubApp[Private GitHub App Worker]
+  Mailer[Private Mailer]
+  Providers[GitHub, OAuth, SMTP]
+  D1[(D1)]
+  KV[(KV)]
+
+  Browser -->|session + validated input| API
+  PublicData -->|schema validation| Browser
+  API --> D1
+  API --> KV
+  API -->|internal secret/service binding| GitHubApp
+  API -->|bearer key| Mailer
+  GitHubApp --> Providers
+  Mailer --> Providers
+```
+
+- Browsers and public data are untrusted.
+- API authentication does not replace per-action authorization.
+- The GitHub App may mutate only configured repositories through validated
+  requests.
+- OAuth, SMTP, GitHub, KV, D1, queues, and hosting platforms are external
+  systems whose responses and failures must be bounded.
+
+## Data Classification
+
+| Class    | Examples                                          | Handling                                         |
+| -------- | ------------------------------------------------- | ------------------------------------------------ |
+| public   | published profiles, projects, courses             | validate before rendering; no secrets            |
+| internal | operation IDs, repository metadata, bounded logs  | expose only to authorized users/services         |
+| private  | permission records, unpublished profile edits     | least-privilege access; do not log whole records |
+| secret   | OAuth secrets, private keys, cookies, bearer keys | secret stores only; never commit or log          |
+
+## Authentication
+
+Better Auth is the sole Portal authentication provider. Its state lives in D1.
+Enabled flows are email OTP, passkeys, Google, and GitHub. Email/password and
+parallel custom JWT, OAuth, magic-code, or WebAuthn routes are not enabled.
+
+Required properties:
+
+- trusted origins are explicit;
+- CSRF and origin checks remain enabled;
+- session cookies are HTTP-only and use environment-appropriate secure and
+  same-site settings;
+- OAuth account linking requires an authenticated user action; matching email
+  alone is insufficient;
+- passkey registration requires a session, user verification, allowed origin,
+  and correct relying-party ID;
+- verification identifiers and OTP values are not stored as reusable plaintext;
+- rate limits use durable D1 state;
+- protected requests re-read current permission/blacklist state.
+
+The `migrate-legacy-auth` admin action is a temporary, confirmation-gated
+production migration. Remove it after identities, passkeys, and conflicts are
+reviewed.
+
+## Authorization
+
+- UI visibility is not authorization.
+- Services verify roles, access levels, ownership, and blacklist status for
+  every protected action.
+- Super-admin operations guard against self-lockout and removal of the last
+  super-admin where applicable.
+- The API derives the actor for GitHub operations; clients do not choose an
+  arbitrary operation owner.
+- Internal GitHub App requests require `X-Internal-Secret`, compared in
+  constant time.
+- Operation reads/cancellations require the owning actor subject unless the
+  authenticated API marks a trusted admin request.
+
+## Input, Output, and Browser Safety
+
+- Parse untrusted JSON and query values with the owning Zod schema.
+- Validate entity IDs, repository paths, branch names, revisions, cursors,
+  redirect targets, and operation IDs before use.
+- Reject unknown route suffixes instead of turning them into file paths.
+- Escape or safely render user-controlled content; do not inject raw HTML.
+- Keep CORS origins and allowed headers explicit.
+- Return stable bounded error codes/messages, never provider dumps or stacks.
+- Keep lists paginated and request bodies size-bounded.
+
+See [API Contracts](API_CONTRACTS.md) for status and response contracts.
 
 ## Secrets
 
-Secrets belong in deployment secret stores and ignored local environment
-files. Never track:
+Never commit or expose:
 
 - OAuth client secrets;
-- JWT or signing secrets;
-- GitHub App private keys;
+- `BETTER_AUTH_SECRET` or config token secrets;
+- GitHub App private keys or installation tokens;
 - internal service secrets;
-- SMTP passwords or mailer API keys;
-- access tokens or populated environment files.
+- mailer API keys or SMTP credentials;
+- session cookies or populated environment files.
 
-A secret removed from Git history must still be rotated. Deletion alone does
-not make it safe.
+A secret removed from source or Git history is still compromised. Revoke or
+rotate it at the provider, update deployment stores, and invalidate dependent
+sessions or credentials.
 
-## Authentication and Authorization
-
-- Better Auth state is stored in D1. Verification identifiers and email OTPs
-  are hashed, rate-limit counters are durable, and OAuth tokens are encrypted
-  at rest with `BETTER_AUTH_SECRET`.
-- Better Auth keeps CSRF and origin validation enabled and accepts only the
-  explicitly configured Portal origins. OAuth accounts are never implicitly
-  linked by matching email; linking requires an authenticated user action.
-- Passkey registration requires an authenticated session, user verification,
-  an allowed origin, and the origin-specific relying-party ID.
-- Email/password authentication is not enabled. Better Auth owns passwordless
-  email OTP, passkey, Google, and GitHub flows. Implicit email-based account
-  linking stays disabled.
-- Better Auth sessions are verified on every protected request. The current
-  permission record is also checked so blacklisting takes effect immediately.
-- Administrative routes require the appropriate role at the time of action.
-- Mutation authorization is checked independently of client-visible UI state.
-- Internal GitHub App requests require service authentication; the browser
-  never receives the internal secret.
-- Secret comparisons should be constant-time where platform identity is not
-  available.
-- OAuth state and redirect targets must be bound and validated.
-- Passkey challenges must be short-lived and tied to the configured origin and
-  relying party.
-
-Legacy JWT, magic-code KV, token-blacklist KV, custom OAuth, and custom
-WebAuthn routes are removed. A super-admin-only, confirmation-gated action
-migrates existing GitHub identities and passkeys into D1 and removes the old
-auth fields from permission records. Normal requests never read those legacy
-fields. Remove the migration action after production migration and review are
-complete.
-
-## Input and Output
-
-Parse external JSON with Zod schemas and reject unknown path shapes before
-constructing repository paths or URLs. Validate branch names, entity IDs,
-cursors, operation IDs, and redirect targets.
-
-Return stable, bounded error codes and messages. Provider error objects, stack
-traces, private records, credentials, and repository tokens do not belong in
-client responses.
+Use [Environment Variables](ENVIRONMENT_VARIABLES.md) for configuration names.
+Do not print values to prove they are configured.
 
 ## GitHub Automation
 
-- Use installation tokens with minimum repository permissions.
-- Do not force-push after a stale reference failure.
-- Bind a mutation to an expected entity revision and surface `409 Conflict`
-  when it changed.
-- Make retries idempotent before enabling queue redelivery.
-- Treat PR labels and branch prefixes as signals, not sufficient authorization
-  on their own.
-- Validate the repository, base branch, head repository, operation metadata,
-  and current actor permissions before destructive or merge actions.
+- Use an installation token with minimum repository permissions.
+- Bind updates and deletes to an expected entity revision.
+- Make retries idempotent before queue redelivery.
+- Serialize changes to the same logical resource.
+- Never force-push after a stale reference or compare failure.
+- Treat branch names, labels, and PR text as signals, not authorization.
+- Verify repository owner/name, base branch, actor, and mutation metadata.
 - Never run untrusted pull-request code with write credentials.
+- Preserve a reviewed PR/audit trail for repository changes.
+
+## Dependencies and CI
+
+- Use the frozen Bun lockfile and pinned Bun version.
+- `bunfig.toml` enforces a minimum package release age with narrow documented
+  exceptions.
+- Keep GitHub Actions permissions least-privileged and use supported runtimes.
+- Review dependency changes rather than applying automated updates blindly.
+- Do not bypass lint, typecheck, test, or build failures with broad ignores.
 
 ## Logging and Audit
 
-Use correlation and operation IDs. Log bounded categories, durations, attempt
-numbers, resource identities, and provider request IDs. Redact tokens, cookie
-values, private keys, OAuth payloads, complete private profiles, and email
-contents.
+Log correlation IDs, operation IDs, bounded resource identities, state
+transitions, durations, attempt counts, and provider request IDs. Redact:
 
-GitHub PR bodies and comments provide an audit trail but must not contain
-secrets. Structured operation state is authoritative; prose comments are not a
-secure database.
+- tokens, cookies, private keys, and secrets;
+- raw OAuth or passkey payloads;
+- complete private profiles and mutation bodies;
+- email content and SMTP credentials.
 
-## Reporting and Response
+GitHub PR comments are useful audit context but are not an authoritative or
+private database. Durable operation state is authoritative for execution.
 
-Report vulnerabilities privately to the repository maintainers. For a
-suspected exposure:
+## Security Review Checklist
 
-1. stop further publication of the value;
-2. rotate or revoke it at the provider;
-3. update deployment stores;
-4. invalidate related sessions or tokens;
-5. inspect logs and repository history for use;
-6. document the remediation without reproducing the secret.
+For authentication, authorization, API, or automation changes, verify:
+
+1. trust boundary and actor identity;
+2. runtime validation of every external value;
+3. authorization on the service, independent of UI;
+4. secret storage and log redaction;
+5. idempotency and revision conflict behavior;
+6. rate and size limits;
+7. safe error responses;
+8. tests for unauthorized, forbidden, malformed, stale, and replayed requests;
+9. least-privilege provider permissions;
+10. recovery and documentation updates.
+
+## Vulnerability Reporting and Incident Response
+
+Report suspected vulnerabilities privately to repository maintainers. Do not
+open a public issue containing exploit details, secrets, or personal data.
+
+For a suspected exposure:
+
+1. stop further publication without destroying evidence;
+2. revoke or rotate the value at the provider;
+3. update deployment secret stores;
+4. invalidate related sessions, tokens, or credentials;
+5. inspect logs, Git history, provider audit logs, and affected operations;
+6. contain or roll back the vulnerable deployment;
+7. add regression tests and document the remediation without reproducing the
+   secret;
+8. notify affected maintainers/users through the appropriate private channel.
+
+Operational recovery procedures are in [Operations](OPERATIONS.md).

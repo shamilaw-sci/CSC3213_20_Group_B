@@ -74,15 +74,28 @@ function localMarkdownTarget(
 
 function documentationViolations(root: string, paths: string[]): string[] {
   const violations: string[] = [];
+  const readme = resolve(root, 'README.md');
+  const documentedPaths = new Set<string>();
+
+  if (existsSync(readme)) {
+    const content = readFileSync(readme, 'utf8');
+    for (const match of content.matchAll(MARKDOWN_LINK)) {
+      const target = localMarkdownTarget(root, 'README.md', match[1]);
+      if (!target) continue;
+      documentedPaths.add(relative(root, target).replaceAll('\\', '/'));
+    }
+  }
 
   for (const path of paths) {
     const normalized = path.replaceAll('\\', '/');
     const allowedLocation =
-      normalized === 'README.md' || normalized.startsWith('docs/');
+      normalized === 'README.md' ||
+      normalized === 'AGENTS.md' ||
+      normalized.startsWith('docs/');
 
     if (!allowedLocation) {
       violations.push(
-        `${normalized}: tracked Markdown must be README.md or live under docs/`
+        `${normalized}: tracked Markdown must be README.md, AGENTS.md, or live under docs/`
       );
       continue;
     }
@@ -90,6 +103,12 @@ function documentationViolations(root: string, paths: string[]): string[] {
     if (!DOCUMENT_NAME.test(basename(normalized))) {
       violations.push(
         `${normalized}: Markdown filename must use uppercase snake case`
+      );
+    }
+
+    if (normalized !== 'README.md' && !documentedPaths.has(normalized)) {
+      violations.push(
+        `${normalized}: Markdown file is not linked from README.md`
       );
     }
 

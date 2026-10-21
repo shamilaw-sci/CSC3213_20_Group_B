@@ -44,9 +44,11 @@ afterEach(async () => {
 });
 
 describe('documentation policy checker', () => {
-  test('accepts root README and uppercase snake-case files under docs', async () => {
+  test('accepts root README, AGENTS, and uppercase snake-case docs', async () => {
     const root = await createFixture({
-      'README.md': '# Example\n\nSee [architecture](docs/ARCHITECTURE.md).\n',
+      'README.md':
+        '# Example\n\nSee [agents](AGENTS.md) and [architecture](docs/ARCHITECTURE.md).\n',
+      'AGENTS.md': '# Agent Instructions\n',
       'docs/ARCHITECTURE.md': '# Architecture\n',
     });
 
@@ -65,7 +67,9 @@ describe('documentation policy checker', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain('apps/portal/README.md');
-    expect(result.output).toContain('must be README.md or live under docs/');
+    expect(result.output).toContain(
+      'must be README.md, AGENTS.md, or live under docs/'
+    );
   });
 
   test('rejects Markdown filenames that are not uppercase snake case', async () => {
@@ -116,5 +120,18 @@ describe('documentation policy checker', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain('docs/lowercase.md');
+  });
+
+  test('rejects documentation that is not discoverable from README', async () => {
+    const root = await createFixture({
+      'README.md': '# Example\n',
+      'docs/OPERATIONS.md': '# Operations\n',
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('docs/OPERATIONS.md');
+    expect(result.output).toContain('not linked from README.md');
   });
 });

@@ -1,33 +1,47 @@
 # API Contracts
 
-## Scope
+This document is the human-readable HTTP reference. The route tables in
+`services/api/src/routes/index.ts` and `services/github-app/src/app.ts`, plus
+the schemas exported by `@scs/schemas`, remain the executable source of truth.
 
-The public API is implemented by `services/api`. `services/github-app` exposes
-an internal API used by the public API. `services/mailer` exposes one internal
-delivery endpoint. Source route tables and shared schemas remain authoritative
-when prose and code disagree.
+## Service Boundaries
 
-## Common Public API Conventions
+| Service               | Audience                            | Authentication                                |
+| --------------------- | ----------------------------------- | --------------------------------------------- |
+| `services/api`        | Portal and approved browser clients | Better Auth session plus authorization checks |
+| `services/github-app` | API Worker only                     | `X-Internal-Secret`                           |
+| `services/mailer`     | trusted services only               | bearer `MAILER_API_KEY`                       |
 
-- Browser clients send credentials for session-protected routes.
-- Portal identifies itself with `X-Client-Id: portal` where required.
-- CORS responses vary by accepted origin and allow credentials only for
-  configured clients.
-- Session cookies are HTTP-only and use deployment-appropriate secure and
-  same-site settings.
-- Authenticated endpoints reject missing, invalid, revoked, or blacklisted
-  sessions.
-- Validation failures use `400`; authentication failures use `401`;
-  authorization failures use `403`; missing resources use `404`; stale or
-  conflicting changes use `409`; upstream failures use `502` where applicable.
+The browser-facing API uses the `/api` namespace. The GitHub App and Mailer
+routes are internal and must not be called directly from browser code.
 
-During the optimization program, the existing mix of JSON and text errors is
-preserved only on legacy routes. New and migrated routes use the versioned
-contracts exported by `@scs/schemas`.
+## Common Browser API Rules
 
-## Versioned Error Contract
+- Send session cookies with protected requests.
+- Send `X-Client-Id: portal` where client validation is required.
+- Send JSON bodies with `Content-Type: application/json`.
+- Treat cursor and operation identifiers as opaque strings.
+- Do not parse human-readable error messages for program logic.
+- Validate responses with the matching schema when crossing a trust boundary.
 
-New error responses use `ApiErrorEnvelopeSchema`:
+Common status meanings:
+
+| Status | Meaning                                                 |
+| ------ | ------------------------------------------------------- |
+| `200`  | request completed synchronously                         |
+| `202`  | durable mutation accepted; poll the operation URL       |
+| `400`  | malformed input, invalid cursor, or unsupported payload |
+| `401`  | missing or invalid authentication                       |
+| `403`  | authenticated but not authorized                        |
+| `404`  | route or resource does not exist                        |
+| `405`  | route exists but does not support the method            |
+| `409`  | revision, idempotency, or state conflict                |
+| `429`  | request was rate-limited                                |
+| `502`  | an upstream service failed or returned invalid data     |
+
+## Versioned Errors
+
+New contracts use `ApiErrorEnvelopeSchema` from `@scs/schemas`:
 
 ```json
 {
@@ -38,28 +52,58 @@ New error responses use `ApiErrorEnvelopeSchema`:
     "correlationId": "req_01JAA2V8M7X4G9NK2QF6D3P1ZT",
     "conflict": {
       "resourceType": "project",
-      "resourceId": "scholarship-management-system",
-      "expectedRevision": "commit-41",
-      "actualRevision": "commit-42"
+      "resourceId": "example-project",
+      "expectedRevision": "blob-41",
+      "actualRevision": "blob-42"
     }
   }
 }
 ```
 
-Codes are stable lowercase snake-case identifiers. Messages are bounded human
-descriptions and must not be parsed for control flow. Correlation IDs are
-required on versioned errors. Conflict details are optional and contain only
-resource identity and revision information safe to return to the caller.
+`code` is stable and machine-readable. `message` is bounded prose for people.
+`correlationId` connects the response to structured logs. Conflict details may
+contain resource identity and revisions, but never credentials or provider
+payloads.
 
-## Mutation and Operation Contract
+## Pagination
 
-Every migrated mutation carries `MutationControl`: a required idempotency key
-and an optional expected entity revision. The idempotency key identifies the
-logical user action across retries; the revision provides compare-and-set
-protection for updates and deletes.
+Page routes accept `limit` and optional `cursor` query parameters. The default
+limit is 25 and the maximum is 100. A cursor is scoped to one route and cannot
+be reused with another collection.
 
-A durable mutation responds with HTTP `202 Accepted` and a value matching
-`MutationAcceptedSchema`:
+```json
+{
+  "version": 1,
+  "items": [],
+  "page": {
+    "nextCursor": null,
+    "hasMore": false,
+    "total": 0
+  }
+}
+```
+
+Clients must follow `nextCursor` rather than constructing cursors or assuming
+offset pagination. `total` is optional and must not be required by a generic
+pagination component.
+
+## Durable Mutations
+
+Portal sends `Prefer: respond-async` for profile, project, course, and offering
+changes. The request body includes `MutationControl`:
+
+```json
+{
+  "idempotencyKey": "01JAA2V8M7X4G9NK2QF6D3P1ZT",
+  "expectedRevision": "blob-42"
+}
+```
+
+Use `missing` as the expected revision for a new entity. The same logical user
+action must reuse its idempotency key when retried. Reusing a key for different
+input returns a conflict.
+
+A successful submission returns `MutationAcceptedSchema` with `202 Accepted`:
 
 ```json
 {
@@ -71,163 +115,118 @@ A durable mutation responds with HTTP `202 Accepted` and a value matching
 }
 ```
 
-The operation resource reports `queued`, `running`, `succeeded`, `failed`,
-`conflicted`, or `cancelled`. Terminal responses include a matching typed
-outcome. Actor references contain an opaque subject ID rather than an email,
-token, GitHub credential, or provider payload. Resource types are limited to
-the mutation families owned by this system.
-
-Authenticated clients read or cancel their own operation through `GET` or
-`DELETE /api/operations/:operationId`. Profile editors opt into the durable
-path by sending `Prefer: respond-async` with `MutationControl` on the existing
-profile PR mutation route. Clients without that preference retain the legacy
-synchronous response during the compatibility period. Profile revisions are
-the authoritative user-record blob SHA; `missing` is the expected revision
-when the user record does not yet exist.
-
-Project, course, and course-offering editors use the same opt-in contract on
-their existing PR mutation routes. Their expected revisions are the blob SHA
-of the authoritative entity record, or `missing` for a new record. The public
-API forwards accepted mutations to the GitHub App operation gateway and
-exposes their status through the shared operation resource. Legacy synchronous
-behavior remains available to clients that omit `Prefer: respond-async` until
-projection generation and compatibility removal are completed.
-
-## Cursor Pagination Contract
-
-Versioned page routes accept `cursor` and `limit` values through
-`PaginationRequestSchema`. The default limit is 25 and the maximum is 100.
-Cursors are opaque: clients store and return them unchanged and must not infer
-offsets or resource IDs from their contents.
-
-Versioned list responses use this shape:
-
-```json
-{
-  "version": 1,
-  "items": [],
-  "page": {
-    "nextCursor": null,
-    "hasMore": false
-  }
-}
+```mermaid
+stateDiagram-v2
+  [*] --> queued
+  queued --> running
+  queued --> cancelled
+  running --> succeeded
+  running --> conflicted
+  running --> failed
+  running --> queued: retryable failure
 ```
 
-`hasMore` is true exactly when `nextCursor` is non-null. A total may be
-included when it is cheap and consistent, but clients must not require it.
+Read or request cancellation of the caller's operation with:
 
-## Authentication and Account Routes
+| Method   | Route                          |
+| -------- | ------------------------------ |
+| `GET`    | `/api/operations/:operationId` |
+| `DELETE` | `/api/operations/:operationId` |
 
-Better Auth is mounted at `/api/auth/*` and owns Google, email OTP, passkey,
-session, account linking, and sign-out endpoints used by the Portal. There are
-no parallel `/auth/*` JWT, OAuth, magic-code, or WebAuthn routes.
+The API owns actor authorization. Emails, provider tokens, and private request
+bodies are not exposed in operation resources.
 
-The Portal uses Better Auth client methods for social sign-in, email OTP,
-passkey registration and authentication, account listing, social-account
-linking and unlinking, session reads, and sign-out. Registration and account
-management require the session and origin protections enforced by Better
-Auth. Allowed account domains and trusted origins are configured centrally in
-the API Worker.
+## Authentication and Current Account
 
-| Method         | Route                                       | Purpose                         |
-| -------------- | ------------------------------------------- | ------------------------------- |
-| `GET`, `PATCH` | `/api/me`                                   | Read or update current user     |
-| `PATCH`        | `/api/me/notifications`                     | Update notification preferences |
-| `GET`          | `/api/admin/actions`                        | List reviewed admin actions     |
-| `POST`         | `/api/admin/actions/migrate-legacy-auth`    | Run the one-time auth migration |
-| `POST`         | `/api/admin/actions/migrate-proxy-settings` | Import proxy settings into D1   |
+Better Auth is mounted at `/api/auth/*` and owns email OTP, Google, GitHub,
+passkey, account-linking, session, and sign-out endpoints. Email/password auth
+and parallel custom JWT/WebAuthn routes are not enabled.
 
-## People Routes
+| Method  | Route                   | Purpose                                            |
+| ------- | ----------------------- | -------------------------------------------------- |
+| `GET`   | `/api/me`               | read the current account and permission projection |
+| `PATCH` | `/api/me`               | update allowed current-account fields              |
+| `PATCH` | `/api/me/notifications` | update notification preferences                    |
 
-| Method   | Route                                       | Purpose                   |
-| -------- | ------------------------------------------- | ------------------------- |
-| `GET`    | `/api/people/v2/me`                         | Read public profile state |
-| `GET`    | `/api/people/v2/me/schema`                  | Read editable schema      |
-| `GET`    | `/api/people/v2/me/pr`                      | Read draft PR state       |
-| `POST`   | `/api/people/v2/me/pr`                      | Submit profile draft      |
-| `PUT`    | `/api/people/v2/me/pr`                      | Update profile draft      |
-| `POST`   | `/api/people/v2/me/student-placement`       | Submit placement metadata |
-| `GET`    | `/api/people/v2/admin/student-placement`    | Read placement source     |
-| `GET`    | `/api/people/v2/admin/student-placement/pr` | Read placement PR state   |
-| `PUT`    | `/api/people/v2/admin/student-placement/pr` | Update placement PR       |
-| `DELETE` | `/api/people/v2/admin/student-placement/pr` | Discard placement PR      |
-| varies   | `/api/people/v2/admin/users/:identity/...`  | Admin profile operations  |
+Session validation alone is not authorization. Protected requests also check
+the current permission record so blacklisting and role changes take effect.
 
-## Project and Academic Routes
+## Public Profile Management
 
-| Methods                        | Route                                 |
-| ------------------------------ | ------------------------------------- |
-| `GET`                          | `/api/projects/v2/projects/page`      |
-| `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/...` |
-| `GET`                          | `/api/academic/v2/courses`            |
-| `GET`                          | `/api/academic/v2/courses/page`       |
-| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/courses/:id/...`    |
-| `GET`                          | `/api/academic/v2/offerings`          |
-| `GET`                          | `/api/academic/v2/offerings/page`     |
-| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/...`  |
+| Method                 | Route                                       | Purpose                                 |
+| ---------------------- | ------------------------------------------- | --------------------------------------- |
+| `GET`                  | `/api/people/v2/me`                         | read the current user's public profile  |
+| `GET`                  | `/api/people/v2/me/schema`                  | read editable profile schema metadata   |
+| `GET`                  | `/api/people/v2/me/pr`                      | read current profile pull-request state |
+| `POST`, `PUT`          | `/api/people/v2/me/pr`                      | create or update a profile mutation     |
+| `POST`                 | `/api/people/v2/me/student-placement`       | submit placement metadata               |
+| `GET`                  | `/api/people/v2/admin/student-placement`    | read placement source data              |
+| `GET`, `PUT`, `DELETE` | `/api/people/v2/admin/student-placement/pr` | manage the placement pull request       |
+| varies                 | `/api/people/v2/admin/users/:identity/...`  | manage another user's public profile    |
 
-Exact detail, schema, and PR suffixes are matched by
-`services/api/src/routes/index.ts`. Mutations validate records with
-`@scs/schemas` before calling the GitHub App.
-The additive `/page` routes return stable key-ordered page envelopes and use
-resource-scoped cursors. Portal uses the project page route. The unbounded
-`/api/projects/v2/projects` route has been retired. Course and offering array
-routes remain because the project and course editors still load those bounded
-reference sets; remove them only after those consumers use page traversal.
+Admin profile suffixes include `/schema`, `/pr`, and `/student-placement`.
+Unknown suffixes are rejected rather than interpreted as repository paths.
 
-## Administration and Proxy Routes
+## Projects and Academics
 
-| Method                   | Route                               |
-| ------------------------ | ----------------------------------- |
-| `GET`                    | `/api/admin/users/page`             |
-| `GET`                    | `/api/admin/proxies/page`           |
-| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           |
-| `GET`                    | `/api/admin/actions`                |
-| `POST`                   | `/api/admin/actions/:actionId`      |
-| `GET`, `POST`            | `/api/me/proxy`                     |
-| `POST`                   | `/api/admin/proxies/reset-attempts` |
+| Methods                        | Route                                    | Purpose                           |
+| ------------------------------ | ---------------------------------------- | --------------------------------- |
+| `GET`                          | `/api/projects/v2/projects/page`         | list a bounded project page       |
+| `GET`                          | `/api/projects/v2/projects/:slug`        | read one project                  |
+| `GET`                          | `/api/projects/v2/projects/:slug/schema` | read project schema metadata      |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/pr`     | manage a project mutation         |
+| `GET`                          | `/api/academic/v2/courses`               | read the course reference array   |
+| `GET`                          | `/api/academic/v2/courses/page`          | list a bounded course page        |
+| `GET`                          | `/api/academic/v2/courses/:id`           | read one course                   |
+| `GET`                          | `/api/academic/v2/courses/:id/schema`    | read course schema metadata       |
+| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/courses/:id/pr`        | manage a course mutation          |
+| `GET`                          | `/api/academic/v2/offerings`             | read the offering reference array |
+| `GET`                          | `/api/academic/v2/offerings/page`        | list a bounded offering page      |
+| `GET`                          | `/api/academic/v2/offerings/:id`         | read one offering                 |
+| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/pr`      | manage an offering mutation       |
 
-Admin routes require a non-blacklisted super-admin. The additive
-`GET /api/admin/users/page` route accepts `cursor` and `limit`, returns the
-standard page envelope, and reads summaries from KV key metadata. Permission
-writes maintain that metadata; older entries are read and backfilled when a
-page first encounters them. The unbounded `/api/admin/users` array has been
-retired. `GET /api/admin/proxies/page` reads stable, bounded email-ordered pages
-directly from D1. Proxy edits consume attempts with one atomic SQL statement,
-while admin edits and resets preserve their separate authorization rules. Users
-cannot reset their own attempts. The one-time `migrate-proxy-settings` action
-imports the previous signed aggregate without overwriting D1 rows and reports
-conflicts for review.
+The unbounded project collection route is intentionally unavailable. Course
+and offering arrays remain because Portal editors currently use them as
+reference data; new collection UIs should use page routes.
 
-Browser-facing API routes stay under `/api`. Current-user resources use the
-`/api/me` namespace, while administrator-only proxy operations use the plural
-`/api/admin/proxies` collection. Portal page URLs such as `/user/proxy` are UI
-routes and are intentionally separate from these API contracts. The duplicate
-`PATCH /api/user/permissions` route has been retired; administrators update one
-user through `PATCH /api/admin/users/:email`.
+## Administration and Proxy Settings
+
+| Method                   | Route                               | Purpose                                        |
+| ------------------------ | ----------------------------------- | ---------------------------------------------- |
+| `GET`                    | `/api/admin/users/page`             | list a bounded page of users                   |
+| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           | manage one permission record                   |
+| `GET`                    | `/api/admin/proxies/page`           | list proxy settings from D1                    |
+| `POST`                   | `/api/admin/proxies/reset-attempts` | reset one user's edit attempts                 |
+| `GET`, `POST`            | `/api/me/proxy`                     | read or edit the current user's proxy settings |
+| `GET`                    | `/api/admin/actions`                | list reviewed administrative actions           |
+| `POST`                   | `/api/admin/actions/:actionId`      | run a confirmation-gated action                |
+
+These routes require a non-blacklisted super-admin except `/api/me/proxy`.
+Users cannot reset their own attempt counter. Proxy edits use one atomic D1
+statement to enforce the attempt limit.
+
+Current one-time actions are `migrate-legacy-auth` and
+`migrate-proxy-settings`. Remove each action only after its production migration
+and conflict review are confirmed.
 
 ## Internal GitHub App API
 
-Every route requires `X-Internal-Secret`. It is not a browser API.
+Every route requires `X-Internal-Secret`. Operation reads also require
+`X-Actor-Subject-Id`; trusted admin reads set `X-Actor-Admin: true`.
 
-Route groups:
+| Route group                    | Responsibility                                         |
+| ------------------------------ | ------------------------------------------------------ |
+| `/operations/:operationId`     | read or request cancellation of durable work           |
+| `/user/repository-permission`  | update repository access configuration                 |
+| `/people/public-profile*`      | read profile state and manage profile PRs/operations   |
+| `/people/student-placement/pr` | manage placement metadata PRs                          |
+| `/projects/public-project*`    | read project state and manage project PRs/operations   |
+| `/academic/public-course*`     | read academic state and manage academic PRs/operations |
 
-- `/user/repository-permission`
-- `/people/public-profile` and `/people/public-profile/pr`
-- `/people/student-placement/pr`
-- `/projects/public-project` and `/projects/public-project/pr`
-- `/projects/public-projects`
-- `/academic/public-course` and `/academic/public-course/pr`
-- `/academic/public-courses`
-- `/academic/public-course-offering` and its PR route
-- `/academic/public-course-offerings`
-
-Portal mutations use the idempotent operation routes and receive `202 Accepted`
-operation resources. The synchronous internal routes remain compatibility
-adapters for clients that do not send `Prefer: respond-async`; no confirmed
-external consumer was found during the final inventory. Remove them only with
-a coordinated contract change, or after production access evidence confirms
-that no caller depends on them.
+The `POST .../operations` routes are the durable mutation entry points. Some
+synchronous PR routes remain compatibility adapters for trusted callers. Do not
+remove them without production caller evidence and a coordinated contract
+change.
 
 ## Mailer API
 
@@ -244,4 +243,15 @@ that no caller depends on them.
 
 `to` contains 1–50 valid addresses, `subject` is required, and at least one of
 `html` or `text` is required. Success returns `{ "ok": true }`; validation,
-authentication, and SMTP failures return `400`, `401`, and `502` respectively.
+authentication, and upstream SMTP failures return `400`, `401`, and `502`.
+
+## Changing a Contract
+
+1. Find every producer and consumer, including tests and separate repositories.
+2. Change or add the `@scs/schemas` contract first when it is shared.
+3. Prefer additive versioned changes over silently changing existing meaning.
+4. Add boundary tests for success, invalid input, authorization, conflict, and
+   retry behavior.
+5. Update Portal/API/GitHub App clients together when the contract spans them.
+6. Update this document, [Schemas](SCHEMAS.md), and
+   [Operations](OPERATIONS.md) when applicable.

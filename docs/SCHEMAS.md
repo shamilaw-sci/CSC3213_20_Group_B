@@ -1,87 +1,143 @@
 # Schemas
 
-## Ownership
+`@scs/schemas` is the shared runtime-contract package. It uses Zod so the same
+definition validates external values and provides inferred TypeScript types.
 
-`@scs/schemas` owns shared Zod schemas and inferred TypeScript types used across
-applications, services, and data validation. It is private to the monorepo in
-the current baseline and exported from `packages/schemas/src/index.ts`.
+## What Belongs Here
 
-The package covers:
+The package owns contracts shared by more than one workspace or repository:
 
-- academic years, periods, programs, and organizations;
-- people identifiers, profiles, social links, students, and staff subtypes;
-- courses, course codes, staff assignments, and offerings;
+- academic years, periods, organizations, programs, courses, and offerings;
+- people identifiers, profiles, students, staff, research, and publications;
 - projects and their people/course relationships;
-- research records, publications, and conferences.
+- API errors, pagination, durable operations, and mutation control.
 
-## Import Pattern
+Provider credentials, Worker bindings, component props used by one app, and
+internal implementation state stay with their owner.
 
-```ts
-import { CourseSchema, ProjectSchema, StaffSchema } from '@scs/schemas';
+## Package Layout
+
+```text
+packages/schemas/
+  src/
+    schemas/       domain and transport schemas
+    index.ts       supported public exports
+  tests/           accepted and rejected examples
+  tsconfig.json
+  tsconfig.test.json
 ```
 
-Use inferred types from the schema package rather than maintaining a parallel
-interface for the same cross-workspace record.
+Consumers import only the public package API:
 
-## Domain Relationships
+```ts
+import { CourseSchema, ProjectSchema, type Project } from '@scs/schemas';
+```
+
+Do not deep-import package source or create a parallel interface for the same
+record. Infer types from the schema whenever the runtime and TypeScript shape
+must remain identical.
+
+## Domain Map
 
 ```mermaid
 flowchart TD
   Organization --> Program
   AcademicYear --> AcademicPeriod
-  AcademicPeriod --> CourseOffering
-  Course --> CourseOffering
+  Course --> Offering[Course offering]
+  AcademicPeriod --> Offering
   Person --> Student
   Person --> Staff
-  Project --> Person
-  Project --> CourseOffering
   Person --> Research
   Research --> Publication
   Publication --> Conference
+  Project --> Person
+  Project --> Course
+  Project --> Offering
 ```
 
-People schemas form discriminated or validated unions for student and staff
-records. Staff variants include academic teaching, academic support, and
-non-academic staff. Identifiers such as academic usernames and student numbers
-have dedicated schemas instead of free-form strings.
-
-Project schemas validate identity, people, status, classification, links, and
-optional course-project relationships. Course offerings connect a course to an
-academic period and delivery metadata.
+Dedicated identifier schemas prevent arbitrary strings from crossing domain
+boundaries. Person records validate student and staff variants; staff variants
+cover academic teaching, academic support, and non-academic roles.
 
 ## Validation Boundaries
 
-Validate untrusted JSON at its entry point:
+```mermaid
+flowchart LR
+  External[Request, env, GitHub JSON, public data] --> Parse[Zod parse/safeParse]
+  Parse -->|valid| Domain[Typed domain value]
+  Parse -->|invalid| Error[Bounded validation error]
+  Domain --> Logic[Pure domain/application logic]
+```
 
-- API request bodies;
-- GitHub-backed record reads;
-- generated aggregate/projection inputs;
-- public data consumed by applications;
-- tests and fixtures.
+Validate at entry points:
 
-Do not repeatedly parse already validated data inside pure domain functions.
-Do not use TypeScript assertions as a substitute for runtime validation at an
-external boundary.
+- API request bodies and query values;
+- GitHub-backed files and provider responses;
+- public JSON loaded by applications;
+- generated projection inputs and outputs;
+- environment configuration;
+- tests and fixtures representing external data.
 
-## Compatibility
+Do not repeatedly parse an already validated value inside pure functions. Do
+not replace runtime validation with a TypeScript assertion.
 
-Additive compatible changes may extend schemas with optional or defaulted
-fields. A change that rejects previously valid published data or alters a
-required field needs a versioned migration across producers and consumers.
+## Adding or Changing a Schema
 
-Shared transport contracts for errors, operations, pagination, and mutations
-will also live in this package. Provider-specific environment/configuration
-schemas stay within their service.
+1. Find all producers and consumers with `rg`.
+2. Decide whether the change is compatible, versioned, or requires migration.
+3. Add the smallest schema in the relevant domain folder.
+4. Export it intentionally from `src/index.ts`.
+5. Infer and export a type only when consumers need it.
+6. Add accepted canonical examples and rejected boundary cases under `tests`.
+7. Update API/data producers before relying on the new field in consumers.
+8. Run the package gate and all affected workspace gates.
+9. Update [API Contracts](API_CONTRACTS.md) or
+   [Environment Variables](ENVIRONMENT_VARIABLES.md) if the boundary changed.
 
-## Package Verification
+## Compatibility Rules
+
+| Change                      | Typical treatment                                          |
+| --------------------------- | ---------------------------------------------------------- |
+| new optional field          | additive; consumers must tolerate absence                  |
+| field with a safe default   | additive if every producer/consumer agrees                 |
+| required field              | coordinated producer migration before consumer requirement |
+| renamed or removed field    | versioned migration; do not silently reinterpret           |
+| narrower enum or validation | verify all published records before rollout                |
+| transport meaning change    | new version or documented compatibility window             |
+
+Published data may outlive one application deployment. A schema change is not
+safe merely because TypeScript compiles in the monorepo.
+
+## Projection Schemas
+
+Individual people, project, course, and offering files are authoritative.
+Aggregates, manifests, search indexes, and `by-person` lists are projections.
+Projection generators should validate authoritative inputs and generated
+outputs, sort deterministically, remove stale derived files, and pass an
+idempotence check.
+
+## API Transport Schemas
+
+Shared API contracts include:
+
+- `ApiErrorEnvelopeSchema` for stable machine-readable errors;
+- `PaginationRequestSchema` and page metadata for bounded lists;
+- `MutationControlSchema` for idempotency and expected revisions;
+- accepted/status/outcome schemas for durable operations.
+
+Keep provider-specific GitHub or Cloudflare payloads behind adapters rather
+than exposing them as public contracts.
+
+## Verification
 
 ```powershell
 bun --filter '@scs/schemas' lint
 bun --filter '@scs/schemas' typecheck
+bun --filter '@scs/schemas' typecheck:test
 bun --filter '@scs/schemas' test
 bun --filter '@scs/schemas' build
 ```
 
-The public-export test must be updated when intentional exports change. Domain
-fixtures should exercise both accepted canonical records and rejected boundary
-cases.
+The public-export test must change with intentional exports. After changing a
+shared schema, run lint, typecheck, tests, and builds for every affected
+consumer, then the root gate.
