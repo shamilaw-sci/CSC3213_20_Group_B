@@ -17,7 +17,6 @@ const runtimeConfig = parseRuntimeConfig({
   GITHUB_PRIVATE_KEY: 'private-key',
   GITHUB_INSTALLATION_ID: '456',
   GITHUB_OWNER: 'scs-pdn',
-  GITHUB_CONFIG_REPOSITORY: 'config.scs.pdn.ac.lk',
   GITHUB_PEOPLE_DATA_REPOSITORY: 'data.scs.pdn.ac.lk',
   GITHUB_PROJECTS_DATA_REPOSITORY: 'data.scs.pdn.ac.lk',
   X_INTERNAL_SECRET: 'internal-secret',

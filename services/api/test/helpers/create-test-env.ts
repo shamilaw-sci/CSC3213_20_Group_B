@@ -12,7 +12,9 @@ function createTestD1Database(): D1Database {
     CREATE TABLE "passkey" ("id" text NOT NULL PRIMARY KEY, "name" text, "publicKey" text NOT NULL, "userId" text NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE, "credentialID" text NOT NULL, "counter" integer NOT NULL, "deviceType" text NOT NULL, "backedUp" integer NOT NULL, "transports" text, "createdAt" integer, "aaguid" text);
     CREATE TABLE "rateLimit" ("id" text NOT NULL PRIMARY KEY, "key" text NOT NULL UNIQUE, "count" integer NOT NULL, "lastRequest" integer NOT NULL);
     CREATE TABLE "proxySettings" ("email" text NOT NULL PRIMARY KEY, "username" text NOT NULL, "active" integer NOT NULL DEFAULT 0 CHECK ("active" IN (0, 1)), "url" text NOT NULL DEFAULT '', "availableAttempts" integer NOT NULL DEFAULT 5 CHECK ("availableAttempts" BETWEEN 0 AND 5), "attemptWindowStartedAt" integer, "updatedAt" integer, "updatedBy" text, "revision" integer NOT NULL DEFAULT 1);
+    CREATE TABLE "permission" ("email" text NOT NULL PRIMARY KEY COLLATE NOCASE, "permissionJson" text NOT NULL CHECK (json_valid("permissionJson")), "role" text NOT NULL CHECK ("role" IN ('USER', 'OTHER', 'STUDENT', 'ACADEMIC', 'NON_ACADEMIC', 'ACADEMIC_SUPPORT')), "accessLevel" text NOT NULL DEFAULT 'NONE' CHECK ("accessLevel" IN ('NONE', 'ADMIN', 'SUPER_ADMIN')), "name" text NOT NULL DEFAULT '', "picture" text NOT NULL DEFAULT '', "blacklisted" integer NOT NULL DEFAULT 0 CHECK ("blacklisted" IN (0, 1)), "createdAt" integer);
     CREATE INDEX "proxySettings_updatedAt_idx" ON "proxySettings" ("updatedAt");
+    CREATE INDEX "permission_accessLevel_idx" ON "permission" ("accessLevel");
     CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("providerId", "accountId");
     CREATE UNIQUE INDEX "passkey_credentialID_unique" ON "passkey" ("credentialID");
   `);
@@ -87,45 +89,6 @@ function createTestD1Database(): D1Database {
   } as unknown as D1Database;
 }
 
-function createTestKvNamespace(): KVNamespace {
-  const values = new Map<string, { value: string; metadata?: unknown }>();
-
-  return {
-    async get(key: string): Promise<string | null> {
-      return values.get(key)?.value ?? null;
-    },
-    async put(
-      key: string,
-      value: string,
-      options?: KVNamespacePutOptions
-    ): Promise<void> {
-      values.set(key, { value, metadata: options?.metadata });
-    },
-    async delete(key: string): Promise<void> {
-      values.delete(key);
-    },
-    async list(options?: KVNamespaceListOptions) {
-      const prefix = options?.prefix ?? '';
-      const cursor = Number(options?.cursor ?? 0);
-      const limit = options?.limit ?? 1000;
-      const matching = [...values.entries()]
-        .filter(([key]) => key.startsWith(prefix))
-        .sort(([left], [right]) => left.localeCompare(right));
-      const end = Math.min(cursor + limit, matching.length);
-      const listComplete = end >= matching.length;
-      return {
-        keys: matching.slice(cursor, end).map(([name, entry]) => ({
-          name,
-          metadata: entry.metadata,
-        })),
-        list_complete: listComplete,
-        ...(listComplete ? {} : { cursor: String(end) }),
-        cacheStatus: null,
-      };
-    },
-  } as unknown as KVNamespace;
-}
-
 export function createTestEnv(overrides: Partial<Env> = {}): Env {
   return {
     AUTH_DB: createTestD1Database(),
@@ -135,14 +98,10 @@ export function createTestEnv(overrides: Partial<Env> = {}): Env {
     GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
     GITHUB_CLIENT_ID: 'test-github-client-id',
     GITHUB_CLIENT_SECRET: 'test-github-client-secret',
-    PERMISSIONS: createTestKvNamespace(),
     MAILER_API_URL: 'https://mailer.test.scs-pdn.space',
     MAILER_API_KEY: 'test-mailer-api-key',
     GITHUB_APP_API_URL: 'https://github-app.test.scs-pdn.space',
     GITHUB_APP_INTERNAL_SECRET: 'test-github-app-internal-secret',
-    CONFIG_DATA_BASE_URL: 'https://config.test.scs-pdn.space',
-    CONFIG_ACCESS_TOKEN_SECRET: 'test-config-access-token-secret',
-    CONFIG_ACCESS_TOKEN_ISSUER: 'test.scs-pdn.space',
     DATA_PUBLIC_BASE_URL: 'https://data.test.scs-pdn.space',
     ...overrides,
   };

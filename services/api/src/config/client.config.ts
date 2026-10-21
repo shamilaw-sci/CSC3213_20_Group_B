@@ -23,8 +23,5 @@ export const PASSKEY_RP_IDS: Record<string, string> = {
 export const PROXY_DEFAULT_AVAILABLE_ATTEMPTS = 5;
 export const PROXY_ATTEMPTS_RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-export const PERMISSION_LIST_PAGE_LIMIT = 100;
-export const PERMISSION_BATCH_SIZE = 50;
-
 export const PROFILE_NAME_MAX_LENGTH = 100;
 export const PROFILE_PICTURE_MAX_LENGTH = 2048;

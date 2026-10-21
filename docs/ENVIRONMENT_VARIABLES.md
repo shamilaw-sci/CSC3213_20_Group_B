@@ -107,12 +107,10 @@ CORS policy, passkey relying-party rules, and cookie domain behavior.
 `services/api/wrangler.jsonc` defines non-secret runtime values:
 
 - `BETTER_AUTH_URL`
-- `CONFIG_ACCESS_TOKEN_ISSUER`
 - `GOOGLE_CLIENT_ID`
 - `GITHUB_CLIENT_ID`
 - `MAILER_API_URL`
 - `GITHUB_APP_API_URL`
-- `CONFIG_DATA_BASE_URL`
 - `DATA_PUBLIC_BASE_URL`
 
 ### Secrets
@@ -124,7 +122,6 @@ Local names are listed in `services/api/.dev.vars.example`:
 - `GITHUB_CLIENT_SECRET`
 - `MAILER_API_KEY`
 - `GITHUB_APP_INTERNAL_SECRET`
-- `CONFIG_ACCESS_TOKEN_SECRET`
 
 Configure production secrets from `services/api`:
 
@@ -134,20 +131,14 @@ wrangler secret put GOOGLE_CLIENT_SECRET
 wrangler secret put GITHUB_CLIENT_SECRET
 wrangler secret put MAILER_API_KEY
 wrangler secret put GITHUB_APP_INTERNAL_SECRET
-wrangler secret put CONFIG_ACCESS_TOKEN_SECRET
 ```
-
-`CONFIG_DATA_BASE_URL`, `CONFIG_ACCESS_TOKEN_ISSUER`, and
-`CONFIG_ACCESS_TOKEN_SECRET` support the one-time proxy migration. Remove the
-inputs with that migration action only after production verification.
 
 ### Bindings
 
-| Binding       | Type            | Ownership                                              |
-| ------------- | --------------- | ------------------------------------------------------ |
-| `AUTH_DB`     | D1              | Better Auth, rate limits, passkeys, and proxy settings |
-| `PERMISSIONS` | KV              | roles, access levels, blacklist, and preferences       |
-| `GITHUB_APP`  | service binding | preferred private call path to the GitHub App Worker   |
+| Binding      | Type            | Ownership                                            |
+| ------------ | --------------- | ---------------------------------------------------- |
+| `AUTH_DB`    | D1              | auth, rate limits, permissions, and proxy settings   |
+| `GITHUB_APP` | service binding | preferred private call path to the GitHub App Worker |
 
 `GITHUB_APP_API_URL` is the independently deployable HTTP fallback.
 
@@ -159,7 +150,6 @@ inputs with that migration action only after production verification.
 | `GITHUB_PRIVATE_KEY`              | secret        | required; escaped newlines are normalized   |
 | `GITHUB_INSTALLATION_ID`          | configuration | installation identifier                     |
 | `GITHUB_OWNER`                    | configuration | repository owner                            |
-| `GITHUB_CONFIG_REPOSITORY`        | configuration | config repository name                      |
 | `GITHUB_PEOPLE_DATA_REPOSITORY`   | configuration | people data repository name                 |
 | `GITHUB_PROJECTS_DATA_REPOSITORY` | configuration | project data repository name                |
 | `X_INTERNAL_SECRET`               | secret        | must match API `GITHUB_APP_INTERNAL_SECRET` |

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { APP_ROLE } from '@/repositories/permissions.repo';
+import { APP_ROLE, setUserPermission } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -40,9 +40,10 @@ async function setup() {
       },
     } as unknown as NonNullable<Env['GITHUB_APP']>,
   });
-  await env.PERMISSIONS.put(
-    `permissions:${EMAIL}`,
-    JSON.stringify({ role: APP_ROLE.ACADEMIC, createdAt: 1 })
+  await setUserPermission(
+    EMAIL,
+    { role: APP_ROLE.ACADEMIC, createdAt: 1 },
+    env
   );
   const sessionCookie = await createTestSessionCookie(env, EMAIL);
   const headers = {

@@ -1,8 +1,4 @@
 import type { Env } from '@/types/env';
-import {
-  PERMISSION_BATCH_SIZE,
-  PERMISSION_LIST_PAGE_LIMIT,
-} from '@/config/client.config';
 
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
 
@@ -46,7 +42,7 @@ const PROFILE_PICTURE_MODES = [
 export type ProfilePictureMode = (typeof PROFILE_PICTURE_MODES)[number];
 
 /**
- * Stored in KV. `role` identifies the person category; `accessLevel` is an
+ * Stored in API D1. `role` identifies the person category; `accessLevel` is an
  * independent management grant and must not be inferred from that role.
  */
 export interface Permission {
@@ -222,53 +218,16 @@ function permissionUserData(email: string, permission: Permission): UserData {
   };
 }
 
-function isUserData(value: unknown): value is UserData {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return false;
-  }
-  const candidate = value as Partial<UserData>;
-  return (
-    typeof candidate.email === 'string' &&
-    typeof candidate.name === 'string' &&
-    typeof candidate.picture === 'string' &&
-    isAppRole(candidate.role) &&
-    isAccessLevel(candidate.accessLevel) &&
-    typeof candidate.blacklisted === 'boolean'
-  );
-}
-
 export async function hasOtherSuperAdmin(
   email: string,
   env: Env
 ): Promise<boolean> {
-  const targetEmail = email.toLowerCase();
-  let cursor: string | undefined;
-
-  do {
-    const result = await env.PERMISSIONS.list({
-      prefix: 'permissions:',
-      cursor,
-      limit: PERMISSION_LIST_PAGE_LIMIT,
-    });
-
-    for (const kvKey of result.keys) {
-      const currentEmail = kvKey.name.slice('permissions:'.length);
-      if (currentEmail.toLowerCase() === targetEmail) continue;
-
-      const permission = await getUserPermission(currentEmail, env);
-      if (isSuperAdmin(permission)) {
-        return true;
-      }
-    }
-
-    cursor = result.list_complete ? undefined : result.cursor;
-  } while (cursor);
-
-  return false;
-}
-
-function key(email: string): string {
-  return `permissions:${email.toLowerCase()}`;
+  const result = await env.AUTH_DB.prepare(
+    'SELECT 1 AS present FROM permission WHERE accessLevel = ? AND email <> ? LIMIT 1'
+  )
+    .bind(ACCESS_LEVEL.SUPER_ADMIN, email.toLowerCase())
+    .first<{ present: number }>();
+  return result !== null;
 }
 
 export async function getUserPermission(
@@ -276,12 +235,15 @@ export async function getUserPermission(
   env: Env
 ): Promise<Permission | null> {
   const sanitizedEmail = email.toLowerCase();
-  const data = await env.PERMISSIONS.get(key(sanitizedEmail));
-
-  if (!data) return null;
+  const row = await env.AUTH_DB.prepare(
+    'SELECT permissionJson FROM permission WHERE email = ? LIMIT 1'
+  )
+    .bind(sanitizedEmail)
+    .first<{ permissionJson: string }>();
+  if (!row) return null;
 
   try {
-    return sanitizePermission(JSON.parse(data) as Permission);
+    return sanitizePermission(JSON.parse(row.permissionJson) as Permission);
   } catch {
     return null;
   }
@@ -294,11 +256,31 @@ export async function setUserPermission(
 ): Promise<void> {
   const sanitizedEmail = email.toLowerCase();
   const sanitizedPermission = sanitizePermission(permission);
-  await env.PERMISSIONS.put(
-    key(sanitizedEmail),
-    JSON.stringify(sanitizedPermission),
-    { metadata: permissionUserData(sanitizedEmail, sanitizedPermission) }
-  );
+  const user = permissionUserData(sanitizedEmail, sanitizedPermission);
+  await env.AUTH_DB.prepare(
+    `INSERT INTO permission (
+      email, permissionJson, role, accessLevel, name, picture, blacklisted, createdAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(email) DO UPDATE SET
+      permissionJson = excluded.permissionJson,
+      role = excluded.role,
+      accessLevel = excluded.accessLevel,
+      name = excluded.name,
+      picture = excluded.picture,
+      blacklisted = excluded.blacklisted,
+      createdAt = excluded.createdAt`
+  )
+    .bind(
+      sanitizedEmail,
+      JSON.stringify(sanitizedPermission),
+      user.role,
+      user.accessLevel,
+      user.name,
+      user.picture,
+      user.blacklisted ? 1 : 0,
+      user.createdAt ?? null
+    )
+    .run();
 }
 
 export async function deleteUserPermission(
@@ -306,7 +288,9 @@ export async function deleteUserPermission(
   env: Env
 ): Promise<void> {
   const sanitizedEmail = email.toLowerCase();
-  await env.PERMISSIONS.delete(key(sanitizedEmail));
+  await env.AUTH_DB.prepare('DELETE FROM permission WHERE email = ?')
+    .bind(sanitizedEmail)
+    .run();
 }
 
 export async function setNotificationPreferences(
@@ -322,53 +306,42 @@ export async function setNotificationPreferences(
   await setUserPermission(email, permission, env);
 }
 
-/**
- * Reads summaries from KV key metadata to avoid one KV read per user. Records
- * written before metadata existed are read once and backfilled in bounded
- * batches; do not replace this with an unbounded `Promise.all`.
- */
 export async function getUserDataPage(
   env: Env,
   input: { cursor?: string; limit: number }
 ): Promise<UserDataPage> {
-  const result = await env.PERMISSIONS.list<UserData>({
-    prefix: 'permissions:',
-    cursor: input.cursor,
-    limit: input.limit,
-  });
-  const users: UserData[] = [];
-
-  for (
-    let start = 0;
-    start < result.keys.length;
-    start += PERMISSION_BATCH_SIZE
-  ) {
-    const keys = result.keys.slice(start, start + PERMISSION_BATCH_SIZE);
-    const fallbackPermissions = await Promise.all(
-      keys.map(async (kvKey) => {
-        if (isUserData(kvKey.metadata)) return null;
-        const email = kvKey.name.slice('permissions:'.length);
-        const permission = await getUserPermission(email, env);
-        if (permission) await setUserPermission(email, permission, env);
-        return permission;
-      })
-    );
-
-    for (let index = 0; index < keys.length; index += 1) {
-      const kvKey = keys[index];
-      if (isUserData(kvKey.metadata)) {
-        users.push(kvKey.metadata);
-        continue;
-      }
-      const permission = fallbackPermissions[index];
-      if (!permission) continue;
-      const email = kvKey.name.slice('permissions:'.length);
-      users.push(permissionUserData(email, permission));
-    }
-  }
+  const rows = await env.AUTH_DB.prepare(
+    `SELECT email, name, picture, role, accessLevel, blacklisted, createdAt
+     FROM permission
+     WHERE email > ?
+     ORDER BY email
+     LIMIT ?`
+  )
+    .bind(input.cursor ?? '', input.limit + 1)
+    .all<{
+      email: string;
+      name: string;
+      picture: string;
+      role: AppRole;
+      accessLevel: AccessLevel;
+      blacklisted: number;
+      createdAt: number | null;
+    }>();
+  const hasMore = rows.results.length > input.limit;
+  const pageRows = rows.results.slice(0, input.limit);
+  const users = pageRows.map((row) => ({
+    id: row.email,
+    email: row.email,
+    name: row.name,
+    picture: row.picture,
+    role: row.role,
+    accessLevel: row.accessLevel,
+    blacklisted: row.blacklisted === 1,
+    ...(row.createdAt === null ? {} : { createdAt: row.createdAt }),
+  }));
 
   return {
     users,
-    nextCursor: result.list_complete ? null : result.cursor,
+    nextCursor: hasMore ? (pageRows.at(-1)?.email ?? null) : null,
   };
 }

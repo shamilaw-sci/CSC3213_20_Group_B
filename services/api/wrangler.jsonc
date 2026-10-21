@@ -15,12 +15,10 @@
   ],
   "vars": {
     "BETTER_AUTH_URL": "https://api.scs-pdn.space",
-    "CONFIG_ACCESS_TOKEN_ISSUER": "api.scs-pdn.space",
     "GOOGLE_CLIENT_ID": "745767843751-p01q3t3sat4m38ae7fp51c7h88gnvjqv.apps.googleusercontent.com",
     "GITHUB_CLIENT_ID": "Ov23lieXg7aKWvl5dC0M",
     "MAILER_API_URL": "https://mailer.scs-pdn.space",
     "GITHUB_APP_API_URL": "https://gh.scs-pdn.space",
-    "CONFIG_DATA_BASE_URL": "https://config.scs-pdn.space",
     "DATA_PUBLIC_BASE_URL": "https://data.scs-pdn.space"
   },
   "d1_databases": [
@@ -35,12 +33,6 @@
     {
       "binding": "GITHUB_APP",
       "service": "scs-portal-github-app"
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "PERMISSIONS",
-      "id": "8ec7ba8609354d1187e562a56a82fca1"
     }
   ],
   "observability": {

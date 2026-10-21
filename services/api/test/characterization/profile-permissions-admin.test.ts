@@ -3,6 +3,8 @@ import { afterEach, describe, expect, mock, spyOn, test } from 'bun:test';
 import {
   ACCESS_LEVEL,
   APP_ROLE,
+  getUserPermission,
+  setUserPermission as persistUserPermission,
   type Permission,
 } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
@@ -34,18 +36,17 @@ async function setPermission(
   email: string,
   permission: Partial<Permission>
 ): Promise<void> {
-  await env.PERMISSIONS.put(
-    `permissions:${email.toLowerCase()}`,
-    JSON.stringify({ ...permission, role: permission.role ?? APP_ROLE.STUDENT })
+  await persistUserPermission(
+    email,
+    { ...permission, role: permission.role ?? APP_ROLE.STUDENT },
+    env
   );
 }
 
 async function getPermission(env: Env, email: string): Promise<Permission> {
-  const stored = await env.PERMISSIONS.get(
-    `permissions:${email.toLowerCase()}`
-  );
+  const stored = await getUserPermission(email, env);
   expect(stored).not.toBeNull();
-  return JSON.parse(stored!) as Permission;
+  return stored!;
 }
 
 function apiRequest(
@@ -170,6 +171,7 @@ describe('/api/me characterization', () => {
     expect(await response.text()).toBe('Forbidden');
     expect(await getPermission(env, USER_EMAIL)).toEqual({
       role: APP_ROLE.USER,
+      accessLevel: ACCESS_LEVEL.NONE,
       name: 'Restricted User',
     });
   });
@@ -314,6 +316,7 @@ describe('/api/me/notifications characterization', () => {
     expect(await response.text()).toBe('Forbidden');
     expect(await getPermission(env, USER_EMAIL)).toEqual({
       role: APP_ROLE.USER,
+      accessLevel: ACCESS_LEVEL.NONE,
       notifications: { email: false, push: false },
     });
   });
@@ -480,168 +483,6 @@ describe('/api/admin/users/:email characterization', () => {
     expect(await getPermission(env, ADMIN_EMAIL)).toMatchObject({
       role: APP_ROLE.USER,
       accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-    });
-  });
-});
-
-describe('/api/admin/actions characterization', () => {
-  test('lists schema-described actions for a super-admin', async () => {
-    const env = createTestEnv();
-    const token = await createAdminContext(env);
-
-    const response = await apiRequest('/api/admin/actions', 'GET', env, {
-      token,
-    });
-
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      schemaVersion: number;
-      actions: Array<{ id: string; requestSchema: unknown }>;
-    };
-    expect(body.schemaVersion).toBe(1);
-    expect(body.actions.map((action) => action.id)).toEqual([
-      'migrate-legacy-auth',
-      'migrate-proxy-settings',
-    ]);
-    expect(body.actions[0]?.requestSchema).toBeDefined();
-  });
-
-  test('requires confirmation and runs the legacy auth migration', async () => {
-    const env = createTestEnv();
-    const token = await createAdminContext(env);
-    await env.PERMISSIONS.put(
-      `permissions:${USER_EMAIL}`,
-      JSON.stringify({
-        role: APP_ROLE.STUDENT,
-        name: 'Test Student',
-        githubUserID: 12345,
-      })
-    );
-
-    const rejected = await apiRequest(
-      '/api/admin/actions/migrate-legacy-auth',
-      'POST',
-      env,
-      { token, body: { confirmation: 'migrate' } }
-    );
-    expect(rejected.status).toBe(400);
-
-    const response = await apiRequest(
-      '/api/admin/actions/migrate-legacy-auth',
-      'POST',
-      env,
-      {
-        token,
-        body: {
-          confirmation:
-            'Migrate legacy GitHub identities and passkeys into Better Auth.',
-        },
-      }
-    );
-
-    expect(response.status).toBe(200);
-    expect((await response.json()) as unknown).toMatchObject({
-      scanned: 2,
-      usersCreated: 1,
-      githubAccountsCreated: 1,
-      permissionsCleaned: 1,
-      conflicts: [],
-    });
-    expect(
-      await env.AUTH_DB.prepare(
-        'SELECT accountId FROM account WHERE providerId = ?'
-      )
-        .bind('github')
-        .first<{ accountId: string }>()
-    ).toEqual({ accountId: '12345' });
-    expect(await getPermission(env, USER_EMAIL)).toEqual({
-      role: APP_ROLE.STUDENT,
-      accessLevel: ACCESS_LEVEL.NONE,
-      name: 'Test Student',
-    });
-  });
-
-  test('idempotently migrates legacy proxy settings into D1', async () => {
-    const env = createTestEnv();
-    const token = await createAdminContext(env);
-    globalThis.fetch = mock(async () =>
-      Response.json({
-        schemaVersion: 1,
-        generatedAt: '2026-07-28T12:00:00.000Z',
-        users: {
-          [USER_EMAIL]: {
-            username: 'student',
-            proxy: {
-              active: true,
-              url: 'https://proxy.example/student',
-              availableAttempts: 3,
-              updatedAt: '2026-07-28T11:00:00.000Z',
-              updatedBy: ADMIN_EMAIL,
-            },
-          },
-        },
-      })
-    ) as unknown as typeof fetch;
-
-    const run = () =>
-      apiRequest('/api/admin/actions/migrate-proxy-settings', 'POST', env, {
-        token,
-        body: { confirmation: 'Migrate legacy proxy settings into D1.' },
-      });
-    const first = await run();
-    const second = await run();
-    const row = await env.AUTH_DB.prepare(
-      'SELECT active, url, availableAttempts, attemptWindowStartedAt, updatedBy FROM proxySettings WHERE email = ?'
-    )
-      .bind(USER_EMAIL)
-      .first<{
-        active: number;
-        url: string;
-        availableAttempts: number;
-        attemptWindowStartedAt: number;
-        updatedBy: string;
-      }>();
-
-    expect(first.status).toBe(200);
-    expect(await first.json()).toMatchObject({
-      scanned: 1,
-      created: 1,
-      alreadyPresent: 0,
-      conflicts: [],
-    });
-    expect(second.status).toBe(200);
-    expect(await second.json()).toMatchObject({
-      scanned: 1,
-      created: 0,
-      alreadyPresent: 1,
-      conflicts: [],
-    });
-    expect(row).toEqual({
-      active: 1,
-      url: 'https://proxy.example/student',
-      availableAttempts: 3,
-      attemptWindowStartedAt: Date.parse('2026-07-28T11:00:00.000Z'),
-      updatedBy: ADMIN_EMAIL,
-    });
-  });
-
-  test('returns not found for unknown admin actions', async () => {
-    const env = createTestEnv();
-    const token = await createAdminContext(env);
-
-    const response = await apiRequest(
-      '/api/admin/actions/unknown-action',
-      'POST',
-      env,
-      {
-        token,
-        body: { mode: 'apply' },
-      }
-    );
-
-    expect(response.status).toBe(404);
-    expect((await response.json()) as unknown).toEqual({
-      error: 'Action not found',
     });
   });
 });

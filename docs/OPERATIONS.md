@@ -23,14 +23,12 @@ flowchart LR
 
   subgraph Cloudflare state
     D1[(D1)]
-    KV[(KV)]
     DO[(Durable Objects)]
     Queue[Queue + DLQ]
   end
 
   Portal --> API
   API --> D1
-  API --> KV
   API --> GH
   API --> Mailer
   GH --> DO
@@ -42,14 +40,13 @@ Docker is not part of the current build or deployment process.
 
 ## Deployment Units
 
-| Unit              | Runtime           | Local production check         | Deployment owner           |
-| ----------------- | ----------------- | ------------------------------ | -------------------------- |
-| four apps         | Next.js           | workspace `build`              | app hosting platform       |
-| `@scs/api`        | Cloudflare Worker | `wrangler build`               | `wrangler deploy`          |
-| `@scs/github-app` | Cloudflare Worker | `wrangler build`               | `wrangler deploy`          |
-| `@scs/mailer`     | Bun/Hono          | `typecheck` and `check`        | service hosting platform   |
-| public data       | Cloudflare assets | separate repository validation | data repository workflow   |
-| access config     | Cloudflare assets | separate repository validation | config repository workflow |
+| Unit              | Runtime           | Local production check         | Deployment owner         |
+| ----------------- | ----------------- | ------------------------------ | ------------------------ |
+| four apps         | Next.js           | workspace `build`              | app hosting platform     |
+| `@scs/api`        | Cloudflare Worker | `wrangler build`               | `wrangler deploy`        |
+| `@scs/github-app` | Cloudflare Worker | `wrangler build`               | `wrangler deploy`        |
+| `@scs/mailer`     | Bun/Hono          | `typecheck` and `check`        | service hosting platform |
+| public data       | Cloudflare assets | separate repository validation | data repository workflow |
 
 ## Pre-Deployment Checklist
 
@@ -79,7 +76,7 @@ git diff --check
 
 ## API Worker
 
-The API Worker owns Better Auth, D1 migrations, KV permissions, browser API
+The API Worker owns Better Auth, D1 migrations, permissions, browser API
 routes, and the private calls to Mailer and GitHub App.
 
 From `services/api`:
@@ -94,7 +91,7 @@ wrangler deploy
 ```
 
 Configure the secrets listed in [Environment Variables](ENVIRONMENT_VARIABLES.md)
-before deployment. `AUTH_DB`, `PERMISSIONS`, and `GITHUB_APP` bindings must point
+before deployment. `AUTH_DB` and `GITHUB_APP` bindings must point
 to the intended environment.
 
 ### D1 Migrations
@@ -118,24 +115,11 @@ bunx wrangler d1 migrations list scs-portal-auth --remote
 Do not edit an applied migration. Add the next numbered migration, test it, and
 apply it through the serialized workflow.
 
-### One-Time Data Migrations
-
-Two confirmation-gated Portal admin actions remain:
-
-| Action                   | Run after                                                          | Remove after                                                     |
-| ------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `migrate-legacy-auth`    | Better Auth tables and Better Auth-only API are deployed           | identities/passkeys are reviewed and conflicts resolved          |
-| `migrate-proxy-settings` | `0003_proxy_settings.sql` and the D1-backed proxy API are deployed | imported counts/conflicts and Portal proxy behavior are verified |
-
-Both actions are idempotent and conflict-reporting. They do not justify blind
-retries: review conflicts and existing target records first. Remove the action
-and migration-only inputs only after production confirmation.
-
 ## GitHub App Worker
 
 The GitHub App requires minimum repository permissions for contents, branches,
-pull requests, controlled labels/comments, and configured repository-access
-updates. Do not grant organization-wide administration for convenience.
+pull requests, and controlled labels/comments in the data repository. Do not
+grant organization-wide administration for convenience.
 
 From `services/github-app`:
 
@@ -178,7 +162,8 @@ sequenceDiagram
 ```
 
 Same-resource mutations are serialized; different resources can run in
-parallel. Never edit Durable Object state manually.
+parallel. Each Durable Object persists its own SQLite data, separate from API
+D1. Never edit Durable Object state manually.
 
 ## Mailer
 
@@ -195,9 +180,9 @@ bun --filter '@scs/mailer' check
 Verify delivery in a non-production mailbox before enabling a new provider.
 Do not log message bodies, bearer tokens, or SMTP credentials.
 
-## Public Data and Config Repositories
+## Public Data Repository
 
-These repositories are deployed separately from the monorepo.
+This repository is deployed separately from the monorepo.
 
 The data repository generates deterministic people, project, academic,
 manifest, search, and `by-person` projections from authoritative entity files.
@@ -205,10 +190,6 @@ Its pull-request validation checks projection freshness without mutating the
 branch. A serialized recovery workflow may open or refresh one automation PR
 when `main` projections are stale. Deployment must use the exact commit that
 passed data validation.
-
-The config repository validates configuration without formatting or committing
-inside validation jobs. Its update workflow is serialized to reduce conflicts
-between concurrent contributors.
 
 Repository rulesets, required checks, merge queue, auto-merge, and permission
 to create automation PRs are provider settings. Verify them with a real

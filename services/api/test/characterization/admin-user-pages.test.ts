@@ -16,20 +16,6 @@ import { invokeWorker } from 'test/helpers/invoke-worker';
 const ORIGIN = 'https://portal.scs-pdn.space';
 const ADMIN_EMAIL = 'admin@pdn.ac.lk';
 
-function countKvGets(env: Env): () => number {
-  const namespace = env.PERMISSIONS;
-  const originalGet = namespace.get.bind(namespace);
-  let count = 0;
-  env.PERMISSIONS = {
-    ...namespace,
-    get: ((...args: unknown[]) => {
-      count += 1;
-      return Reflect.apply(originalGet, namespace, args);
-    }) as KVNamespace['get'],
-  } as KVNamespace;
-  return () => count;
-}
-
 async function requestPage(env: Env, query: string): Promise<Response> {
   return invokeWorker(
     `/api/admin/users/page${query}`,
@@ -45,7 +31,7 @@ async function requestPage(env: Env, query: string): Promise<Response> {
 }
 
 describe('admin user pages', () => {
-  test('returns bounded metadata pages without one KV get per listed user', async () => {
+  test('returns bounded D1 pages without loading the full user set', async () => {
     const env = createTestEnv();
     await setUserPermission(
       ADMIN_EMAIL,
@@ -67,8 +53,6 @@ describe('admin user pages', () => {
         env
       );
     }
-    const getCount = countKvGets(env);
-
     const firstResponse = await requestPage(env, '?limit=10');
     const first = (await firstResponse.json()) as Page<UserData>;
 
@@ -76,7 +60,6 @@ describe('admin user pages', () => {
     expect(first.items).toHaveLength(10);
     expect(first.page.hasMore).toBe(true);
     expect(first.page.nextCursor).toBeString();
-    expect(getCount()).toBe(2);
 
     const secondResponse = await requestPage(
       env,
@@ -88,7 +71,6 @@ describe('admin user pages', () => {
     expect(
       new Set([...first.items, ...second.items].map((user) => user.email)).size
     ).toBe(20);
-    expect(getCount()).toBe(4);
   });
 
   test('rejects page sizes above the shared maximum', async () => {

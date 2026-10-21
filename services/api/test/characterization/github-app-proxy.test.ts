@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 
-import { ACCESS_LEVEL, APP_ROLE } from '@/repositories/permissions.repo';
+import {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  setUserPermission,
+} from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -26,12 +30,13 @@ async function projectPrRequest(env: Env): Promise<Response> {
 
 async function adminEnv(): Promise<Env> {
   const env = createTestEnv();
-  await env.PERMISSIONS.put(
-    `permissions:${ADMIN_EMAIL}`,
-    JSON.stringify({
+  await setUserPermission(
+    ADMIN_EMAIL,
+    {
       role: APP_ROLE.ACADEMIC,
       accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-    })
+    },
+    env
   );
   return env;
 }

@@ -4,6 +4,7 @@ import { PROXY_ATTEMPTS_RESET_WINDOW_MS } from '@/config/client.config';
 import {
   ACCESS_LEVEL,
   APP_ROLE,
+  setUserPermission as persistUserPermission,
   type Permission,
 } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
@@ -24,9 +25,10 @@ async function setPermission(
   email: string,
   permission: Partial<Permission>
 ): Promise<void> {
-  await env.PERMISSIONS.put(
-    `permissions:${email.toLowerCase()}`,
-    JSON.stringify({ ...permission, role: permission.role ?? APP_ROLE.STUDENT })
+  await persistUserPermission(
+    email,
+    { ...permission, role: permission.role ?? APP_ROLE.STUDENT },
+    env
   );
 }
 

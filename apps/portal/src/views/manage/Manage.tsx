@@ -1,10 +1,4 @@
-import {
-  FolderKanban,
-  GraduationCap,
-  Network,
-  PlaySquare,
-  Users,
-} from 'lucide-react';
+import { FolderKanban, GraduationCap, Network, Users } from 'lucide-react';
 import Link from 'next/link';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
@@ -39,12 +33,6 @@ export default function Manage() {
       href: '/admin/academic-rules',
       description: 'Manage trusted undergraduate, alumni, and SLQF mappings.',
       icon: GraduationCap,
-    },
-    {
-      title: 'Actions',
-      href: '/admin/actions',
-      description: 'Run approved maintenance actions when available.',
-      icon: PlaySquare,
     },
   ];
 

@@ -29,12 +29,12 @@ flowchart LR
   Visitor --> Projects[Project directory]
   Member[Authenticated browser] --> Portal[Management portal]
   Portal --> API[API Worker]
-  API --> Auth[(D1: auth and proxy state)]
-  API --> Permissions[(KV: permissions)]
+  API --> State[(API D1: auth, proxy, and permission state)]
   API --> Mailer[Mailer]
   API --> Automation[GitHub App Worker]
+  Automation --> Operations[(Durable Object SQLite: operations and leases)]
+  Automation <--> Queue[Cloudflare Queue]
   Automation --> DataRepo[data repository]
-  Automation --> ConfigRepo[config repository]
   Web --> PublicData[Published public data]
   People --> PublicData
   Projects --> PublicData
@@ -51,7 +51,7 @@ workspaces.
 | `apps/people`            | `@scs/people`        | Public staff, student, alumni, and profile pages |
 | `apps/projects`          | `@scs/projects`      | Public project discovery and project details     |
 | `apps/portal`            | `@scs/portal`        | Authentication and management workflows          |
-| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, D1, and KV      |
+| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and D1 state    |
 | `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
 | `services/mailer`        | `@scs/mailer`        | Authenticated SMTP delivery API                  |
 | `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
@@ -59,8 +59,8 @@ workspaces.
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
 | `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets                        |
 
-The public data and repository-access configuration repositories are separate
-systems. They are not Bun workspaces in this repository.
+The public data repository is a separate system. It is not a Bun workspace in
+this repository.
 
 ## Daily Commands
 

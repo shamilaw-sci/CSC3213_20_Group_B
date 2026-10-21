@@ -7,10 +7,6 @@ import {
   updateUserPermissions,
 } from '@/services/admin.service';
 import {
-  listAdminActions,
-  runAdminAction,
-} from '@/services/admin-actions.service';
-import {
   getOrCreateUserProxy,
   listAdminProxiesPage,
   resetAdminProxyAttempts,
@@ -343,16 +339,6 @@ const routes: RegisteredRoute[] = [
       }
       return deletePublicOfferingPr(req, env);
     },
-  },
-  {
-    method: 'GET',
-    match: { kind: 'exact', path: '/api/admin/actions' },
-    handler: listAdminActions,
-  },
-  {
-    method: 'POST',
-    match: { kind: 'prefix', path: '/api/admin/actions/' },
-    handler: runAdminAction,
   },
   {
     method: 'GET',

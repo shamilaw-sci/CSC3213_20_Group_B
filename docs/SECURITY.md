@@ -14,12 +14,10 @@ flowchart LR
   Mailer[Private Mailer]
   Providers[GitHub, OAuth, SMTP]
   D1[(D1)]
-  KV[(KV)]
 
   Browser -->|session + validated input| API
   PublicData -->|schema validation| Browser
   API --> D1
-  API --> KV
   API -->|internal secret/service binding| GitHubApp
   API -->|bearer key| Mailer
   GitHubApp --> Providers
@@ -30,7 +28,7 @@ flowchart LR
 - API authentication does not replace per-action authorization.
 - The GitHub App may mutate only configured repositories through validated
   requests.
-- OAuth, SMTP, GitHub, KV, D1, queues, and hosting platforms are external
+- OAuth, SMTP, GitHub, D1, queues, and hosting platforms are external
   systems whose responses and failures must be bounded.
 
 ## Data Classification
@@ -61,10 +59,6 @@ Required properties:
 - verification identifiers and OTP values are not stored as reusable plaintext;
 - rate limits use durable D1 state;
 - protected requests re-read current permission/blacklist state.
-
-The `migrate-legacy-auth` admin action is a temporary, confirmation-gated
-production migration. Remove it after identities, passkeys, and conflicts are
-reviewed.
 
 ## Authorization
 
@@ -98,7 +92,7 @@ See [API Contracts](API_CONTRACTS.md) for status and response contracts.
 Never commit or expose:
 
 - OAuth client secrets;
-- `BETTER_AUTH_SECRET` or config token secrets;
+- `BETTER_AUTH_SECRET`;
 - GitHub App private keys or installation tokens;
 - internal service secrets;
 - mailer API keys or SMTP credentials;

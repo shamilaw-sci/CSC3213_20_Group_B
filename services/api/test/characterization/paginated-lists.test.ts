@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 
-import { ACCESS_LEVEL, APP_ROLE } from '@/repositories/permissions.repo';
+import {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  setUserPermission,
+} from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -74,12 +78,13 @@ describe('paginated list endpoint contracts', () => {
 
   test('registry page routes return bounded stable envelopes with scoped cursors', async () => {
     const env = createTestEnv();
-    await env.PERMISSIONS.put(
-      `permissions:${ADMIN_EMAIL}`,
-      JSON.stringify({
+    await setUserPermission(
+      ADMIN_EMAIL,
+      {
         role: APP_ROLE.ACADEMIC,
         accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
-      })
+      },
+      env
     );
     const cookie = await createTestSessionCookie(env, ADMIN_EMAIL);
     const projects = ['charlie', 'alpha', 'bravo'].map(project);
@@ -151,10 +156,7 @@ describe('paginated list endpoint contracts', () => {
     expect(projectPage.page).toMatchObject({ hasMore: true, total: 3 });
 
     const studentEmail = 'student@pdn.ac.lk';
-    await env.PERMISSIONS.put(
-      `permissions:${studentEmail}`,
-      JSON.stringify({ role: APP_ROLE.STUDENT })
-    );
+    await setUserPermission(studentEmail, { role: APP_ROLE.STUDENT }, env);
     const studentResponse = await invokeWorker(
       '/api/projects/v2/projects/page?limit=2',
       {

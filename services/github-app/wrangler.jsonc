@@ -17,7 +17,6 @@
     "GITHUB_APP_ID": "2772312",
     "GITHUB_INSTALLATION_ID": "110608346",
     "GITHUB_OWNER": "csc3213-2026-group-b",
-    "GITHUB_CONFIG_REPOSITORY": "config.scs.pdn.ac.lk",
     "GITHUB_PEOPLE_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
     "GITHUB_PROJECTS_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
     "PORT": "3000"

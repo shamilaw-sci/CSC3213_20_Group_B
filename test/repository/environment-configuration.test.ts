@@ -37,7 +37,6 @@ const workspaceVariables = {
   ],
   'services/api/.dev.vars.example': [
     'BETTER_AUTH_SECRET',
-    'CONFIG_ACCESS_TOKEN_SECRET',
     'GITHUB_APP_INTERNAL_SECRET',
     'GITHUB_CLIENT_SECRET',
     'GOOGLE_CLIENT_SECRET',
@@ -45,7 +44,6 @@ const workspaceVariables = {
   ],
   'services/github-app/.env.example': [
     'GITHUB_APP_ID',
-    'GITHUB_CONFIG_REPOSITORY',
     'GITHUB_INSTALLATION_ID',
     'GITHUB_OWNER',
     'GITHUB_PEOPLE_DATA_REPOSITORY',

@@ -13,8 +13,8 @@ apply.
 4. Trace callers and consumers before removing an endpoint, export, dependency,
    environment variable, or compatibility path.
 
-Do not modify the separate data, config, or legacy source repositories unless
-the task explicitly includes them.
+Do not modify the separate data or legacy source repositories unless the task
+explicitly includes them.
 
 ## Architecture Rules
 
@@ -36,7 +36,7 @@ the task explicitly includes them.
 
 - Preserve behavior unless the task explicitly changes a contract.
 - Validate untrusted data at the boundary with the owning Zod schema.
-- Keep lists bounded and paginated. Avoid N+1 provider, database, or KV reads.
+- Keep lists bounded and paginated. Avoid N+1 provider or database reads.
 - Make externally retried mutations idempotent and protect updates with entity
   revisions where supported.
 - Put tests in the workspace's `test` or `tests` directory, not beside source.

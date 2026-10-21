@@ -198,16 +198,10 @@ reference data; new collection UIs should use page routes.
 | `GET`                    | `/api/admin/proxies/page`           | list proxy settings from D1                    |
 | `POST`                   | `/api/admin/proxies/reset-attempts` | reset one user's edit attempts                 |
 | `GET`, `POST`            | `/api/me/proxy`                     | read or edit the current user's proxy settings |
-| `GET`                    | `/api/admin/actions`                | list reviewed administrative actions           |
-| `POST`                   | `/api/admin/actions/:actionId`      | run a confirmation-gated action                |
 
 These routes require a non-blacklisted super-admin except `/api/me/proxy`.
 Users cannot reset their own attempt counter. Proxy edits use one atomic D1
 statement to enforce the attempt limit.
-
-Current one-time actions are `migrate-legacy-auth` and
-`migrate-proxy-settings`. Remove each action only after its production migration
-and conflict review are confirmed.
 
 ## Internal GitHub App API
 
@@ -217,7 +211,6 @@ Every route requires `X-Internal-Secret`. Operation reads also require
 | Route group                    | Responsibility                                         |
 | ------------------------------ | ------------------------------------------------------ |
 | `/operations/:operationId`     | read or request cancellation of durable work           |
-| `/user/repository-permission`  | update repository access configuration                 |
 | `/people/public-profile*`      | read profile state and manage profile PRs/operations   |
 | `/people/student-placement/pr` | manage placement metadata PRs                          |
 | `/projects/public-project*`    | read project state and manage project PRs/operations   |

@@ -14,7 +14,6 @@ const processEnv = createEnv({
     GITHUB_PRIVATE_KEY: z.string().min(1),
     GITHUB_INSTALLATION_ID: z.string().min(1),
     GITHUB_OWNER: z.string().min(1),
-    GITHUB_CONFIG_REPOSITORY: z.string().min(1),
     GITHUB_PEOPLE_DATA_REPOSITORY: z.string().min(1),
     GITHUB_PROJECTS_DATA_REPOSITORY: z.string().min(1),
     X_INTERNAL_SECRET: z.string().min(1),

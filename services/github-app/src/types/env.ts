@@ -9,7 +9,6 @@ export interface GithubAppEnv {
   GITHUB_PRIVATE_KEY: string;
   GITHUB_INSTALLATION_ID: string;
   GITHUB_OWNER: string;
-  GITHUB_CONFIG_REPOSITORY: string;
   GITHUB_PEOPLE_DATA_REPOSITORY: string;
   GITHUB_PROJECTS_DATA_REPOSITORY: string;
   X_INTERNAL_SECRET: string;

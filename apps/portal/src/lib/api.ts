@@ -110,14 +110,6 @@ export function adminUserApiUrl(email: string) {
   return apiUrl(`/api/admin/users/${encodeURIComponent(email)}`);
 }
 
-export function adminActionsApiUrl() {
-  return apiUrl('/api/admin/actions');
-}
-
-export function adminActionApiUrl(actionId: string) {
-  return apiUrl(`/api/admin/actions/${encodeURIComponent(actionId)}`);
-}
-
 export function publicProjectsPageApiUrl(cursor?: string, limit = 24) {
   const url = apiUrl('/api/projects/v2/projects/page');
   url.searchParams.set('limit', String(limit));

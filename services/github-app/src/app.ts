@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
-import { handleUpdateRepositoryPermission } from '@/controllers/repository-permission.controller';
 import {
   handleCancelOperation,
   handleGetOperation,
@@ -55,9 +54,6 @@ app.delete('/operations/:operationId', async (c) =>
   handleCancelOperation(c.req.raw, c.env, c.req.param('operationId'))
 );
 
-app.post('/user/repository-permission', async (c) =>
-  handleUpdateRepositoryPermission(c.req.raw)
-);
 app.get('/people/public-profile', async (c) =>
   handleGetPublicProfile(c.req.raw)
 );

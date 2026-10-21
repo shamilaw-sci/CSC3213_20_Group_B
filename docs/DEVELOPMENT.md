@@ -52,7 +52,7 @@ templates. See [Environment Variables](ENVIRONMENT_VARIABLES.md).
 | public people/profile rendering                             | `apps/people`                                   |
 | public project discovery                                    | `apps/projects`                                 |
 | authenticated page or form                                  | `apps/portal`                                   |
-| session, authorization, D1, KV, or browser API              | `services/api`                                  |
+| session, authorization, D1, or browser API                  | `services/api`                                  |
 | repository branch, commit, PR, operation, or retry behavior | `services/github-app`                           |
 | SMTP request or delivery                                    | `services/mailer`                               |
 | shared domain/transport shape                               | `packages/schemas`                              |

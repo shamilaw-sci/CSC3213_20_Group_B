@@ -11,19 +11,11 @@ import {
 } from '@scs/schemas';
 import { z } from 'zod';
 
-import { repositoryPermissionLevelSchema } from '@/schemas/user-access.schema';
-
 const usernameSchema = z
   .string()
   .trim()
   .min(1)
   .regex(/^[A-Za-z0-9-]{1,39}$/);
-
-const repositorySchema = z
-  .string()
-  .trim()
-  .min(1)
-  .regex(/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?$/);
 
 const actorSchema = z.string().trim().min(1);
 const dataRepoPathSchema = z
@@ -45,14 +37,6 @@ const gitShaSchema = z
   .string()
   .trim()
   .regex(/^[a-f0-9]{40}$/i);
-
-export const updateRepositoryPermissionRequestSchema = z.object({
-  repository: repositorySchema,
-  username: usernameSchema,
-  updatedBy: actorSchema,
-  permission: repositoryPermissionLevelSchema.default('read'),
-  active: z.boolean(),
-});
 
 export const getPublicProfileQuerySchema = z.object({
   username: usernameSchema,

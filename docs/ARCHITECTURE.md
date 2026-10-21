@@ -8,8 +8,8 @@ and dependency sections.
 ## System Context
 
 The repository contains four Next.js applications, two Cloudflare Workers, one
-Bun mail service, and four shared packages. Public records and repository-access
-configuration are published from separate Git repositories.
+Bun mail service, and four shared packages. Public records are published from a
+separate Git repository.
 
 ```mermaid
 flowchart TB
@@ -32,14 +32,14 @@ flowchart TB
   end
 
   subgraph Storage
-    D1[(D1)]
-    KV[(KV)]
+    D1[(API D1: auth, proxy, and permission state)]
+    DO[(GitHub App Durable Object SQLite)]
+    Queue[Cloudflare Queue and DLQ]
     Data[Published public data]
   end
 
   subgraph GitHub
     DataRepo[data.scs.pdn.ac.lk]
-    ConfigRepo[config.scs.pdn.ac.lk]
   end
 
   PublicUser --> Web
@@ -51,11 +51,11 @@ flowchart TB
   Projects --> Data
   Portal --> API
   API --> D1
-  API --> KV
   API --> Mailer
   API --> GitHubApp
+  GitHubApp --> DO
+  GitHubApp <--> Queue
   GitHubApp --> DataRepo
-  GitHubApp --> ConfigRepo
   DataRepo --> Data
 ```
 
@@ -72,7 +72,7 @@ fallback.
 | `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                  |
 | `apps/projects`          | project discovery, filtering, and public project details                             | project write workflows                       |
 | `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes  |
-| `services/api`           | Better Auth, sessions, authorization, D1/KV state, public API contracts              | GitHub installation credentials               |
+| `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials               |
 | `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state    |
 | `services/mailer`        | authenticated mail requests and SMTP delivery                                        | application permissions                       |
 | `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration       |
@@ -130,15 +130,33 @@ sequenceDiagram
 | --------------------------------------------------------------------- | -------------------------- | ----------------------------------------------- |
 | users, accounts, sessions, verification, passkeys                     | API D1 database            | managed through Better Auth and API migrations  |
 | proxy settings and edit-attempt state                                 | API D1 database            | updates consume attempts atomically             |
-| application roles, access levels, blacklist, notification preferences | API KV namespace           | checked on protected requests                   |
+| application roles, access levels, blacklist, notification preferences | API D1 database            | checked on protected requests                   |
 | person, project, course, and offering entity records                  | data repository            | individual entity files are authoritative       |
 | aggregate arrays, manifests, search indexes, `by-person` files        | generated projections      | reproducible from authoritative records         |
-| repository permission configuration                                   | config repository          | changed through reviewed GitHub automation      |
 | durable mutation status                                               | GitHub App Durable Objects | keyed by operation and resource identity        |
+| same-resource mutation leases                                         | GitHub App Durable Objects | keyed by resource identity for serialization    |
 | queued delivery and retry state                                       | Cloudflare Queues          | exhausted retries move to the dead-letter queue |
 
 Never introduce a second writable owner for the same state. Caches and
 projections must be disposable and reproducible.
+
+### Cloudflare Storage Boundaries
+
+The API D1 database and GitHub App Durable Object storage are independent
+resources:
+
+- `AUTH_DB` D1 stores Better Auth tables, rate limits, proxy settings, and one
+  permission record per user. Permission records include role, access level,
+  blacklist state, repository include/exclude rules, notification preferences,
+  and display metadata.
+- `OPERATION_STATE` creates one Durable Object per operation ID. Its private
+  SQLite database stores that operation record.
+- `MUTATION_COORDINATOR` creates one Durable Object per resource key. Its
+  private SQLite database stores the current mutation lease.
+
+Durable Object SQLite is not a table or schema inside `AUTH_DB`. A D1 migration
+does not migrate or modify Durable Object storage, and rolling back Worker code
+does not roll back either resource's persisted data.
 
 ## Durable Operation Lifecycle
 
@@ -164,7 +182,7 @@ contract error, not a second mutation.
 flowchart BT
   Domain[Domain rules and schemas]
   UseCases[Application use cases]
-  Adapters[Next.js, HTTP, D1, KV, GitHub, SMTP adapters]
+  Adapters[Next.js, HTTP, D1, GitHub, SMTP adapters]
 
   UseCases --> Domain
   Adapters --> UseCases
@@ -196,9 +214,9 @@ verification orchestration, not a combined release. A shared-package change may
 require several deployables to rebuild; a service-only change should not force
 an unrelated app deployment.
 
-The public data and config repositories have separate validation, publication,
-and deployment workflows. Changes to those repositories require their own
-review and must not be hidden inside a monorepo deployment.
+The public data repository has separate validation, publication, and deployment
+workflows. Changes to that repository require their own review and must not be
+hidden inside a monorepo deployment.
 
 ## Changing the Architecture
 
