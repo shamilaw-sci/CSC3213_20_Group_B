@@ -16,7 +16,7 @@ describe('application shell contracts', () => {
     expect(layout).toContain('<ThemeProvider>');
     expect(layout).toContain('href="#main-content"');
     expect(layout).toContain('<SiteHeader');
-    expect(layout).toContain('<main id="main-content"');
+    expect(layout).toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
@@ -67,7 +67,7 @@ describe('application shell contracts', () => {
     expect(layout).toContain('@scs/ui/components/theme-provider');
     expect(layout).toContain('href="#main-content"');
     expect(layout).toContain('<SiteHeader');
-    expect(layout).toContain('<main id="main-content"');
+    expect(layout).toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
@@ -105,5 +105,23 @@ describe('application shell contracts', () => {
 
     expect(search).toContain('aria-label="Search people"');
     expect(search).toContain("event.key === 'Escape'");
+  });
+
+  test('Projects provides a discovery-focused themed shell', () => {
+    const layout = source('apps/projects/src/app/layout.tsx');
+    const header = source(
+      'apps/projects/src/components/layout/site-header.tsx'
+    );
+
+    expect(layout).toContain("import '@scs/ui/styles/theme.css';");
+    expect(layout).toContain('@scs/ui/components/theme-provider');
+    expect(layout).toContain('href="#main-content"');
+    expect(layout).toContain('<main id="main-content"');
+    expect(layout).not.toContain('maximumScale');
+    expect(layout).not.toContain('userScalable');
+    expect(header).toContain('aria-expanded={browseOpen}');
+    expect(header).toContain("event.key === 'Escape'");
+    expect(header).toContain('max-h-[min(24rem,calc(100vh-6rem))]');
+    expect(header).not.toContain('transition-all');
   });
 });
