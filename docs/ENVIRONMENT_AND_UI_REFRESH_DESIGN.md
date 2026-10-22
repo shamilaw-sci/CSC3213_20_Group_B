@@ -26,6 +26,9 @@ Portal, including theme tokens, typography, global surfaces, navigation,
 responsive behavior, focus treatment, and theme controls. It does not rewrite
 unrelated feature workflows or application content.
 
+Public assets, favicon files, manifests, and existing asset URLs are excluded
+from this change.
+
 ## Environment Audit
 
 ### Inventory Model
@@ -62,6 +65,8 @@ documentation does not establish runtime use.
 - Extend repository tests to compare the catalog, templates, typed
   configuration, and deploy-time declarations where practical, preventing
   silent drift.
+- Declare build-affecting application variables in the appropriate Turborepo
+  tasks so cached output cannot be reused across incompatible environments.
 
 ### Deliverable
 
@@ -89,6 +94,29 @@ owned by each app because the apps serve different tasks:
 This keeps the applications recognizably related without making public sites
 look like administration software or flattening the Portal into a marketing
 header.
+
+### Monorepo UI Ownership
+
+The monorepo keeps deployable applications as independent package-graph
+endpoints. Shared shadcn primitives and primitive-level theme infrastructure
+belong in `packages/ui`; composed product interfaces remain in their owning
+application.
+
+Within each Next.js application:
+
+- `app` owns routes, layouts, metadata, server-side orchestration, and Next.js
+  special files;
+- route-private compositions live in a colocated `_components` folder;
+- app-wide shells and compositions reused by multiple routes live in
+  `components`, grouped by responsibility or feature;
+- `lib` owns data access and non-visual application helpers;
+- the meaningless `components/custom` layer is removed from files touched by
+  the refresh;
+- route-shaped modules in `views` move to their owning route, while modules
+  reused across routes move to a named app-level feature folder.
+
+The migration is incremental and limited to the interface surfaces affected by
+this work. It does not perform a blind repository-wide file move.
 
 ### Visual Language
 
@@ -128,6 +156,29 @@ Theme initialization must remain hydration-safe. Each app will provide a
 matching browser `theme-color`, native dark color scheme, reduced-motion
 behavior, and no viewport setting that disables zoom.
 
+The reusable theme provider, initialization logic, toggle primitive, and
+semantic token stylesheet live in `packages/ui`. Each application retains the
+placement of theme controls, metadata colors, and any deliberate product-level
+token overrides.
+
+### Error and Not-Found Surfaces
+
+Every application uses the complete Next.js fallback hierarchy:
+
+- `error.tsx` handles recoverable uncaught errors below the root layout and
+  offers a retry action;
+- `global-error.tsx` is the last-resort root-layout boundary and renders its own
+  document and theme initialization;
+- `not-found.tsx` handles missing domain records raised through `notFound()`;
+- `global-not-found.tsx` handles completely unmatched URLs while the existing
+  experimental convention remains enabled.
+
+The Next.js special files stay inside every app, but delegate presentation to
+shared primitive-level feedback UI where that removes exact duplication. Copy,
+destinations, and product-specific actions remain app-owned. Expected failures
+such as validation, authorization, and unavailable upstream data remain
+explicit application states rather than being converted into thrown errors.
+
 ## Compatibility and Failure Handling
 
 - No endpoint, route, environment name, binding, or component export will be
@@ -160,3 +211,5 @@ reported explicitly rather than described as verified.
 - Redesigning every feature page or rewriting application copy.
 - Adding a new CSS framework, component system, analytics product, or runtime
   dependency solely for this refresh.
+- Consolidating, regenerating, deleting, or otherwise modifying public assets,
+  favicons, manifests, or their published URLs.
