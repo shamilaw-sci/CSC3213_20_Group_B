@@ -1,11 +1,12 @@
-import './globals.css';
+import '@/app/globals.css';
 
+import { Button } from '@scs/ui/components/button';
+import { FeedbackState } from '@scs/ui/components/feedback-state';
+import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
 import Image from 'next/image';
-
-import { ThemeInitScript } from '@/components/custom/theme/theme-init-script';
 
 const openSans = Open_Sans({
   variable: '--font-open-sans',
@@ -13,50 +14,44 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: '404 - Page Not Found | SCS PDN',
-  description: 'The page you are looking for does not exist.',
+  title: '404 - Page Not Found | SCS Projects',
+  description: 'The requested project page does not exist.',
 };
 
 export default function GlobalNotFound() {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${openSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <ThemeInitScript />
       </head>
-      <body
-        className={`${openSans.variable} flex h-full flex-col items-center justify-center bg-background text-foreground antialiased`}
-      >
-        <div className="flex max-w-md flex-col items-center px-4 text-center">
-          <div className="relative mb-8">
-            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-3xl"></div>
-            <div className="relative h-24 w-24">
-              <Image
-                src="/favicon/logo-symbol-icon.svg"
-                alt="University of Peradeniya"
-                width={96}
-                height={96}
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div>
-          <h1 className="mb-2 text-6xl font-bold tracking-tighter text-foreground">
-            404
-          </h1>
-          <h2 className="mb-4 text-2xl font-semibold text-muted-foreground">
-            Page Not Found
-          </h2>
-          <p className="mb-8 text-base leading-relaxed text-muted-foreground">
-            This page is not available. Check the address or return home.
-          </p>
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/"
-            className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Go Back Home
-          </a>
-        </div>
+      <body className="flex min-h-full items-center bg-background text-foreground">
+        <FeedbackState
+          code="404"
+          icon={
+            <Image
+              src="/favicon/logo-symbol-icon.svg"
+              alt=""
+              width={72}
+              height={72}
+            />
+          }
+          title="Project page not found"
+          description="The project, course, or category may have moved. Return to discovery to continue browsing."
+          actions={
+            <Button asChild>
+              {/* A hard navigation remains reliable outside the root app tree. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a href="/">
+                <ArrowLeft className="size-4" />
+                Browse projects
+              </a>
+            </Button>
+          }
+        />
       </body>
     </html>
   );

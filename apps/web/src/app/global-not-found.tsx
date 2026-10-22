@@ -1,5 +1,9 @@
-import './globals.css';
+import '@/app/globals.css';
 
+import { Button } from '@scs/ui/components/button';
+import { FeedbackState } from '@scs/ui/components/feedback-state';
+import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
+import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
 
@@ -15,27 +19,30 @@ export const metadata: Metadata = {
 
 export default function GlobalNotFound() {
   return (
-    <html lang="en" className="h-full">
-      <body
-        className={`${openSans.variable} h-full bg-gray-50 flex items-center justify-center`}
-      >
-        <div className="text-center px-6">
-          <h1 className="text-7xl font-bold text-gray-900">404</h1>
-          <h2 className="mt-4 text-2xl font-semibold text-gray-700">
-            Page Not Found
-          </h2>
-          <p className="mt-4 text-gray-500 max-w-md mx-auto">
-            Oops! The page you're looking for doesn't exist or has been moved.
-            Please check the URL or return to the home page.
-          </p>
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/"
-            className="inline-block mt-6 rounded-lg bg-black px-6 py-3 text-white text-sm font-medium hover:bg-gray-800 transition"
-          >
-            Go Back Home
-          </a>
-        </div>
+    <html
+      lang="en"
+      className={`${openSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeInitScript />
+      </head>
+      <body className="flex min-h-full items-center bg-background text-foreground">
+        <FeedbackState
+          code="404"
+          title="Page not found"
+          description="The address may be incorrect, or the page may have moved."
+          actions={
+            <Button asChild>
+              {/* A hard navigation remains reliable outside the root app tree. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a href="/">
+                <ArrowLeft className="size-4" />
+                Return to SCS home
+              </a>
+            </Button>
+          }
+        />
       </body>
     </html>
   );
