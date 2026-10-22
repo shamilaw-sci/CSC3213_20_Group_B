@@ -27,11 +27,8 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
 import { Pagination } from '@/components/custom/pagination/Pagination';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import {
   adminProxyResetAttemptsApiUrl,
   apiHeaders,

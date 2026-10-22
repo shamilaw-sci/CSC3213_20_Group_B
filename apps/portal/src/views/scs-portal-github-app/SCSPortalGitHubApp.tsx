@@ -1,9 +1,6 @@
 import { ExternalLink, ShieldAlert } from 'lucide-react';
 
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 
 function GitHubIcon({ className }: { className?: string }) {
   return (

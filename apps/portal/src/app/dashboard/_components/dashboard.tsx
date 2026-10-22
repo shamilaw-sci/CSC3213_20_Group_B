@@ -14,10 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { PageLoading } from '@/components/custom/loading/PageLoading';
 import { LogoutButton } from '@/components/custom/logout-button/logout-button';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import {
   ACCESS_LEVEL,
@@ -135,9 +132,7 @@ export default function Dashboard() {
     return baseItems;
   }, [isSuperAdmin, showCourses, showProxySettings]);
 
-  if (!loaded) {
-    return <PageLoading />;
-  }
+  if (!loaded) return <PageLoading />;
 
   return (
     <PageShell width="wide">
@@ -155,15 +150,14 @@ export default function Dashboard() {
             <Link
               key={item.href}
               href={item.href}
-              className="group flex min-h-32 items-start gap-4 rounded-md border bg-card p-5 text-card-foreground shadow-sm transition hover:border-foreground/25 hover:bg-muted/30"
+              className="group flex min-h-32 items-start gap-4 rounded-md border bg-card p-5 text-card-foreground shadow-sm transition-colors hover:border-foreground/25 hover:bg-muted/30"
             >
               <div className="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background">
-                <Icon className="text-muted-foreground size-5 transition group-hover:text-foreground" />
+                <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
               </div>
-
               <div className="space-y-1">
                 <p className="font-semibold">{item.title}</p>
-                <p className="text-muted-foreground text-sm leading-6">
+                <p className="text-sm leading-6 text-muted-foreground">
                   {item.description}
                 </p>
               </div>

@@ -1,7 +1,7 @@
 import { Construction } from 'lucide-react';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageShell } from '@/components/custom/page-shell/page-shell';
+import { PageShell } from '@/components/layout/page-shell';
 
 interface DevPageProps {
   fallbackHref?: string;

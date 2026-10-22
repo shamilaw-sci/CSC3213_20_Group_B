@@ -4,11 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
 import { PageLoading } from '@/components/custom/loading/PageLoading';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
 import ProfileContent from '@/components/custom/profile-page/components/profile-content';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 
 interface ProfileData {

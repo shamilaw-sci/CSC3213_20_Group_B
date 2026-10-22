@@ -27,10 +27,10 @@ export function PageShell({
 }
 
 interface PageHeaderProps {
-  title: string;
+  action?: React.ReactNode;
   description?: string;
   icon?: React.ReactNode;
-  action?: React.ReactNode;
+  title: string;
 }
 
 export function PageHeader({
@@ -47,7 +47,7 @@ export function PageHeader({
           <h1 className="text-2xl font-semibold">{title}</h1>
         </div>
         {description ? (
-          <p className="text-muted-foreground text-sm">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {action}

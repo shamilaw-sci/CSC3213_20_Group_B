@@ -73,11 +73,8 @@ import {
   PageLoading,
   PageLoadingPanel,
 } from '@/components/custom/loading/PageLoading';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
 import { Pagination } from '@/components/custom/pagination/Pagination';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { projectConfig } from '@/config/project.config';
 import publicEnvConfig from '@/config/public.env.config';
 import {

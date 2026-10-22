@@ -19,10 +19,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 import { getProxyUrlError, proxyUrlSchema } from '@/lib/proxy-url';
 

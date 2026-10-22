@@ -1,5 +1,5 @@
-import Home from '@/views/home/Home';
+import PortalHome from '@/app/_components/portal-home';
 
 export default function Page() {
-  return <Home />;
+  return <PortalHome />;
 }

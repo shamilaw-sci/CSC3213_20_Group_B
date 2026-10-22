@@ -16,15 +16,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
 import ProfilePictureEditor, {
   createInitialProfilePictureDraft,
   profilePictureDraftPayload,
   validateProfilePictureDraft,
 } from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import type { ProfilePictureMode } from '@/types/user';
 

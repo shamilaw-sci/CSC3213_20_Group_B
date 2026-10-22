@@ -17,11 +17,8 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  PageHeader,
-  PageShell,
-} from '@/components/custom/page-shell/page-shell';
 import { Pagination } from '@/components/custom/pagination/Pagination';
+import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { emailPathSegment } from '@/lib/email';
 import {
   ACCESS_LEVEL,

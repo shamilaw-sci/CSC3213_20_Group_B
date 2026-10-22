@@ -20,12 +20,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageShell } from '@/components/custom/page-shell/page-shell';
 import ProfilePictureEditor, {
   createInitialProfilePictureDraft,
   profilePictureDraftPayload,
   validateProfilePictureDraft,
 } from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
+import { PageShell } from '@/components/layout/page-shell';
 import { adminUserApiUrl, apiHeaders, readApiError } from '@/lib/api';
 import { emailPathSegment } from '@/lib/email';
 import type { AppRole } from '@/types/role';
