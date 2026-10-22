@@ -179,6 +179,42 @@ destinations, and product-specific actions remain app-owned. Expected failures
 such as validation, authorization, and unavailable upstream data remain
 explicit application states rather than being converted into thrown errors.
 
+### Portal Editing Workflows
+
+Project, course, and public-profile editing use a task-oriented workspace
+instead of combining record-source and rendering-mode selectors. The primary
+flow is:
+
+1. Edit details in guided, logically grouped form sections.
+2. Review a human-readable summary and compare changes with the published
+   record where one exists.
+3. Submit through the existing revision-protected, idempotent mutation flow.
+
+Published is a record status and comparison source, not an editing mode. The
+workspace header clearly distinguishes published data, current unsaved changes,
+draft or pull-request state, and operation progress.
+
+Advanced JSON is a secondary disclosure rather than a peer of the guided form.
+Viewing JSON remains available, editing remains permission-gated, and applying
+JSON validates it before replacing the canonical working draft. Leaving dirty
+JSON requires an explicit Apply, Discard, or Stay decision.
+
+Edit, Review, and Advanced JSON all read and write one canonical in-memory
+draft. Switching surfaces must never silently reset fields, change the selected
+record, replace the draft with published data, or discard invalid JSON. The
+active surface has a single clear control, is reflected in the URL where that
+does not cause a server reload, and preserves keyboard focus predictably.
+
+Transitions use short opacity or transform changes only and honor reduced
+motion. Smoothness is verified through state and interaction tests rather than
+screenshot comparison.
+
+Long editors are split into domain-focused section components with explicit
+labels, instructions before difficult inputs, inline errors, a linked error
+summary, and specific action labels. The existing API routes, schemas,
+authorization checks, entity revisions, idempotency keys, operation polling,
+and pull-request behavior remain unchanged.
+
 ## Compatibility and Failure Handling
 
 - No endpoint, route, environment name, binding, or component export will be
@@ -193,9 +229,9 @@ explicit application states rather than being converted into thrown errors.
 ## Verification
 
 Environment work will use repository policy tests plus focused configuration
-tests for each affected service. UI work will add or update focused navigation
-and theme tests, then exercise representative desktop and mobile flows in all
-four apps.
+tests for each affected service. UI work will add or update focused navigation,
+editor-state, keyboard, validation, and theme interaction tests without
+screenshot or subjective visual comparison.
 
 For every affected workspace, run only its declared lint, typecheck,
 typecheck:test, test, and build tasks. Before completion, run the repository
