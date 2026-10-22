@@ -8,60 +8,141 @@ const catalog = readFileSync(
   'utf8'
 );
 
+type VariableKind = 'browser' | 'server' | 'secret' | 'binding' | 'adapter';
+type VariableStatus = 'runtime' | 'binding' | 'deployment-only';
+type VariableSupply = 'template' | 'wrangler' | 'provider';
+
+interface VariableAudit {
+  name: string;
+  kind: VariableKind;
+  supply: VariableSupply;
+  status: VariableStatus;
+}
+
+function templated(
+  variables: readonly (readonly [string, VariableKind])[]
+): VariableAudit[] {
+  return variables.map(([name, kind]) => ({
+    name,
+    kind,
+    supply: 'template',
+    status: 'runtime',
+  }));
+}
+
+function audited(
+  variables: readonly (readonly [
+    string,
+    VariableKind,
+    VariableSupply,
+    VariableStatus,
+  ])[]
+): VariableAudit[] {
+  return variables.map(([name, kind, supply, status]) => ({
+    name,
+    kind,
+    supply,
+    status,
+  }));
+}
+
 const workspaceVariables = {
-  'apps/web/.env.example': [
-    'BASE_DOMAIN',
-    'CF_SECRET',
-    'MOODLE_URL',
-    'NEXT_PUBLIC_SITE_URL',
-    'WORKER_URL',
-  ],
-  'apps/people/.env.example': [
-    'NEXT_PUBLIC_PEOPLE_DATA_BASE_URL',
-    'NEXT_PUBLIC_PROJECTS_DATA_BASE_URL',
-    'NEXT_PUBLIC_PROJECTS_SITE_URL',
-    'NEXT_PUBLIC_SITE_URL',
-  ],
-  'apps/projects/.env.example': [
-    'NEXT_PUBLIC_PEOPLE_SITE_URL',
-    'NEXT_PUBLIC_PROJECTS_DATA_BASE_URL',
-    'NEXT_PUBLIC_SITE_URL',
-  ],
-  'apps/portal/.env.example': [
-    'COOKIE_DOMAIN',
-    'NEXT_PUBLIC_API_CLIENT_ID',
-    'NEXT_PUBLIC_BASE_API_URL',
-    'NEXT_PUBLIC_PEOPLE_DATA_BASE_URL',
-    'NEXT_PUBLIC_SITE_URL',
-    'NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH',
-  ],
-  'services/api/.dev.vars.example': [
-    'BETTER_AUTH_SECRET',
-    'GITHUB_APP_INTERNAL_SECRET',
-    'GITHUB_CLIENT_SECRET',
-    'GOOGLE_CLIENT_SECRET',
-    'MAILER_API_KEY',
-  ],
-  'services/github-app/.env.example': [
-    'GITHUB_APP_ID',
-    'GITHUB_INSTALLATION_ID',
-    'GITHUB_OWNER',
-    'GITHUB_PEOPLE_DATA_REPOSITORY',
-    'GITHUB_PRIVATE_KEY',
-    'GITHUB_PROJECTS_DATA_REPOSITORY',
-    'PORT',
-    'X_INTERNAL_SECRET',
-  ],
-  'services/mailer/.env.example': [
-    'MAILER_API_KEY',
-    'PORT',
-    'SMTP_FROM',
-    'SMTP_HOST',
-    'SMTP_PASS',
-    'SMTP_SECURE',
-    'SMTP_USER',
-    'VERCEL_EXPERIMENTAL_BACKENDS',
-  ],
+  web: {
+    template: 'apps/web/.env.example',
+    turboTask: '@scs/web#build',
+    variables: templated([
+      ['BASE_DOMAIN', 'server'],
+      ['CF_SECRET', 'secret'],
+      ['MOODLE_URL', 'server'],
+      ['NEXT_PUBLIC_SITE_URL', 'browser'],
+      ['WORKER_URL', 'server'],
+    ]),
+  },
+  people: {
+    template: 'apps/people/.env.example',
+    turboTask: '@scs/people#build',
+    variables: templated([
+      ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
+      ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
+      ['NEXT_PUBLIC_PROJECTS_SITE_URL', 'browser'],
+      ['NEXT_PUBLIC_SITE_URL', 'browser'],
+    ]),
+  },
+  projects: {
+    template: 'apps/projects/.env.example',
+    turboTask: '@scs/projects#build',
+    variables: templated([
+      ['NEXT_PUBLIC_PEOPLE_SITE_URL', 'browser'],
+      ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
+      ['NEXT_PUBLIC_SITE_URL', 'browser'],
+    ]),
+  },
+  portal: {
+    template: 'apps/portal/.env.example',
+    turboTask: '@scs/portal#build',
+    variables: templated([
+      ['COOKIE_DOMAIN', 'server'],
+      ['NEXT_PUBLIC_API_CLIENT_ID', 'browser'],
+      ['NEXT_PUBLIC_BASE_API_URL', 'browser'],
+      ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
+      ['NEXT_PUBLIC_SITE_URL', 'browser'],
+      ['NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH', 'browser'],
+    ]),
+  },
+  api: {
+    template: 'services/api/.dev.vars.example',
+    wrangler: 'services/api/wrangler.jsonc',
+    variables: audited([
+      ['BETTER_AUTH_SECRET', 'secret', 'template', 'runtime'],
+      ['BETTER_AUTH_URL', 'server', 'wrangler', 'runtime'],
+      ['DATA_PUBLIC_BASE_URL', 'server', 'wrangler', 'runtime'],
+      ['GITHUB_APP', 'binding', 'wrangler', 'binding'],
+      ['GITHUB_APP_API_URL', 'server', 'wrangler', 'runtime'],
+      ['GITHUB_APP_INTERNAL_SECRET', 'secret', 'template', 'runtime'],
+      ['GITHUB_CLIENT_ID', 'server', 'wrangler', 'runtime'],
+      ['GITHUB_CLIENT_SECRET', 'secret', 'template', 'runtime'],
+      ['GOOGLE_CLIENT_ID', 'server', 'wrangler', 'runtime'],
+      ['GOOGLE_CLIENT_SECRET', 'secret', 'template', 'runtime'],
+      ['MAILER_API_KEY', 'secret', 'template', 'runtime'],
+      ['MAILER_API_URL', 'server', 'wrangler', 'runtime'],
+      ['AUTH_DB', 'binding', 'wrangler', 'binding'],
+    ]),
+  },
+  githubApp: {
+    template: 'services/github-app/.env.example',
+    wrangler: 'services/github-app/wrangler.jsonc',
+    variables: audited([
+      ['GITHUB_APP_ID', 'server', 'template', 'runtime'],
+      ['GITHUB_INSTALLATION_ID', 'server', 'template', 'runtime'],
+      ['GITHUB_OWNER', 'server', 'template', 'runtime'],
+      ['GITHUB_PEOPLE_DATA_REPOSITORY', 'server', 'template', 'runtime'],
+      ['GITHUB_PRIVATE_KEY', 'secret', 'template', 'runtime'],
+      ['GITHUB_PROJECTS_DATA_REPOSITORY', 'server', 'template', 'runtime'],
+      ['MUTATION_COORDINATOR', 'binding', 'wrangler', 'binding'],
+      ['OPERATION_QUEUE', 'binding', 'wrangler', 'binding'],
+      ['OPERATION_STATE', 'binding', 'wrangler', 'binding'],
+      ['PORT', 'adapter', 'template', 'runtime'],
+      ['X_INTERNAL_SECRET', 'secret', 'template', 'runtime'],
+    ]),
+  },
+  mailer: {
+    template: 'services/mailer/.env.example',
+    variables: audited([
+      ['MAILER_API_KEY', 'secret', 'template', 'runtime'],
+      ['PORT', 'adapter', 'template', 'runtime'],
+      ['SMTP_FROM', 'server', 'template', 'runtime'],
+      ['SMTP_HOST', 'server', 'template', 'runtime'],
+      ['SMTP_PASS', 'secret', 'template', 'runtime'],
+      ['SMTP_SECURE', 'server', 'template', 'runtime'],
+      ['SMTP_USER', 'secret', 'template', 'runtime'],
+      [
+        'VERCEL_EXPERIMENTAL_BACKENDS',
+        'adapter',
+        'provider',
+        'deployment-only',
+      ],
+    ]),
+  },
 } as const;
 
 function keysInTemplate(path: string): string[] {
@@ -73,18 +154,88 @@ function keysInTemplate(path: string): string[] {
     .sort();
 }
 
+function readTurboConfig(path: string): {
+  tasks: Record<string, { env?: string[] }>;
+} {
+  return JSON.parse(readFileSync(resolve(root, path), 'utf8')) as {
+    tasks: Record<string, { env?: string[] }>;
+  };
+}
+
 describe('environment configuration discovery', () => {
-  for (const [path, variables] of Object.entries(workspaceVariables)) {
-    test(`${path} lists its complete supported local configuration`, () => {
-      expect(keysInTemplate(path)).toEqual([...variables].sort());
+  for (const [workspace, audit] of Object.entries(workspaceVariables)) {
+    test(`${workspace} lists its complete supported local configuration`, () => {
+      const templatedVariables = audit.variables
+        .filter((variable) => variable.supply !== 'wrangler')
+        .map((variable) => variable.name)
+        .sort();
+
+      expect(keysInTemplate(audit.template)).toEqual(templatedVariables);
     });
   }
 
-  test('the root catalog names every templated variable', () => {
-    const variables = new Set(Object.values(workspaceVariables).flat());
+  test('the root catalog documents the kind, supply, and status of every supported value', () => {
+    const catalogLines = catalog.split(/\r?\n/u);
 
-    for (const variable of variables) {
-      expect(catalog).toContain(`\`${variable}\``);
+    for (const audit of Object.values(workspaceVariables)) {
+      for (const variable of audit.variables) {
+        expect(
+          catalogLines.some(
+            (line) =>
+              line.includes(`\`${variable.name}\``) &&
+              line.includes(`\`${variable.kind}\``) &&
+              line.includes(`\`${variable.supply}\``) &&
+              line.includes(`\`${variable.status}\``)
+          )
+        ).toBe(true);
+      }
+    }
+  });
+
+  test('every Wrangler-supplied value or binding is declared by its owner', () => {
+    for (const audit of Object.values(workspaceVariables)) {
+      if (!('wrangler' in audit)) continue;
+      const declaration = readFileSync(resolve(root, audit.wrangler), 'utf8');
+
+      for (const variable of audit.variables.filter(
+        (entry) => entry.supply === 'wrangler'
+      )) {
+        expect(declaration).toContain(`\"${variable.name}\"`);
+      }
+    }
+  });
+
+  test('classifies platform bindings and deployment-only adapter settings explicitly', () => {
+    const variables = Object.values(workspaceVariables).flatMap(
+      (audit) => audit.variables
+    );
+    const bindings = variables
+      .filter((variable) => variable.status === 'binding')
+      .map((variable) => variable.name)
+      .sort();
+
+    expect(bindings).toEqual([
+      'AUTH_DB',
+      'GITHUB_APP',
+      'MUTATION_COORDINATOR',
+      'OPERATION_QUEUE',
+      'OPERATION_STATE',
+    ]);
+    expect(
+      variables.find(
+        (variable) => variable.name === 'VERCEL_EXPERIMENTAL_BACKENDS'
+      )
+    ).toMatchObject({ status: 'deployment-only', supply: 'provider' });
+  });
+
+  test('declares every Next.js build input on its owning Turborepo task', () => {
+    const turbo = readTurboConfig('turbo.json');
+
+    for (const audit of Object.values(workspaceVariables)) {
+      if (!('turboTask' in audit)) continue;
+      expect(turbo.tasks[audit.turboTask]?.env?.slice().sort()).toEqual(
+        audit.variables.map((variable) => variable.name).sort()
+      );
     }
   });
 });

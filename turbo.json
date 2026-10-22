@@ -3,6 +3,40 @@
   "tasks": {
     "dev": { "cache": false, "persistent": true },
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
+    "@scs/web#build": {
+      "env": [
+        "BASE_DOMAIN",
+        "CF_SECRET",
+        "MOODLE_URL",
+        "NEXT_PUBLIC_SITE_URL",
+        "WORKER_URL"
+      ]
+    },
+    "@scs/people#build": {
+      "env": [
+        "NEXT_PUBLIC_PEOPLE_DATA_BASE_URL",
+        "NEXT_PUBLIC_PROJECTS_DATA_BASE_URL",
+        "NEXT_PUBLIC_PROJECTS_SITE_URL",
+        "NEXT_PUBLIC_SITE_URL"
+      ]
+    },
+    "@scs/projects#build": {
+      "env": [
+        "NEXT_PUBLIC_PEOPLE_SITE_URL",
+        "NEXT_PUBLIC_PROJECTS_DATA_BASE_URL",
+        "NEXT_PUBLIC_SITE_URL"
+      ]
+    },
+    "@scs/portal#build": {
+      "env": [
+        "COOKIE_DOMAIN",
+        "NEXT_PUBLIC_API_CLIENT_ID",
+        "NEXT_PUBLIC_BASE_API_URL",
+        "NEXT_PUBLIC_PEOPLE_DATA_BASE_URL",
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH"
+      ]
+    },
     "lint": { "dependsOn": ["^lint"] },
     "test": { "dependsOn": ["^test"] },
     "typecheck": { "dependsOn": ["^typecheck"] },

@@ -38,6 +38,98 @@ them into `process.env`.
 | GitHub App | `services/github-app/.env.example` | `services/github-app/src/config/runtime.config.ts`  | Wrangler config and secrets            |
 | Mailer     | `services/mailer/.env.example`     | `services/mailer/src/config/env.ts`                 | service hosting environment            |
 
+## Audited Configuration Matrix
+
+The audit status describes a verified consumer, not merely a declaration.
+`runtime` values are read by application or adapter code, `binding` values are
+injected and consumed by Cloudflare, and `deployment-only` values are consumed
+by the named hosting adapter. No currently supported name is unused.
+
+### Web
+
+| Name                   | Kind      | Supply     | Status    | Consumer / purpose              |
+| ---------------------- | --------- | ---------- | --------- | ------------------------------- |
+| `NEXT_PUBLIC_SITE_URL` | `browser` | `template` | `runtime` | canonical URL and metadata      |
+| `BASE_DOMAIN`          | `server`  | `template` | `runtime` | application domain construction |
+| `MOODLE_URL`           | `server`  | `template` | `runtime` | Moodle destination              |
+| `WORKER_URL`           | `server`  | `template` | `runtime` | proxy Worker requests           |
+| `CF_SECRET`            | `secret`  | `template` | `runtime` | proxy Worker authentication     |
+
+### People
+
+| Name                                 | Kind      | Supply     | Status    | Consumer / purpose         |
+| ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
+| `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
+| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`   | `browser` | `template` | `runtime` | people records             |
+| `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | related project records    |
+| `NEXT_PUBLIC_PROJECTS_SITE_URL`      | `browser` | `template` | `runtime` | Projects app destinations  |
+
+### Projects
+
+| Name                                 | Kind      | Supply     | Status    | Consumer / purpose         |
+| ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
+| `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
+| `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | project records            |
+| `NEXT_PUBLIC_PEOPLE_SITE_URL`        | `browser` | `template` | `runtime` | People app destinations    |
+
+### Portal
+
+| Name                                       | Kind      | Supply     | Status    | Consumer / purpose             |
+| ------------------------------------------ | --------- | ---------- | --------- | ------------------------------ |
+| `NEXT_PUBLIC_SITE_URL`                     | `browser` | `template` | `runtime` | canonical URL and metadata     |
+| `NEXT_PUBLIC_BASE_API_URL`                 | `browser` | `template` | `runtime` | browser API client             |
+| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`         | `browser` | `template` | `runtime` | public profile data            |
+| `NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH` | `browser` | `template` | `runtime` | verification input constraints |
+| `NEXT_PUBLIC_API_CLIENT_ID`                | `browser` | `template` | `runtime` | API client identification      |
+| `COOKIE_DOMAIN`                            | `server`  | `template` | `runtime` | authentication cookie scope    |
+
+### API Worker
+
+| Name                         | Kind      | Supply     | Status    | Consumer / purpose                   |
+| ---------------------------- | --------- | ---------- | --------- | ------------------------------------ |
+| `BETTER_AUTH_SECRET`         | `secret`  | `template` | `runtime` | Better Auth signing                  |
+| `BETTER_AUTH_URL`            | `server`  | `wrangler` | `runtime` | Better Auth base URL                 |
+| `GOOGLE_CLIENT_ID`           | `server`  | `wrangler` | `runtime` | Google OAuth                         |
+| `GOOGLE_CLIENT_SECRET`       | `secret`  | `template` | `runtime` | Google OAuth                         |
+| `GITHUB_CLIENT_ID`           | `server`  | `wrangler` | `runtime` | GitHub OAuth                         |
+| `GITHUB_CLIENT_SECRET`       | `secret`  | `template` | `runtime` | GitHub OAuth                         |
+| `MAILER_API_URL`             | `server`  | `wrangler` | `runtime` | Mailer service endpoint              |
+| `MAILER_API_KEY`             | `secret`  | `template` | `runtime` | Mailer service authentication        |
+| `GITHUB_APP_API_URL`         | `server`  | `wrangler` | `runtime` | GitHub App HTTP fallback             |
+| `GITHUB_APP_INTERNAL_SECRET` | `secret`  | `template` | `runtime` | GitHub App HTTP authentication       |
+| `DATA_PUBLIC_BASE_URL`       | `server`  | `wrangler` | `runtime` | public data URL construction         |
+| `AUTH_DB`                    | `binding` | `wrangler` | `binding` | D1 auth and settings store           |
+| `GITHUB_APP`                 | `binding` | `wrangler` | `binding` | private GitHub App service transport |
+
+### GitHub App
+
+| Name                              | Kind      | Supply     | Status    | Consumer / purpose                  |
+| --------------------------------- | --------- | ---------- | --------- | ----------------------------------- |
+| `GITHUB_APP_ID`                   | `server`  | `template` | `runtime` | GitHub App authentication           |
+| `GITHUB_PRIVATE_KEY`              | `secret`  | `template` | `runtime` | GitHub App authentication           |
+| `GITHUB_INSTALLATION_ID`          | `server`  | `template` | `runtime` | installation selection              |
+| `GITHUB_OWNER`                    | `server`  | `template` | `runtime` | repository owner                    |
+| `GITHUB_PEOPLE_DATA_REPOSITORY`   | `server`  | `template` | `runtime` | people data repository              |
+| `GITHUB_PROJECTS_DATA_REPOSITORY` | `server`  | `template` | `runtime` | projects data repository            |
+| `X_INTERNAL_SECRET`               | `secret`  | `template` | `runtime` | internal request authentication     |
+| `PORT`                            | `adapter` | `template` | `runtime` | local Bun listener                  |
+| `OPERATION_STATE`                 | `binding` | `wrangler` | `binding` | durable operation state             |
+| `MUTATION_COORDINATOR`            | `binding` | `wrangler` | `binding` | per-resource mutation serialization |
+| `OPERATION_QUEUE`                 | `binding` | `wrangler` | `binding` | durable operation dispatch          |
+
+### Mailer
+
+| Name                           | Kind      | Supply     | Status            | Consumer / purpose                   |
+| ------------------------------ | --------- | ---------- | ----------------- | ------------------------------------ |
+| `MAILER_API_KEY`               | `secret`  | `template` | `runtime`         | bearer authentication                |
+| `SMTP_HOST`                    | `server`  | `template` | `runtime`         | SMTP connection                      |
+| `SMTP_SECURE`                  | `server`  | `template` | `runtime`         | SMTP transport and port selection    |
+| `SMTP_USER`                    | `secret`  | `template` | `runtime`         | SMTP authentication                  |
+| `SMTP_PASS`                    | `secret`  | `template` | `runtime`         | SMTP authentication                  |
+| `SMTP_FROM`                    | `server`  | `template` | `runtime`         | sender address                       |
+| `PORT`                         | `adapter` | `template` | `runtime`         | Bun listener                         |
+| `VERCEL_EXPERIMENTAL_BACKENDS` | `adapter` | `provider` | `deployment-only` | Vercel backend routing during deploy |
+
 ## Local Files
 
 Copy only what you need. These destinations are ignored and must remain
