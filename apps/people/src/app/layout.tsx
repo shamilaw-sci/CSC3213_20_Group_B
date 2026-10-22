@@ -1,11 +1,13 @@
-import './globals.css';
+import '@scs/ui/styles/theme.css';
+import '@/app/globals.css';
 
 import { Toaster } from '@scs/ui/components/sonner';
+import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
 import { Open_Sans } from 'next/font/google';
 
-import Navbar from '@/components/custom/navbar/Navbar';
-import { ThemeProvider } from '@/components/custom/theme/theme-provider';
+import { SiteFooter } from '@/components/layout/site-footer';
+import { SiteHeader } from '@/components/layout/site-header';
 import publicEnvConfig from '@/config/public.env.config';
 
 const openSans = Open_Sans({
@@ -131,11 +133,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'white' },
+    { media: '(prefers-color-scheme: light)', color: '#faf9f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#151317' },
   ],
 };
 
@@ -146,48 +146,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${openSans.variable} flex min-h-screen flex-col antialiased`}
-      >
+      <body className={`${openSans.variable} min-h-svh antialiased`}>
         <ThemeProvider>
-          <Navbar />
-
-          <main className="flex flex-1 flex-col">{children}</main>
-
-          <footer className="border-t bg-muted/30">
-            <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted-foreground">
-              <p>
-                <a
-                  href="https://scs-pdn.space"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Department of Statistics &amp; Computer Science
-                </a>
-              </p>
-              <p className="mt-1">
-                <a
-                  href="https://sci.pdn.ac.lk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Faculty of Science
-                </a>
-                {' - '}
-                <a
-                  href="https://www.pdn.ac.lk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  University of Peradeniya
-                </a>
-              </p>
-            </div>
-          </footer>
-
+          <a
+            href="#main-content"
+            className="fixed top-3 left-3 z-50 -translate-y-20 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-transform focus:translate-y-0"
+          >
+            Skip to main content
+          </a>
+          <div className="flex min-h-svh flex-col">
+            <SiteHeader />
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="flex flex-1 flex-col"
+            >
+              {children}
+            </main>
+            <SiteFooter />
+          </div>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>

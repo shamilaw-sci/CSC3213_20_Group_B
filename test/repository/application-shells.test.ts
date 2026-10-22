@@ -59,4 +59,51 @@ describe('application shell contracts', () => {
     const views = source('apps/web/src/views/home/Home.tsx');
     expect(views).toContain('@/components/feedback/development-page');
   });
+
+  test('People provides a search-led themed document shell', () => {
+    const layout = source('apps/people/src/app/layout.tsx');
+
+    expect(layout).toContain("import '@scs/ui/styles/theme.css';");
+    expect(layout).toContain('@scs/ui/components/theme-provider');
+    expect(layout).toContain('href="#main-content"');
+    expect(layout).toContain('<SiteHeader');
+    expect(layout).toContain('<main id="main-content"');
+    expect(layout).toContain('<SiteFooter');
+    expect(layout).not.toContain('maximumScale');
+    expect(layout).not.toContain('userScalable');
+  });
+
+  test('People disclosures and mobile navigation expose every destination', () => {
+    const header = source('apps/people/src/components/layout/site-header.tsx');
+
+    for (const destination of [
+      '/staff',
+      '/staff/academic',
+      '/staff/academic-support',
+      '/staff/non-academic',
+      '/students',
+      '/students/computer-science',
+      '/students/data-science',
+      '/students/statistics',
+    ]) {
+      expect(header).toContain(`href: '${destination}'`);
+    }
+
+    expect(header).toContain('aria-expanded={openMenu === menu.id}');
+    expect(header).toContain("event.key === 'Escape'");
+    expect(header).toContain('pointerdown');
+    expect(header).toContain('aria-current={active');
+    expect(header).toContain('border-l-2');
+    expect(header).toContain('<PeopleSearch');
+    expect(header).toContain('<ThemeToggle');
+  });
+
+  test('People search retains an explicit accessible label', () => {
+    const search = source(
+      'apps/people/src/components/search/people-search.tsx'
+    );
+
+    expect(search).toContain('aria-label="Search people"');
+    expect(search).toContain("event.key === 'Escape'");
+  });
 });
