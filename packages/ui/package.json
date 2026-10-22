@@ -3,7 +3,9 @@
   "name": "@scs/ui",
   "private": true,
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "imports": {
     "#components/*": "./src/components/*.tsx",
     "#hooks/*": "./src/hooks/*.ts",
@@ -12,7 +14,8 @@
   "exports": {
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./lib/*": "./src/lib/*.ts"
+    "./lib/*": "./src/lib/*.ts",
+    "./styles/theme.css": "./src/styles/theme.css"
   },
   "scripts": {
     "lint": "eslint .",

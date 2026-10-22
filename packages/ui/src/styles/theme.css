@@ -1,0 +1,94 @@
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+  --background: #faf9f7;
+  --foreground: #231f24;
+  --card: #ffffff;
+  --card-foreground: #231f24;
+  --popover: #ffffff;
+  --popover-foreground: #231f24;
+  --primary: #741f3a;
+  --primary-foreground: #fffafc;
+  --secondary: #f0ece8;
+  --secondary-foreground: #352e34;
+  --muted: #f5f2ef;
+  --muted-foreground: #6e646a;
+  --accent: #e0b44b;
+  --accent-foreground: #2c2414;
+  --destructive: #b42318;
+  --border: #ddd6d4;
+  --input: #d3cac8;
+  --ring: #9a6a18;
+  --chart-1: #741f3a;
+  --chart-2: #9a6a18;
+  --chart-3: #496a72;
+  --chart-4: #785a87;
+  --chart-5: #8a6255;
+  --sidebar: #f7f3f0;
+  --sidebar-foreground: #231f24;
+  --sidebar-primary: #741f3a;
+  --sidebar-primary-foreground: #fffafc;
+  --sidebar-accent: #eee5e5;
+  --sidebar-accent-foreground: #5f1930;
+  --sidebar-border: #ddd6d4;
+  --sidebar-ring: #9a6a18;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #151317;
+  --foreground: #f3edef;
+  --card: #1d1a20;
+  --card-foreground: #f3edef;
+  --popover: #211d23;
+  --popover-foreground: #f3edef;
+  --primary: #d9aebc;
+  --primary-foreground: #2d111b;
+  --secondary: #2a252c;
+  --secondary-foreground: #eee6e9;
+  --muted: #242027;
+  --muted-foreground: #b5a9af;
+  --accent: #d8ae55;
+  --accent-foreground: #241c0d;
+  --destructive: #f0756b;
+  --border: #3a333c;
+  --input: #463d47;
+  --ring: #e1bd70;
+  --chart-1: #d9aebc;
+  --chart-2: #e1bd70;
+  --chart-3: #83abb2;
+  --chart-4: #b69bc2;
+  --chart-5: #c69583;
+  --sidebar: #19161b;
+  --sidebar-foreground: #f3edef;
+  --sidebar-primary: #d9aebc;
+  --sidebar-primary-foreground: #2d111b;
+  --sidebar-accent: #30272e;
+  --sidebar-accent-foreground: #f0dce3;
+  --sidebar-border: #3a333c;
+  --sidebar-ring: #e1bd70;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+:where(button, [role='button'], a) {
+  touch-action: manipulation;
+}
+
+:where(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
