@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { SignupForm } from '@/components/custom/signup-form/signup-form';
+import { SignupForm } from '@/components/auth/signup-form';
 import { UopLogoIcon } from '@/components/icons/uop-logo';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
 

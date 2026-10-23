@@ -41,15 +41,15 @@ import { CourseCodesSection } from '@/components/courses/sections/course-codes-s
 import { CourseDepartmentsSection } from '@/components/courses/sections/course-departments-section';
 import { CourseDetailsSection } from '@/components/courses/sections/course-details-section';
 import { CourseOfferingsSection } from '@/components/courses/sections/course-offerings-section';
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageLoading } from '@/components/custom/loading/PageLoading';
 import {
   createEditorState,
   type EditorRecordStatus,
   type EditorState,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import {
   apiHeaders,
   meApiUrl,

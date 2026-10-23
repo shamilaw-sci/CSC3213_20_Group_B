@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { LoginForm } from '@/components/custom/login-form/login-form';
+import { LoginForm } from '@/components/auth/login-form';
 import { UopLogoIcon } from '@/components/icons/uop-logo';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
 

@@ -36,9 +36,9 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageLoading } from '@/components/custom/loading/PageLoading';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import {
   adminStudentPlacementMetadataApiUrl,
   adminStudentPlacementMetadataPrApiUrl,

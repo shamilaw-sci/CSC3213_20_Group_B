@@ -18,8 +18,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 import { getProxyUrlError, proxyUrlSchema } from '@/lib/proxy-url';
 

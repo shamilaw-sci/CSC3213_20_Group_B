@@ -1,8 +1,8 @@
 import { FolderKanban, GraduationCap, Network, Users } from 'lucide-react';
 import Link from 'next/link';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 
 const sections = [
   {

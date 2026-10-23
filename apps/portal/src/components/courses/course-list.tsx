@@ -14,7 +14,7 @@ import { BookOpen, Search } from 'lucide-react';
 import Link from 'next/link';
 
 import type { CourseRecord } from '@/components/courses/course-review';
-import { Pagination } from '@/components/custom/pagination/Pagination';
+import { Pagination } from '@/components/navigation/pagination';
 
 interface CourseListProps {
   courses: readonly CourseRecord[];

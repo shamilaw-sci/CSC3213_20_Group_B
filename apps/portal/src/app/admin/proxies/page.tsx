@@ -1,4 +1,4 @@
-import ManageProxiesPage from '@/components/custom/manage-proxies-page/ManageProxiesPage';
+import ManageProxiesPage from '@/app/admin/proxies/_components/manage-proxies-page';
 import { adminProxiesPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';

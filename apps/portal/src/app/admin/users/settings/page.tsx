@@ -1,4 +1,4 @@
-import DevPage from '@/components/custom/dev-page/DevPage';
+import DevPage from '@/components/feedback/development-page';
 
 export default function Page() {
   return <DevPage />;

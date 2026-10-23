@@ -12,8 +12,8 @@ import { Separator } from '@scs/ui/components/separator';
 import { Calendar, IdCard, Mail, Shield, UserCheck, UserX } from 'lucide-react';
 import Link from 'next/link';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
 import { PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import { emailPathSegment } from '@/lib/email';
 import {
   ACCESS_LEVEL,

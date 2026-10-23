@@ -26,9 +26,9 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { Pagination } from '@/components/custom/pagination/Pagination';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
+import { Pagination } from '@/components/navigation/pagination';
 import {
   adminProxyResetAttemptsApiUrl,
   apiHeaders,

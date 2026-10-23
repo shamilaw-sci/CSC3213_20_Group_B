@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dir, '../..');
 const apps = ['web', 'people', 'projects', 'portal'] as const;
 const appSourceGlob = new Bun.Glob('apps/*/src/**/*.{js,jsx,ts,tsx}');
+const customComponentGlob = new Bun.Glob('apps/*/src/components/custom/**/*');
 const viewSourceGlob = new Bun.Glob('apps/*/src/views/**/*');
 
 async function matchingFiles(glob: Bun.Glob) {
@@ -31,6 +32,28 @@ describe('application composition ownership', () => {
     const imports = (await matchingFiles(appSourceGlob)).filter((path) => {
       const source = readFileSync(resolve(root, path), 'utf8');
       return /(?:from\s+|import\s*\()\s*['"][^'"]*(?:@\/views|\/views)(?:\/|['"])/m.test(
+        source
+      );
+    });
+
+    expect(imports).toEqual([]);
+  });
+
+  test('applications do not retain an ambiguous custom component layer', async () => {
+    expect(await matchingFiles(customComponentGlob)).toEqual([]);
+
+    for (const app of apps) {
+      expect(
+        existsSync(resolve(root, `apps/${app}/src/components/custom`)),
+        app
+      ).toBe(false);
+    }
+  });
+
+  test('application source does not import through the retired custom alias', async () => {
+    const imports = (await matchingFiles(appSourceGlob)).filter((path) => {
+      const source = readFileSync(resolve(root, path), 'utf8');
+      return /(?:from\s+|import\s*\()\s*['"][^'"]*(?:@\/components\/custom|\/components\/custom)(?:\/|['"])/m.test(
         source
       );
     });

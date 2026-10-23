@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { PageLoading } from '@/components/custom/loading/PageLoading';
-import ProxySettingsPage from '@/components/custom/proxy-settings-page/ProxySettingsPage';
+import ProxySettingsPage from '@/app/user/proxy/_components/proxy-settings-form';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 
 export default function ProxySettings() {

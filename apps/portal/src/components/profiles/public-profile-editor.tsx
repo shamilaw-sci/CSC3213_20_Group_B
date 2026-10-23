@@ -54,8 +54,6 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageLoading } from '@/components/custom/loading/PageLoading';
 import {
   createEditorState,
   type EditorRecordStatus,
@@ -63,7 +61,9 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import type {
   PostgraduateProgramme,
   ProfileKind,

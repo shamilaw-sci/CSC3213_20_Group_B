@@ -8,10 +8,10 @@ import {
 } from '@scs/ui/components/card';
 import { Mail } from 'lucide-react';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import ProfileHeader from '@/components/custom/profile-page/components/profile-header';
-import { ProfileHeaderProps } from '@/components/custom/profile-page/components/profile-header';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
+import ProfileHeader from '@/components/profiles/profile-header';
+import { ProfileHeaderProps } from '@/components/profiles/profile-header';
 
 type ProfilePageProps = Omit<
   ProfileHeaderProps,

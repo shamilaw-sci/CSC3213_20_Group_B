@@ -17,17 +17,11 @@ describe('Portal Better Auth integration', () => {
   });
 
   test('moves all sign-in, account linking, passkeys, and logout to Better Auth', () => {
-    const login = source('src/components/custom/login-form/login-form.tsx');
-    const magicCode = source(
-      'src/components/custom/magic-code-form/magic-code-form.tsx'
-    );
+    const login = source('src/components/auth/login-form.tsx');
+    const magicCode = source('src/components/auth/magic-code-form.tsx');
     const passkeys = source('src/lib/passkeys.ts');
-    const logout = source(
-      'src/components/custom/logout-button/logout-button.tsx'
-    );
-    const profile = source(
-      'src/components/custom/profile-page/components/profile-content.tsx'
-    );
+    const logout = source('src/components/auth/logout-button.tsx');
+    const profile = source('src/components/profiles/account-content.tsx');
 
     expect(login).toContain('authClient.signIn.social');
     expect(login).not.toContain('authProviderApiUrl');

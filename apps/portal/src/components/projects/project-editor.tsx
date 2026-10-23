@@ -57,11 +57,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  PageLoading,
-  PageLoadingPanel,
-} from '@/components/custom/loading/PageLoading';
 import {
   createEditorState,
   type EditorRecordStatus,
@@ -69,7 +64,12 @@ import {
   type EditorValidationIssue,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import {
+  PageLoading,
+  PageLoadingPanel,
+} from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import { ProjectList } from '@/components/projects/project-list';
 import {
   type ProjectRecord,

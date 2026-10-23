@@ -15,7 +15,7 @@ import { cn } from 'cn';
 import { Eye, FolderKanban, Pencil, Search } from 'lucide-react';
 import Link from 'next/link';
 
-import { Pagination } from '@/components/custom/pagination/Pagination';
+import { Pagination } from '@/components/navigation/pagination';
 import type { ProjectRecord } from '@/components/projects/project-review';
 
 interface ProjectListProps {

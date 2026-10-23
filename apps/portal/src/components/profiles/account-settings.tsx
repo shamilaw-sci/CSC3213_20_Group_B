@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
-import { PageLoading } from '@/components/custom/loading/PageLoading';
-import ProfileContent from '@/components/custom/profile-page/components/profile-content';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
+import ProfileContent from '@/components/profiles/account-content';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 
 interface ProfileData {

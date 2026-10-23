@@ -1,4 +1,4 @@
-import ManageUserPage from '@/components/custom/manage-user-page/ManageUserPage';
+import ManageUserPage from '@/app/admin/users/[email]/_components/manage-user-page';
 import { loadAdminUser } from '@/lib/server/user';
 
 export default async function Page({

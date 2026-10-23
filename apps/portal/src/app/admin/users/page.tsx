@@ -1,4 +1,4 @@
-import ManageUsersPage from '@/components/custom/manage-users-page/ManageUsersPage';
+import ManageUsersPage from '@/app/admin/users/_components/manage-users-page';
 import { adminUsersPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';

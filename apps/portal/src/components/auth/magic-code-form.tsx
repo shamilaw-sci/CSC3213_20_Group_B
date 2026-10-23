@@ -6,7 +6,7 @@ import { Label } from '@scs/ui/components/label';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { MagicCodeInput } from '@/components/custom/magic-code-input/magic-code-input';
+import { MagicCodeInput } from '@/components/auth/magic-code-input';
 import { authConfig } from '@/config/auth.config';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
 import { authClient } from '@/lib/auth-client';

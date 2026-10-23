@@ -1,4 +1,4 @@
-import ProfileEditPage from '@/components/custom/profile-edit-page/ProfileEditPage';
+import ProfileEditPage from '@/app/user/me/edit/_components/profile-edit-page';
 import { loadCurrentUserProfile } from '@/lib/server/user';
 
 export default async function Page() {

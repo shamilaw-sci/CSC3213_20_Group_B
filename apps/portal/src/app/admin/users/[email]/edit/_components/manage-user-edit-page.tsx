@@ -19,13 +19,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
+import { PageShell } from '@/components/layout/page-shell';
+import { BackButton } from '@/components/navigation/back-button';
 import ProfilePictureEditor, {
   createInitialProfilePictureDraft,
   profilePictureDraftPayload,
   validateProfilePictureDraft,
-} from '@/components/custom/profile-picture-editor/ProfilePictureEditor';
-import { PageShell } from '@/components/layout/page-shell';
+} from '@/components/profiles/profile-picture-editor';
 import { adminUserApiUrl, apiHeaders, readApiError } from '@/lib/api';
 import { emailPathSegment } from '@/lib/email';
 import type { AppRole } from '@/types/role';

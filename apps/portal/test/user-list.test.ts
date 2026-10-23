@@ -5,7 +5,7 @@ const pageSource = await Bun.file(
 ).text();
 const componentSource = await Bun.file(
   new URL(
-    '../src/components/custom/manage-users-page/ManageUsersPage.tsx',
+    '../src/app/admin/users/_components/manage-users-page.tsx',
     import.meta.url
   )
 ).text();

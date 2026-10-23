@@ -1,4 +1,4 @@
-import ManageUserEditPage from '@/components/custom/manage-user-edit-page/ManageUserEditPage';
+import ManageUserEditPage from '@/app/admin/users/[email]/edit/_components/manage-user-edit-page';
 import { loadAdminUser } from '@/lib/server/user';
 
 export default async function Page({

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { PageLoading } from '@/components/custom/loading/PageLoading';
-import ProfilePage from '@/components/custom/profile-page/ProfilePage';
+import { PageLoading } from '@/components/feedback/page-loading';
+import ProfilePage from '@/components/profiles/profile-overview';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import { AppRole } from '@/types/role';
 

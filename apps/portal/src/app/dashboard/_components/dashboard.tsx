@@ -12,8 +12,8 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-import { PageLoading } from '@/components/custom/loading/PageLoading';
-import { LogoutButton } from '@/components/custom/logout-button/logout-button';
+import { LogoutButton } from '@/components/auth/logout-button';
+import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import {
