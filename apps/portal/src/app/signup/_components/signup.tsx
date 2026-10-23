@@ -1,15 +1,14 @@
 'use client';
-
-import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { LoginForm } from '@/components/custom/login-form/login-form';
+import { SignupForm } from '@/components/custom/signup-form/signup-form';
 import { UopLogoIcon } from '@/components/icons/uop-logo';
-import { auth_error_messages } from '@/views/auth/auth-errors';
+import { auth_error_messages } from '@/lib/auth/auth-errors';
 
-export default function Login() {
+export default function Signup() {
   const params = useSearchParams();
   const error = params.get('error');
   const pathname = usePathname();
@@ -18,7 +17,7 @@ export default function Login() {
   useEffect(() => {
     if (!error) return;
 
-    toast.error(auth_error_messages[error] || 'Login failed', {
+    toast.error(auth_error_messages[error] || 'Signup failed', {
       onDismiss: () => router.replace(pathname),
     });
   }, [error, pathname, router]);
@@ -34,15 +33,7 @@ export default function Login() {
             </h1>
           </div>
         </div>
-        <LoginForm />
-        <div className="flex justify-center gap-4 text-sm text-muted-foreground">
-          <Link href="/privacy" className="hover:text-foreground">
-            Privacy Policy
-          </Link>
-          <Link href="/tos" className="hover:text-foreground">
-            Terms of Service
-          </Link>
-        </div>
+        <SignupForm />
       </div>
     </div>
   );

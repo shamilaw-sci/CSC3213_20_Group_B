@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 import { MagicCodeInput } from '@/components/custom/magic-code-input/magic-code-input';
 import { authConfig } from '@/config/auth.config';
+import { auth_error_messages } from '@/lib/auth/auth-errors';
 import { authClient } from '@/lib/auth-client';
-import { auth_error_messages } from '@/views/auth/auth-errors';
 
 type Step = 'idle' | 'sending' | 'verify' | 'verifying';
 

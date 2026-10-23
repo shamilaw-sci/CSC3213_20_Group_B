@@ -17,13 +17,13 @@ import { toast } from 'sonner';
 
 import { MagicCodeForm } from '@/components/custom/magic-code-form/magic-code-form';
 import publicEnvConfig from '@/config/public.env.config';
+import { auth_error_messages } from '@/lib/auth/auth-errors';
 import { authClient } from '@/lib/auth-client';
 import {
   authenticateWithPasskey,
   isPasskeyApiError,
   passkeysAreSupported,
 } from '@/lib/passkeys';
-import { auth_error_messages } from '@/views/auth/auth-errors';
 
 export function LoginForm({
   className,

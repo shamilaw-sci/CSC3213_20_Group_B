@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 
 import { authConfig } from '@/config/auth.config';
 import publicEnvConfig from '@/config/public.env.config';
+import { auth_error_messages } from '@/lib/auth/auth-errors';
 import { authClient } from '@/lib/auth-client';
 import {
   deletePasskeyCredential,
@@ -34,7 +35,6 @@ import {
   registerPasskey,
   updatePasskeyCredential,
 } from '@/lib/passkeys';
-import { auth_error_messages } from '@/views/auth/auth-errors';
 
 export interface ProfileContentProps {
   id: string;

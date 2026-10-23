@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { UopLogoIcon } from '@/components/icons/uop-logo';
-import { auth_error_messages } from '@/views/auth/auth-errors';
+import { auth_error_messages } from '@/lib/auth/auth-errors';
 
 export default function PortalHome() {
   const params = useSearchParams();
