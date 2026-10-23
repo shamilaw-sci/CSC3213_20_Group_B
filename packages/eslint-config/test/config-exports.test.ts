@@ -73,12 +73,12 @@ describe('shared ESLint exports', () => {
     )?.settings?.['better-tailwindcss'];
 
     expect(webSettings).toEqual({
-      cwd: expect.stringContaining('apps\\web'),
+      cwd: expect.stringMatching(/[\\/]apps[\\/]web$/),
       detectComponentClasses: true,
       entryPoint: 'src/app/globals.css',
     });
     expect(uiSettings).toEqual({
-      cwd: expect.stringContaining('packages\\ui'),
+      cwd: expect.stringMatching(/[\\/]packages[\\/]ui$/),
       detectComponentClasses: true,
       entryPoint: 'src/styles/registry.css',
     });
