@@ -1,4 +1,4 @@
-import CourseManagementPage from '@/components/custom/course-management-page/CourseManagementPage';
+import CourseEditor from '@/components/courses/course-editor';
 import { meApiUrl, publicCoursesPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';
@@ -35,7 +35,7 @@ export default async function Page({
   });
 
   return (
-    <CourseManagementPage
+    <CourseEditor
       initialUser={user}
       initialCourses={data.items}
       previousHref={navigation.previousHref}

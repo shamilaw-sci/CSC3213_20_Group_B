@@ -1,4 +1,4 @@
-import CourseManagementPage from '@/components/custom/course-management-page/CourseManagementPage';
+import CourseEditor from '@/components/courses/course-editor';
 import { loadCourseEditorData } from '@/lib/server/course-editor';
 
 interface PageProps {
@@ -12,7 +12,7 @@ export default async function Page({ params }: PageProps) {
   const data = await loadCourseEditorData(course);
 
   return (
-    <CourseManagementPage
+    <CourseEditor
       courseId={course}
       initialUser={data.user}
       initialSchema={data.schema}

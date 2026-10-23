@@ -4,10 +4,7 @@ const projectSource = await Bun.file(
   new URL('../src/components/projects/project-editor.tsx', import.meta.url)
 ).text();
 const courseSource = await Bun.file(
-  new URL(
-    '../src/components/custom/course-management-page/CourseManagementPage.tsx',
-    import.meta.url
-  )
+  new URL('../src/components/courses/course-editor.tsx', import.meta.url)
 ).text();
 const operationSource = await Bun.file(
   new URL('../src/lib/mutation-operation.ts', import.meta.url)

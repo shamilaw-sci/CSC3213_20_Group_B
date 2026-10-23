@@ -26,28 +26,29 @@ import {
 } from '@scs/ui/components/select';
 import { Separator } from '@scs/ui/components/separator';
 import { cn } from 'cn';
-import {
-  BookOpen,
-  Plus,
-  RefreshCw,
-  Save,
-  Search,
-  Trash2,
-  X,
-} from 'lucide-react';
-import dynamic from 'next/dynamic';
+import { BookOpen, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { BackButton } from '@/components/custom/back-button/back-button';
+import { CourseList } from '@/components/courses/course-list';
 import {
-  type EditorModeValue,
-  EditorViewControls,
-} from '@/components/custom/editor-view-controls/editor-view-controls';
+  type CourseRecord,
+  CourseReview,
+} from '@/components/courses/course-review';
+import { CourseCodesSection } from '@/components/courses/sections/course-codes-section';
+import { CourseDepartmentsSection } from '@/components/courses/sections/course-departments-section';
+import { CourseDetailsSection } from '@/components/courses/sections/course-details-section';
+import { CourseOfferingsSection } from '@/components/courses/sections/course-offerings-section';
+import { BackButton } from '@/components/custom/back-button/back-button';
 import { PageLoading } from '@/components/custom/loading/PageLoading';
-import { Pagination } from '@/components/custom/pagination/Pagination';
+import {
+  createEditorState,
+  type EditorRecordStatus,
+  type EditorState,
+} from '@/components/editor/editor-state';
+import { EditorWorkspace } from '@/components/editor/editor-workspace';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import {
   apiHeaders,
@@ -68,25 +69,7 @@ import {
 import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { canEditCoursesRole } from '@/types/role';
 
-const JsonEditor = dynamic(
-  () =>
-    import('@/components/editor/json-editor').then(
-      (module) => module.JsonEditor
-    ),
-  { ssr: false }
-);
-const JsonPreview = dynamic(
-  () =>
-    import('@/components/editor/json-preview').then(
-      (module) => module.JsonPreview
-    ),
-  { ssr: false }
-);
-
-type EditorMode = 'form' | 'json-view' | 'json-edit';
-type CourseTab = 'draft' | 'published';
-
-interface CourseManagementPageProps {
+interface CourseEditorProps {
   courseId?: string;
   newCourse?: boolean;
   initialUser?: Record<string, unknown>;
@@ -97,15 +80,6 @@ interface CourseManagementPageProps {
   initialOfferings?: unknown[];
   previousHref?: string;
   nextHref?: string;
-}
-
-interface CourseRecord {
-  id: string;
-  primaryCode: string;
-  codes: string[];
-  title: string;
-  credits: 1 | 2 | 3 | 6;
-  departments: string[];
 }
 
 interface OfferingRecord {
@@ -163,6 +137,13 @@ const STAFF_ROLES = [
   'LECTURER',
   'INSTRUCTOR',
   'TEACHING_ASSISTANT',
+] as const;
+
+const COURSE_EDITOR_SECTIONS = [
+  { id: 'course-details', label: 'Details' },
+  { id: 'course-codes', label: 'Codes' },
+  { id: 'course-departments', label: 'Departments' },
+  { id: 'course-offerings', label: 'Offerings' },
 ] as const;
 
 function normalizeCourseCode(value: string) {
@@ -225,6 +206,47 @@ function courseFromRecord(value: unknown): CourseRecord | null {
 
   if (!id || !primaryCode || !title || codes.length === 0) return null;
   return { id, primaryCode, codes, title, credits, departments };
+}
+
+function validateCourseDraft(value: unknown) {
+  const course = courseFromRecord(value);
+  if (!course) {
+    return {
+      success: false as const,
+      issues: [
+        {
+          field: 'course-details',
+          message: 'Course JSON must match the course catalog fields.',
+        },
+      ],
+    };
+  }
+
+  const normalizedCodes = uniqueCourseCodes(course.codes);
+  if (normalizedCodes.length !== course.codes.length) {
+    return {
+      success: false as const,
+      issues: [
+        {
+          field: 'course-codes',
+          message: 'Course codes must be valid and cannot contain duplicates.',
+        },
+      ],
+    };
+  }
+  if (!normalizedCodes.includes(normalizeCourseCode(course.primaryCode))) {
+    return {
+      success: false as const,
+      issues: [
+        {
+          field: 'course-codes',
+          message: 'The primary code must also appear in the course code list.',
+        },
+      ],
+    };
+  }
+
+  return { success: true as const, data: course };
 }
 
 function offeringFromRecord(value: unknown): OfferingRecord | null {
@@ -292,7 +314,7 @@ function prBadgeClass(status: AcademicPr['status']) {
   return 'border-muted-foreground/20 text-muted-foreground';
 }
 
-export default function CourseManagementPage({
+export default function CourseEditor({
   courseId,
   newCourse = false,
   initialUser,
@@ -303,7 +325,7 @@ export default function CourseManagementPage({
   initialOfferings = [],
   previousHref,
   nextHref,
-}: CourseManagementPageProps) {
+}: CourseEditorProps) {
   const router = useRouter();
   const beginOperationPolling = useOperationPollingSignal();
   const [user, setUser] = useState<Record<string, unknown> | null>(
@@ -327,23 +349,17 @@ export default function CourseManagementPage({
     ? (initialPullRequest as unknown as AcademicPr)
     : null;
   const initialDraftCourse = courseFromRecord(initialPr?.draftRecord);
-  const [course, setCourse] = useState<CourseRecord>(
-    initialDraftCourse ?? initialPublishedCourse ?? emptyCourse()
+  const [editorState, setEditorState] = useState<EditorState<CourseRecord>>(
+    () =>
+      createEditorState(
+        initialDraftCourse ?? initialPublishedCourse ?? emptyCourse(),
+        initialPublishedCourse
+      )
   );
-  const [publishedCourse, setPublishedCourse] = useState<CourseRecord | null>(
-    initialPublishedCourse
-  );
+  const course = editorState.draft;
+  const publishedCourse = editorState.published;
   const [pr, setPr] = useState<AcademicPr | null>(initialPr);
   const [query, setQuery] = useState('');
-  const [jsonText, setJsonText] = useState(
-    JSON.stringify(
-      initialDraftCourse ?? initialPublishedCourse ?? emptyCourse(),
-      null,
-      2
-    )
-  );
-  const [editorMode, setEditorMode] = useState<EditorMode>('form');
-  const [activeTab, setActiveTab] = useState<CourseTab>('draft');
   const [loading, setLoading] = useState(
     !initialUser || ((Boolean(courseId) || newCourse) && !initialSchema)
   );
@@ -353,10 +369,8 @@ export default function CourseManagementPage({
   const canEdit =
     Boolean(schema?.canEditCourses) || canEditCoursesRole(user ?? {});
   const isWorkspace = Boolean(courseId) || newCourse;
-  const displayedCourse =
-    activeTab === 'published' ? (publishedCourse ?? course) : course;
   const courseOfferings = offerings.filter(
-    (offering) => offering.courseId === displayedCourse.id
+    (offering) => offering.courseId === course.id
   );
 
   const filteredCourses = useMemo(() => {
@@ -369,22 +383,22 @@ export default function CourseManagementPage({
         item.codes.some((code) => code.toLowerCase().includes(normalizedQuery))
     );
   }, [courses, query]);
+  const editorStatus: EditorRecordStatus = saving
+    ? 'submitting'
+    : newCourse
+      ? 'new'
+      : pr?.status === 'open'
+        ? 'draft'
+        : publishedCourse
+          ? 'published'
+          : 'draft';
 
-  function syncJson(nextCourse = course) {
-    setJsonText(JSON.stringify(nextCourse, null, 2));
-  }
-
-  function setEditableCourse(nextCourse: CourseRecord) {
-    setCourse(nextCourse);
-    syncJson(nextCourse);
-    setActiveTab('draft');
-  }
-
-  function handleCourseTabChange(tab: CourseTab) {
-    setActiveTab(tab);
-    if (tab === 'published' && editorMode !== 'json-view') {
-      setEditorMode('json-view');
-    }
+  function rejectCourse(field: string, message: string) {
+    setEditorState((current) => ({
+      ...current,
+      validationIssues: [{ field, message }],
+    }));
+    toast.error(message);
   }
 
   async function loadMe() {
@@ -478,10 +492,7 @@ export default function CourseManagementPage({
 
     setSchema(nextSchema);
     setPr(nextPr);
-    setPublishedCourse(published);
-    setCourse(nextCourse);
-    syncJson(nextCourse);
-    setActiveTab('draft');
+    setEditorState(createEditorState(nextCourse, published));
   }
 
   useEffect(() => {
@@ -514,10 +525,8 @@ export default function CourseManagementPage({
                 }
                 setSchema((await schemaRes.json()) as SchemaResponse);
                 const nextCourse = emptyCourse();
-                setCourse(nextCourse);
-                setPublishedCourse(null);
+                setEditorState(createEditorState(nextCourse, null));
                 setPr(null);
-                syncJson(nextCourse);
               })()
             : Promise.resolve();
         await Promise.all([
@@ -545,23 +554,7 @@ export default function CourseManagementPage({
      * Key loading by route state only. Helper identities change with local
      * editor state and must not restart this network request.
      */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, initialSchema, initialUser, newCourse]);
-
-  function parseJsonEditor() {
-    try {
-      const value = JSON.parse(jsonText) as unknown;
-      const parsed = courseFromRecord(value);
-      if (!parsed) {
-        toast.error('Course JSON must match the course catalog shape.');
-        return null;
-      }
-      return parsed;
-    } catch {
-      toast.error('Course JSON is not valid JSON.');
-      return null;
-    }
-  }
 
   async function saveCourse(nextCourse = course) {
     if (!canEdit) {
@@ -571,21 +564,30 @@ export default function CourseManagementPage({
 
     const normalizedId = slugify(nextCourse.id);
     if (!normalizedId) {
-      toast.error('Course id is required.');
+      rejectCourse('course-details', 'Course id is required.');
       return;
     }
     if (courseId && normalizedId !== slugify(courseId)) {
-      toast.error('Course id must match the selected course.');
+      rejectCourse(
+        'course-details',
+        'Course id must match the selected course.'
+      );
       return;
     }
     const normalizedPrimaryCode = normalizeCourseCode(nextCourse.primaryCode);
     const normalizedCodes = uniqueCourseCodes(nextCourse.codes);
     if (normalizedCodes.length !== nextCourse.codes.length) {
-      toast.error('Course codes must be valid and cannot contain duplicates.');
+      rejectCourse(
+        'course-codes',
+        'Course codes must be valid and cannot contain duplicates.'
+      );
       return;
     }
     if (!normalizedCodes.includes(normalizedPrimaryCode)) {
-      toast.error('Primary code must be listed in course codes.');
+      rejectCourse(
+        'course-codes',
+        'Primary code must be listed in course codes.'
+      );
       return;
     }
     const validatedCourse = {
@@ -622,8 +624,9 @@ export default function CourseManagementPage({
         { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
-      setCourse(validatedCourse);
-      syncJson(validatedCourse);
+      setEditorState((current) =>
+        createEditorState(validatedCourse, current.published)
+      );
       await loadCourse(normalizedId);
       router.refresh();
       toast.success('Course PR submitted.');
@@ -787,61 +790,13 @@ export default function CourseManagementPage({
           }
         />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Course Catalog</CardTitle>
-            <CardDescription>
-              Search by course id, title, or course code.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search courses"
-                className="pl-9"
-              />
-            </div>
-            <Separator />
-            {filteredCourses.length === 0 ? (
-              <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-center">
-                <BookOpen className="size-10 opacity-30" />
-                <p className="text-sm">No courses found.</p>
-              </div>
-            ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {filteredCourses.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/academic/courses/${item.id}`}
-                    className="rounded-md border bg-card p-4 shadow-sm transition hover:border-foreground/25 hover:bg-muted/30"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2 className="font-semibold">{item.title}</h2>
-                        <p className="text-muted-foreground text-sm">
-                          {item.id}
-                        </p>
-                      </div>
-                      <Badge variant="secondary">{item.primaryCode}</Badge>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {item.codes.map((code) => (
-                        <Badge key={code} variant="outline">
-                          {code}
-                        </Badge>
-                      ))}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Pagination previousHref={previousHref} nextHref={nextHref} />
+        <CourseList
+          courses={filteredCourses}
+          query={query}
+          onQueryChange={setQuery}
+          previousHref={previousHref}
+          nextHref={nextHref}
+        />
       </PageShell>
     );
   }
@@ -850,7 +805,7 @@ export default function CourseManagementPage({
     <PageShell width="wide">
       <BackButton fallbackHref="/academic/courses" label="Back to Courses" />
       <PageHeader
-        title={newCourse ? 'New Course' : displayedCourse.title || 'Course'}
+        title={newCourse ? 'New Course' : course.title || 'Course'}
         description={
           schema?.note ??
           'Course data is validated before a GitHub pull request is opened.'
@@ -867,19 +822,6 @@ export default function CourseManagementPage({
               <RefreshCw data-icon="inline-start" />
               Refresh
             </Button>
-            {canEdit ? (
-              <Button
-                disabled={saving}
-                onClick={() => {
-                  const nextCourse =
-                    editorMode === 'json-edit' ? parseJsonEditor() : course;
-                  if (nextCourse) void saveCourse(nextCourse);
-                }}
-              >
-                <Save data-icon="inline-start" />
-                Save
-              </Button>
-            ) : null}
           </div>
         }
       />
@@ -902,90 +844,83 @@ export default function CourseManagementPage({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <CardTitle>Course</CardTitle>
-                  <CardDescription>
-                    Stable catalog identity and valid course codes.
-                  </CardDescription>
-                </div>
-                <EditorViewControls<CourseTab>
-                  className="md:w-[24rem]"
-                  sourceValue={
-                    !newCourse && publishedCourse ? activeTab : undefined
-                  }
-                  sourceOptions={[
-                    {
-                      value: 'draft',
-                      label: pr?.draftRecord ? 'Draft PR' : 'Editor',
-                    },
-                    { value: 'published', label: 'Published' },
-                  ]}
-                  onSourceChange={handleCourseTabChange}
-                  modeValue={editorMode as EditorModeValue}
-                  onModeChange={(value) => setEditorMode(value as EditorMode)}
-                  disableJsonEdit={!canEdit || activeTab === 'published'}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {editorMode === 'json-view' ? (
-                <JsonPreview value={displayedCourse} />
-              ) : editorMode === 'json-edit' ? (
-                <JsonEditor
-                  value={jsonText}
-                  onChange={setJsonText}
-                  readOnly={!canEdit || activeTab === 'published'}
-                  minHeight="420px"
-                  height="min(58vh, 680px)"
-                />
-              ) : (
-                <CourseForm
-                  course={displayedCourse}
-                  readOnly={!canEdit || activeTab === 'published'}
-                  onChange={setEditableCourse}
-                />
-              )}
+            <CardContent className="pt-6">
+              <EditorWorkspace
+                state={editorState}
+                onStateChange={setEditorState}
+                title={
+                  newCourse ? 'New course draft' : course.title || 'Course'
+                }
+                status={editorStatus}
+                statusDetail={
+                  pr?.status === 'open'
+                    ? 'A pull request draft is open.'
+                    : publishedCourse
+                      ? 'Published data is available for comparison.'
+                      : 'This course has not been published yet.'
+                }
+                sections={COURSE_EDITOR_SECTIONS}
+                canEditJson={canEdit}
+                canSubmit={canEdit}
+                submitting={saving}
+                submitLabel="Submit Course Changes"
+                validateJson={validateCourseDraft}
+                onSubmit={() => void saveCourse(editorState.draft)}
+                renderEdit={(draft, onDraftChange) => (
+                  <CourseForm
+                    course={draft}
+                    readOnly={!canEdit}
+                    onChange={onDraftChange}
+                  />
+                )}
+                renderReview={(draft, published, onChangeField) => (
+                  <CourseReview
+                    draft={draft}
+                    published={published}
+                    offeringCount={courseOfferings.length}
+                    onChangeField={onChangeField}
+                  />
+                )}
+              />
             </CardContent>
           </Card>
 
           {!newCourse ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Offerings</CardTitle>
-                <CardDescription>
-                  Year and semester instances for this course.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {courseOfferings.length === 0 ? (
-                  <div className="text-muted-foreground rounded-md border p-4 text-sm">
-                    No offerings are published for this course yet.
-                  </div>
-                ) : (
-                  courseOfferings.map((offering) => (
-                    <OfferingForm
-                      key={offering.id}
-                      offering={offering}
-                      readOnly={!canEdit}
-                      onSave={(nextOffering) => void saveOffering(nextOffering)}
-                    />
-                  ))
-                )}
-                {canEdit && activeTab === 'draft' ? (
-                  <>
-                    <Separator />
-                    <OfferingForm
-                      offering={emptyOffering(course)}
-                      createMode
-                      readOnly={!canEdit}
-                      onSave={(nextOffering) => void saveOffering(nextOffering)}
-                    />
-                  </>
-                ) : null}
-              </CardContent>
-            </Card>
+            <CourseOfferingsSection>
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  {courseOfferings.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                      No offerings are published for this course yet.
+                    </div>
+                  ) : (
+                    courseOfferings.map((offering) => (
+                      <OfferingForm
+                        key={offering.id}
+                        offering={offering}
+                        readOnly={!canEdit}
+                        onSave={(nextOffering) =>
+                          void saveOffering(nextOffering)
+                        }
+                      />
+                    ))
+                  )}
+                  {canEdit ? (
+                    <>
+                      <Separator />
+                      <OfferingForm
+                        offering={emptyOffering(course)}
+                        createMode
+                        readOnly={!canEdit}
+                        onSave={(nextOffering) =>
+                          void saveOffering(nextOffering)
+                        }
+                      />
+                    </>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </CourseOfferingsSection>
           ) : null}
         </div>
 
@@ -1007,11 +942,11 @@ export default function CourseManagementPage({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Primary code</span>
-                <span>{displayedCourse.primaryCode}</span>
+                <span>{course.primaryCode}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Credits</span>
-                <span>{displayedCourse.credits}</span>
+                <span>{course.credits}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Offerings</span>
@@ -1135,126 +1070,142 @@ function CourseForm({
   }
 
   return (
-    <FieldGroup className="grid gap-4 md:grid-cols-2">
-      <Field>
-        <FieldLabel htmlFor="course-id">Course ID</FieldLabel>
-        <Input
-          id="course-id"
-          value={course.id}
-          readOnly={readOnly}
-          onChange={(event) => setField('id', slugify(event.target.value))}
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="course-primary-code">Primary Code</FieldLabel>
-        <Input
-          id="course-primary-code"
-          value={course.primaryCode}
-          readOnly={readOnly}
-          placeholder="CSC3213"
-          onChange={(event) => {
-            const primaryCode = normalizeCourseCode(event.target.value);
-            onChange({
-              ...course,
-              primaryCode,
-              codes: uniqueCourseCodes([...course.codes, primaryCode]),
-            });
-          }}
-        />
-      </Field>
-      <Field className="md:col-span-2">
-        <FieldLabel htmlFor="course-title">Title</FieldLabel>
-        <Input
-          id="course-title"
-          value={course.title}
-          readOnly={readOnly}
-          onChange={(event) => setField('title', event.target.value)}
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="course-credits">Credits</FieldLabel>
-        <Select
-          value={String(course.credits)}
-          disabled={readOnly}
-          onValueChange={(value) =>
-            setField('credits', Number(value) as 1 | 2 | 3 | 6)
-          }
-        >
-          <SelectTrigger id="course-credits" className="w-full">
-            <SelectValue placeholder="Select credits" />
-          </SelectTrigger>
-          <SelectContent>
-            {CREDIT_OPTIONS.map((credits) => (
-              <SelectItem key={credits} value={String(credits)}>
-                {credits}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field className="md:col-span-2">
-        <FieldLabel htmlFor="course-code-draft">
-          Additional Course Codes
-        </FieldLabel>
-        <div className="space-y-2 rounded-md border p-3">
-          <div className="flex flex-wrap gap-2">
-            {course.codes.length === 0 ? (
-              <span className="text-muted-foreground text-sm">
-                No course codes added.
-              </span>
-            ) : (
-              course.codes.map((code) => (
-                <Badge key={code} variant="outline" className="gap-2">
-                  {code}
-                  {code === course.primaryCode ? (
-                    <span className="text-muted-foreground">Primary</span>
-                  ) : !readOnly ? (
-                    <button
-                      type="button"
-                      className="hover:text-destructive"
-                      aria-label={`Remove ${code}`}
-                      onClick={() => removeCode(code)}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  ) : null}
-                </Badge>
-              ))
-            )}
-          </div>
-          {!readOnly ? (
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <Input
-                id="course-code-draft"
-                value={codeDraft}
-                placeholder="Enter course code"
-                onChange={(event) => setCodeDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    addCode();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!codeDraft}
-                onClick={addCode}
-              >
-                <Plus data-icon="inline-start" />
-                Add
-              </Button>
+    <div className="space-y-8">
+      <CourseDetailsSection>
+        <FieldGroup className="grid gap-4 md:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="course-id">Course ID</FieldLabel>
+            <Input
+              id="course-id"
+              value={course.id}
+              readOnly={readOnly}
+              onChange={(event) => setField('id', slugify(event.target.value))}
+            />
+          </Field>
+          <Field className="md:col-span-2">
+            <FieldLabel htmlFor="course-title">Title</FieldLabel>
+            <Input
+              id="course-title"
+              value={course.title}
+              readOnly={readOnly}
+              onChange={(event) => setField('title', event.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="course-credits">Credits</FieldLabel>
+            <Select
+              value={String(course.credits)}
+              disabled={readOnly}
+              onValueChange={(value) =>
+                setField('credits', Number(value) as 1 | 2 | 3 | 6)
+              }
+            >
+              <SelectTrigger id="course-credits" className="w-full">
+                <SelectValue placeholder="Select credits" />
+              </SelectTrigger>
+              <SelectContent>
+                {CREDIT_OPTIONS.map((credits) => (
+                  <SelectItem key={credits} value={String(credits)}>
+                    {credits}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </FieldGroup>
+      </CourseDetailsSection>
+
+      <CourseCodesSection>
+        <FieldGroup className="grid gap-4">
+          <Field>
+            <FieldLabel htmlFor="course-primary-code">Primary Code</FieldLabel>
+            <Select
+              value={course.primaryCode}
+              disabled={readOnly || course.codes.length === 0}
+              onValueChange={(primaryCode) =>
+                setField('primaryCode', primaryCode)
+              }
+            >
+              <SelectTrigger id="course-primary-code" className="w-full">
+                <SelectValue placeholder="Add a course code first" />
+              </SelectTrigger>
+              <SelectContent>
+                {course.codes.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="course-code-draft">
+              Additional Course Codes
+            </FieldLabel>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex flex-wrap gap-2">
+                {course.codes.length === 0 ? (
+                  <span className="text-sm text-muted-foreground">
+                    No course codes added.
+                  </span>
+                ) : (
+                  course.codes.map((code) => (
+                    <Badge key={code} variant="outline" className="gap-2">
+                      {code}
+                      {code === course.primaryCode ? (
+                        <span className="text-muted-foreground">Primary</span>
+                      ) : !readOnly ? (
+                        <button
+                          type="button"
+                          className="hover:text-destructive"
+                          aria-label={`Remove ${code}`}
+                          onClick={() => removeCode(code)}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      ) : null}
+                    </Badge>
+                  ))
+                )}
+              </div>
+              {!readOnly ? (
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <Input
+                    id="course-code-draft"
+                    value={codeDraft}
+                    placeholder="Enter course code"
+                    onChange={(event) => setCodeDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addCode();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!codeDraft}
+                    onClick={addCode}
+                  >
+                    <Plus data-icon="inline-start" />
+                    Add code
+                  </Button>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-      </Field>
-      <DepartmentCheckboxes
-        value={course.departments}
-        readOnly={readOnly}
-        onChange={(departments) => setField('departments', departments)}
-      />
-    </FieldGroup>
+          </Field>
+        </FieldGroup>
+      </CourseCodesSection>
+
+      <CourseDepartmentsSection>
+        <DepartmentCheckboxes
+          value={course.departments}
+          readOnly={readOnly}
+          onChange={(departments) => setField('departments', departments)}
+        />
+      </CourseDepartmentsSection>
+    </div>
   );
 }
 
@@ -1270,9 +1221,7 @@ function OfferingForm({
   onSave: (offering: OfferingRecord) => void;
 }) {
   const [draft, setDraft] = useState(offering);
-  const staffText = draft.staff
-    .map((member) => `${member.staff}:${member.role}`)
-    .join(', ');
+  const formId = useId();
 
   function setField<K extends keyof OfferingRecord>(
     field: K,
@@ -1285,27 +1234,27 @@ function OfferingForm({
     <div className="rounded-md border p-4">
       <FieldGroup className="grid gap-4 md:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor="offering-id">Offering ID</FieldLabel>
+          <FieldLabel htmlFor={`${formId}-id`}>Offering ID</FieldLabel>
           <Input
-            id="offering-id"
+            id={`${formId}-id`}
             value={draft.id}
             readOnly={readOnly}
             onChange={(event) => setField('id', slugify(event.target.value))}
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="offering-academic-year">
+          <FieldLabel htmlFor={`${formId}-academic-year`}>
             Academic Year
           </FieldLabel>
           <Input
-            id="offering-academic-year"
+            id={`${formId}-academic-year`}
             value={draft.academicYear}
             readOnly={readOnly}
             onChange={(event) => setField('academicYear', event.target.value)}
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="offering-semester">Semester</FieldLabel>
+          <FieldLabel htmlFor={`${formId}-semester`}>Semester</FieldLabel>
           <Select
             value={draft.semester}
             disabled={readOnly}
@@ -1313,7 +1262,7 @@ function OfferingForm({
               setField('semester', value as 'SEM1' | 'SEM2')
             }
           >
-            <SelectTrigger id="offering-semester" className="w-full">
+            <SelectTrigger id={`${formId}-semester`} className="w-full">
               <SelectValue placeholder="Select semester" />
             </SelectTrigger>
             <SelectContent>
@@ -1322,45 +1271,133 @@ function OfferingForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field>
-          <FieldLabel htmlFor="offering-staff">Staff</FieldLabel>
-          <Input
-            id="offering-staff"
-            value={staffText}
-            readOnly={readOnly}
-            placeholder="username:LECTURER, username:INSTRUCTOR"
-            onChange={(event) =>
-              setField(
-                'staff',
-                event.target.value
-                  .split(',')
-                  .map((item) => {
-                    const [staff, role] = item
-                      .split(':')
-                      .map((part) => part.trim());
-                    if (!staff) return null;
-                    return {
-                      staff,
-                      role: STAFF_ROLES.includes(
-                        role as (typeof STAFF_ROLES)[number]
-                      )
-                        ? (role as (typeof STAFF_ROLES)[number])
-                        : 'LECTURER',
-                    };
-                  })
-                  .filter((item): item is OfferingRecord['staff'][number] =>
-                    Boolean(item)
-                  )
-              )
-            }
-          />
+        <Field className="md:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <FieldLabel>Teaching staff</FieldLabel>
+            {!readOnly ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setField('staff', [
+                    ...draft.staff,
+                    { staff: '', role: 'LECTURER' },
+                  ])
+                }
+              >
+                <Plus data-icon="inline-start" />
+                Add staff member
+              </Button>
+            ) : null}
+          </div>
+          {draft.staff.length === 0 ? (
+            <p className="rounded-md border p-3 text-sm text-muted-foreground">
+              No teaching staff assigned.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {draft.staff.map((member, index) => (
+                <div
+                  key={`${member.staff}-${index}`}
+                  className="grid gap-2 rounded-md border p-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,0.6fr)_auto]"
+                >
+                  <div className="space-y-1.5">
+                    <FieldLabel htmlFor={`${formId}-staff-${index}`}>
+                      Username
+                    </FieldLabel>
+                    <Input
+                      id={`${formId}-staff-${index}`}
+                      value={member.staff}
+                      readOnly={readOnly}
+                      placeholder="Academic username"
+                      onChange={(event) => {
+                        const staff = draft.staff.map((entry, entryIndex) =>
+                          entryIndex === index
+                            ? { ...entry, staff: event.target.value.trim() }
+                            : entry
+                        );
+                        setField('staff', staff);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <FieldLabel htmlFor={`${formId}-role-${index}`}>
+                      Role
+                    </FieldLabel>
+                    <Select
+                      value={member.role}
+                      disabled={readOnly}
+                      onValueChange={(role) => {
+                        const staff = draft.staff.map((entry, entryIndex) =>
+                          entryIndex === index
+                            ? {
+                                ...entry,
+                                role: role as OfferingRecord['staff'][number]['role'],
+                              }
+                            : entry
+                        );
+                        setField('staff', staff);
+                      }}
+                    >
+                      <SelectTrigger
+                        id={`${formId}-role-${index}`}
+                        className="w-full"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAFF_ROLES.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {enumLabel(role)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {!readOnly ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="self-end"
+                      aria-label={`Remove staff member ${index + 1}`}
+                      onClick={() =>
+                        setField(
+                          'staff',
+                          draft.staff.filter(
+                            (_, entryIndex) => entryIndex !== index
+                          )
+                        )
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
         </Field>
       </FieldGroup>
       {!readOnly ? (
         <div className="mt-4 flex justify-end">
-          <Button size="sm" onClick={() => onSave(draft)}>
+          <Button
+            size="sm"
+            onClick={() =>
+              onSave({
+                ...draft,
+                staff: draft.staff
+                  .filter((member) => member.staff.trim())
+                  .map((member) => ({
+                    ...member,
+                    staff: member.staff.trim(),
+                  })),
+              })
+            }
+          >
             <Save data-icon="inline-start" />
-            {createMode ? 'Add Offering' : 'Save Offering'}
+            {createMode ? 'Add Course Offering' : 'Submit Offering Changes'}
           </Button>
         </div>
       ) : null}
