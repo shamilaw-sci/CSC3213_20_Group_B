@@ -37,9 +37,6 @@ export interface ProxySettingsPage {
   total: number;
 }
 
-export type ImportProxySettingsResult =
-  'created' | 'already_present' | 'conflict';
-
 function emailToUsername(email: string): string {
   return email.split('@')[0]?.toLowerCase() ?? email.toLowerCase();
 }
@@ -225,45 +222,4 @@ export async function listProxySettingsPage(
     nextEmail: hasMore ? (pageRows.at(-1)?.email ?? null) : null,
     total,
   };
-}
-
-/**
- * Imports one legacy row without overwriting D1 state created after cutover.
- * Repeated migration runs therefore remain safe and report their disposition.
- */
-export async function importProxySettings(
-  env: Env,
-  settings: Omit<ProxySettings, 'revision'>
-): Promise<ImportProxySettingsResult> {
-  const email = settings.email.trim().toLowerCase();
-  const updatedAt = settings.updatedAt ? Date.parse(settings.updatedAt) : null;
-  const attemptWindowStartedAt =
-    settings.availableAttempts < PROXY_DEFAULT_AVAILABLE_ATTEMPTS
-      ? updatedAt
-      : null;
-  const inserted = await env.AUTH_DB.prepare(
-    'INSERT OR IGNORE INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
-  )
-    .bind(
-      email,
-      settings.username.trim().toLowerCase(),
-      settings.active,
-      settings.url,
-      settings.availableAttempts,
-      attemptWindowStartedAt,
-      updatedAt,
-      settings.updatedBy ?? null
-    )
-    .run();
-  if ((inserted.meta.changes ?? 0) > 0) return 'created';
-
-  const existing = await env.AUTH_DB.prepare(
-    'SELECT email, username FROM proxySettings WHERE email = ? OR username = ? LIMIT 1'
-  )
-    .bind(email, settings.username.trim().toLowerCase())
-    .first<{ email: string; username: string }>();
-  return existing?.email === email &&
-    existing.username === settings.username.trim().toLowerCase()
-    ? 'already_present'
-    : 'conflict';
 }

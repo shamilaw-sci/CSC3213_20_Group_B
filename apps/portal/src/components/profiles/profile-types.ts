@@ -16,7 +16,7 @@ export type PostgraduateProgramme =
   | 'PHD_UPGRADE_FROM_MSC'
   | 'PHD_UPGRADE_FROM_MPHIL';
 
-export type SlqfLevel = 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12';
+type SlqfLevel = 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12';
 
 export interface StudentPlacementResponse {
   level?: Student['level'];

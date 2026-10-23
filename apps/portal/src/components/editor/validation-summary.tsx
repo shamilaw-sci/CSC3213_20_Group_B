@@ -46,21 +46,3 @@ export function ValidationSummary({
     </section>
   );
 }
-
-interface InlineValidationErrorProps {
-  id: string;
-  message?: string;
-}
-
-export function InlineValidationError({
-  id,
-  message,
-}: InlineValidationErrorProps) {
-  if (!message) return null;
-
-  return (
-    <p id={id} className="mt-1 text-sm text-destructive">
-      {message}
-    </p>
-  );
-}

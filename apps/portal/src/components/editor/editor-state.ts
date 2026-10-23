@@ -8,7 +8,7 @@ export interface EditorValidationIssue {
   message: string;
 }
 
-export type EditorValidationResult<T> =
+type EditorValidationResult<T> =
   | { success: true; data: T }
   | { success: false; issues: EditorValidationIssue[] };
 
