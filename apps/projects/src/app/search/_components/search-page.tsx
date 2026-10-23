@@ -8,7 +8,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import {
   ProjectErrorPanel,
   ProjectListLoading,
-} from '@/components/custom/StatePanel';
+} from '@/components/projects/project-states';
 import { ProjectGrid } from '@/components/projects/registry-ui';
 import { fetchProjectSearch } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';

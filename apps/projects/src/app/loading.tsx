@@ -1,4 +1,4 @@
-import { ProjectListLoading } from '@/components/custom/StatePanel';
+import { ProjectListLoading } from '@/components/projects/project-states';
 
 export default function Loading() {
   return (

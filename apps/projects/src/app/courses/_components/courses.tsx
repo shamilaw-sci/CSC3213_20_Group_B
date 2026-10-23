@@ -14,7 +14,7 @@ import {
   ProjectErrorPanel,
   StatePanel,
   TileGridLoading,
-} from '@/components/custom/StatePanel';
+} from '@/components/projects/project-states';
 import { PageIntro } from '@/components/projects/registry-ui';
 import { fetchCourses, type ProjectCourse } from '@/lib/projects/api-client';
 

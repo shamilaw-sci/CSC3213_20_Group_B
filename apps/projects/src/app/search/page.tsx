@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import SearchPage from '@/app/search/_components/search-page';
-import { ProjectListLoading } from '@/components/custom/StatePanel';
+import { ProjectListLoading } from '@/components/projects/project-states';
 
 export const metadata: Metadata = {
   title: 'Search Projects',

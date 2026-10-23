@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import {
   ProjectErrorPanel,
   ProjectListLoading,
-} from '@/components/custom/StatePanel';
+} from '@/components/projects/project-states';
 import { ProjectGrid } from '@/components/projects/registry-ui';
 import { fetchProjects } from '@/lib/projects/api-client';
 import type { Project, ProjectType } from '@/lib/projects/types';

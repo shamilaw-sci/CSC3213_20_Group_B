@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ProjectErrorPanel,
   ProjectListLoading,
-} from '@/components/custom/StatePanel';
+} from '@/components/projects/project-states';
 import {
   FacetRail,
   PageIntro,

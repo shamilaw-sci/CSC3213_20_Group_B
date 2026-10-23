@@ -6,7 +6,7 @@ import {
   ProjectDetailLoading,
   ProjectErrorPanel,
   StatePanel,
-} from '@/components/custom/StatePanel';
+} from '@/components/projects/project-states';
 import { ProjectDetail, ProjectGrid } from '@/components/projects/registry-ui';
 import {
   fetchProject,

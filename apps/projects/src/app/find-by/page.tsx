@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 import FindByUsernamePage from '@/app/find-by/_components/find-by-username-page';
-import { ProjectListLoading } from '@/components/custom/StatePanel';
+import { ProjectListLoading } from '@/components/projects/project-states';
 
 export const metadata = {
   title: 'Find Projects by Username',

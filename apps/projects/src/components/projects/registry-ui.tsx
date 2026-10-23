@@ -37,7 +37,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
 
-import { EmptyProjectsPanel } from '@/components/custom/StatePanel';
+import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import publicEnvConfig from '@/config/public.env.config';
 import {
   fetchCategories,
