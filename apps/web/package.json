@@ -19,7 +19,7 @@
     "@scs/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "lucide-react": "^1.55.0",
-    "next": "^16.2.6",
+    "next": "^16.4.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "zod": "^4.4.3"
