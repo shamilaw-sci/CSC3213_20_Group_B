@@ -1,4 +1,4 @@
-import StudentSubjectBatchPage from '@/views/students/StudentSubjectBatchPage';
+import StudentSubjectBatchPage from '@/components/students/student-subject-batch-page';
 
 export default async function Page({
   params,

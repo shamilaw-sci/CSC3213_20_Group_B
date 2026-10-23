@@ -1,4 +1,4 @@
-import StudentsPage from '@/views/students/StudentsPage';
+import StudentsPage from '@/app/students/_components/students-page';
 
 export default function Page() {
   return <StudentsPage />;

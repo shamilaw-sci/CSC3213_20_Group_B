@@ -1,4 +1,4 @@
-import PersonProfilePage from '@/views/people/PersonProfilePage';
+import PersonProfilePage from '@/app/people/[identity]/_components/person-profile-page';
 
 export default async function Page({
   params,
