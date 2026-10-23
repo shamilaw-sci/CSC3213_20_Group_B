@@ -97,29 +97,21 @@ describe('application shell contracts', () => {
     expect(layout).not.toContain('userScalable');
   });
 
-  test('People disclosures and mobile navigation expose every destination', () => {
+  test('People keeps search and top-level directory choices direct', () => {
     const header = source('apps/people/src/components/layout/site-header.tsx');
 
-    for (const destination of [
-      '/staff',
-      '/staff/academic',
-      '/staff/academic-support',
-      '/staff/non-academic',
-      '/students',
-      '/students/computer-science',
-      '/students/data-science',
-      '/students/statistics',
-    ]) {
+    for (const destination of ['/staff', '/students']) {
       expect(header).toContain(`href: '${destination}'`);
     }
 
-    expect(header).toContain('aria-expanded={openMenu === menu.id}');
     expect(header).toContain("event.key === 'Escape'");
-    expect(header).toContain('pointerdown');
     expect(header).toContain('aria-current={active');
     expect(header).toContain('border-l-2');
     expect(header).toContain('<PeopleSearch');
     expect(header).toContain('<ThemeToggle');
+    expect(header).toContain('aria-label="SCS People home"');
+    expect(header).not.toContain('ChevronDown');
+    expect(header).not.toContain('openMenu');
   });
 
   test('People search retains an explicit accessible label', () => {
@@ -143,20 +135,32 @@ describe('application shell contracts', () => {
     expect(layout).toMatch(/<main\s+id="main-content"/);
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
-    expect(header).toContain('aria-expanded={browseOpen}');
+    for (const destination of [
+      '/search',
+      '/find-by',
+      '/courses',
+      '/categories',
+      '/topics',
+    ]) {
+      expect(header).toContain(`href: '${destination}'`);
+    }
+
+    expect(header).not.toContain('browseOpen');
+    expect(header).not.toContain('Course-linked work');
+    expect(header).toContain('aria-label="SCS Projects home"');
     expect(header).toContain("event.key === 'Escape'");
-    expect(header).toContain('max-h-[min(24rem,calc(100vh-6rem))]');
     expect(header).not.toContain('transition-all');
   });
 
-  test('Portal navigation reports the exact active public destination', () => {
+  test('Portal navigation reports session-aware active destinations', () => {
     const header = source(
       'apps/portal/src/components/layout/portal-header.tsx'
     );
 
     expect(header).toContain("'use client';");
     expect(header).toContain('usePathname');
-    expect(header).toContain('pathname === item.href');
+    expect(header).toContain('authClient.useSession()');
+    expect(header).toContain('isNavigationItemActive');
     expect(header).toContain("aria-current={active ? 'page' : undefined}");
     expect(header).toContain('border-primary');
   });

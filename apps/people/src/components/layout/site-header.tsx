@@ -2,71 +2,39 @@
 
 import { Button } from '@scs/ui/components/button';
 import { ThemeToggle } from '@scs/ui/components/theme-toggle';
-import { ChevronDown, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { PeopleSearch } from '@/components/search/people-search';
 
-const navigationMenus = [
-  {
-    id: 'staff',
-    label: 'Staff',
-    links: [
-      { href: '/staff', label: 'All staff' },
-      { href: '/staff/academic', label: 'Academic staff' },
-      { href: '/staff/academic-support', label: 'Academic support' },
-      { href: '/staff/non-academic', label: 'Non-academic staff' },
-    ],
-  },
-  {
-    id: 'students',
-    label: 'Students',
-    links: [
-      { href: '/students', label: 'Student groups' },
-      { href: '/students/computer-science', label: 'Computer Science' },
-      { href: '/students/data-science', label: 'Data Science' },
-      { href: '/students/statistics', label: 'Statistics' },
-    ],
-  },
+const navigation = [
+  { href: '/staff', label: 'Staff' },
+  { href: '/students', label: 'Students' },
 ] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const headerRef = useRef<HTMLElement>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const dismissMenus = (event: PointerEvent) => {
-      if (!headerRef.current?.contains(event.target as Node)) {
-        setOpenMenu(null);
-        setMobileOpen(false);
-      }
-    };
+    if (!mobileOpen) return;
+
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpenMenu(null);
-        setMobileOpen(false);
-      }
+      if (event.key === 'Escape') setMobileOpen(false);
     };
 
-    document.addEventListener('pointerdown', dismissMenus);
     window.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', dismissMenus);
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, []);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [mobileOpen]);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header
-      ref={headerRef}
       className="bg-background/95 supports-backdrop-filter:bg-background/85
         sticky top-0 z-40 border-b backdrop-blur"
     >
@@ -76,13 +44,14 @@ export function SiteHeader() {
       >
         <Link
           href="/"
+          aria-label="SCS People home"
           className="flex min-h-11 shrink-0 items-center gap-2 rounded-sm
             font-semibold"
           onClick={() => setMobileOpen(false)}
         >
           <Image
             src="/favicon/logo-symbol-icon.svg"
-            alt="SCS People"
+            alt=""
             width={40}
             height={40}
             className="size-9 object-contain"
@@ -98,57 +67,23 @@ export function SiteHeader() {
           aria-label="People directory navigation"
           className="hidden items-center gap-1 md:flex"
         >
-          {navigationMenus.map((menu) => {
-            const active = menu.links.some((link) => isActive(link.href));
+          {navigation.map((item) => {
+            const active = isActive(item.href);
             return (
-              <div className="relative" key={menu.id}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-expanded={openMenu === menu.id}
-                  aria-controls={`${menu.id}-menu`}
-                  className={`min-h-11 rounded-none border-b-2 ${
-                    active ? 'border-primary' : 'border-transparent'
-                  }`}
-                  onClick={() =>
-                    setOpenMenu((current) =>
-                      current === menu.id ? null : menu.id
-                    )
-                  }
-                >
-                  {menu.label}
-                  <ChevronDown className="size-4" aria-hidden="true" />
-                </Button>
-                {openMenu === menu.id ? (
-                  <div
-                    id={`${menu.id}-menu`}
-                    className="bg-popover text-popover-foreground absolute
-                      top-full right-0 mt-1 w-56 rounded-md border p-1 shadow-lg
-                      md:right-auto md:left-0"
-                  >
-                    {menu.links.map((link) => {
-                      const activeLink = isActive(link.href);
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          aria-current={activeLink ? 'page' : undefined}
-                          className={`flex min-h-10 items-center rounded-sm
-                            border-l-2 px-3 text-sm ${
-                              activeLink
-                                ? 'border-primary bg-muted font-medium'
-                                : `text-muted-foreground hover:bg-muted
-                                  hover:text-foreground border-transparent`
-                            }`}
-                          onClick={() => setOpenMenu(null)}
-                        >
-                          {link.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-11 items-center rounded-sm border-b-2
+                px-3 text-sm font-medium ${
+                  active
+                    ? 'border-primary text-foreground'
+                    : `text-muted-foreground hover:border-border
+                      hover:text-foreground border-transparent`
+                }`}
+              >
+                {item.label}
+              </Link>
             );
           })}
         </nav>
@@ -178,37 +113,27 @@ export function SiteHeader() {
           aria-label="Mobile navigation"
           className="bg-background border-t p-3 md:hidden"
         >
-          <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2">
-            {navigationMenus.map((menu) => (
-              <div key={menu.id}>
-                <p
-                  className="text-muted-foreground px-3 pb-1 text-xs
-                    font-semibold tracking-wide uppercase"
+          <div className="mx-auto grid max-w-6xl gap-1">
+            {navigation.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex min-h-11 items-center rounded-md border-l-2
+                    px-3 text-sm font-medium ${
+                      active
+                        ? 'border-primary bg-muted text-foreground'
+                        : `text-muted-foreground hover:bg-muted
+                          hover:text-foreground border-transparent`
+                    }`}
+                  onClick={() => setMobileOpen(false)}
                 >
-                  {menu.label}
-                </p>
-                {menu.links.map((link) => {
-                  const active = isActive(link.href);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex min-h-11 items-center rounded-md
-                        border-l-2 px-3 text-sm ${
-                          active
-                            ? 'border-primary bg-muted font-medium'
-                            : `text-muted-foreground hover:bg-muted
-                              hover:text-foreground border-transparent`
-                        }`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </nav>
       ) : null}

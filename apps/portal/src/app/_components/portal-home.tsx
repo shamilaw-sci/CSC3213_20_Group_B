@@ -1,5 +1,6 @@
 'use client';
 
+import { buttonVariants } from '@scs/ui/components/button';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
@@ -7,8 +8,10 @@ import { toast } from 'sonner';
 
 import { UopLogoIcon } from '@/components/icons/uop-logo';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
+import { authClient } from '@/lib/auth-client';
 
 export default function PortalHome() {
+  const { data: session, isPending } = authClient.useSession();
   const params = useSearchParams();
   const error = params.get('error');
   const pathname = usePathname();
@@ -49,25 +52,25 @@ export default function PortalHome() {
         Computer Science.
       </p>
 
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link
-          href="/login"
-          className="bg-primary text-primary-foreground hover:bg-primary/90
-            inline-flex min-h-11 items-center rounded-md px-5 text-sm
-            font-medium focus-visible:outline-none"
-        >
-          Sign in
-        </Link>
+      {!isPending ? (
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link
+            href={session?.user ? '/dashboard' : '/login'}
+            className={buttonVariants({ size: 'lg' })}
+          >
+            {session?.user ? 'Open dashboard' : 'Sign in'}
+          </Link>
 
-        <Link
-          href="/signup"
-          className="bg-background hover:bg-accent inline-flex min-h-11
-            items-center rounded-md border px-5 text-sm font-medium
-            focus-visible:outline-none"
-        >
-          Create account
-        </Link>
-      </div>
+          {!isPending && !session?.user ? (
+            <Link
+              href="/signup"
+              className={buttonVariants({ variant: 'outline', size: 'lg' })}
+            >
+              Create account
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="text-muted-foreground mt-8 flex gap-4 text-sm">
         <Link href="/privacy" className="hover:text-foreground">

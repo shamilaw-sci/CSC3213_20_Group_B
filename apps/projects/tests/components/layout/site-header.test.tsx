@@ -12,21 +12,23 @@ vi.mock('@scs/ui/components/theme-toggle', () => ({
 }));
 
 describe('Projects SiteHeader', () => {
-  test('opens and dismisses Browse with keyboard controls', async () => {
-    const user = userEvent.setup();
+  test('keeps every discovery destination directly visible on desktop', () => {
     render(<SiteHeader />);
 
-    const browse = screen.getByRole('button', { name: 'Browse' });
-    expect(browse).toHaveAttribute('aria-expanded', 'false');
-
-    await user.click(browse);
-    expect(browse).toHaveAttribute('aria-expanded', 'true');
+    for (const label of [
+      'Search',
+      'People',
+      'Courses',
+      'Categories',
+      'Topics',
+    ]) {
+      expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
+    }
     expect(
-      screen.getByRole('menuitem', { name: /Courses/ })
-    ).toBeInTheDocument();
-
-    await user.keyboard('{Escape}');
-    expect(browse).toHaveAttribute('aria-expanded', 'false');
+      screen.getByRole('link', { name: 'SCS Projects home' })
+    ).toHaveAttribute('href', '/');
+    expect(screen.queryByRole('link', { name: 'Home' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Browse' })).toBeNull();
   });
 
   test('keeps all discovery destinations in the mobile menu', async () => {
@@ -36,7 +38,6 @@ describe('Projects SiteHeader', () => {
     await user.click(screen.getByRole('button', { name: 'Open navigation' }));
 
     for (const label of [
-      'Home',
       'Search',
       'People',
       'Courses',

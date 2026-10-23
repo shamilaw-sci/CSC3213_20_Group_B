@@ -9,23 +9,37 @@ function source(path: string) {
 }
 
 describe('Portal application shell', () => {
-  test('keeps universally safe destinations in the root header', () => {
+  test('shows account actions that match the Better Auth session', () => {
     const header = source('src/components/layout/portal-header.tsx');
 
-    expect(header).toContain("{ href: '/', label: 'Portal home' }");
+    expect(header).toContain('authClient.useSession()');
+    expect(header).toContain('isPending');
     expect(header).toContain("{ href: '/login', label: 'Sign in' }");
-    expect(header).toContain('<Link');
+    expect(header).toContain("{ href: '/signup', label: 'Create account' }");
+    expect(header).toContain("{ href: '/dashboard', label: 'Dashboard' }");
+    expect(header).toContain("{ href: '/user/me', label: 'Account' }");
+    expect(header).toContain('<LogoutButton');
     expect(header).toContain('<ThemeToggle');
     expect(header).not.toContain('/admin');
   });
 
-  test('marks the exact active public destination in both navigation layouts', () => {
+  test('marks active destinations and groups account routes', () => {
     const header = source('src/components/layout/portal-header.tsx');
 
     expect(header).toContain('usePathname');
-    expect(header).toContain('pathname === item.href');
+    expect(header).toContain('isNavigationItemActive');
+    expect(header).toContain("pathname.startsWith('/account/')");
     expect(header).toContain("aria-current={active ? 'page' : undefined}");
     expect(header.match(/<PortalNavigationLink/gu)?.length).toBe(2);
+  });
+
+  test('removes signed-out calls to action from the signed-in home state', () => {
+    const home = source('src/app/_components/portal-home.tsx');
+
+    expect(home).toContain('authClient.useSession()');
+    expect(home).toContain("href={session?.user ? '/dashboard' : '/login'}");
+    expect(home).toContain("session?.user ? 'Open dashboard' : 'Sign in'");
+    expect(home).toContain('!isPending && !session?.user');
   });
 
   test('uses the shared theme without a floating global control', () => {

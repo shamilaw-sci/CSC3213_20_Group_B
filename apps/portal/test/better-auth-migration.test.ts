@@ -30,6 +30,8 @@ describe('Portal Better Auth integration', () => {
     expect(passkeys).toContain('authClient.signIn.passkey');
     expect(passkeys).toContain('authClient.passkey.addPasskey');
     expect(logout).toContain('authClient.signOut');
+    expect(logout).toContain('<DialogTitle>Log out?</DialogTitle>');
+    expect(logout).toContain('Stay signed in');
     expect(profile).toContain('authClient.linkSocial');
     expect(profile).toContain('authClient.unlinkAccount');
     expect(profile).not.toContain('/api/me/oauth/github');
