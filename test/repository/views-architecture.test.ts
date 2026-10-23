@@ -3,8 +3,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
-const appSourceGlob = new Bun.Glob('apps/*/src/**/*.{ts,tsx}');
-const viewSourceGlob = new Bun.Glob('apps/*/src/views/**/*.{ts,tsx}');
+const apps = ['web', 'people', 'projects', 'portal'] as const;
+const appSourceGlob = new Bun.Glob('apps/*/src/**/*.{js,jsx,ts,tsx}');
+const viewSourceGlob = new Bun.Glob('apps/*/src/views/**/*');
 
 async function matchingFiles(glob: Bun.Glob) {
   return Array.fromAsync(
@@ -18,12 +19,21 @@ async function matchingFiles(glob: Bun.Glob) {
 describe('application composition ownership', () => {
   test('applications do not retain a generic views layer', async () => {
     expect(await matchingFiles(viewSourceGlob)).toEqual([]);
+
+    for (const app of apps) {
+      expect(existsSync(resolve(root, `apps/${app}/src/views`)), app).toBe(
+        false
+      );
+    }
   });
 
   test('application source does not import through the retired views alias', async () => {
-    const imports = (await matchingFiles(appSourceGlob)).filter((path) =>
-      readFileSync(resolve(root, path), 'utf8').includes('@/views')
-    );
+    const imports = (await matchingFiles(appSourceGlob)).filter((path) => {
+      const source = readFileSync(resolve(root, path), 'utf8');
+      return /(?:from\s+|import\s*\()\s*['"][^'"]*(?:@\/views|\/views)(?:\/|['"])/m.test(
+        source
+      );
+    });
 
     expect(imports).toEqual([]);
   });
