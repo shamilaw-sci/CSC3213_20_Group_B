@@ -194,6 +194,53 @@ frameworks. Adapters translate external input into validated domain values.
 Create a shared abstraction only when it has a stable owner and more than a
 visual resemblance to another file.
 
+## Application UI Ownership
+
+The four Next.js applications share a visual system, not one universal shell.
+Web keeps an institutional navigation model, People and Projects keep
+discovery-oriented navigation, and Portal keeps an authenticated workspace
+shell. Each deployable owns the composition, labels, destinations, and
+permission-aware behavior appropriate to its users.
+
+Reusable shadcn primitives, theme initialization, semantic theme tokens,
+feedback surfaces, and primitive-level hooks belong in `packages/ui`. Product
+components that combine primitives with application routes, data, copy, or
+permissions remain in their owning application. Do not move a composed header,
+editor, dashboard, or domain workflow into `packages/ui` merely because another
+application has a visually similar surface.
+
+Within a Next.js application, use these ownership rules:
+
+- `app` owns routes, layouts, metadata, server orchestration, and Next.js
+  special files such as `error.tsx`, `global-error.tsx`, `not-found.tsx`, and
+  `global-not-found.tsx`;
+- a route's private composition belongs in its colocated `_components` folder;
+- UI reused by multiple routes belongs in `components/<responsibility>`, such
+  as `components/layout`, `components/editor`, or a named domain folder;
+- `lib` owns non-visual helpers, data access, and client or server adapters;
+- use `@/` and package exports for cross-directory imports rather than creating
+  path-dependent component trees.
+
+This is an incremental convention. Move a legacy `components/custom` or
+route-shaped `views` module when the owning feature is being changed and all of
+its consumers can be updated atomically. Do not perform unrelated bulk moves,
+and delete an old path only after repository search confirms that it has no
+remaining callers.
+
+### Portal Editor State
+
+Project, course, offering, and public-profile editors use one canonical draft
+across Edit, Review, and Advanced JSON surfaces. Published data is a read-only
+comparison source, never an editable mode. Changing surfaces must not replace
+the draft, selected record, revision, or permission context.
+
+Advanced JSON is secondary to the guided form. If its text differs from the
+canonical draft, leaving it requires an explicit Apply, Discard, or Stay
+decision. Apply parses and validates the domain record before updating the
+canonical draft. Final submission continues to use the existing authorized,
+revision-protected, idempotent operation flow; the UI state machine does not
+change API payloads or grant permissions.
+
 ## Configuration and Contracts
 
 - Runtime variables are parsed in each workspace's `src/config` modules.

@@ -116,7 +116,7 @@ describe('application shell contracts', () => {
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
     expect(layout).toContain('href="#main-content"');
-    expect(layout).toContain('<main id="main-content"');
+    expect(layout).toMatch(/<main\s+id="main-content"/);
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
     expect(header).toContain('aria-expanded={browseOpen}');
