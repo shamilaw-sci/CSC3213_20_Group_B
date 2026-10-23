@@ -1,4 +1,4 @@
-import { ProfileLoading } from '@/components/custom/loading/PageLoading';
+import { ProfileLoading } from '@/components/feedback/directory-loading';
 
 export default function PersonLoading() {
   return <ProfileLoading />;

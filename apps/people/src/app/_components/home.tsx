@@ -3,7 +3,7 @@
 import { BriefcaseBusiness, GraduationCap, Wrench } from 'lucide-react';
 import Link from 'next/link';
 
-import PageHeader from '@/components/custom/layout/PageHeader';
+import PageHeader from '@/components/layout/page-header';
 import { getSubjectPath, SUBJECTS } from '@/config/subjects';
 import {
   prefetchAcademicStaff,

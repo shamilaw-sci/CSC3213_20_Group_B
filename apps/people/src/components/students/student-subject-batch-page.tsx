@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-import PageHeader from '@/components/custom/layout/PageHeader';
+import PageHeader from '@/components/layout/page-header';
 import {
   PeopleCardSkeletonGrid,
   StudentCard,
-} from '@/components/custom/people/PeopleCard';
+} from '@/components/people/people-card';
 import { getSubjectPath } from '@/config/subjects';
 import {
   getPeopleManifest,

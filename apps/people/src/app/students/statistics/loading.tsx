@@ -1,4 +1,4 @@
-import { BatchDirectoryLoading } from '@/components/custom/loading/PageLoading';
+import { BatchDirectoryLoading } from '@/components/feedback/directory-loading';
 
 export default function StatisticsLoading() {
   return <BatchDirectoryLoading />;

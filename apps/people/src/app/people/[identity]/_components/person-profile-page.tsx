@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 
 import PageHeader, {
   type BreadcrumbItem,
-} from '@/components/custom/layout/PageHeader';
+} from '@/components/layout/page-header';
 import {
   DetailedPersonCard,
   DetailedPersonCardSkeleton,
   type ProfileTab,
-} from '@/components/custom/people/PeopleCard';
+} from '@/components/people/people-card';
 import publicEnvConfig from '@/config/public.env.config';
 import { getSubjectPath } from '@/config/subjects';
 import {

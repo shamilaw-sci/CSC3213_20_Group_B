@@ -3,11 +3,11 @@
 import { Tabs, TabsList, TabsTrigger } from '@scs/ui/components/tabs';
 import { useEffect, useState } from 'react';
 
-import PageHeader from '@/components/custom/layout/PageHeader';
+import PageHeader from '@/components/layout/page-header';
 import {
   PeopleCardSkeletonGrid,
   StaffCard,
-} from '@/components/custom/people/PeopleCard';
+} from '@/components/people/people-card';
 import {
   getAcademicStaff,
   prefetchPeopleProfiles,
