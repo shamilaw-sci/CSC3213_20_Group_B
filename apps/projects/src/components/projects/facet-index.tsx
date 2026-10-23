@@ -10,12 +10,12 @@ import {
   StatePanel,
   TileGridLoading,
 } from '@/components/custom/StatePanel';
+import { PageIntro } from '@/components/projects/registry-ui';
 import {
   fetchCategories,
   fetchTags,
   type ProjectFacet,
 } from '@/lib/projects/api-client';
-import { PageIntro } from '@/views/projects/RegistryUI';
 
 type FacetItem = {
   href: string;

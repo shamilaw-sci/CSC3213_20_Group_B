@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import FacetIndex from '@/views/projects/FacetIndex';
+import FacetIndex from '@/components/projects/facet-index';
 
 export const metadata: Metadata = {
   title: 'Tags',

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import Courses from '@/views/course/Courses';
+import Courses from '@/app/courses/_components/courses';
 
 export const metadata: Metadata = {
   title: 'Courses',

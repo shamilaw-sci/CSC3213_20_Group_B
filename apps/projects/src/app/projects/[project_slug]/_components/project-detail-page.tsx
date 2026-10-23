@@ -7,13 +7,13 @@ import {
   ProjectErrorPanel,
   StatePanel,
 } from '@/components/custom/StatePanel';
+import { ProjectDetail, ProjectGrid } from '@/components/projects/registry-ui';
 import {
   fetchProject,
   fetchProjects,
   ProjectDataNotFoundError,
 } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-import { ProjectDetail, ProjectGrid } from '@/views/projects/RegistryUI';
 
 function getRelatedProjects(project: Project, projects: Project[]) {
   return projects

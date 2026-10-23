@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
+import ProjectCollection from '@/components/projects/project-collection';
 import { labelFromSlug } from '@/lib/projects/metadata';
-import ProjectCollection from '@/views/projects/ProjectCollection';
 
 type PageProps = {
   params: Promise<{

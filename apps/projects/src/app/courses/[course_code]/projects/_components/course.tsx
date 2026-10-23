@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import ProjectCollection from '@/components/projects/project-collection';
 import { fetchCourses, type ProjectCourse } from '@/lib/projects/api-client';
-import ProjectCollection from '@/views/projects/ProjectCollection';
 
 export default function Course({
   courseCode,

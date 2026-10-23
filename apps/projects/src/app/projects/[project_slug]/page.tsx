@@ -1,4 +1,4 @@
-import ProjectDetailPage from '@/views/projects/ProjectDetailPage';
+import ProjectDetailPage from '@/app/projects/[project_slug]/_components/project-detail-page';
 
 type PageProps = {
   params: Promise<{

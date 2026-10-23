@@ -15,8 +15,8 @@ import {
   StatePanel,
   TileGridLoading,
 } from '@/components/custom/StatePanel';
+import { PageIntro } from '@/components/projects/registry-ui';
 import { fetchCourses, type ProjectCourse } from '@/lib/projects/api-client';
-import { PageIntro } from '@/views/projects/RegistryUI';
 
 export default function Courses() {
   const [courses, setCourses] = useState<ProjectCourse[]>([]);

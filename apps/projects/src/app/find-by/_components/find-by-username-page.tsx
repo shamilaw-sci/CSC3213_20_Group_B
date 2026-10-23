@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@scs/ui/components/button';
-import { Search } from 'lucide-react';
+import { Search, UserRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 
@@ -9,22 +9,26 @@ import {
   ProjectErrorPanel,
   ProjectListLoading,
 } from '@/components/custom/StatePanel';
-import { fetchProjectSearch } from '@/lib/projects/api-client';
+import { ProjectGrid } from '@/components/projects/registry-ui';
+import { fetchProjectsByUsername } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-import { ProjectGrid } from '@/views/projects/RegistryUI';
 
-export default function SearchPage() {
+function normalizeUsername(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export default function FindByUsernamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') ?? '';
+  const username = normalizeUsername(searchParams.get('username') ?? '');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const hasQuery = query.trim().length > 0;
+  const hasUsername = username.length > 0;
 
   useEffect(() => {
-    if (!hasQuery) {
+    if (!hasUsername) {
       return;
     }
 
@@ -34,7 +38,7 @@ export default function SearchPage() {
       setLoading(true);
 
       try {
-        setProjects(await fetchProjectSearch(query, controller.signal));
+        setProjects(await fetchProjectsByUsername(username, controller.signal));
         setLoadFailed(false);
       } catch {
         if (!controller.signal.aborted) {
@@ -53,15 +57,19 @@ export default function SearchPage() {
     return () => {
       controller.abort();
     };
-  }, [hasQuery, query, reloadKey]);
+  }, [hasUsername, username, reloadKey]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const nextQuery = String(formData.get('q') ?? '').trim();
+    const nextUsername = normalizeUsername(
+      String(formData.get('username') ?? '')
+    );
     router.push(
-      nextQuery ? `/search?q=${encodeURIComponent(nextQuery)}` : '/search'
+      nextUsername
+        ? `/find-by?username=${encodeURIComponent(nextUsername)}`
+        : '/find-by'
     );
   }
 
@@ -69,31 +77,31 @@ export default function SearchPage() {
     <>
       <section className="border-b bg-card">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <p className="text-sm font-medium text-primary">Search</p>
+          <p className="text-sm font-medium text-primary">Find by username</p>
           <h1 className="mt-3 text-3xl font-semibold text-card-foreground sm:text-4xl">
-            Search by anything
+            Projects connected to a person
           </h1>
           <form
-            key={query}
+            key={username}
             onSubmit={handleSubmit}
             className="project-search-control mt-6 flex max-w-2xl items-center overflow-hidden rounded-md border bg-background shadow-sm focus-within:ring-[3px] focus-within:ring-ring/50"
           >
-            <Search className="ml-3 size-4 shrink-0 text-muted-foreground" />
-            <label htmlFor="project-search-page" className="sr-only">
-              Search projects
+            <UserRound className="ml-3 size-4 shrink-0 text-muted-foreground" />
+            <label htmlFor="project-username-search" className="sr-only">
+              Username
             </label>
             <input
-              id="project-search-page"
-              name="q"
-              defaultValue={query}
-              placeholder="Search projects"
+              id="project-username-search"
+              name="username"
+              defaultValue={username}
+              placeholder="Enter username"
               className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none"
             />
             <Button
               type="submit"
               size="icon"
               className="h-11 w-11 shrink-0 rounded-none"
-              aria-label="Search projects"
+              aria-label="Find projects"
             >
               <Search className="size-4" />
             </Button>
@@ -102,7 +110,7 @@ export default function SearchPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        {hasQuery ? (
+        {hasUsername ? (
           <div className="mb-5 rounded-md border bg-card p-4">
             <p className="text-sm font-medium text-muted-foreground">
               Found{' '}
@@ -111,7 +119,7 @@ export default function SearchPage() {
               </span>{' '}
               projects for{' '}
               <span className="font-semibold text-card-foreground">
-                {query}
+                {username}
               </span>
               .
             </p>
@@ -119,32 +127,32 @@ export default function SearchPage() {
         ) : (
           <div className="rounded-md border bg-card p-6">
             <h2 className="text-lg font-semibold text-card-foreground">
-              Search anything in projects
+              Enter a username
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Try a course code, project title, technology, academic year,
-              student group, supervisor, status, collection, or project type.
+              Find projects using the username published in project team
+              records.
             </p>
           </div>
         )}
 
-        {hasQuery && loading ? (
-          <ProjectListLoading label="Searching projects" />
+        {hasUsername && loading ? (
+          <ProjectListLoading label="Finding projects" />
         ) : null}
 
-        {hasQuery && !loading && loadFailed ? (
+        {hasUsername && !loading && loadFailed ? (
           <ProjectErrorPanel
-            title="Search is unavailable"
-            description="The published project registry could not be searched right now."
+            title="Username lookup is unavailable"
+            description="The published project-person index could not be loaded right now."
             onRetry={() => setReloadKey((key) => key + 1)}
           />
         ) : null}
 
-        {hasQuery && !loading && !loadFailed ? (
+        {hasUsername && !loading && !loadFailed ? (
           <ProjectGrid
             projects={projects}
-            emptyTitle="No matching projects"
-            emptyDescription="Nothing in the published registry matches this search yet. Try a course code, project title, person, or technology."
+            emptyTitle="No projects for this username"
+            emptyDescription="No published project currently lists this username."
           />
         ) : null}
       </section>

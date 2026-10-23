@@ -1,4 +1,4 @@
-import Course from '@/views/course/Course';
+import Course from '@/app/courses/[course_code]/projects/_components/course';
 
 type PageProps = {
   params: Promise<{

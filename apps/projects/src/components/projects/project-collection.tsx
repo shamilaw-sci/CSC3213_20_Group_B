@@ -6,9 +6,13 @@ import {
   ProjectErrorPanel,
   ProjectListLoading,
 } from '@/components/custom/StatePanel';
+import {
+  FacetRail,
+  PageIntro,
+  ProjectGrid,
+} from '@/components/projects/registry-ui';
 import { fetchProjects } from '@/lib/projects/api-client';
 import type { Project } from '@/lib/projects/types';
-import { FacetRail, PageIntro, ProjectGrid } from '@/views/projects/RegistryUI';
 
 export default function ProjectCollection({
   eyebrow,
