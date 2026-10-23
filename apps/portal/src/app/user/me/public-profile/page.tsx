@@ -1,8 +1,8 @@
-import PublicProfilePage from '@/components/custom/public-profile-page/PublicProfilePage';
+import PublicProfileEditor from '@/components/profiles/public-profile-editor';
 import { loadPublicProfileEditorData } from '@/lib/server/public-profile';
 
 export default async function Page() {
   const initialData = await loadPublicProfileEditorData();
 
-  return <PublicProfilePage initialData={initialData} from="profile" />;
+  return <PublicProfileEditor initialData={initialData} from="profile" />;
 }

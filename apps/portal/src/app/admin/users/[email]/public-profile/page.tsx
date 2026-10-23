@@ -1,4 +1,4 @@
-import PublicProfilePage from '@/components/custom/public-profile-page/PublicProfilePage';
+import PublicProfileEditor from '@/components/profiles/public-profile-editor';
 import { emailPathSegment } from '@/lib/email';
 import { loadPublicProfileEditorData } from '@/lib/server/public-profile';
 
@@ -12,7 +12,7 @@ export default async function Page({
   const initialData = await loadPublicProfileEditorData(targetEmail);
 
   return (
-    <PublicProfilePage
+    <PublicProfileEditor
       initialData={initialData}
       targetEmail={targetEmail}
       backHref={`/admin/users/${emailPathSegment(targetEmail)}`}

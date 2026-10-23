@@ -1,0 +1,24 @@
+import type { ReactNode } from 'react';
+
+interface ProfileWorkSectionProps {
+  children: ReactNode;
+}
+
+export function ProfileWorkSection({ children }: ProfileWorkSectionProps) {
+  return (
+    <section
+      id="profile-work"
+      tabIndex={-1}
+      className="scroll-mt-24 space-y-4 outline-none"
+    >
+      <div>
+        <h3 className="text-base font-semibold">Work and studies</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add public qualifications, research, teaching, projects, and
+          publications.
+        </p>
+      </div>
+      {children}
+    </section>
+  );
+}

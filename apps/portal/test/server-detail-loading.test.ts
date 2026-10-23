@@ -8,7 +8,7 @@ const profileRouteSource = await Bun.file(
 ).text();
 const profileEditorSource = await Bun.file(
   new URL(
-    '../src/components/custom/public-profile-page/PublicProfilePage.tsx',
+    '../src/components/profiles/public-profile-editor.tsx',
     import.meta.url
   )
 ).text();

@@ -48,28 +48,37 @@ import {
   SelectValue,
 } from '@scs/ui/components/select';
 import { cn } from 'cn';
-import {
-  ExternalLink,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Save,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
-import dynamic from 'next/dynamic';
+import { ExternalLink, Plus, RefreshCw, Trash2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
-import {
-  type EditorModeValue,
-  EditorViewControls,
-} from '@/components/custom/editor-view-controls/editor-view-controls';
 import { PageLoading } from '@/components/custom/loading/PageLoading';
+import {
+  createEditorState,
+  type EditorRecordStatus,
+  type EditorState,
+  updateEditorDraft,
+} from '@/components/editor/editor-state';
+import { EditorWorkspace } from '@/components/editor/editor-workspace';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import type {
+  PostgraduateProgramme,
+  ProfileKind,
+  ProfileRecord,
+  ProfileSchemaResponse,
+  PublicProfileInitialData,
+  PublicProfilePr,
+  PublicProfileResponse,
+  StudentPlacementResponse,
+} from '@/components/profiles/profile-types';
+import { PublicProfileReview } from '@/components/profiles/public-profile-review';
+import { ProfileAboutSection } from '@/components/profiles/sections/profile-about-section';
+import { ProfileLinksSection } from '@/components/profiles/sections/profile-links-section';
+import { ProfileRoleSection } from '@/components/profiles/sections/profile-role-section';
+import { ProfileWorkSection } from '@/components/profiles/sections/profile-work-section';
 import {
   adminPublicProfileApiUrl,
   adminPublicProfilePrApiUrl,
@@ -93,39 +102,6 @@ import {
 } from '@/lib/mutation-operation';
 import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 
-const JsonProfileEditor = dynamic(
-  () =>
-    import('@/components/editor/json-editor').then(
-      (module) => module.JsonEditor
-    ),
-  { ssr: false }
-);
-const JsonProfileView = dynamic(
-  () =>
-    import('@/components/editor/json-preview').then(
-      (module) => module.JsonPreview
-    ),
-  { ssr: false }
-);
-
-export type ProfileKind =
-  'academic' | 'academic-support' | 'non-academic' | 'student';
-
-type EditorMode = 'form' | 'json-view' | 'json-edit';
-type ProfileTab = 'draft' | 'published';
-export type ProfileRecord = Record<string, unknown>;
-type PostgraduateProgramme =
-  | 'POSTGRADUATE_CERTIFICATE'
-  | 'POSTGRADUATE_DIPLOMA'
-  | 'MASTERS_COURSEWORK'
-  | 'MSC'
-  | 'MPHIL'
-  | 'MPHIL_UPGRADE_FROM_MSC'
-  | 'PHD'
-  | 'PHD_UPGRADE_FROM_MSC'
-  | 'PHD_UPGRADE_FROM_MPHIL';
-type SlqfLevel = 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12';
-
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
   'academic-support': AcademicSupportStaff;
@@ -136,67 +112,6 @@ type ProfileByKind = {
 type ProfileSchemaMap = {
   [Kind in ProfileKind]: z.ZodType<ProfileByKind[Kind]>;
 };
-
-export interface ProfileSchemaResponse {
-  allowedKinds: ProfileKind[];
-  specialStreams: string[];
-  identity?: {
-    email: string;
-    username: string;
-    studentPlacement?: StudentPlacementResponse;
-  };
-  lockedFields?: string[];
-  note: string;
-}
-
-interface StudentPlacementResponse {
-  registrationNo: string;
-  studentType: 'UNDERGRADUATE' | 'POSTGRADUATE';
-  studentTrack?: Student['studentTrack'];
-  level?: Student['level'];
-  postgraduateProgramme?: PostgraduateProgramme;
-  slqfLevel?: SlqfLevel;
-  status: Student['status'];
-  lockedFields: string[];
-}
-
-export interface PublicProfilePr {
-  status:
-    | 'none'
-    | 'open'
-    | 'merged'
-    | 'closed'
-    | 'checks_pending'
-    | 'checks_failed'
-    | 'auto_merge_queued';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  currentUserFileSha?: string | null;
-  revision?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-  profileKind?: ProfileKind;
-  stream?: string;
-  targetUserFile?: string;
-  targetAggregateFiles?: string[];
-  draftProfile?: ProfileRecord | null;
-}
-
-export interface PublicProfileResponse {
-  profile: ProfileRecord | null;
-  profileKind?: ProfileKind;
-  stream?: string;
-  targetUserFile?: string;
-  targetAggregateFiles?: string[];
-}
-
-export interface PublicProfileInitialData {
-  schema: ProfileSchemaResponse;
-  profile: PublicProfileResponse;
-  pr: PublicProfilePr;
-}
 
 function normalizePublicProfileResponse(value: unknown): PublicProfileResponse {
   if (isRecord(value) && 'profile' in value) {
@@ -214,6 +129,13 @@ const PROFILE_LABELS: Record<ProfileKind, string> = {
   'non-academic': 'Non-Academic',
   student: 'Student',
 };
+
+const PROFILE_EDITOR_SECTIONS = [
+  { id: 'profile-about', label: 'About you' },
+  { id: 'profile-role', label: 'Role and affiliation' },
+  { id: 'profile-work', label: 'Work and studies' },
+  { id: 'profile-links', label: 'Links' },
+] as const;
 
 const TITLES = PersonSchema.shape.title.options;
 const STUDENT_TYPES = StudentTypeSchema.options;
@@ -613,6 +535,35 @@ function validationMessage(error: {
       return `${path}${issue.message}`;
     })
     .join('; ');
+}
+
+function profileIssueField(path: PropertyKey[]) {
+  const root = String(path[0] ?? 'profile');
+  if (root === 'socialLinks') return 'profile-links';
+  if (
+    [
+      'publications',
+      'projects',
+      'qualifications',
+      'researchInterests',
+      'teachings',
+    ].includes(root)
+  ) {
+    return 'profile-work';
+  }
+  if (
+    [
+      'title',
+      'fullName',
+      'email',
+      'personalEmail',
+      'profileImageUrl',
+      'mobilePhone',
+    ].includes(root)
+  ) {
+    return 'profile-about';
+  }
+  return 'profile-role';
 }
 
 interface FieldProps {
@@ -1207,8 +1158,17 @@ function ProfileForm({
 
   return (
     <div className="space-y-8">
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">Basic Details</h3>
+      {lockedFields.length > 0 ? (
+        <p className="rounded-md border bg-muted/35 p-3 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">
+            Managed by university records.
+          </span>{' '}
+          Disabled fields come from the official record. Ask an administrator if
+          a value is incorrect.
+        </p>
+      ) : null}
+
+      <ProfileAboutSection>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <OptionGrid
@@ -1250,365 +1210,375 @@ function ProfileForm({
             placeholder="+94 7X XXX XXXX"
           />
         </div>
-      </section>
+      </ProfileAboutSection>
 
-      {isStudent ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Student Details</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field
-              label="Registration No"
-              value={displayRegistrationNo}
-              onChange={(value) => setField('registrationNo', value)}
-              required
-              placeholder="S20XXX or S20SPXXX"
-              disabled={lockedRegistrationNo}
-            />
-            <Field
-              label="Personal Email"
-              value={asString(profile.personalEmail)}
-              onChange={(value) => setField('personalEmail', value)}
-              type="email"
-              placeholder="name@example.com"
-            />
-          </div>
-          <OptionGrid
-            label="Student Type"
-            value={studentType}
-            options={STUDENT_TYPES}
-            onChange={(value) => setField('studentType', value)}
-            required
-            compact
-            labels={{
-              UNDERGRADUATE: 'Undergraduate',
-              POSTGRADUATE: 'Postgraduate',
-            }}
-          />
-          {!isPostgraduate ? (
+      <ProfileRoleSection>
+        {isStudent ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">Student Details</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field
+                label="Registration No"
+                value={displayRegistrationNo}
+                onChange={(value) => setField('registrationNo', value)}
+                required
+                placeholder="S20XXX or S20SPXXX"
+                disabled={lockedRegistrationNo}
+              />
+              <Field
+                label="Personal Email"
+                value={asString(profile.personalEmail)}
+                onChange={(value) => setField('personalEmail', value)}
+                type="email"
+                placeholder="name@example.com"
+              />
+            </div>
             <OptionGrid
-              label="Track"
-              value={undergraduateTrack}
-              options={[...STUDENT_TRACKS]}
-              onChange={(value) =>
-                onProfileChange({
-                  ...profile,
-                  studentTrack: value,
-                  level: studentLevelForTrack(value, profile.level),
-                })
-              }
+              label="Student Type"
+              value={studentType}
+              options={STUDENT_TYPES}
+              onChange={(value) => setField('studentType', value)}
               required
               compact
               labels={{
-                GENERAL: 'General',
-                HONOURS: 'Honours',
+                UNDERGRADUATE: 'Undergraduate',
+                POSTGRADUATE: 'Postgraduate',
               }}
             />
-          ) : null}
-          {isHonoursStudent && streams.length ? (
-            <SelectField
-              label="Directory Stream"
-              value={stream}
-              options={streams.map((option) => ({
-                value: option,
-                label: option.toUpperCase(),
-              }))}
-              onChange={onStreamChange}
-              description="Optional grouping for the public honours directory."
-            />
-          ) : null}
-          {!isPostgraduate ? (
-            <>
+            {!isPostgraduate ? (
               <OptionGrid
-                label="Level"
-                value={asString(undergraduateLevel)}
-                options={undergraduateLevelOptions}
-                onChange={(value) => setField('level', value)}
+                label="Track"
+                value={undergraduateTrack}
+                options={[...STUDENT_TRACKS]}
+                onChange={(value) =>
+                  onProfileChange({
+                    ...profile,
+                    studentTrack: value,
+                    level: studentLevelForTrack(value, profile.level),
+                  })
+                }
                 required
                 compact
-                disabled={lockedLevel}
                 labels={{
-                  '1000': '1000 Level',
-                  '2000': '2000 Level',
-                  '3000': '3000 Level',
-                  '4000': '4000 Level',
+                  GENERAL: 'General',
+                  HONOURS: 'Honours',
                 }}
               />
+            ) : null}
+            {isHonoursStudent && streams.length ? (
               <SelectField
-                label="Honours Programme"
-                value={asString(profile.honoursProgramme)}
-                options={HONOURS_PROGRAMMES.map((programme) => ({
-                  value: programme,
-                  label: HONOURS_PROGRAMME_LABELS[programme],
+                label="Directory Stream"
+                value={stream}
+                options={streams.map((option) => ({
+                  value: option,
+                  label: option.toUpperCase(),
                 }))}
-                onChange={(value) => setField('honoursProgramme', value)}
-                description="Special degree programme, if the student is following one."
+                onChange={onStreamChange}
+                description="Optional grouping for the public honours directory."
               />
+            ) : null}
+            {!isPostgraduate ? (
+              <>
+                <OptionGrid
+                  label="Level"
+                  value={asString(undergraduateLevel)}
+                  options={undergraduateLevelOptions}
+                  onChange={(value) => setField('level', value)}
+                  required
+                  compact
+                  disabled={lockedLevel}
+                  labels={{
+                    '1000': '1000 Level',
+                    '2000': '2000 Level',
+                    '3000': '3000 Level',
+                    '4000': '4000 Level',
+                  }}
+                />
+                <SelectField
+                  label="Honours Programme"
+                  value={asString(profile.honoursProgramme)}
+                  options={HONOURS_PROGRAMMES.map((programme) => ({
+                    value: programme,
+                    label: HONOURS_PROGRAMME_LABELS[programme],
+                  }))}
+                  onChange={(value) => setField('honoursProgramme', value)}
+                  description="Special degree programme, if the student is following one."
+                />
+                <StringArrayEditor
+                  label="Subjects"
+                  value={
+                    Array.isArray(profile.subjects)
+                      ? profile.subjects.filter(
+                          (item): item is string => typeof item === 'string'
+                        )
+                      : []
+                  }
+                  onChange={(value) => setField('subjects', value)}
+                  options={ACADEMIC_SUBJECTS}
+                  labels={ACADEMIC_SUBJECT_LABELS}
+                  placeholder="Special subject"
+                />
+              </>
+            ) : (
+              <>
+                <SelectField
+                  label="Programme"
+                  value={
+                    POSTGRADUATE_PROGRAMMES.includes(
+                      profile.postgraduateProgramme as PostgraduateProgramme
+                    )
+                      ? (profile.postgraduateProgramme as PostgraduateProgramme)
+                      : 'MSC'
+                  }
+                  options={POSTGRADUATE_PROGRAMMES.map((programme) => ({
+                    value: programme,
+                    label: POSTGRADUATE_PROGRAMME_LABELS[programme],
+                  }))}
+                  onChange={(value) => setField('postgraduateProgramme', value)}
+                />
+                <OptionGrid
+                  label="SLQF Level"
+                  value={asString(profile.slqfLevel)}
+                  options={['L7', 'L8', 'L9', 'L10', 'L11', 'L12']}
+                  onChange={(value) => setField('slqfLevel', value)}
+                  required
+                  compact
+                  disabled={lockedSlqfLevel}
+                  labels={{
+                    L7: 'L7',
+                    L8: 'L8',
+                    L9: 'L9',
+                    L10: 'L10',
+                    L11: 'L11',
+                    L12: 'L12',
+                  }}
+                />
+              </>
+            )}
+            <OptionGrid
+              label="Status"
+              value={asString(profile.status)}
+              options={STUDENT_STATUSES}
+              onChange={(value) => setField('status', value)}
+              required
+              compact
+              disabled={lockedStatus}
+              labels={{
+                CURRENT: 'Current',
+                ALUMNI: 'Alumni',
+              }}
+            />
+            <StringArrayEditor
+              label="Primary Research Focus"
+              value={
+                Array.isArray(profile.researchInterests)
+                  ? profile.researchInterests.filter(
+                      (item): item is string => typeof item === 'string'
+                    )
+                  : []
+              }
+              onChange={(value) => setField('researchInterests', value)}
+              placeholder="One focus area per line"
+            />
+          </section>
+        ) : null}
+
+        {profileKind === 'academic' ||
+        profileKind === 'academic-support' ||
+        profileKind === 'non-academic' ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">Department & Unit</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <SelectField
+                label="Department"
+                value={asString(profile.department)}
+                options={ACADEMIC_DEPARTMENTS.map((department) => ({
+                  value: department,
+                  label: ACADEMIC_DEPARTMENT_LABELS[department],
+                }))}
+                onChange={(value) => setField('department', value)}
+                description="Academic department this person belongs to."
+              />
+              <SelectField
+                label="Unit"
+                value={asString(profile.unit)}
+                options={ACADEMIC_UNITS.map((unit) => ({
+                  value: unit,
+                  label: ACADEMIC_UNIT_LABELS[unit],
+                }))}
+                onChange={(value) => setField('unit', value)}
+                description="Service unit this person belongs to, if any."
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {profileKind === 'academic' ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">Academic Details</h3>
+            <OptionGrid
+              label="Academic Rank"
+              value={asString(profile.academicRank)}
+              options={ACADEMIC_RANKS}
+              onChange={(value) => setField('academicRank', value)}
+              required
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field
+                label="Office Phone"
+                value={asString(profile.officePhone)}
+                onChange={(value) => setField('officePhone', value)}
+                placeholder="+94 81 239 XXXX"
+              />
+              <Field
+                label="Office Location"
+                value={asString(profile.officeLocation)}
+                onChange={(value) => setField('officeLocation', value)}
+                placeholder="Room 101, SCS Building"
+              />
+              <Field
+                label="Website"
+                value={asString(profile.website)}
+                onChange={(value) => setField('website', value)}
+                type="url"
+                placeholder="https://example.com"
+              />
+              <Field
+                label="CV URL"
+                value={asString(profile.cvUrl)}
+                onChange={(value) => setField('cvUrl', value)}
+                type="url"
+                placeholder="https://example.com/cv.pdf"
+              />
+            </div>
+            <StringArrayEditor
+              label="Teaching Areas"
+              value={
+                Array.isArray(profile.teachings)
+                  ? profile.teachings.filter(
+                      (item): item is string => typeof item === 'string'
+                    )
+                  : []
+              }
+              onChange={(value) => setField('teachings', value)}
+              placeholder="CSC3213"
+            />
+            <div className="grid gap-4 md:grid-cols-2">
               <StringArrayEditor
-                label="Subjects"
-                value={
-                  Array.isArray(profile.subjects)
-                    ? profile.subjects.filter(
+                label="Primary Research Focus"
+                value={asArray(profile.researchInterests).flatMap((interest) =>
+                  Array.isArray(interest.primaryFocus)
+                    ? interest.primaryFocus.filter(
                         (item): item is string => typeof item === 'string'
                       )
                     : []
+                )}
+                onChange={(value) =>
+                  setField('researchInterests', [
+                    {
+                      ...asArray(profile.researchInterests)[0],
+                      primaryFocus: value,
+                    },
+                  ])
                 }
-                onChange={(value) => setField('subjects', value)}
-                options={ACADEMIC_SUBJECTS}
-                labels={ACADEMIC_SUBJECT_LABELS}
-                placeholder="Special subject"
+                placeholder="Research focus"
               />
-            </>
-          ) : (
-            <>
-              <SelectField
-                label="Programme"
-                value={
-                  POSTGRADUATE_PROGRAMMES.includes(
-                    profile.postgraduateProgramme as PostgraduateProgramme
-                  )
-                    ? (profile.postgraduateProgramme as PostgraduateProgramme)
-                    : 'MSC'
+              <StringArrayEditor
+                label="Other Research Interests"
+                value={asArray(profile.researchInterests).flatMap((interest) =>
+                  Array.isArray(interest.otherInterests)
+                    ? interest.otherInterests.filter(
+                        (item): item is string => typeof item === 'string'
+                      )
+                    : []
+                )}
+                onChange={(value) =>
+                  setField('researchInterests', [
+                    {
+                      ...asArray(profile.researchInterests)[0],
+                      otherInterests: value,
+                    },
+                  ])
                 }
-                options={POSTGRADUATE_PROGRAMMES.map((programme) => ({
-                  value: programme,
-                  label: POSTGRADUATE_PROGRAMME_LABELS[programme],
-                }))}
-                onChange={(value) => setField('postgraduateProgramme', value)}
+                placeholder="Research interest"
               />
-              <OptionGrid
-                label="SLQF Level"
-                value={asString(profile.slqfLevel)}
-                options={['L7', 'L8', 'L9', 'L10', 'L11', 'L12']}
-                onChange={(value) => setField('slqfLevel', value)}
-                required
-                compact
-                disabled={lockedSlqfLevel}
-                labels={{
-                  L7: 'L7',
-                  L8: 'L8',
-                  L9: 'L9',
-                  L10: 'L10',
-                  L11: 'L11',
-                  L12: 'L12',
-                }}
-              />
-            </>
-          )}
-          <OptionGrid
-            label="Status"
-            value={asString(profile.status)}
-            options={STUDENT_STATUSES}
-            onChange={(value) => setField('status', value)}
-            required
-            compact
-            disabled={lockedStatus}
-            labels={{
-              CURRENT: 'Current',
-              ALUMNI: 'Alumni',
-            }}
-          />
-          <StringArrayEditor
-            label="Primary Research Focus"
-            value={
-              Array.isArray(profile.researchInterests)
-                ? profile.researchInterests.filter(
-                    (item): item is string => typeof item === 'string'
-                  )
-                : []
-            }
-            onChange={(value) => setField('researchInterests', value)}
-            placeholder="One focus area per line"
-          />
-          <CommonProfileCollections
-            profile={profile}
-            setArrayField={setArrayField}
-            includeAcademicExtra={false}
-          />
-        </section>
-      ) : null}
+            </div>
+          </section>
+        ) : null}
 
-      {profileKind === 'academic' ||
-      profileKind === 'academic-support' ||
-      profileKind === 'non-academic' ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Department & Unit</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <SelectField
-              label="Department"
-              value={asString(profile.department)}
-              options={ACADEMIC_DEPARTMENTS.map((department) => ({
-                value: department,
-                label: ACADEMIC_DEPARTMENT_LABELS[department],
-              }))}
-              onChange={(value) => setField('department', value)}
-              description="Academic department this person belongs to."
+        {profileKind === 'academic-support' ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">
+              Academic Support Details
+            </h3>
+            <OptionGrid
+              label="Designation"
+              value={asString(profile.designation)}
+              options={ACADEMIC_SUPPORT_POSITIONS}
+              onChange={(value) => setField('designation', value)}
+              required
             />
-            <SelectField
-              label="Unit"
-              value={asString(profile.unit)}
-              options={ACADEMIC_UNITS.map((unit) => ({
-                value: unit,
-                label: ACADEMIC_UNIT_LABELS[unit],
-              }))}
-              onChange={(value) => setField('unit', value)}
-              description="Service unit this person belongs to, if any."
-            />
-          </div>
-        </section>
-      ) : null}
-
-      {profileKind === 'academic' ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Academic Details</h3>
-          <OptionGrid
-            label="Academic Rank"
-            value={asString(profile.academicRank)}
-            options={ACADEMIC_RANKS}
-            onChange={(value) => setField('academicRank', value)}
-            required
-          />
-          <div className="grid gap-4 md:grid-cols-2">
             <Field
               label="Office Phone"
               value={asString(profile.officePhone)}
               onChange={(value) => setField('officePhone', value)}
               placeholder="+94 81 239 XXXX"
             />
-            <Field
-              label="Office Location"
-              value={asString(profile.officeLocation)}
-              onChange={(value) => setField('officeLocation', value)}
-              placeholder="Room 101, SCS Building"
-            />
-            <Field
-              label="Website"
-              value={asString(profile.website)}
-              onChange={(value) => setField('website', value)}
-              type="url"
-              placeholder="https://example.com"
-            />
-            <Field
-              label="CV URL"
-              value={asString(profile.cvUrl)}
-              onChange={(value) => setField('cvUrl', value)}
-              type="url"
-              placeholder="https://example.com/cv.pdf"
-            />
-          </div>
-          <StringArrayEditor
-            label="Teaching Areas"
-            value={
-              Array.isArray(profile.teachings)
-                ? profile.teachings.filter(
-                    (item): item is string => typeof item === 'string'
-                  )
-                : []
-            }
-            onChange={(value) => setField('teachings', value)}
-            placeholder="CSC3213"
-          />
-          <div className="grid gap-4 md:grid-cols-2">
             <StringArrayEditor
-              label="Primary Research Focus"
-              value={asArray(profile.researchInterests).flatMap((interest) =>
-                Array.isArray(interest.primaryFocus)
-                  ? interest.primaryFocus.filter(
+              label="Qualifications"
+              value={
+                Array.isArray(profile.qualifications)
+                  ? profile.qualifications.filter(
                       (item): item is string => typeof item === 'string'
                     )
                   : []
-              )}
-              onChange={(value) =>
-                setField('researchInterests', [
-                  {
-                    ...asArray(profile.researchInterests)[0],
-                    primaryFocus: value,
-                  },
-                ])
               }
-              placeholder="Research focus"
+              onChange={(value) => setField('qualifications', value)}
+              placeholder="Qualification"
             />
-            <StringArrayEditor
-              label="Other Research Interests"
-              value={asArray(profile.researchInterests).flatMap((interest) =>
-                Array.isArray(interest.otherInterests)
-                  ? interest.otherInterests.filter(
-                      (item): item is string => typeof item === 'string'
-                    )
-                  : []
-              )}
-              onChange={(value) =>
-                setField('researchInterests', [
-                  {
-                    ...asArray(profile.researchInterests)[0],
-                    otherInterests: value,
-                  },
-                ])
-              }
-              placeholder="Research interest"
+          </section>
+        ) : null}
+
+        {profileKind === 'non-academic' ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">Non-Academic Details</h3>
+            <OptionGrid
+              label="Designation"
+              value={asString(profile.designation)}
+              options={NON_ACADEMIC_POSITIONS}
+              onChange={(value) => setField('designation', value)}
+              required
             />
-          </div>
+            <Field
+              label="Office Phone"
+              value={asString(profile.officePhone)}
+              onChange={(value) => setField('officePhone', value)}
+              placeholder="+94 81 239 XXXX"
+            />
+          </section>
+        ) : null}
+      </ProfileRoleSection>
+
+      <ProfileWorkSection>
+        {isStudent || profileKind === 'academic' ? (
           <CommonProfileCollections
             profile={profile}
             setArrayField={setArrayField}
-            includeAcademicExtra
+            includeAcademicExtra={profileKind === 'academic'}
           />
-        </section>
-      ) : null}
+        ) : (
+          <p className="rounded-md border p-3 text-sm text-muted-foreground">
+            This profile type has no additional public work collections.
+          </p>
+        )}
+      </ProfileWorkSection>
 
-      {profileKind === 'academic-support' ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Academic Support Details</h3>
-          <OptionGrid
-            label="Designation"
-            value={asString(profile.designation)}
-            options={ACADEMIC_SUPPORT_POSITIONS}
-            onChange={(value) => setField('designation', value)}
-            required
-          />
-          <Field
-            label="Office Phone"
-            value={asString(profile.officePhone)}
-            onChange={(value) => setField('officePhone', value)}
-            placeholder="+94 81 239 XXXX"
-          />
-          <StringArrayEditor
-            label="Qualifications"
-            value={
-              Array.isArray(profile.qualifications)
-                ? profile.qualifications.filter(
-                    (item): item is string => typeof item === 'string'
-                  )
-                : []
-            }
-            onChange={(value) => setField('qualifications', value)}
-            placeholder="Qualification"
-          />
-        </section>
-      ) : null}
-
-      {profileKind === 'non-academic' ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Non-Academic Details</h3>
-          <OptionGrid
-            label="Designation"
-            value={asString(profile.designation)}
-            options={NON_ACADEMIC_POSITIONS}
-            onChange={(value) => setField('designation', value)}
-            required
-          />
-          <Field
-            label="Office Phone"
-            value={asString(profile.officePhone)}
-            onChange={(value) => setField('officePhone', value)}
-            placeholder="+94 81 239 XXXX"
-          />
-        </section>
-      ) : null}
-
-      <SocialLinksEditor
-        value={profile.socialLinks}
-        onChange={(value) => setField('socialLinks', value)}
-      />
+      <ProfileLinksSection>
+        <SocialLinksEditor
+          value={profile.socialLinks}
+          onChange={(value) => setField('socialLinks', value)}
+        />
+      </ProfileLinksSection>
     </div>
   );
 }
@@ -1999,7 +1969,7 @@ function PublicationArray({ label, value, onChange }: PublicationArrayProps) {
   );
 }
 
-interface PublicProfilePageProps {
+interface PublicProfileEditorProps {
   initialData: PublicProfileInitialData;
   targetEmail?: string;
   targetName?: string;
@@ -2008,14 +1978,14 @@ interface PublicProfilePageProps {
   backLabel?: string;
 }
 
-export default function PublicProfilePage({
+export default function PublicProfileEditor({
   initialData,
   targetEmail,
   targetName,
   from = 'profile',
   backHref,
   backLabel,
-}: PublicProfilePageProps) {
+}: PublicProfileEditorProps) {
   const router = useRouter();
   const beginOperationPolling = useOperationPollingSignal();
   const fallbackBackRoute = profileToolBackRoute(from);
@@ -2040,12 +2010,9 @@ export default function PublicProfilePage({
     initialData.schema
   );
   const [pr, setPr] = useState<PublicProfilePr>(initialData.pr);
-  const [publishedProfile, setPublishedProfile] =
-    useState<ProfileRecord | null>(initialPublishedProfile);
   const [draftProfile, setDraftProfile] = useState<ProfileRecord | null>(
     initialDraftProfile
   );
-  const [activeTab, setActiveTab] = useState<ProfileTab>('draft');
   const [profileKind, setProfileKind] =
     useState<ProfileKind>(initialProfileKind);
   const [stream, setStream] = useState(
@@ -2054,25 +2021,15 @@ export default function PublicProfilePage({
       initialData.schema.specialStreams[0] ??
       'cs'
   );
-  const [profile, setProfile] = useState<ProfileRecord>(initialEditableProfile);
-  const [mode, setMode] = useState<EditorMode>('form');
-  const [jsonDraft, setJsonDraft] = useState(
-    JSON.stringify(initialEditableProfile, null, 2)
+  const [editorState, setEditorState] = useState<EditorState<ProfileRecord>>(
+    () => createEditorState(initialEditableProfile, initialPublishedProfile)
   );
-  const [jsonDirty, setJsonDirty] = useState(false);
+  const profile = editorState.draft;
+  const publishedProfile = editorState.published;
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [placementLoading, setPlacementLoading] = useState(false);
-
-  const parsedJsonDraft = useMemo(() => {
-    try {
-      const value = JSON.parse(jsonDraft) as unknown;
-      return isRecord(value) ? value : null;
-    } catch {
-      return null;
-    }
-  }, [jsonDraft]);
 
   const allowedKinds = schema?.allowedKinds.length
     ? schema.allowedKinds
@@ -2106,16 +2063,9 @@ export default function PublicProfilePage({
       : publicProfilePrApiUrl();
   }
 
-  function syncJson(nextProfile = profile) {
-    setJsonDraft(JSON.stringify(nextProfile, null, 2));
-    setJsonDirty(false);
-  }
-
   function setEditableProfile(nextProfile: ProfileRecord) {
-    setProfile(nextProfile);
+    setEditorState((current) => updateEditorDraft(current, nextProfile));
     setDraftProfile(nextProfile);
-    syncJson(nextProfile);
-    setActiveTab('draft');
   }
 
   async function refresh() {
@@ -2172,18 +2122,15 @@ export default function PublicProfilePage({
 
       setSchema(nextSchema);
       setPr(nextPr);
-      setPublishedProfile(nextPublishedProfile);
       setDraftProfile(nextDraftProfile);
       setProfileKind(nextKind);
-      setProfile(editableProfile);
+      setEditorState(createEditorState(editableProfile, nextPublishedProfile));
       setStream(
         nextPr.stream ??
           profileBody.stream ??
           nextSchema.specialStreams[0] ??
           'cs'
       );
-      setActiveTab(nextDraftProfile ? 'draft' : 'draft');
-      syncJson(editableProfile);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load');
     } finally {
@@ -2203,11 +2150,8 @@ export default function PublicProfilePage({
   }
 
   function handleProfileChange(nextProfile: ProfileRecord) {
-    setProfile(nextProfile);
+    setEditorState((current) => updateEditorDraft(current, nextProfile));
     setDraftProfile(nextProfile);
-    if (!jsonDirty) {
-      setJsonDraft(JSON.stringify(nextProfile, null, 2));
-    }
   }
 
   async function refreshStudentPlacement(nextProfile = profile) {
@@ -2304,105 +2248,84 @@ export default function PublicProfilePage({
     profile.postgraduateProgramme,
   ]);
 
-  function confirmDiscardJsonChanges() {
-    if (!jsonDirty) return true;
-    return window.confirm(
-      'Discard unapplied JSON changes? Apply JSON first to keep them.'
-    );
-  }
-
-  function handleModeChange(nextMode: EditorMode) {
-    if (mode === nextMode) return;
-
-    if (
-      mode === 'json-edit' &&
-      nextMode !== 'json-edit' &&
-      !confirmDiscardJsonChanges()
-    ) {
-      return;
-    }
-
-    if (nextMode === 'json-edit') {
-      syncJson(profile);
-    } else if (mode === 'json-edit') {
-      setJsonDirty(false);
-    }
-
-    setMode(nextMode);
-  }
-
-  function handleTabChange(nextTab: ProfileTab) {
-    if (activeTab === nextTab) return;
-
-    if (mode === 'json-edit' && !confirmDiscardJsonChanges()) {
-      return;
-    }
-
-    setActiveTab(nextTab);
-    setJsonDirty(false);
-
-    if (nextTab === 'published' && mode !== 'json-view') {
-      setMode('json-view');
-    }
-  }
-
-  function applyJsonDraft() {
-    if (!parsedJsonDraft) {
-      toast.error('Profile JSON must be one object.');
-      return;
-    }
-    setEditableProfile(
-      trustedProfileForSchema({
-        profileKind,
-        profile: parsedJsonDraft,
-        identity: schema?.identity,
-        lockedFields,
-      })
-    );
-    toast.success('JSON applied to the form');
-  }
-
-  function discardJsonDraft() {
-    syncJson(profile);
-    toast.success('JSON changes discarded');
-  }
-
-  function loadPublishedAsEditBase(nextMode: EditorMode = 'form') {
-    if (!publishedProfile) {
-      toast.error('No published profile exists yet.');
-      return;
-    }
-    const nextKind = inferProfileKind(publishedProfile, profileKind);
-    setProfileKind(nextKind);
-    setEditableProfile(publishedProfile);
-    setMode(nextMode);
-    toast.success('Published profile loaded into the editor');
-  }
-
-  async function submit() {
-    const selectedProfile =
-      mode === 'json-edit' && jsonDirty ? parsedJsonDraft : profile;
-
-    if (!selectedProfile) {
-      toast.error('Profile JSON must be one object.');
-      return;
+  function validateProfileDraft(value: unknown) {
+    if (!isRecord(value)) {
+      return {
+        success: false as const,
+        issues: [
+          {
+            field: 'profile-about',
+            message: 'Profile JSON must contain one profile object.',
+          },
+        ],
+      };
     }
 
     const trustedProfile = trustedProfileForSchema({
       profileKind,
-      profile: selectedProfile,
+      profile: value,
       identity: schema?.identity,
       lockedFields,
     });
     const pruned = pruneEmpty(trustedProfile);
     if (!isRecord(pruned)) {
-      toast.error('Profile must include required fields.');
+      return {
+        success: false as const,
+        issues: [
+          {
+            field: 'profile-about',
+            message: 'Profile must include the required public fields.',
+          },
+        ],
+      };
+    }
+
+    const validation = schemaForKind(profileKind).safeParse(pruned);
+    if (!validation.success) {
+      return {
+        success: false as const,
+        issues: validation.error.issues.map((issue) => ({
+          field: profileIssueField(issue.path),
+          message: `${issue.path.join('.') || 'Profile'}: ${issue.message}`,
+        })),
+      };
+    }
+
+    return {
+      success: true as const,
+      data: validation.data as unknown as ProfileRecord,
+    };
+  }
+
+  async function submit() {
+    const trustedProfile = trustedProfileForSchema({
+      profileKind,
+      profile,
+      identity: schema?.identity,
+      lockedFields,
+    });
+    const pruned = pruneEmpty(trustedProfile);
+    if (!isRecord(pruned)) {
+      const message = 'Profile must include required fields.';
+      setEditorState((current) => ({
+        ...current,
+        validationIssues: [{ field: 'profile-about', message }],
+      }));
+      toast.error(message);
       return;
     }
 
     const validation = schemaForKind(profileKind).safeParse(pruned);
     if (!validation.success) {
-      toast.error(validationMessage(validation.error));
+      const message = validationMessage(validation.error);
+      setEditorState((current) => ({
+        ...current,
+        validationIssues: validation.error.issues.map((issue) => ({
+          field: profileIssueField(issue.path),
+          message: `${issue.path.join('.') || 'Profile'}: ${issue.message}`,
+        })),
+      }));
+      toast.error(message);
       return;
     }
 
@@ -2514,7 +2437,13 @@ export default function PublicProfilePage({
   }
 
   const hasOpenDraft = pr?.status === 'open' && Boolean(draftProfile);
-  const canSubmit = activeTab === 'draft';
+  const editorStatus: EditorRecordStatus = saving
+    ? 'submitting'
+    : hasOpenDraft
+      ? 'draft'
+      : publishedProfile
+        ? 'published'
+        : 'new';
 
   if (loading && !schema) {
     return <PageLoading variant="detail" />;
@@ -2592,168 +2521,79 @@ export default function PublicProfilePage({
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>Profile Data</CardTitle>
-              <CardDescription>
-                {hasOpenDraft
-                  ? 'An unmerged PR draft exists. The editor is loaded from that draft.'
-                  : (schema?.note ?? 'Loading the profile schema details.')}
-              </CardDescription>
-            </div>
-            <EditorViewControls<ProfileTab>
-              className="lg:w-[24rem]"
-              sourceValue={activeTab}
-              sourceOptions={[
-                { value: 'draft', label: hasOpenDraft ? 'Draft PR' : 'Editor' },
-                {
-                  value: 'published',
-                  label: 'Published',
-                  disabled: !publishedProfile,
-                },
-              ]}
-              onSourceChange={handleTabChange}
-              modeValue={mode as EditorModeValue}
-              onModeChange={(value) => handleModeChange(value as EditorMode)}
-            />
-          </div>
+          <CardTitle>Profile editor</CardTitle>
+          <CardDescription>
+            {hasOpenDraft
+              ? 'An unmerged PR draft exists. Submitting updates that same draft.'
+              : (schema?.note ?? 'Loading the profile schema details.')}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <>
-            {activeTab === 'published' ? (
-              <div className="space-y-4">
-                {publishedProfile ? (
-                  <>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-medium">Published profile</p>
-                        <p className="text-muted-foreground text-sm">
-                          Read-only merged people-directory profile.
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => loadPublishedAsEditBase()}
-                      >
-                        <Pencil className="size-4" />
-                        Use published as edit base
-                      </Button>
-                    </div>
-                    <JsonProfileView
-                      value={publishedProfile}
-                      enableClipboard
-                      monospace
-                    />
-                  </>
-                ) : (
-                  <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
-                    No published profile exists yet.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
+          <EditorWorkspace
+            state={editorState}
+            onStateChange={(nextState) => {
+              setEditorState(nextState);
+              setDraftProfile(nextState.draft);
+            }}
+            title={
+              targetEmail
+                ? `${targetName || targetEmail}'s profile`
+                : 'Your public profile'
+            }
+            status={editorStatus}
+            statusDetail={
+              hasOpenDraft
+                ? `Editing the draft in PR #${pr?.number}.`
+                : publishedProfile
+                  ? 'Published data is available for comparison.'
+                  : 'No public profile has been published yet.'
+            }
+            sections={PROFILE_EDITOR_SECTIONS}
+            canEditJson={!saving && !loading}
+            submitting={saving || loading || placementLoading}
+            submitLabel="Submit Profile Changes"
+            validateJson={validateProfileDraft}
+            onSubmit={() => void submit()}
+            renderEdit={(draft) => (
+              <div className="space-y-8">
                 <div className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">
                   {hasOpenDraft
-                    ? `Editable draft from PR #${pr?.number}. Submitting updates the same PR before merge.`
+                    ? `Submitting updates the current PR #${pr?.number}.`
                     : placementLoading
                       ? 'Refreshing official student placement fields.'
-                      : publishedProfile
-                        ? 'Editing starts from the published profile. Submitting creates a new PR.'
-                        : 'No public profile exists yet. Start from this empty template and submit a PR.'}
+                      : 'Complete the guided sections, then review the public information.'}
                 </div>
-
-                {mode === 'form' ? (
-                  <>
-                    <OptionGrid
-                      label="Profile Type"
-                      value={profileKind}
-                      options={allowedKinds}
-                      onChange={(value) =>
-                        handleKindChange(value as ProfileKind)
-                      }
-                      required
-                      labels={PROFILE_LABELS}
-                    />
-                    <ProfileForm
-                      profileKind={profileKind}
-                      stream={stream}
-                      streams={streams}
-                      profile={profile}
-                      identity={schema?.identity}
-                      lockedFields={lockedFields}
-                      onProfileChange={handleProfileChange}
-                      onStreamChange={setStream}
-                    />
-                  </>
-                ) : mode === 'json-view' ? (
-                  <JsonProfileView value={profile} enableClipboard monospace />
-                ) : (
-                  <div className="space-y-4">
-                    <JsonProfileEditor
-                      value={jsonDraft}
-                      onChange={(value) => {
-                        setJsonDraft(value);
-                        setJsonDirty(true);
-                      }}
-                      readOnly={saving || loading}
-                    />
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      {!parsedJsonDraft ? (
-                        <p className="text-destructive text-sm">
-                          JSON must parse to one object.
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Apply JSON to update the form before submitting.
-                        </p>
-                      )}
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={discardJsonDraft}
-                          disabled={!jsonDirty || saving || loading}
-                        >
-                          Discard JSON Changes
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={applyJsonDraft}
-                          disabled={!parsedJsonDraft || saving || loading}
-                        >
-                          Apply JSON
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
+                <OptionGrid
+                  label="Profile Type"
+                  value={profileKind}
+                  options={allowedKinds}
+                  onChange={(value) => handleKindChange(value as ProfileKind)}
+                  required
+                  labels={PROFILE_LABELS}
+                />
+                <ProfileForm
+                  profileKind={profileKind}
+                  stream={stream}
+                  streams={streams}
+                  profile={draft}
+                  identity={schema?.identity}
+                  lockedFields={lockedFields}
+                  onProfileChange={handleProfileChange}
+                  onStreamChange={setStream}
+                />
+              </div>
             )}
-          </>
+            renderReview={(draft, published, onChangeField) => (
+              <PublicProfileReview
+                draft={draft}
+                published={published}
+                profileKind={profileKind}
+                onChangeField={onChangeField}
+              />
+            )}
+          />
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <Button
-          onClick={submit}
-          disabled={
-            !canSubmit ||
-            saving ||
-            loading ||
-            placementLoading ||
-            (mode === 'json-edit' && !parsedJsonDraft)
-          }
-        >
-          <Save className="mr-2 size-4" />
-          {saving
-            ? 'Submitting...'
-            : placementLoading
-              ? 'Refreshing...'
-              : 'Submit PR'}
-        </Button>
-      </div>
     </PageShell>
   );
 }

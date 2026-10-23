@@ -6,7 +6,7 @@ import type {
   PublicProfileInitialData,
   PublicProfilePr,
   PublicProfileResponse,
-} from '@/components/custom/public-profile-page/PublicProfilePage';
+} from '@/components/profiles/profile-types';
 import {
   adminPublicProfileApiUrl,
   adminPublicProfilePrApiUrl,
