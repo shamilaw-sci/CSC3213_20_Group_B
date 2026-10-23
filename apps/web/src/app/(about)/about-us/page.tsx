@@ -1,5 +1,5 @@
-import AboutUs from '@/views/about/about-us/AboutUs';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <AboutUs />;
+  return <DevelopmentPage />;
 }

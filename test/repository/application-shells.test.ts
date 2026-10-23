@@ -56,8 +56,8 @@ describe('application shell contracts', () => {
       )
     ).toBe(false);
 
-    const views = source('apps/web/src/views/home/Home.tsx');
-    expect(views).toContain('@/components/feedback/development-page');
+    const home = source('apps/web/src/app/page.tsx');
+    expect(home).toContain('@/components/feedback/development-page');
   });
 
   test('People provides a search-led themed document shell', () => {

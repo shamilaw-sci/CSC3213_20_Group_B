@@ -1,5 +1,5 @@
-import Home from '@/views/home/Home';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <Home />;
+  return <DevelopmentPage />;
 }

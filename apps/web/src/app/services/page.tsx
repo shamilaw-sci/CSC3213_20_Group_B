@@ -1,5 +1,5 @@
-import Services from '@/views/services/Services';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <Services />;
+  return <DevelopmentPage />;
 }

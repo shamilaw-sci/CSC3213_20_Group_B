@@ -1,5 +1,5 @@
-import Contact from '@/views/contact/Contact';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <Contact />;
+  return <DevelopmentPage />;
 }

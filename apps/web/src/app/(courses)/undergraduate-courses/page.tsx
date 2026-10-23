@@ -1,5 +1,5 @@
-import UndergraduateCourses from '@/views/courses/undergraduate-courses/UndergraduateCourses';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <UndergraduateCourses />;
+  return <DevelopmentPage />;
 }

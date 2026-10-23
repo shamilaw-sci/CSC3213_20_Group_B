@@ -1,5 +1,5 @@
-import Research from '@/views/research/Research';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <Research />;
+  return <DevelopmentPage />;
 }

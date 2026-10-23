@@ -1,5 +1,5 @@
-import PrizesScholarships from '@/views/prizes-scholarships/PrizesScholarships';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <PrizesScholarships />;
+  return <DevelopmentPage />;
 }

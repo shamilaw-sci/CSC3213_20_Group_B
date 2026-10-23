@@ -1,5 +1,5 @@
-import Societies from '@/views/societies/Societies';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <Societies />;
+  return <DevelopmentPage />;
 }

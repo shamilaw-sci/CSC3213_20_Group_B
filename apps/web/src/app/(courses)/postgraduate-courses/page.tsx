@@ -1,5 +1,5 @@
-import PostgraduateCourses from '@/views/courses/postgraduate-courses/PostgraduateCourses';
+import { DevelopmentPage } from '@/components/feedback/development-page';
 
 export default function Page() {
-  return <PostgraduateCourses />;
+  return <DevelopmentPage />;
 }
