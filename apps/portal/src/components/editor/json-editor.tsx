@@ -5,11 +5,11 @@ import CodeMirror from '@uiw/react-codemirror';
 import { useTheme } from 'next-themes';
 
 interface JsonEditorProps {
-  value: string;
+  height?: string;
+  minHeight?: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
-  minHeight?: string;
-  height?: string;
+  value: string;
 }
 
 export function JsonEditor({

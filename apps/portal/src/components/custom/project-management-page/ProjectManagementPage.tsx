@@ -98,14 +98,14 @@ import { isSuperAdminRole } from '@/types/role';
 
 const JsonEditor = dynamic(
   () =>
-    import('@/components/custom/json-editor/JsonEditor').then(
+    import('@/components/editor/json-editor').then(
       (module) => module.JsonEditor
     ),
   { ssr: false }
 );
 const JsonPreview = dynamic(
   () =>
-    import('@/components/custom/json-editor/JsonPreview').then(
+    import('@/components/editor/json-preview').then(
       (module) => module.JsonPreview
     ),
   { ssr: false }

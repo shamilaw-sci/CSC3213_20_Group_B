@@ -95,14 +95,14 @@ import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 
 const JsonProfileEditor = dynamic(
   () =>
-    import('@/components/custom/json-editor/JsonEditor').then(
+    import('@/components/editor/json-editor').then(
       (module) => module.JsonEditor
     ),
   { ssr: false }
 );
 const JsonProfileView = dynamic(
   () =>
-    import('@/components/custom/json-editor/JsonPreview').then(
+    import('@/components/editor/json-preview').then(
       (module) => module.JsonPreview
     ),
   { ssr: false }

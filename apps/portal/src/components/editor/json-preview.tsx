@@ -6,9 +6,9 @@ import { githubLightTheme } from '@uiw/react-json-view/githubLight';
 import { useTheme } from 'next-themes';
 
 interface JsonPreviewProps {
-  value: object | undefined;
   enableClipboard?: boolean;
   monospace?: boolean;
+  value: object | undefined;
 }
 
 export function JsonPreview({
@@ -20,7 +20,7 @@ export function JsonPreview({
   const theme = resolvedTheme === 'dark' ? githubDarkTheme : githubLightTheme;
 
   return (
-    <div className="max-w-full overflow-x-auto rounded-md border bg-[#f6f8fa] p-3 text-sm sm:p-4 dark:bg-[#0d1117]">
+    <div className="max-w-full overflow-x-auto rounded-md border bg-muted/45 p-3 text-sm sm:p-4">
       <JsonView
         value={value ?? {}}
         style={{
