@@ -1,10 +1,14 @@
 import nextConfig from '@scs/eslint-config/next';
-import { typescriptProjectRoot } from '@scs/eslint-config/project';
+import {
+  tailwindProjectRoot,
+  typescriptProjectRoot,
+} from '@scs/eslint-config/project';
 import { globalIgnores } from 'eslint/config';
 
 const config = [
   ...nextConfig,
   typescriptProjectRoot(import.meta.dirname),
+  tailwindProjectRoot(import.meta.dirname, 'src/app/globals.css'),
   globalIgnores([
     '.agents/**',
     '.devcontainer/**',

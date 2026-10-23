@@ -4,6 +4,9 @@ import baseConfig from '@scs/eslint-config/base';
 import nextConfig from '@scs/eslint-config/next';
 import { typescriptProjectRoot } from '@scs/eslint-config/project';
 import workerConfig from '@scs/eslint-config/worker';
+import projectsConfig from '../../../apps/projects/eslint.config';
+import webConfig from '../../../apps/web/eslint.config';
+import uiConfig from '../../ui/eslint.config';
 import githubAppConfig from '../../../services/github-app/eslint.config';
 
 type FlatConfig = {
@@ -14,6 +17,11 @@ type FlatConfig = {
   };
   rules?: Record<string, unknown>;
   settings?: {
+    'better-tailwindcss'?: {
+      cwd?: string;
+      detectComponentClasses?: boolean;
+      entryPoint?: string;
+    };
     'import/resolver'?: {
       typescript?: { project?: string[] };
     };
@@ -45,9 +53,51 @@ describe('shared ESLint exports', () => {
     expect(rules['@next/next/no-html-link-for-pages']).toBeDefined();
     expect(rules['@typescript-eslint/no-explicit-any']).toBe('warn');
     expect(rules['simple-import-sort/imports']).toBe('error');
+    expect(rules['better-tailwindcss/no-unknown-classes']).toBe('error');
+    expect(rules['better-tailwindcss/no-conflicting-classes']).toBe('error');
+    expect(rules['better-tailwindcss/enforce-consistent-class-order']).toBe(
+      undefined
+    );
     expect(postcssOverride?.rules?.['unused-imports/no-unused-vars']).toBe(
       'off'
     );
+  });
+
+  test('Tailwind consumers resolve their own CSS entry point', () => {
+    const webSettings = (webConfig as FlatConfig[]).find(
+      (entry) => entry.settings?.['better-tailwindcss']
+    )?.settings?.['better-tailwindcss'];
+    const uiSettings = (uiConfig as FlatConfig[]).find(
+      (entry) => entry.settings?.['better-tailwindcss']
+    )?.settings?.['better-tailwindcss'];
+
+    expect(webSettings).toEqual({
+      cwd: expect.stringContaining('apps\\web'),
+      detectComponentClasses: true,
+      entryPoint: 'src/app/globals.css',
+    });
+    expect(uiSettings).toEqual({
+      cwd: expect.stringContaining('packages\\ui'),
+      detectComponentClasses: true,
+      entryPoint: 'src/styles/registry.css',
+    });
+
+    expect(
+      mergedRules(uiConfig as FlatConfig[])[
+        'better-tailwindcss/no-unknown-classes'
+      ]
+    ).toBe('off');
+
+    expect(
+      mergedRules(projectsConfig as FlatConfig[])[
+        'better-tailwindcss/no-unknown-classes'
+      ]
+    ).toEqual([
+      'error',
+      {
+        ignore: ['^loading-shimmer-page$', '^project-search-control$'],
+      },
+    ]);
   });
 
   test('Worker preserves security, import, and typed promise rules', () => {

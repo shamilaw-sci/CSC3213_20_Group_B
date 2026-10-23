@@ -83,7 +83,7 @@ export default function PrivacyPage() {
                 <li key={item.scope} className="min-w-0">
                   <span
                     className="text-foreground font-medium
-                      [overflow-wrap:anywhere] break-words"
+                      [overflow-wrap:anywhere]"
                   >
                     {item.scope}
                   </span>
