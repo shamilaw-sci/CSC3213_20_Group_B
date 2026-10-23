@@ -60,6 +60,35 @@ function runThemeInit({
 }
 
 describe('shared UI component contracts', () => {
+  test('renders one reusable skip link with a stable default target', async () => {
+    const modulePath = resolve(
+      import.meta.dir,
+      '../src/components/skip-link.tsx'
+    );
+    expect(existsSync(modulePath)).toBe(true);
+
+    const { SkipLink } = await import('@scs/ui/components/skip-link');
+    const markup = renderToStaticMarkup(
+      <SkipLink className="custom-skip" data-test="skip" />
+    );
+
+    expect(markup).toContain('href="#main-content"');
+    expect(markup).toContain('>Skip to main content<');
+    expect(markup).toContain('custom-skip');
+    expect(markup).toContain('data-test="skip"');
+    expect(markup).toContain('focus-visible:translate-y-0');
+  });
+
+  test('limits shared control transitions to explicit properties', () => {
+    for (const path of [
+      '../src/components/switch.tsx',
+      '../src/components/tabs.tsx',
+    ]) {
+      const source = readFileSync(resolve(import.meta.dir, path), 'utf8');
+      expect(source).not.toContain('transition-all');
+    }
+  });
+
   test('preserves badge variants and custom classes', () => {
     expect(badgeVariants({ variant: 'outline' })).toContain('border-border');
     expect(renderToStaticMarkup(<Badge className="custom" />)).toContain(
