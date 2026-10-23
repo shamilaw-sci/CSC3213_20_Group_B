@@ -19,6 +19,15 @@ describe('Portal application shell', () => {
     expect(header).not.toContain('/admin');
   });
 
+  test('marks the exact active public destination in both navigation layouts', () => {
+    const header = source('src/components/layout/portal-header.tsx');
+
+    expect(header).toContain('usePathname');
+    expect(header).toContain('pathname === item.href');
+    expect(header).toContain("aria-current={active ? 'page' : undefined}");
+    expect(header.match(/<PortalNavigationLink/gu)?.length).toBe(2);
+  });
+
   test('uses the shared theme without a floating global control', () => {
     const layout = source('src/app/layout.tsx');
 

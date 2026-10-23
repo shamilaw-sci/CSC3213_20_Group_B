@@ -1,6 +1,7 @@
 import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
+import { SkipLink } from '@scs/ui/components/skip-link';
 import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
 import { Open_Sans } from 'next/font/google';
@@ -147,12 +148,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${openSans.variable} min-h-svh antialiased`}>
         <ThemeProvider>
-          <a
-            href="#main-content"
-            className="fixed top-3 left-3 z-50 -translate-y-20 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-transform focus:translate-y-0"
-          >
-            Skip to main content
-          </a>
+          <SkipLink />
           <div className="flex min-h-svh flex-col">
             <SiteHeader />
             <main id="main-content" tabIndex={-1} className="flex-1">

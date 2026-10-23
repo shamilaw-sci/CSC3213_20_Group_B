@@ -18,7 +18,7 @@ const primaryNavigation = [
 ] as const;
 
 const navigationLinkClass =
-  'flex min-h-11 items-center border-b-2 px-1 text-sm font-medium transition-colors focus-visible:rounded-sm focus-visible:outline-none';
+  'flex min-h-11 items-center rounded-sm border-b-2 px-1 text-sm font-medium transition-colors';
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -43,7 +43,7 @@ export function SiteHeader() {
       <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="mr-auto flex min-h-11 items-center rounded-sm focus-visible:outline-none"
+          className="mr-auto flex min-h-11 items-center rounded-sm"
           onClick={() => setMenuOpen(false)}
         >
           <span className="flex size-9 items-center justify-center rounded-md bg-primary text-sm font-bold tracking-tight text-primary-foreground">
@@ -111,7 +111,7 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm font-medium focus-visible:outline-none ${
+                  className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm font-medium ${
                     active
                       ? 'border-primary bg-muted text-foreground'
                       : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'

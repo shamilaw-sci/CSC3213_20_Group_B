@@ -72,7 +72,7 @@ export function SiteHeader() {
       <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3 sm:px-4">
         <Link
           href="/"
-          className="flex min-h-11 shrink-0 items-center gap-2 rounded-sm font-semibold focus-visible:outline-none"
+          className="flex min-h-11 shrink-0 items-center gap-2 rounded-sm font-semibold"
           onClick={() => setMobileOpen(false)}
         >
           <Image
@@ -126,7 +126,7 @@ export function SiteHeader() {
                           key={link.href}
                           href={link.href}
                           aria-current={activeLink ? 'page' : undefined}
-                          className={`flex min-h-10 items-center rounded-sm border-l-2 px-3 text-sm focus-visible:outline-none ${
+                          className={`flex min-h-10 items-center rounded-sm border-l-2 px-3 text-sm ${
                             activeLink
                               ? 'border-primary bg-muted font-medium'
                               : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -182,7 +182,7 @@ export function SiteHeader() {
                       key={link.href}
                       href={link.href}
                       aria-current={active ? 'page' : undefined}
-                      className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm focus-visible:outline-none ${
+                      className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm ${
                         active
                           ? 'border-primary bg-muted font-medium'
                           : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'

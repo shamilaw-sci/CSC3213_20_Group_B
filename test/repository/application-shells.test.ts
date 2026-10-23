@@ -9,12 +9,36 @@ function source(path: string) {
 }
 
 describe('application shell contracts', () => {
+  test('all applications use the shared skip-navigation primitive', () => {
+    for (const app of ['web', 'people', 'projects', 'portal']) {
+      const layout = source(`apps/${app}/src/app/layout.tsx`);
+
+      expect(layout, app).toContain('@scs/ui/components/skip-link');
+      expect(layout, app).toContain('<SkipLink');
+      expect(layout, app).not.toContain('href="#main-content"');
+    }
+  });
+
+  test('application headers preserve the shared visible focus indicator', () => {
+    for (const app of ['web', 'people', 'projects']) {
+      const header = source(
+        `apps/${app}/src/components/layout/site-header.tsx`
+      );
+      expect(header, app).not.toContain('focus-visible:outline-none');
+    }
+
+    const portalHeader = source(
+      'apps/portal/src/components/layout/portal-header.tsx'
+    );
+    expect(portalHeader, 'portal').not.toContain('focus-visible:outline-none');
+  });
+
   test('Web provides a themed and zoom-accessible document shell', () => {
     const layout = source('apps/web/src/app/layout.tsx');
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('<ThemeProvider>');
-    expect(layout).toContain('href="#main-content"');
+    expect(layout).toContain('<SkipLink');
     expect(layout).toContain('<SiteHeader');
     expect(layout).toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
@@ -40,7 +64,7 @@ describe('application shell contracts', () => {
     expect(header).toContain("'Close navigation' : 'Open navigation'");
     expect(header).toContain('aria-expanded={menuOpen}');
     expect(header).toContain("event.key === 'Escape'");
-    expect(header).toContain('focus-visible:');
+    expect(header).toContain("aria-current={active ? 'page' : undefined}");
     expect(header).toContain('<ThemeToggle');
   });
 
@@ -65,7 +89,7 @@ describe('application shell contracts', () => {
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
-    expect(layout).toContain('href="#main-content"');
+    expect(layout).toContain('<SkipLink');
     expect(layout).toContain('<SiteHeader');
     expect(layout).toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
@@ -115,7 +139,7 @@ describe('application shell contracts', () => {
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
-    expect(layout).toContain('href="#main-content"');
+    expect(layout).toContain('<SkipLink');
     expect(layout).toMatch(/<main\s+id="main-content"/);
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
@@ -123,5 +147,17 @@ describe('application shell contracts', () => {
     expect(header).toContain("event.key === 'Escape'");
     expect(header).toContain('max-h-[min(24rem,calc(100vh-6rem))]');
     expect(header).not.toContain('transition-all');
+  });
+
+  test('Portal navigation reports the exact active public destination', () => {
+    const header = source(
+      'apps/portal/src/components/layout/portal-header.tsx'
+    );
+
+    expect(header).toContain("'use client';");
+    expect(header).toContain('usePathname');
+    expect(header).toContain('pathname === item.href');
+    expect(header).toContain("aria-current={active ? 'page' : undefined}");
+    expect(header).toContain('border-primary');
   });
 });
