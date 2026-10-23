@@ -18,9 +18,11 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorStatus } from '@/components/editor/editor-status';
+import { ValidationSummary } from '@/components/editor/validation-summary';
 
 interface EditorWorkspaceProps<T extends object> {
   canEditJson?: boolean;
+  canSubmit?: boolean;
   onStateChange: (state: EditorState<T>) => void;
   onSubmit: () => void;
   renderEdit: (draft: T, onDraftChange: (draft: T) => void) => ReactNode;
@@ -47,6 +49,7 @@ const surfaceLabels: Record<EditorSurface, string> = {
 
 export function EditorWorkspace<T extends object>({
   canEditJson = true,
+  canSubmit = true,
   onStateChange,
   onSubmit,
   renderEdit,
@@ -93,12 +96,12 @@ export function EditorWorkspace<T extends object>({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-muted-foreground">Editor</p>
-            <h1
+            <h2
               id="editor-title"
               className="text-2xl font-semibold tracking-tight"
             >
               {title}
-            </h1>
+            </h2>
           </div>
           <EditorStatus status={status} detail={statusDetail} />
         </div>
@@ -127,6 +130,8 @@ export function EditorWorkspace<T extends object>({
         </nav>
       </header>
 
+      <ValidationSummary issues={state.validationIssues} />
+
       <div
         className={`${editorTransitionClass(false)} motion-reduce:transform-none motion-reduce:transition-none`}
       >
@@ -149,11 +154,17 @@ export function EditorWorkspace<T extends object>({
               {renderEdit(state.draft, (draft) =>
                 onStateChange(updateEditorDraft(state, draft))
               )}
-              <div className="flex justify-end border-t pt-5">
-                <Button type="button" onClick={onSubmit} disabled={submitting}>
-                  {submitLabel}
-                </Button>
-              </div>
+              {canSubmit ? (
+                <div className="flex justify-end border-t pt-5">
+                  <Button
+                    type="button"
+                    onClick={onSubmit}
+                    disabled={submitting}
+                  >
+                    {submitLabel}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -169,9 +180,11 @@ export function EditorWorkspace<T extends object>({
               >
                 Edit details
               </Button>
-              <Button type="button" onClick={onSubmit} disabled={submitting}>
-                {submitLabel}
-              </Button>
+              {canSubmit ? (
+                <Button type="button" onClick={onSubmit} disabled={submitting}>
+                  {submitLabel}
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : null}

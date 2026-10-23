@@ -1,4 +1,4 @@
-import ProjectManagementPage from '@/components/custom/project-management-page/ProjectManagementPage';
+import ProjectEditor from '@/components/projects/project-editor';
 import { meApiUrl, publicProjectsPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';
@@ -42,7 +42,7 @@ export default async function Page({
   });
 
   return (
-    <ProjectManagementPage
+    <ProjectEditor
       initialUser={user}
       initialProjects={data.items}
       previousHref={navigation.previousHref}

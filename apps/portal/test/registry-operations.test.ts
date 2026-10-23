@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
 const projectSource = await Bun.file(
-  new URL(
-    '../src/components/custom/project-management-page/ProjectManagementPage.tsx',
-    import.meta.url
-  )
+  new URL('../src/components/projects/project-editor.tsx', import.meta.url)
 ).text();
 const courseSource = await Bun.file(
   new URL(

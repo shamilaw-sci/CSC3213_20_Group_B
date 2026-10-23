@@ -80,7 +80,7 @@ export function updateEditorDraft<T>(
   current: EditorState<T>,
   draft: T
 ): EditorState<T> {
-  return { ...current, draft };
+  return { ...current, draft, validationIssues: [] };
 }
 
 export function updateAdvancedJson<T>(

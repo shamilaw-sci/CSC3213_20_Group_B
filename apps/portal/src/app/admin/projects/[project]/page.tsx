@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import ProjectManagementPage from '@/components/custom/project-management-page/ProjectManagementPage';
+import ProjectEditor from '@/components/projects/project-editor';
 import { loadProjectEditorData } from '@/lib/server/project-editor';
 import { isSuperAdminRole } from '@/types/role';
 
@@ -16,7 +16,7 @@ export default async function Page({ params }: PageProps) {
   if (!isSuperAdminRole(data.user)) redirect('/dashboard');
 
   return (
-    <ProjectManagementPage
+    <ProjectEditor
       admin
       projectSlug={project}
       initialUser={data.user}

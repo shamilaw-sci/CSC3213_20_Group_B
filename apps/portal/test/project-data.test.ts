@@ -3,10 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const source = readFileSync(
-  resolve(
-    import.meta.dir,
-    '../src/components/custom/project-management-page/ProjectManagementPage.tsx'
-  ),
+  resolve(import.meta.dir, '../src/components/projects/project-editor.tsx'),
   'utf8'
 );
 

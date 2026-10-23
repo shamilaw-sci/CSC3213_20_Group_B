@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
-import { Separator } from '@scs/ui/components/separator';
 import { cn } from 'cn';
 import {
   Archive,
@@ -48,33 +47,39 @@ import {
   Copy,
   ExternalLink,
   Eye,
-  FileJson,
   FolderKanban,
-  Pencil,
   Plus,
   RefreshCw,
-  Save,
-  Search,
   Trash2,
   UserRound,
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { BackButton } from '@/components/custom/back-button/back-button';
 import {
-  type EditorModeValue,
-  EditorViewControls,
-} from '@/components/custom/editor-view-controls/editor-view-controls';
-import {
   PageLoading,
   PageLoadingPanel,
 } from '@/components/custom/loading/PageLoading';
-import { Pagination } from '@/components/custom/pagination/Pagination';
+import {
+  createEditorState,
+  type EditorRecordStatus,
+  type EditorState,
+  type EditorValidationIssue,
+} from '@/components/editor/editor-state';
+import { EditorWorkspace } from '@/components/editor/editor-workspace';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
+import { ProjectList } from '@/components/projects/project-list';
+import {
+  type ProjectRecord,
+  ProjectReview,
+} from '@/components/projects/project-review';
+import { ProjectAcademicSection } from '@/components/projects/sections/project-academic-section';
+import { ProjectBasicsSection } from '@/components/projects/sections/project-basics-section';
+import { ProjectLinksSection } from '@/components/projects/sections/project-links-section';
+import { ProjectPeopleSection } from '@/components/projects/sections/project-people-section';
+import { ProjectSourceSection } from '@/components/projects/sections/project-source-section';
 import { projectConfig } from '@/config/project.config';
 import publicEnvConfig from '@/config/public.env.config';
 import {
@@ -96,27 +101,9 @@ import {
 import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { isSuperAdminRole } from '@/types/role';
 
-const JsonEditor = dynamic(
-  () =>
-    import('@/components/editor/json-editor').then(
-      (module) => module.JsonEditor
-    ),
-  { ssr: false }
-);
-const JsonPreview = dynamic(
-  () =>
-    import('@/components/editor/json-preview').then(
-      (module) => module.JsonPreview
-    ),
-  { ssr: false }
-);
-
 type WorkspaceMode = 'list' | 'edit' | 'new';
-type ProjectRecord = Record<string, unknown>;
-type EditorMode = 'form' | 'json-view' | 'json-edit';
-type ProjectTab = 'draft' | 'published';
 
-interface ProjectManagementPageProps {
+interface ProjectEditorProps {
   admin?: boolean;
   projectSlug?: string;
   initialUser?: UserContext;
@@ -281,6 +268,14 @@ const USER_PROJECT_TYPES = [
   'OTHER',
 ] as const;
 
+const PROJECT_EDITOR_SECTIONS = [
+  { id: 'project-title', label: 'Basics' },
+  { id: 'project-people', label: 'People' },
+  { id: 'project-academic', label: 'Academic context' },
+  { id: 'project-links', label: 'Links' },
+  { id: 'project-source', label: 'Source' },
+] as const;
+
 function enumLabel(value: string) {
   return value
     .toLowerCase()
@@ -304,6 +299,54 @@ function slugify(value: string) {
 
 function isRecord(value: unknown): value is ProjectRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function projectIssueField(path: PropertyKey[]) {
+  const root = String(path[0] ?? 'project');
+  if (root === 'people') return 'project-people';
+  if (root === 'links') return 'project-links';
+  if (root === 'source' || root === 'media') return 'project-source';
+  if (
+    [
+      'title',
+      'slug',
+      'id',
+      'status',
+      'shortDescription',
+      'description',
+      'dates',
+    ].includes(root)
+  ) {
+    return 'project-title';
+  }
+  return 'project-academic';
+}
+
+function validateProjectDraft(value: unknown) {
+  if (!isRecord(value)) {
+    return {
+      success: false as const,
+      issues: [
+        {
+          field: 'project-title',
+          message: 'Project JSON must contain one project object.',
+        },
+      ],
+    };
+  }
+
+  const result = ProjectSchema.safeParse(value);
+  if (!result.success) {
+    return {
+      success: false as const,
+      issues: result.error.issues.map((issue) => ({
+        field: projectIssueField(issue.path),
+        message: `${issue.path.join('.') || 'Project'}: ${issue.message}`,
+      })),
+    };
+  }
+
+  return { success: true as const, data: result.data as ProjectRecord };
 }
 
 function courseCatalogRecord(value: unknown): CourseCatalogRecord | null {
@@ -897,8 +940,7 @@ function ProjectForm({
 
   return (
     <div className="space-y-8">
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">Identity</h3>
+      <ProjectBasicsSection>
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
             label="Title"
@@ -982,10 +1024,53 @@ function ProjectForm({
           readOnly={readOnly}
           onChange={(value) => setField('description', value)}
         />
-      </section>
+        <div className="space-y-4 border-t pt-5">
+          <h4 className="text-sm font-semibold">Project dates</h4>
+          <div className="grid gap-4 md:grid-cols-3">
+            <TextField
+              label="Started At"
+              type="date"
+              value={typeof dates.startedAt === 'string' ? dates.startedAt : ''}
+              readOnly={readOnly}
+              onChange={(value) =>
+                setNested('dates', {
+                  ...dates,
+                  startedAt: value.trim() ? value : undefined,
+                })
+              }
+            />
+            <TextField
+              label="Completed At"
+              type="date"
+              value={
+                typeof dates.completedAt === 'string' ? dates.completedAt : ''
+              }
+              readOnly={readOnly}
+              onChange={(value) =>
+                setNested('dates', {
+                  ...dates,
+                  completedAt: value.trim() ? value : undefined,
+                })
+              }
+            />
+            <TextField
+              label="Last Updated At"
+              type="date"
+              value={
+                typeof dates.lastUpdatedAt === 'string'
+                  ? dates.lastUpdatedAt
+                  : today()
+              }
+              readOnly={readOnly}
+              onChange={(value) =>
+                setNested('dates', { ...dates, lastUpdatedAt: value })
+              }
+            />
+          </div>
+        </div>
+      </ProjectBasicsSection>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">Classification</h3>
+      <ProjectAcademicSection>
         <div className="grid gap-4 md:grid-cols-2">
           <SelectField
             label="Project Type"
@@ -1042,65 +1127,64 @@ function ProjectForm({
             onChange={(value) => setField('departments', value)}
           />
         </div>
-      </section>
 
-      {projectType === 'COURSE_PROJECT' ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Course Project</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Course Offering</Label>
-              <Select
-                value={selectedOfferingId}
-                disabled={readOnly}
-                onValueChange={selectCourseOffering}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a course offering" />
-                </SelectTrigger>
-                <SelectContent>
-                  {courseOfferingOptions.map((option) => (
-                    <SelectItem
-                      key={option.offering.id}
-                      value={option.offering.id}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-muted-foreground text-xs">
-                Course projects must reference an existing course offering.
-              </p>
+        {projectType === 'COURSE_PROJECT' ? (
+          <section className="space-y-4">
+            <h3 className="text-base font-semibold">Course Project</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Course Offering</Label>
+                <Select
+                  value={selectedOfferingId}
+                  disabled={readOnly}
+                  onValueChange={selectCourseOffering}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a course offering" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courseOfferingOptions.map((option) => (
+                      <SelectItem
+                        key={option.offering.id}
+                        value={option.offering.id}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Course projects must reference an existing course offering.
+                </p>
+              </div>
+              <TextField
+                label="Batch"
+                value={typeof project.batch === 'string' ? project.batch : ''}
+                placeholder="2021"
+                readOnly={readOnly}
+                onChange={(value) =>
+                  setField('batch', value.trim() ? value : undefined)
+                }
+              />
+              <TextField
+                label="Group Number"
+                value={
+                  typeof project.groupNumber === 'string'
+                    ? project.groupNumber
+                    : ''
+                }
+                readOnly={readOnly}
+                onChange={(value) =>
+                  setField('groupNumber', value.trim() ? value : undefined)
+                }
+              />
             </div>
-            <TextField
-              label="Batch"
-              value={typeof project.batch === 'string' ? project.batch : ''}
-              placeholder="2021"
-              readOnly={readOnly}
-              onChange={(value) =>
-                setField('batch', value.trim() ? value : undefined)
-              }
-            />
-            <TextField
-              label="Group Number"
-              value={
-                typeof project.groupNumber === 'string'
-                  ? project.groupNumber
-                  : ''
-              }
-              readOnly={readOnly}
-              onChange={(value) =>
-                setField('groupNumber', value.trim() ? value : undefined)
-              }
-            />
-          </div>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
+      </ProjectAcademicSection>
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-base font-semibold">People</h3>
+      <ProjectPeopleSection>
+        <div className="flex items-center justify-end gap-3">
           {!readOnly ? (
             <Button
               type="button"
@@ -1208,10 +1292,9 @@ function ProjectForm({
             </div>
           ))}
         </div>
-      </section>
+      </ProjectPeopleSection>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">Links</h3>
+      <ProjectLinksSection>
         <div className="grid gap-4 md:grid-cols-2">
           {LINK_FIELDS.map((field) => (
             <TextField
@@ -1234,11 +1317,10 @@ function ProjectForm({
             />
           ))}
         </div>
-      </section>
+      </ProjectLinksSection>
 
       {canSubmitAnyProject ? (
-        <section className="space-y-4">
-          <h3 className="text-base font-semibold">Registry Metadata</h3>
+        <ProjectSourceSection>
           <div className="grid gap-4 md:grid-cols-2">
             <SelectField
               label="Source Type"
@@ -1339,58 +1421,13 @@ function ProjectForm({
               }
             />
           </div>
-        </section>
+        </ProjectSourceSection>
       ) : null}
-
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">Dates</h3>
-        <div className="grid gap-4 md:grid-cols-3">
-          <TextField
-            label="Started At"
-            type="date"
-            value={typeof dates.startedAt === 'string' ? dates.startedAt : ''}
-            readOnly={readOnly}
-            onChange={(value) =>
-              setNested('dates', {
-                ...dates,
-                startedAt: value.trim() ? value : undefined,
-              })
-            }
-          />
-          <TextField
-            label="Completed At"
-            type="date"
-            value={
-              typeof dates.completedAt === 'string' ? dates.completedAt : ''
-            }
-            readOnly={readOnly}
-            onChange={(value) =>
-              setNested('dates', {
-                ...dates,
-                completedAt: value.trim() ? value : undefined,
-              })
-            }
-          />
-          <TextField
-            label="Last Updated At"
-            type="date"
-            value={
-              typeof dates.lastUpdatedAt === 'string'
-                ? dates.lastUpdatedAt
-                : today()
-            }
-            readOnly={readOnly}
-            onChange={(value) =>
-              setNested('dates', { ...dates, lastUpdatedAt: value })
-            }
-          />
-        </div>
-      </section>
     </div>
   );
 }
 
-export default function ProjectManagementPage({
+export default function ProjectEditor({
   admin = false,
   projectSlug,
   initialUser,
@@ -1401,7 +1438,7 @@ export default function ProjectManagementPage({
   initialOfferings = [],
   previousHref,
   nextHref,
-}: ProjectManagementPageProps) {
+}: ProjectEditorProps) {
   const router = useRouter();
   const beginOperationPolling = useOperationPollingSignal();
   const [user, setUser] = useState<UserContext | null>(initialUser ?? null);
@@ -1419,11 +1456,15 @@ export default function ProjectManagementPage({
       .map(courseOfferingRecord)
       .filter((item): item is CourseOfferingRecord => Boolean(item))
   );
-  const [publishedProject, setPublishedProject] =
-    useState<ProjectRecord | null>(initialProject ?? null);
-  const [project, setProject] = useState<ProjectRecord>(
-    () => initialProject ?? emptyProject(initialSchema?.identity)
+  const [editorState, setEditorState] = useState<EditorState<ProjectRecord>>(
+    () =>
+      createEditorState(
+        initialProject ?? emptyProject(initialSchema?.identity),
+        initialProject ?? null
+      )
   );
+  const project = editorState.draft;
+  const publishedProject = editorState.published;
   const latestProjectRef = useRef(project);
   const [pr, setPr] = useState<ProjectPr | null>(null);
   const routeProjectSlug = projectSlug ? slugify(projectSlug) : null;
@@ -1433,9 +1474,6 @@ export default function ProjectManagementPage({
   const [selectedSlug, setSelectedSlug] = useState<string | null>(
     routeProjectSlug
   );
-  const [editorMode, setEditorMode] = useState<EditorMode>('form');
-  const [activeTab, setActiveTab] = useState<ProjectTab>('draft');
-  const [jsonText, setJsonText] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(
     !initialUser || (Boolean(projectSlug) && !initialSchema)
@@ -1482,8 +1520,12 @@ export default function ProjectManagementPage({
     latestProjectRef.current = project;
   }, [project]);
 
-  function syncJson(nextProject = project) {
-    setJsonText(JSON.stringify(nextProject, null, 2));
+  function resetEditor(
+    nextProject: ProjectRecord,
+    published: Readonly<ProjectRecord> | null
+  ) {
+    latestProjectRef.current = nextProject;
+    setEditorState(createEditorState(nextProject, published));
   }
 
   function returnToProjectList() {
@@ -1644,9 +1686,9 @@ export default function ProjectManagementPage({
           currentProjectJson === baseProjectJson
         ) {
           latestProjectRef.current = draft;
-          setProject(draft);
-          syncJson(draft);
-          setActiveTab('draft');
+          setEditorState((current) =>
+            createEditorState(draft, current.published)
+          );
         }
       }
 
@@ -1726,11 +1768,9 @@ export default function ProjectManagementPage({
           : null;
         if (draft && nextPr?.status === 'open') {
           setSelectedSlug(normalizedSlug);
-          setPublishedProject(null);
+          resetEditor(draft, null);
           setSchema(nextSchema);
           setWorkspaceMode('edit');
-          setEditorMode('form');
-          setActiveTab('draft');
           return;
         }
 
@@ -1743,13 +1783,9 @@ export default function ProjectManagementPage({
         projectBody.project ?? emptyProject(nextSchema.identity);
 
       setSelectedSlug(normalizedSlug);
-      setPublishedProject(projectBody.project);
-      setProject(nextProject);
+      setEditorState(createEditorState(nextProject, projectBody.project));
       latestProjectRef.current = nextProject;
-      syncJson(nextProject);
       setWorkspaceMode('edit');
-      setEditorMode('form');
-      setActiveTab('draft');
       void loadProjectPr(normalizedSlug, {
         applyDraft: true,
         draftBaseProject: nextProject,
@@ -1814,15 +1850,10 @@ export default function ProjectManagementPage({
       const nextProject = emptyProject(nextSchema.identity);
       setSchema(nextSchema);
       setSelectedSlug(null);
-      setPublishedProject(null);
       setPr(null);
       setPrError(null);
-      latestProjectRef.current = nextProject;
-      setProject(nextProject);
-      syncJson(nextProject);
+      resetEditor(nextProject, null);
       setWorkspaceMode('new');
-      setEditorMode('form');
-      setActiveTab('draft');
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -1842,73 +1873,11 @@ export default function ProjectManagementPage({
     setWorkspaceMode('list');
     setSelectedSlug(null);
     setSchema(null);
-    setPublishedProject(null);
     setPr(null);
     const nextProject = emptyProject();
-    latestProjectRef.current = nextProject;
-    setProject(nextProject);
-    syncJson(nextProject);
+    resetEditor(nextProject, null);
     setError(null);
     setPrError(null);
-  }
-
-  function applyJson() {
-    try {
-      const parsed = JSON.parse(jsonText) as unknown;
-      if (!isRecord(parsed)) {
-        toast.error('Project JSON must be an object.');
-        return null;
-      }
-      latestProjectRef.current = parsed;
-      setProject(parsed);
-      return parsed;
-    } catch (jsonError) {
-      toast.error(
-        jsonError instanceof Error ? jsonError.message : 'Invalid JSON.'
-      );
-      return null;
-    }
-  }
-
-  function setEditableProject(nextProject: ProjectRecord) {
-    latestProjectRef.current = nextProject;
-    setProject(nextProject);
-    syncJson(nextProject);
-    setActiveTab('draft');
-  }
-
-  function loadPublishedAsEditBase(nextMode: EditorMode = 'form') {
-    if (!publishedProject) {
-      toast.error('No published project exists yet.');
-      return;
-    }
-
-    setEditableProject(publishedProject);
-    setEditorMode(nextMode);
-    toast.success('Published project loaded into the editor');
-  }
-
-  function handleEditorModeChange(nextMode: EditorMode) {
-    if (activeTab === 'published' && nextMode !== 'json-view') {
-      if (!canEdit) {
-        setEditorMode(nextMode);
-        return;
-      }
-      loadPublishedAsEditBase(nextMode);
-      return;
-    }
-
-    if (nextMode === 'json-edit') syncJson();
-    setEditorMode(nextMode);
-  }
-
-  function handleTabChange(nextTab: ProjectTab) {
-    if (activeTab === nextTab) return;
-
-    setActiveTab(nextTab);
-    if (nextTab === 'published') {
-      setEditorMode(canEdit ? 'json-view' : 'form');
-    }
   }
 
   async function saveProject(nextProject = project) {
@@ -1946,15 +1915,17 @@ export default function ProjectManagementPage({
 
     const validation = ProjectSchema.safeParse(normalizedProject);
     if (!validation.success) {
+      const validationIssues: EditorValidationIssue[] =
+        validation.error.issues.map((issue) => ({
+          field: projectIssueField(issue.path),
+          message: `${issue.path.join('.') || 'Project'}: ${issue.message}`,
+        }));
+      setEditorState((current) => ({
+        ...current,
+        validationIssues,
+      }));
       toast.error('Project validation failed.');
-      setError(
-        validation.error.issues
-          .map((issue) => {
-            const path = issue.path.length ? issue.path.join('.') : 'project';
-            return `${path}: ${issue.message}`;
-          })
-          .join('\n')
-      );
+      setError(validationIssues.map((issue) => issue.message).join('\n'));
       return;
     }
 
@@ -2007,11 +1978,8 @@ export default function ProjectManagementPage({
       if (!nextPr) throw new Error('Project PR status is unavailable.');
       setPrError(null);
       setSelectedSlug(targetSlug);
-      latestProjectRef.current = validation.data;
-      setProject(validation.data);
-      syncJson(validation.data);
+      resetEditor(validation.data, publishedProject);
       setWorkspaceMode('edit');
-      setActiveTab('draft');
       router.refresh();
       toast.success('Project PR submitted.');
     } catch (saveError) {
@@ -2171,12 +2139,21 @@ export default function ProjectManagementPage({
     : effectiveAdmin
       ? 'Back to Admin'
       : 'Back to Dashboard';
-  const displayedProject =
-    activeTab === 'published' ? (publishedProject ?? project) : project;
   const showRegistry = !routeProjectSlug && workspaceMode === 'list';
   const showWorkspace = routeProjectSlug || workspaceMode !== 'list';
   const deleteConfirmationMatches =
     selectedSlug !== null && deleteConfirmation.trim() === selectedSlug;
+  const editorStatus: EditorRecordStatus = saving
+    ? 'submitting'
+    : error
+      ? 'failed'
+      : isNew
+        ? 'new'
+        : pr?.status === 'open'
+          ? 'draft'
+          : publishedProject
+            ? 'published'
+            : 'draft';
 
   return (
     <PageShell width="wide" className="px-3 sm:px-4">
@@ -2221,96 +2198,18 @@ export default function ProjectManagementPage({
 
       <div className="grid gap-5">
         {showRegistry ? (
-          <>
-            <Card>
-              <CardHeader className="px-4 sm:px-6">
-                <CardTitle>Project Registry</CardTitle>
-                <CardDescription>
-                  Open a project workspace or start a new registry draft.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4 sm:px-6">
-                <div className="relative">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search projects..."
-                    className="pl-9"
-                  />
-                </div>
-                <Separator />
-                {filteredProjects.length === 0 ? (
-                  <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-center">
-                    <FolderKanban className="size-10 opacity-30" />
-                    <p className="text-sm">No projects found.</p>
-                  </div>
-                ) : (
-                  <ul className="divide-border divide-y">
-                    {filteredProjects.map((item) => {
-                      const itemSlug =
-                        typeof item.slug === 'string' ? item.slug : '';
-                      const selected = itemSlug === selectedSlug;
-                      const canEditItem = userCanEditProject(
-                        user,
-                        item,
-                        effectiveAdmin
-                      );
-
-                      return (
-                        <li
-                          key={itemSlug}
-                          className="py-3 first:pt-0 last:pb-0"
-                        >
-                          <article
-                            className={cn(
-                              'w-full rounded-md border p-3 text-left transition hover:border-foreground/25 hover:bg-muted/30',
-                              selected && 'border-foreground/30 bg-muted/40'
-                            )}
-                          >
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                              <span className="min-w-0 flex-1 wrap-break-word font-medium sm:truncate">
-                                {projectTitle(item)}
-                              </span>
-                              {typeof item.status === 'string' ? (
-                                <Badge variant="secondary">
-                                  {enumLabel(item.status)}
-                                </Badge>
-                              ) : null}
-                            </div>
-                            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-6">
-                              {typeof item.shortDescription === 'string'
-                                ? item.shortDescription
-                                : itemSlug}
-                            </p>
-                            <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                              <Button
-                                asChild
-                                size="sm"
-                                className="w-full sm:w-auto"
-                              >
-                                <Link href={`${projectsHref}/${itemSlug}`}>
-                                  {canEditItem ? (
-                                    <Pencil className="size-4" />
-                                  ) : (
-                                    <Eye className="size-4" />
-                                  )}
-                                  {canEditItem
-                                    ? 'Manage Project'
-                                    : 'View Project'}
-                                </Link>
-                              </Button>
-                            </div>
-                          </article>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-            <Pagination previousHref={previousHref} nextHref={nextHref} />
-          </>
+          <ProjectList
+            projects={filteredProjects}
+            projectsHref={projectsHref}
+            selectedSlug={selectedSlug}
+            search={search}
+            onSearchChange={setSearch}
+            canEditProject={(item) =>
+              userCanEditProject(user, item, effectiveAdmin)
+            }
+            previousHref={previousHref}
+            nextHref={nextHref}
+          />
         ) : null}
 
         {showWorkspace ? (
@@ -2319,7 +2218,7 @@ export default function ProjectManagementPage({
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 space-y-1.5">
                   <CardTitle>
-                    {isNew ? 'New Project' : projectTitle(displayedProject)}
+                    {isNew ? 'New Project' : projectTitle(project)}
                   </CardTitle>
                   <CardDescription>
                     {schema?.note ??
@@ -2406,41 +2305,53 @@ export default function ProjectManagementPage({
                     </div>
                   ) : null}
 
-                  <EditorViewControls<ProjectTab>
-                    className="rounded-md border bg-muted/20 p-3 md:w-[24rem]"
-                    sourceValue={
-                      !isNew && publishedProject ? activeTab : undefined
+                  <EditorWorkspace
+                    state={editorState}
+                    onStateChange={(nextState) => {
+                      latestProjectRef.current = nextState.draft;
+                      setEditorState(nextState);
+                    }}
+                    title={isNew ? 'New project draft' : projectTitle(project)}
+                    status={editorStatus}
+                    statusDetail={
+                      pr?.status === 'open'
+                        ? 'A pull request draft is open.'
+                        : publishedProject
+                          ? 'Published data is available for comparison.'
+                          : 'This project has not been published yet.'
                     }
-                    sourceOptions={[
-                      {
-                        value: 'draft',
-                        label: pr?.draftProject ? 'Draft PR' : 'Editor',
-                      },
-                      { value: 'published', label: 'Published' },
-                    ]}
-                    onSourceChange={handleTabChange}
-                    modeValue={editorMode as EditorModeValue}
-                    onModeChange={(value) =>
-                      handleEditorModeChange(value as EditorMode)
+                    sections={
+                      canSubmitAnyProject
+                        ? PROJECT_EDITOR_SECTIONS
+                        : PROJECT_EDITOR_SECTIONS.filter(
+                            (section) => section.id !== 'project-source'
+                          )
                     }
-                    disableJsonEdit={!canEdit && editorMode !== 'json-edit'}
+                    canEditJson={canEdit}
+                    canSubmit={canEdit}
+                    submitting={saving}
+                    submitLabel="Submit Project Changes"
+                    validateJson={validateProjectDraft}
+                    onSubmit={() => void saveProject(editorState.draft)}
+                    renderEdit={(draft, onDraftChange) => (
+                      <ProjectForm
+                        project={draft}
+                        onChange={onDraftChange}
+                        canSubmitAnyProject={canSubmitAnyProject}
+                        slugLocked={!isNew}
+                        courses={courses}
+                        offerings={offerings}
+                        readOnly={!canEdit}
+                      />
+                    )}
+                    renderReview={(draft, published, onChangeField) => (
+                      <ProjectReview
+                        draft={draft}
+                        published={published}
+                        onChangeField={onChangeField}
+                      />
+                    )}
                   />
-
-                  {editorMode === 'form' ? (
-                    <ProjectForm
-                      project={displayedProject ?? project}
-                      onChange={setProject}
-                      canSubmitAnyProject={canSubmitAnyProject}
-                      slugLocked={!isNew}
-                      courses={courses}
-                      offerings={offerings}
-                      readOnly={!canEdit}
-                    />
-                  ) : editorMode === 'json-view' ? (
-                    <JsonPreview value={displayedProject ?? project} />
-                  ) : (
-                    <JsonEditor value={jsonText} onChange={setJsonText} />
-                  )}
 
                   {canEdit ? (
                     <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -2451,16 +2362,6 @@ export default function ProjectManagementPage({
                           : 'Owner submission requires your identity in People.'}
                       </div>
                       <div className="grid w-full grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap">
-                        {editorMode === 'json-edit' ? (
-                          <Button
-                            variant="outline"
-                            onClick={applyJson}
-                            className="w-full sm:w-auto"
-                          >
-                            <FileJson className="size-4" />
-                            Apply JSON
-                          </Button>
-                        ) : null}
                         {!isNew ? (
                           <Button
                             variant="outline"
@@ -2485,20 +2386,6 @@ export default function ProjectManagementPage({
                             {deleting ? 'Deleting...' : 'Remove'}
                           </Button>
                         ) : null}
-                        <Button
-                          onClick={() => {
-                            const nextProject =
-                              editorMode === 'json-edit'
-                                ? applyJson()
-                                : project;
-                            if (nextProject) void saveProject(nextProject);
-                          }}
-                          disabled={saving}
-                          className="w-full sm:w-auto"
-                        >
-                          <Save className="size-4" />
-                          {saving ? 'Saving...' : 'Submit PR'}
-                        </Button>
                       </div>
                     </div>
                   ) : null}

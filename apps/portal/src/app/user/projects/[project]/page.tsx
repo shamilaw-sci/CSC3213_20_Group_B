@@ -1,4 +1,4 @@
-import ProjectManagementPage from '@/components/custom/project-management-page/ProjectManagementPage';
+import ProjectEditor from '@/components/projects/project-editor';
 import { loadProjectEditorData } from '@/lib/server/project-editor';
 
 interface PageProps {
@@ -12,7 +12,7 @@ export default async function Page({ params }: PageProps) {
   const data = await loadProjectEditorData(project);
 
   return (
-    <ProjectManagementPage
+    <ProjectEditor
       projectSlug={project}
       initialUser={data.user}
       initialSchema={data.schema}
