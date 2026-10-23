@@ -221,12 +221,10 @@ Within a Next.js application, use these ownership rules:
 - use `@/` and package exports for cross-directory imports rather than creating
   path-dependent component trees.
 
-Applications do not use a generic `src/views` layer. Keep route-only
-compositions beside their route, and promote a composition to a named feature
-folder only when multiple routes reuse it. Do not recreate `views` as a second
-route tree. `components/custom` is a legacy location: when one of its modules is
-changed, move it to its route or named feature owner only when all consumers can
-be updated atomically.
+Applications do not use generic `src/views` or `components/custom` layers. Keep
+route-only compositions beside their route, and promote a composition to a
+named responsibility or domain folder only when multiple routes reuse it. Do
+not recreate either ambiguous layer as a second route or component tree.
 
 ### Portal Editor State
 
