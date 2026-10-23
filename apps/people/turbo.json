@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": [
+        "NEXT_PUBLIC_PEOPLE_DATA_BASE_URL",
+        "NEXT_PUBLIC_PROJECTS_DATA_BASE_URL",
+        "NEXT_PUBLIC_PROJECTS_SITE_URL",
+        "NEXT_PUBLIC_SITE_URL"
+      ]
+    }
+  }
+}

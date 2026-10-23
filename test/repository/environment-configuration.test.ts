@@ -19,6 +19,16 @@ interface VariableAudit {
   status: VariableStatus;
 }
 
+interface TurboDryRun {
+  tasks: Array<{
+    taskId: string;
+    resolvedTaskDefinition: {
+      dependsOn: string[];
+      outputs: string[];
+    };
+  }>;
+}
+
 function templated(
   variables: readonly (readonly [string, VariableKind])[]
 ): VariableAudit[] {
@@ -49,7 +59,7 @@ function audited(
 const workspaceVariables = {
   web: {
     template: 'apps/web/.env.example',
-    turboTask: '@scs/web#build',
+    turboConfig: 'apps/web/turbo.json',
     variables: templated([
       ['BASE_DOMAIN', 'server'],
       ['CF_SECRET', 'secret'],
@@ -60,7 +70,7 @@ const workspaceVariables = {
   },
   people: {
     template: 'apps/people/.env.example',
-    turboTask: '@scs/people#build',
+    turboConfig: 'apps/people/turbo.json',
     variables: templated([
       ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
@@ -70,7 +80,7 @@ const workspaceVariables = {
   },
   projects: {
     template: 'apps/projects/.env.example',
-    turboTask: '@scs/projects#build',
+    turboConfig: 'apps/projects/turbo.json',
     variables: templated([
       ['NEXT_PUBLIC_PEOPLE_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
@@ -79,7 +89,7 @@ const workspaceVariables = {
   },
   portal: {
     template: 'apps/portal/.env.example',
-    turboTask: '@scs/portal#build',
+    turboConfig: 'apps/portal/turbo.json',
     variables: templated([
       ['COOKIE_DOMAIN', 'server'],
       ['NEXT_PUBLIC_API_CLIENT_ID', 'browser'],
@@ -229,13 +239,41 @@ describe('environment configuration discovery', () => {
   });
 
   test('declares every Next.js build input on its owning Turborepo task', () => {
-    const turbo = readTurboConfig('turbo.json');
-
     for (const audit of Object.values(workspaceVariables)) {
-      if (!('turboTask' in audit)) continue;
-      expect(turbo.tasks[audit.turboTask]?.env?.slice().sort()).toEqual(
+      if (!('turboConfig' in audit)) continue;
+      const turbo = readTurboConfig(audit.turboConfig);
+
+      expect(turbo.tasks.build?.env?.slice().sort()).toEqual(
         audit.variables.map((variable) => variable.name).sort()
       );
+    }
+  });
+
+  test('restores every Next.js build artifact from the Turborepo cache', () => {
+    const result = Bun.spawnSync({
+      cmd: ['bunx', 'turbo', 'run', 'build', '--dry=json'],
+      cwd: root,
+      stderr: 'pipe',
+      stdout: 'pipe',
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const dryRun = JSON.parse(result.stdout.toString()) as TurboDryRun;
+    const nextBuildTasks = [
+      '@scs/people#build',
+      '@scs/portal#build',
+      '@scs/projects#build',
+      '@scs/web#build',
+    ];
+
+    for (const taskId of nextBuildTasks) {
+      const task = dryRun.tasks.find(
+        (candidate) => candidate.taskId === taskId
+      );
+
+      expect(task?.resolvedTaskDefinition.outputs).toContain('.next/**');
+      expect(task?.resolvedTaskDefinition.dependsOn).toContain('^build');
     }
   });
 });

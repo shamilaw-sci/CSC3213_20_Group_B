@@ -53,6 +53,12 @@ CI caches Bun downloads and `.turbo` output. Cache keys include the lockfile
 hash and commit SHA; restore keys allow reuse without making stale output
 authoritative. Installation still uses the frozen lockfile.
 
+The root `turbo.json` owns shared build dependencies and artifact outputs.
+Each Next.js app extends that configuration from its local `turbo.json` and
+declares only its build-time environment inputs. Keep this inheritance intact:
+a root `package#build` override replaces the shared task instead of composing
+with it, which prevents `.next` artifacts from being restored on a cache hit.
+
 Superseded pull-request runs are cancelled. Merge-group and `main` runs are not
 cancelled because they prove a specific integration state. The workflow uses
 Node 24-compatible `actions/checkout@v7` and `actions/cache@v6`.
