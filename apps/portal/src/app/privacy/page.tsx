@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           >
             SCS PDN Portal
           </Link>
-          <h1 className="text-2xl leading-tight font-semibold sm:text-3xl">
+          <h1 className="text-2xl/tight font-semibold sm:text-3xl">
             Privacy Policy
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -63,13 +63,13 @@ export default function PrivacyPage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               Information We Collect
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               SCS PDN Portal is used by students, staff, and administrators of
@@ -81,10 +81,7 @@ export default function PrivacyPage() {
             <ul className="list-disc space-y-2 pl-5">
               {googleScopes.map((item) => (
                 <li key={item.scope} className="min-w-0">
-                  <span
-                    className="text-foreground font-medium
-                      [overflow-wrap:anywhere]"
-                  >
+                  <span className="text-foreground font-medium wrap-anywhere">
                     {item.scope}
                   </span>
                   : {item.purpose}
@@ -101,13 +98,13 @@ export default function PrivacyPage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               How We Use Information
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               We use this information to authenticate users, maintain portal
@@ -124,13 +121,13 @@ export default function PrivacyPage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               Sharing, Retention, and Control
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               Personal information is shared only with authorized portal

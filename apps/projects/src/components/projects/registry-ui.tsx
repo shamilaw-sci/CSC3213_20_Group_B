@@ -107,7 +107,7 @@ export function PageIntro({
         >
           {title}
         </h1>
-        <p className="text-muted-foreground mt-4 max-w-3xl text-base leading-7">
+        <p className="text-muted-foreground mt-4 max-w-3xl text-base/7">
           {description}
         </p>
       </div>
@@ -169,7 +169,7 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
         </div>
         <CardContent className="min-w-0 px-0">
           <CardTitle
-            className="text-card-foreground line-clamp-2 text-base leading-snug
+            className="text-card-foreground line-clamp-2 text-base/snug
               md:text-lg"
           >
             {project.title}
@@ -183,10 +183,7 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
             </Badge>
             <StatusBadge status={project.status} />
           </div>
-          <p
-            className="text-muted-foreground mt-2 line-clamp-1 text-sm
-              leading-6"
-          >
+          <p className="text-muted-foreground mt-2 line-clamp-1 text-sm/6">
             {project.shortDescription}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -340,12 +337,12 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               ) : null}
             </div>
             <h1
-              className="text-card-foreground text-3xl leading-tight
-                font-semibold sm:text-4xl"
+              className="text-card-foreground text-3xl/tight font-semibold
+                sm:text-4xl"
             >
               {project.title}
             </h1>
-            <p className="text-muted-foreground max-w-3xl text-base leading-8">
+            <p className="text-muted-foreground max-w-3xl text-base/8">
               {project.shortDescription}
             </p>
             <ProjectLinkButtons links={project.links} />
@@ -359,7 +356,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
       >
         <div className="space-y-8">
           <InfoPanel title="Overview">
-            <p className="text-muted-foreground text-sm leading-7">
+            <p className="text-muted-foreground text-sm/7">
               {project.description}
             </p>
           </InfoPanel>
@@ -560,7 +557,7 @@ function FacetBlock({
             href={item.href}
             className="text-muted-foreground hover:bg-muted
               hover:text-foreground flex items-center justify-between rounded-md
-              px-2 py-2 text-sm font-medium transition-colors"
+              p-2 text-sm font-medium transition-colors"
           >
             <span>{item.label}</span>
             <Badge variant="outline" className="rounded-md">

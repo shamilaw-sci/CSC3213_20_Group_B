@@ -100,7 +100,7 @@ export default function SearchPage() {
             <Button
               type="submit"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-none"
+              className="size-11 shrink-0 rounded-none"
               aria-label="Search projects"
             >
               <Search className="size-4" />
@@ -129,9 +129,7 @@ export default function SearchPage() {
             <h2 className="text-card-foreground text-lg font-semibold">
               Search anything in projects
             </h2>
-            <p
-              className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6"
-            >
+            <p className="text-muted-foreground mt-2 max-w-2xl text-sm/6">
               Try a course code, project title, technology, academic year,
               student group, supervisor, status, collection, or project type.
             </p>

@@ -37,7 +37,7 @@ export default function TermsOfServicePage() {
           >
             SCS PDN Portal
           </Link>
-          <h1 className="text-2xl leading-tight font-semibold sm:text-3xl">
+          <h1 className="text-2xl/tight font-semibold sm:text-3xl">
             Terms of Service
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -47,13 +47,13 @@ export default function TermsOfServicePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               Use of the Portal
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               SCS PDN Portal provides access to academic and administrative
@@ -73,13 +73,13 @@ export default function TermsOfServicePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               Google Sign-In
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               The portal may use Google Sign-In to authenticate users. When you
@@ -96,13 +96,13 @@ export default function TermsOfServicePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
+            <CardTitle className="text-lg/snug sm:text-xl">
               Service Availability and Changes
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               The portal is provided for institutional use and may be updated,
@@ -119,13 +119,11 @@ export default function TermsOfServicePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-lg leading-snug sm:text-xl">
-              Contact
-            </CardTitle>
+            <CardTitle className="text-lg/snug sm:text-xl">Contact</CardTitle>
           </CardHeader>
           <CardContent
-            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
-              leading-7 sm:px-6"
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
           >
             <p>
               Questions about these terms should be directed to the Department

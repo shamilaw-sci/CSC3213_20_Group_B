@@ -45,7 +45,7 @@ export default function SCSPortalGitHubApp() {
               External installation is not recommended
             </h2>
 
-            <p className="text-muted-foreground text-sm leading-6">
+            <p className="text-muted-foreground text-sm/6">
               This GitHub App is intended only for use with the SCS Portal. It
               automatically processes repository pull requests and commits
               required by the portal and is not designed or supported for use by
@@ -61,7 +61,7 @@ export default function SCSPortalGitHubApp() {
           <div className="space-y-1">
             <h2 className="font-semibold">Purpose</h2>
 
-            <p className="text-muted-foreground text-sm leading-6">
+            <p className="text-muted-foreground text-sm/6">
               The SCS Portal GitHub App connects approved repositories to the
               portal and handles automated GitHub operations such as processing
               pull requests and commits.
@@ -71,7 +71,7 @@ export default function SCSPortalGitHubApp() {
           <div className="space-y-1 border-t pt-4">
             <h2 className="font-semibold">Installation</h2>
 
-            <p className="text-muted-foreground text-sm leading-6">
+            <p className="text-muted-foreground text-sm/6">
               Install this application only when instructed by an SCS Portal
               administrator and only on an approved GitHub account,
               organization, or repository.
@@ -81,7 +81,7 @@ export default function SCSPortalGitHubApp() {
           <div className="space-y-1 border-t pt-4">
             <h2 className="font-semibold">Liability notice</h2>
 
-            <p className="text-muted-foreground text-sm leading-6">
+            <p className="text-muted-foreground text-sm/6">
               External users who install or use this application do so at their
               own risk. The application owners, developers, maintainers,
               contributors, and the SCS Portal team are not liable for any data
@@ -96,7 +96,7 @@ export default function SCSPortalGitHubApp() {
           className="bg-muted/30 flex flex-col gap-3 rounded-md border p-5
             sm:flex-row sm:items-center sm:justify-between"
         >
-          <p className="text-muted-foreground text-sm leading-6">
+          <p className="text-muted-foreground text-sm/6">
             By installing the app outside its intended environment, you accept
             all risks associated with unsupported use.
           </p>

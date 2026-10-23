@@ -37,7 +37,7 @@ export default function ProfileHeader({
             md:items-center"
         >
           <div className="relative">
-            <Avatar className="h-24 w-24">
+            <Avatar className="size-24">
               <AvatarImage src={picture} alt="Profile" />
               <AvatarFallback className="text-2xl">
                 {name ? name.charAt(0).toUpperCase() : '?'}

@@ -645,7 +645,7 @@ export default function ProfileContent({
               >
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Fingerprint className="h-5 w-5 shrink-0" />
+                    <Fingerprint className="size-5 shrink-0" />
                     <Label className="text-base">Passkeys</Label>
                     <Badge
                       variant="outline"

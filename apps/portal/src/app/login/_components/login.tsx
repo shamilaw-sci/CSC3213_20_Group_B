@@ -30,7 +30,7 @@ export default function Login() {
     >
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="mb-2 flex flex-col items-center gap-3">
-          <UopLogoIcon className="h-24 w-24" />
+          <UopLogoIcon className="size-24" />
           <div className="text-center">
             <h1 className="text-foreground text-2xl font-semibold">
               SCS PDN Portal

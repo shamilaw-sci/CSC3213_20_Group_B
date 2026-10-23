@@ -121,7 +121,7 @@ export default function StudentsPage() {
                   p-4"
               >
                 <Icon
-                  className={`h-8 w-8 ${iconClassName}`}
+                  className={`size-8 ${iconClassName}`}
                   strokeWidth={2.5}
                   aria-hidden="true"
                 />

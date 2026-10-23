@@ -45,6 +45,7 @@
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "npm.packageManager": "bun",
   "npm.scriptRunner": "bun",
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   "terminal.integrated.enableMultiLinePasteWarning": "never",
   "explorer.confirmDelete": false,

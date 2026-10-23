@@ -43,7 +43,7 @@ export default function PortalHome() {
         Faculty of Science, University of Peradeniya
       </p>
 
-      <p className="text-muted-foreground mt-6 max-w-xl text-sm leading-6">
+      <p className="text-muted-foreground mt-6 max-w-xl text-sm/6">
         This portal provides access to academic and administrative services for
         students, staff, and administrators of the Department of Statistics and
         Computer Science.

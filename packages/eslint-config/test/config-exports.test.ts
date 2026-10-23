@@ -55,6 +55,7 @@ describe('shared ESLint exports', () => {
     expect(rules['simple-import-sort/imports']).toBe('error');
     expect(rules['better-tailwindcss/no-unknown-classes']).toBe('error');
     expect(rules['better-tailwindcss/no-conflicting-classes']).toBe('error');
+    expect(rules['better-tailwindcss/enforce-canonical-classes']).toBe('error');
     expect(rules['better-tailwindcss/enforce-consistent-class-order']).toBe(
       undefined
     );

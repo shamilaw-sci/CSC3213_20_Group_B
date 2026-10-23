@@ -120,7 +120,7 @@ function SourceOption({
       </span>
       <span className="min-w-0 space-y-1">
         <span className="block font-medium">{title}</span>
-        <span className="text-muted-foreground block text-sm leading-5">
+        <span className="text-muted-foreground block text-sm/5">
           {description}
         </span>
       </span>

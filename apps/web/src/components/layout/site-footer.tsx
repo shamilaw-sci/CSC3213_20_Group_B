@@ -33,7 +33,7 @@ export function SiteFooter() {
           <p className="font-semibold">
             Department of Statistics &amp; Computer Science
           </p>
-          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-6">
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm/6">
             Faculty of Science, University of Peradeniya, Sri Lanka.
           </p>
         </div>

@@ -67,7 +67,7 @@ export function SiteHeader() {
   return (
     <header
       ref={headerRef}
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+      className="bg-background/95 supports-backdrop-filter:bg-background/85
         sticky top-0 z-40 border-b backdrop-blur"
     >
       <div
@@ -176,7 +176,7 @@ export function SiteHeader() {
         <nav
           id="people-mobile-navigation"
           aria-label="Mobile navigation"
-          className="bg-background border-t px-3 py-3 md:hidden"
+          className="bg-background border-t p-3 md:hidden"
         >
           <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2">
             {navigationMenus.map((menu) => (

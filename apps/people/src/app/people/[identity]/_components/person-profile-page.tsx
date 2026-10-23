@@ -80,10 +80,7 @@ function ProjectProfileTab({
                   {project.role}
                 </span>
               </div>
-              <p
-                className="text-muted-foreground mt-2 line-clamp-2 text-sm
-                  leading-6"
-              >
+              <p className="text-muted-foreground mt-2 line-clamp-2 text-sm/6">
                 {project.shortDescription}
               </p>
             </a>
@@ -122,7 +119,7 @@ function MinimalProjectPersonProfile({
         </div>
         <div className="mt-5">
           <h1
-            className="text-card-foreground text-2xl leading-tight font-bold
+            className="text-card-foreground text-2xl/tight font-bold
               wrap-break-word"
           >
             @{username}
@@ -138,7 +135,7 @@ function MinimalProjectPersonProfile({
         <div className="bg-card rounded-md border p-5">
           <div
             className="bg-muted/30 text-muted-foreground mb-5 rounded-md border
-              p-4 text-sm leading-6"
+              p-4 text-sm/6"
           >
             This username is listed in published project records, but no public
             directory profile is available yet.

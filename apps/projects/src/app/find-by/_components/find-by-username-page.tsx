@@ -108,7 +108,7 @@ export default function FindByUsernamePage() {
             <Button
               type="submit"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-none"
+              className="size-11 shrink-0 rounded-none"
               aria-label="Find projects"
             >
               <Search className="size-4" />
@@ -137,9 +137,7 @@ export default function FindByUsernamePage() {
             <h2 className="text-card-foreground text-lg font-semibold">
               Enter a username
             </h2>
-            <p
-              className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6"
-            >
+            <p className="text-muted-foreground mt-2 max-w-2xl text-sm/6">
               Find projects using the username published in project team
               records.
             </p>

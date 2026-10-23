@@ -80,7 +80,7 @@ export function SiteHeader() {
   return (
     <header
       ref={headerRef}
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+      className="bg-background/95 supports-backdrop-filter:bg-background/85
         sticky top-0 z-40 border-b backdrop-blur"
     >
       <div
@@ -191,7 +191,7 @@ export function SiteHeader() {
           id="projects-mobile-navigation"
           aria-label="Mobile navigation"
           className="bg-background max-h-[min(24rem,calc(100vh-5rem))]
-            overflow-y-auto border-t px-3 py-3 md:hidden"
+            overflow-y-auto border-t p-3 md:hidden"
         >
           <div className="mx-auto grid max-w-6xl gap-1 sm:grid-cols-2">
             {[...primaryNavigation, ...browseNavigation].map((item) => {

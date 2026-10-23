@@ -166,7 +166,7 @@ export default function Dashboard() {
               </div>
               <div className="space-y-1">
                 <p className="font-semibold">{item.title}</p>
-                <p className="text-muted-foreground text-sm leading-6">
+                <p className="text-muted-foreground text-sm/6">
                   {item.description}
                 </p>
               </div>

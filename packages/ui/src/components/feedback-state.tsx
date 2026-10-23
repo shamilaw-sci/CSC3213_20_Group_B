@@ -47,9 +47,7 @@ export function FeedbackState({
       >
         {title}
       </h1>
-      <div
-        className="text-muted-foreground mt-4 max-w-prose text-base leading-7"
-      >
+      <div className="text-muted-foreground mt-4 max-w-prose text-base/7">
         {description}
       </div>
       {actions ? (

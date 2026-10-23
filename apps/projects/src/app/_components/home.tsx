@@ -110,9 +110,7 @@ export default function Home() {
           >
             SCS Projects
           </h1>
-          <p
-            className="text-muted-foreground mt-4 max-w-2xl text-base leading-7"
-          >
+          <p className="text-muted-foreground mt-4 max-w-2xl text-base/7">
             Browse student projects, research work, department systems, open
             source tools, datasets, and collaborations.
           </p>

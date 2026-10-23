@@ -978,9 +978,9 @@ function FieldShell({
   children: React.ReactNode;
 }) {
   return (
-    <Field className="min-w-0 [&>*]:min-w-0">
+    <Field className="min-w-0 *:min-w-0">
       <FieldLabel
-        className={compact ? 'md:sr-only md:!w-px md:!min-w-0' : undefined}
+        className={compact ? 'md:sr-only md:w-px! md:min-w-0!' : undefined}
       >
         {label}
       </FieldLabel>
@@ -1048,7 +1048,7 @@ function SelectControl({
   return (
     <Field className="min-w-0">
       <FieldLabel
-        className={compact ? 'md:sr-only md:!w-px md:!min-w-0' : undefined}
+        className={compact ? 'md:sr-only md:w-px! md:min-w-0!' : undefined}
       >
         {label}
       </FieldLabel>

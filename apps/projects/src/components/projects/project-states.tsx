@@ -59,7 +59,7 @@ export function StatePanel({
           <h2 className="text-card-foreground text-lg font-semibold">
             {title}
           </h2>
-          <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm/6">
             {description}
           </p>
           {action || secondaryAction || onRetry ? (

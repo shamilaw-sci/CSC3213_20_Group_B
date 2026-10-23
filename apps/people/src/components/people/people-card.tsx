@@ -107,7 +107,7 @@ function PersonImage({
         alt={name}
         width={size === 'lg' ? 352 : 320}
         height={size === 'lg' ? 448 : 200}
-        className="h-full w-full object-cover"
+        className="size-full object-cover"
         priority={size === 'lg'}
         referrerPolicy="no-referrer"
       />
@@ -156,7 +156,7 @@ function PersonTile({
       >
         <CardTitle
           className="text-card-foreground group-hover:text-primary line-clamp-2
-            text-sm leading-snug sm:text-base"
+            text-sm/snug sm:text-base"
         >
           {title}
         </CardTitle>
@@ -494,7 +494,7 @@ function ProfileLinkList({
               min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm
               transition-colors"
           >
-            <Icon className="h-4 w-4 shrink-0" aria-hidden={true} />
+            <Icon className="size-4 shrink-0" aria-hidden={true} />
             <span className="truncate">{link.label}</span>
           </a>
         );
@@ -521,11 +521,10 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
             aria-label={link.label}
             title={link.label}
             className="bg-card text-muted-foreground hover:border-primary
-              hover:bg-primary hover:text-primary-foreground inline-flex h-10
-              w-10 items-center justify-center rounded-md border
-              transition-colors"
+              hover:bg-primary hover:text-primary-foreground inline-flex size-10
+              items-center justify-center rounded-md border transition-colors"
           >
-            <Icon className="h-5 w-5" aria-hidden={true} />
+            <Icon className="size-5" aria-hidden={true} />
           </a>
         );
       })}
@@ -574,7 +573,7 @@ function FieldGrid({ fields }: { fields: ProfileField[] }) {
                 className="text-muted-foreground mb-1 flex items-center gap-2
                   text-xs font-medium uppercase"
               >
-                {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
+                {Icon && <Icon className="size-3.5" aria-hidden="true" />}
                 {field.label}
               </dt>
               <dd className="text-card-foreground text-sm font-medium">
@@ -662,7 +661,7 @@ function TimelineList({
                   text-sm hover:underline"
               >
                 Website
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                <ExternalLink className="size-3.5" aria-hidden="true" />
               </a>
             )}
           </li>
@@ -1005,9 +1004,7 @@ export function DetailedPersonCard({
         />
         <div className="mt-5">
           {showIdentity && (
-            <h1
-              className="text-card-foreground text-2xl leading-tight font-bold"
-            >
+            <h1 className="text-card-foreground text-2xl/tight font-bold">
               {person.title} {person.fullName}
             </h1>
           )}
@@ -1080,10 +1077,10 @@ export function DetailedPersonCardSkeleton() {
           <div className="mt-6">
             <div className="bg-muted mb-3 h-3 w-12 rounded" />
             <div className="flex flex-wrap gap-2">
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
             </div>
           </div>
         </div>

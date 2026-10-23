@@ -6,7 +6,7 @@ export default function Loading() {
       className="flex min-h-screen items-center justify-center gap-2
         text-gray-600"
     >
-      <Loader2 className="h-5 w-5 animate-spin" />
+      <Loader2 className="size-5 animate-spin" />
       Loading...
     </div>
   );

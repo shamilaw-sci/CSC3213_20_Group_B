@@ -77,7 +77,7 @@ export function PeopleSearch() {
           }}
           className="bg-background placeholder:text-muted-foreground
             focus-visible:border-ring focus-visible:ring-ring/30 h-10 w-full
-            rounded-md border pr-9 pl-9 text-sm transition-colors outline-none
+            rounded-md border px-9 text-sm transition-colors outline-none
             focus-visible:ring-2"
         />
         {isLoading ? (
@@ -105,12 +105,11 @@ export function PeopleSearch() {
 
       {showPanel ? (
         <div
-          className="bg-popover text-popover-foreground absolute top-full
-            right-0 left-0 z-50 mt-2 overflow-hidden rounded-md border
-            shadow-lg"
+          className="bg-popover text-popover-foreground absolute inset-x-0
+            top-full z-50 mt-2 overflow-hidden rounded-md border shadow-lg"
         >
           {error ? (
-            <p className="text-muted-foreground px-3 py-3 text-sm">
+            <p className="text-muted-foreground p-3 text-sm">
               Unable to load people search.
             </p>
           ) : results.length > 0 ? (
@@ -138,7 +137,7 @@ export function PeopleSearch() {
               ))}
             </div>
           ) : query.trim() && !isLoading ? (
-            <p className="text-muted-foreground px-3 py-3 text-sm">
+            <p className="text-muted-foreground p-3 text-sm">
               No people found.
             </p>
           ) : null}

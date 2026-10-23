@@ -17,7 +17,7 @@ export function PortalHeader() {
 
   return (
     <header
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+      className="bg-background/95 supports-backdrop-filter:bg-background/85
         sticky top-0 z-40 border-b backdrop-blur"
     >
       <div

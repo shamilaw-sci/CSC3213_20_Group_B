@@ -120,7 +120,7 @@ export function ProjectList({
                       </div>
                       <p
                         className="text-muted-foreground mt-1 line-clamp-2
-                          text-sm leading-6"
+                          text-sm/6"
                       >
                         {typeof project.shortDescription === 'string'
                           ? project.shortDescription

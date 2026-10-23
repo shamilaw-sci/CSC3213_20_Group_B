@@ -50,7 +50,7 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
             className="flex flex-col items-start gap-6 md:flex-row
               md:items-center"
           >
-            <Avatar className="h-24 w-24">
+            <Avatar className="size-24">
               <AvatarImage src={user.picture} alt={user.name} />
               <AvatarFallback className="text-2xl">
                 {user.name ? user.name.charAt(0).toUpperCase() : '?'}

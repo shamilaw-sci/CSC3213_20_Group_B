@@ -82,7 +82,7 @@ export function IndexCardsLoading({
                 className="bg-card flex min-h-36 flex-col items-start
                   justify-between rounded-md border p-4"
               >
-                <div className="bg-muted h-8 w-8 rounded-md" />
+                <div className="bg-muted size-8 rounded-md" />
                 <div className="bg-muted h-5 w-32 max-w-full rounded" />
               </div>
             ))}
@@ -149,7 +149,7 @@ export function BatchDirectoryLoading() {
       descriptionWidth="w-56"
     >
       <div className="mb-5 flex items-center gap-2">
-        <div className="bg-muted h-5 w-5 rounded" />
+        <div className="bg-muted size-5 rounded" />
         <div className="bg-muted h-4 w-28 rounded" />
       </div>
       <div
@@ -188,10 +188,10 @@ export function ProfileLoading() {
           <div className="mt-6">
             <div className="bg-muted mb-3 h-3 w-12 rounded" />
             <div className="flex flex-wrap gap-2">
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
-              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
+              <div className="bg-muted size-10 rounded-md" />
             </div>
           </div>
         </aside>

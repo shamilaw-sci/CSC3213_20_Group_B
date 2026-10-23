@@ -162,7 +162,7 @@ export default function StudentSubjectPage({
         className="text-primary mb-5 flex items-center gap-2 text-sm
           font-medium"
       >
-        <BookOpen className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+        <BookOpen className="size-5" strokeWidth={2.5} aria-hidden="true" />
         Batch Directory
       </div>
 

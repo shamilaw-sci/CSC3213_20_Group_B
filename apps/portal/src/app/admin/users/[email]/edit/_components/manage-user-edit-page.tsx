@@ -137,7 +137,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="size-16">
               <AvatarImage src={user.picture} alt={previewName} />
               <AvatarFallback className="text-xl">
                 {previewName.charAt(0).toUpperCase()}

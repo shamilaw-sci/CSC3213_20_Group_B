@@ -127,17 +127,14 @@ export default function FacetIndex({
                 className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto]
                   items-start gap-3"
               >
-                <CardTitle
-                  className="min-w-0 text-lg leading-snug
-                    [overflow-wrap:anywhere]"
-                >
+                <CardTitle className="min-w-0 text-lg/snug wrap-anywhere">
                   {item.label}
                 </CardTitle>
                 <Badge className="shrink-0 rounded-md">{item.count}</Badge>
               </div>
               {item.description ? (
                 <CardContent className="px-0">
-                  <p className="text-muted-foreground text-sm leading-6">
+                  <p className="text-muted-foreground text-sm/6">
                     {item.description}
                   </p>
                 </CardContent>

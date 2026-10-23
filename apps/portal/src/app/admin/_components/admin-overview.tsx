@@ -67,7 +67,7 @@ export default function AdminOverview() {
               </div>
               <div className="space-y-1">
                 <h2 className="font-semibold">{section.title}</h2>
-                <p className="text-muted-foreground text-sm leading-6">
+                <p className="text-muted-foreground text-sm/6">
                   {section.description}
                 </p>
               </div>

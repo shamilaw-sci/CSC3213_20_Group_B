@@ -10,6 +10,11 @@ const nextConfig = [
   ...baseConfig,
   betterTailwindcss.configs.correctness,
   {
+    rules: {
+      'better-tailwindcss/enforce-canonical-classes': 'error',
+    },
+  },
+  {
     files: ['postcss.config.mts'],
     rules: {
       // The plugin misclassifies a named `.mts` default export as type-only.

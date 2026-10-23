@@ -22,7 +22,7 @@ export default function DevPage({
       <h1 className="text-foreground text-2xl font-semibold">
         Page Under Development
       </h1>
-      <p className="text-muted-foreground mt-3 max-w-md text-sm leading-6">
+      <p className="text-muted-foreground mt-3 max-w-md text-sm/6">
         This page is currently under development and will be available soon.
         Please check back later.
       </p>
