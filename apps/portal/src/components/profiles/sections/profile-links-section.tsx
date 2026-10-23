@@ -13,7 +13,7 @@ export function ProfileLinksSection({ children }: ProfileLinksSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Links</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Connect public professional and social profiles using recognizable
           labels.
         </p>

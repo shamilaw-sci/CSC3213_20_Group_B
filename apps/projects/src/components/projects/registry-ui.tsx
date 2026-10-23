@@ -94,15 +94,20 @@ export function PageIntro({
   description: string;
 }>) {
   return (
-    <section className="border-b bg-card">
+    <section className="bg-card border-b">
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+        <p
+          className="text-primary text-xs font-semibold tracking-wide uppercase"
+        >
           {eyebrow}
         </p>
-        <h1 className="mt-3 max-w-4xl text-3xl font-semibold tracking-tight text-card-foreground sm:text-5xl">
+        <h1
+          className="text-card-foreground mt-3 max-w-4xl text-3xl font-semibold
+            tracking-tight sm:text-5xl"
+        >
           {title}
         </h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
+        <p className="text-muted-foreground mt-4 max-w-3xl text-base leading-7">
           {description}
         </p>
       </div>
@@ -143,16 +148,30 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
     <Link
       href={`/projects/${project.slug}`}
       aria-label={`View project ${project.title}`}
-      className="group block rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className="group focus-visible:ring-ring/50 block rounded-md
+        focus-visible:ring-[3px] focus-visible:outline-none"
     >
-      <Card className="grid w-full gap-4 rounded-md p-4 transition group-hover:-translate-y-0.5 group-hover:bg-muted/35 group-hover:shadow-lg md:grid-cols-[2.5rem_minmax(0,1fr)_auto] md:items-start">
-        <div className="flex min-w-0 items-start justify-between gap-4 md:w-10 md:justify-start">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+      <Card
+        className="group-hover:bg-muted/35 grid w-full gap-4 rounded-md p-4
+          transition group-hover:-translate-y-0.5 group-hover:shadow-lg
+          md:grid-cols-[2.5rem_minmax(0,1fr)_auto] md:items-start"
+      >
+        <div
+          className="flex min-w-0 items-start justify-between gap-4 md:w-10
+            md:justify-start"
+        >
+          <span
+            className="bg-primary/10 text-primary flex size-10 shrink-0
+              items-center justify-center rounded-md"
+          >
             <Icon className="size-5" />
           </span>
         </div>
         <CardContent className="min-w-0 px-0">
-          <CardTitle className="line-clamp-2 text-base leading-snug text-card-foreground md:text-lg">
+          <CardTitle
+            className="text-card-foreground line-clamp-2 text-base leading-snug
+              md:text-lg"
+          >
             {project.title}
           </CardTitle>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -164,7 +183,10 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
             </Badge>
             <StatusBadge status={project.status} />
           </div>
-          <p className="mt-2 line-clamp-1 text-sm leading-6 text-muted-foreground">
+          <p
+            className="text-muted-foreground mt-2 line-clamp-1 text-sm
+              leading-6"
+          >
             {project.shortDescription}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -180,11 +202,16 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
             ) : null}
           </div>
         </CardContent>
-        <div className="flex items-center justify-end border-t pt-3 md:block md:min-w-24 md:border-t-0 md:pt-0">
+        <div
+          className="flex items-center justify-end border-t pt-3 md:block
+            md:min-w-24 md:border-t-0 md:pt-0"
+        >
           <Button asChild size="sm" variant="outline" className="md:mt-1">
             <span>
               View
-              <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+              <ArrowRight
+                className="size-4 transition group-hover:translate-x-0.5"
+              />
             </span>
           </Button>
         </div>
@@ -270,7 +297,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
 
   return (
     <article>
-      <section className="relative overflow-hidden border-b bg-card">
+      <section className="bg-card relative overflow-hidden border-b">
         {project.media.coverImage ? (
           <Image
             src={project.media.coverImage}
@@ -281,10 +308,17 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
             className="object-cover opacity-12 dark:opacity-10"
           />
         ) : null}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--card)_0%,rgba(255,255,255,0.88)_68%,rgba(255,255,255,0.35)_100%)] dark:bg-[linear-gradient(90deg,var(--card)_0%,rgba(23,25,35,0.92)_68%,rgba(23,25,35,0.5)_100%)]" />
+        <div
+          className="absolute inset-0
+            bg-[linear-gradient(90deg,var(--card)_0%,rgba(255,255,255,0.88)_68%,rgba(255,255,255,0.35)_100%)]
+            dark:bg-[linear-gradient(90deg,var(--card)_0%,rgba(23,25,35,0.92)_68%,rgba(23,25,35,0.5)_100%)]"
+        />
         <div className="relative mx-auto max-w-6xl px-4 py-14">
           <div className="flex max-w-4xl flex-col gap-5">
-            <span className="flex size-14 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span
+              className="bg-primary/10 text-primary flex size-14 items-center
+                justify-center rounded-md"
+            >
               <Icon className="size-8" />
             </span>
             <div className="flex flex-wrap gap-2">
@@ -296,7 +330,8 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 <Badge
                   asChild
                   variant="secondary"
-                  className="rounded-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                  className="hover:bg-primary hover:text-primary-foreground
+                    rounded-md transition-colors"
                 >
                   <Link href={`/courses/${project.course.code}/projects`}>
                     {project.course.code}
@@ -304,10 +339,13 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 </Badge>
               ) : null}
             </div>
-            <h1 className="text-3xl font-semibold leading-tight text-card-foreground sm:text-4xl">
+            <h1
+              className="text-card-foreground text-3xl leading-tight
+                font-semibold sm:text-4xl"
+            >
               {project.title}
             </h1>
-            <p className="max-w-3xl text-base leading-8 text-muted-foreground">
+            <p className="text-muted-foreground max-w-3xl text-base leading-8">
               {project.shortDescription}
             </p>
             <ProjectLinkButtons links={project.links} />
@@ -315,10 +353,13 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_20rem]">
+      <section
+        className="mx-auto grid max-w-6xl gap-8 px-4 py-10
+          lg:grid-cols-[1fr_20rem]"
+      >
         <div className="space-y-8">
           <InfoPanel title="Overview">
-            <p className="text-sm leading-7 text-muted-foreground">
+            <p className="text-muted-foreground text-sm leading-7">
               {project.description}
             </p>
           </InfoPanel>
@@ -331,16 +372,26 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                     href={peopleProfileHref(person.username)}
                     className="block"
                   >
-                    <Card className="rounded-md py-0 transition-colors hover:border-primary/40 hover:bg-muted/30">
+                    <Card
+                      className="hover:border-primary/40 hover:bg-muted/30
+                        rounded-md py-0 transition-colors"
+                    >
                       <CardContent className="p-4">
-                        <p className="font-semibold text-card-foreground underline-offset-4 transition-colors hover:text-primary hover:underline">
+                        <p
+                          className="text-card-foreground hover:text-primary
+                            font-semibold underline-offset-4 transition-colors
+                            hover:underline"
+                        >
                           {person.name}
                         </p>
-                        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <p
+                          className="text-muted-foreground mt-1 text-xs
+                            font-medium tracking-wide uppercase"
+                        >
                           {person.role}
                         </p>
                         {person.sNumber ? (
-                          <p className="mt-2 text-sm text-muted-foreground">
+                          <p className="text-muted-foreground mt-2 text-sm">
                             {person.sNumber}
                           </p>
                         ) : null}
@@ -353,14 +404,17 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                     className="rounded-md py-0"
                   >
                     <CardContent className="p-4">
-                      <p className="font-semibold text-card-foreground">
+                      <p className="text-card-foreground font-semibold">
                         {person.name}
                       </p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <p
+                        className="text-muted-foreground mt-1 text-xs
+                          font-medium tracking-wide uppercase"
+                      >
                         {person.role}
                       </p>
                       {person.sNumber ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
+                        <p className="text-muted-foreground mt-2 text-sm">
                           {person.sNumber}
                         </p>
                       ) : null}
@@ -380,7 +434,8 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 >
                   <Badge
                     variant="secondary"
-                    className="rounded-md capitalize transition-colors hover:bg-primary hover:text-primary-foreground"
+                    className="hover:bg-primary hover:text-primary-foreground
+                      rounded-md capitalize transition-colors"
                   >
                     {category.label}
                   </Badge>
@@ -394,7 +449,8 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 >
                   <Badge
                     variant="secondary"
-                    className="rounded-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                    className="hover:bg-primary hover:text-primary-foreground
+                      rounded-md transition-colors"
                   >
                     {tag}
                   </Badge>
@@ -465,7 +521,8 @@ function StatusBadge({ status }: Readonly<{ status: Project['status'] }>) {
       className={cn(
         'rounded-md font-black',
         status === 'ACTIVE' &&
-          'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200',
+          `bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15
+          dark:text-emerald-200`,
         status === 'COMPLETED' &&
           'bg-blue-100 text-blue-800 dark:bg-blue-400/15 dark:text-blue-200',
         status === 'PLANNED' &&
@@ -492,7 +549,7 @@ function FacetBlock({
     <Card className="rounded-md p-4">
       <CardHeader className="px-0">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Icon className="size-4 text-primary" />
+          <Icon className="text-primary size-4" />
           {title}
         </CardTitle>
       </CardHeader>
@@ -501,7 +558,9 @@ function FacetBlock({
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground hover:bg-muted
+              hover:text-foreground flex items-center justify-between rounded-md
+              px-2 py-2 text-sm font-medium transition-colors"
           >
             <span>{item.label}</span>
             <Badge variant="outline" className="rounded-md">
@@ -561,10 +620,13 @@ function MetadataRow({
 }: Readonly<{ label: string; value: string }>) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <dt
+        className="text-muted-foreground text-xs font-medium tracking-wide
+          uppercase"
+      >
         {label}
       </dt>
-      <dd className="mt-1 font-semibold text-card-foreground">{value}</dd>
+      <dd className="text-card-foreground mt-1 font-semibold">{value}</dd>
     </div>
   );
 }

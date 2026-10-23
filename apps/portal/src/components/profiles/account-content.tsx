@@ -465,7 +465,11 @@ export default function ProfileContent({
 
   return (
     <Tabs defaultValue="sign-in" className="min-w-0 space-y-6">
-      <TabsList className="grid min-h-11 w-full min-w-0 grid-cols-3 items-center gap-1 overflow-hidden rounded-md border bg-muted p-1 shadow-sm dark:bg-muted/30">
+      <TabsList
+        className="bg-muted dark:bg-muted/30 grid min-h-11 w-full min-w-0
+          grid-cols-3 items-center gap-1 overflow-hidden rounded-md border p-1
+          shadow-sm"
+      >
         <TabsTrigger value="sign-in" className={settingsTabTriggerClass}>
           Sign-In
         </TabsTrigger>
@@ -487,7 +491,10 @@ export default function ProfileContent({
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row
+                  sm:items-center sm:justify-between"
+              >
                 <div className="flex items-center gap-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -528,7 +535,10 @@ export default function ProfileContent({
                 </Badge>
               </div>
 
-              <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row
+                  sm:items-center sm:justify-between"
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -580,7 +590,10 @@ export default function ProfileContent({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row
+                  sm:items-center sm:justify-between"
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <Mail className="size-5" />
                   <div>
@@ -600,7 +613,10 @@ export default function ProfileContent({
             </div>
 
             <Separator />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className="flex flex-col gap-3 sm:flex-row sm:items-center
+                sm:justify-between"
+            >
               <div className="space-y-1">
                 <Label className="text-base">Login Notifications</Label>
                 <p className="text-muted-foreground text-sm">
@@ -623,7 +639,10 @@ export default function ProfileContent({
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div
+                className="flex flex-col gap-3 sm:flex-row sm:items-start
+                  sm:justify-between"
+              >
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Fingerprint className="h-5 w-5 shrink-0" />
@@ -653,7 +672,7 @@ export default function ProfileContent({
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="w-full md:flex-1 md:min-w-0 space-y-2">
+                <div className="w-full space-y-2 md:min-w-0 md:flex-1">
                   <Label htmlFor="passkey-name" className="text-sm">
                     Passkey name (optional)
                   </Label>
@@ -669,7 +688,7 @@ export default function ProfileContent({
                     className="w-full md:w-[18rem]"
                   />
                   {passkeyNameError ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-destructive text-sm">
                       {passkeyNameError}
                     </p>
                   ) : (
@@ -731,7 +750,7 @@ export default function ProfileContent({
                       {passkeyCredentials.map((credential, index) => (
                         <div
                           key={credential.id}
-                          className="rounded-md border bg-muted/20 p-3"
+                          className="bg-muted/20 rounded-md border p-3"
                         >
                           <div className="space-y-3">
                             <div className="min-w-0 space-y-1">
@@ -752,7 +771,10 @@ export default function ProfileContent({
                             </div>
 
                             <div className="space-y-2">
-                              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                              <div
+                                className="flex flex-col gap-2 md:flex-row
+                                  md:items-center"
+                              >
                                 {passkeyEditingId === credential.id ? (
                                   <>
                                     <Input
@@ -855,7 +877,7 @@ export default function ProfileContent({
                               ) : null}
 
                               {passkeyRenameErrors[credential.id] ? (
-                                <p className="text-xs text-destructive">
+                                <p className="text-destructive text-xs">
                                   {passkeyRenameErrors[credential.id]}
                                 </p>
                               ) : null}
@@ -887,7 +909,10 @@ export default function ProfileContent({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row
+                sm:items-center sm:justify-between"
+            >
               <div className="space-y-1">
                 <Label className="text-base">Email Notifications</Label>
                 <p className="text-muted-foreground text-sm">
@@ -925,7 +950,10 @@ export default function ProfileContent({
               />
             </div>
 
-            <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row
+                sm:items-center sm:justify-between"
+            >
               <div className="space-y-1">
                 <Label className="text-base">Push Notifications</Label>
                 <p className="text-muted-foreground text-sm">

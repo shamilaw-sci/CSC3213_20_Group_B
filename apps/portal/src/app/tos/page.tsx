@@ -24,12 +24,16 @@ export const metadata: Metadata = {
 
 export default function TermsOfServicePage() {
   return (
-    <main className="min-h-screen bg-muted px-3 py-8 text-foreground sm:px-6 sm:py-12">
+    <main
+      className="bg-muted text-foreground min-h-screen px-3 py-8 sm:px-6
+        sm:py-12"
+    >
       <div className="mx-auto w-full max-w-3xl min-w-0 space-y-5 sm:space-y-6">
         <div className="space-y-2">
           <Link
             href="/"
-            className="text-muted-foreground text-sm font-medium hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground text-sm
+              font-medium"
           >
             SCS PDN Portal
           </Link>
@@ -47,7 +51,10 @@ export default function TermsOfServicePage() {
               Use of the Portal
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               SCS PDN Portal provides access to academic and administrative
               services for students, staff, and administrators of the Department
@@ -70,7 +77,10 @@ export default function TermsOfServicePage() {
               Google Sign-In
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               The portal may use Google Sign-In to authenticate users. When you
               sign in with Google, the portal requests only openid,
@@ -90,7 +100,10 @@ export default function TermsOfServicePage() {
               Service Availability and Changes
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               The portal is provided for institutional use and may be updated,
               interrupted, restricted, or discontinued when required for
@@ -110,14 +123,17 @@ export default function TermsOfServicePage() {
               Contact
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               Questions about these terms should be directed to the Department
               of Statistics and Computer Science, University of Peradeniya.
             </p>
             <p>
               For information about personal data practices, read the{' '}
-              <Link href="/privacy" className="font-medium text-foreground">
+              <Link href="/privacy" className="text-foreground font-medium">
                 Privacy Policy
               </Link>
               .

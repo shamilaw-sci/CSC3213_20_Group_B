@@ -123,11 +123,14 @@ export function MagicCodeInput({
           disabled={disabled}
           aria-label={`Digit ${i + 1} of ${length}`}
           className={cn(
-            'h-12 w-10 rounded-md border text-center text-lg font-semibold shadow-sm transition-colors',
-            'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+            `h-12 w-10 rounded-md border text-center text-lg font-semibold
+            shadow-sm transition-colors`,
+            `focus:border-primary focus:ring-primary/20 focus:ring-2
+            focus:outline-none`,
             error &&
               !disabled &&
-              'border-destructive focus:border-destructive focus:ring-destructive/20',
+              `border-destructive focus:border-destructive
+              focus:ring-destructive/20`,
             disabled && 'cursor-not-allowed opacity-50',
             !error && !disabled && 'border-input'
           )}

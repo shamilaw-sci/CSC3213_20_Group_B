@@ -23,12 +23,15 @@ export default function Signup() {
   }, [error, pathname, router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+    <div
+      className="bg-muted flex min-h-screen flex-col items-center justify-center
+        gap-6 p-6 md:p-10"
+    >
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="mb-2 flex flex-col items-center gap-3">
           <UopLogoIcon className="h-24 w-24" />
           <div className="text-center">
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-foreground text-2xl font-semibold">
               SCS PDN Portal
             </h1>
           </div>

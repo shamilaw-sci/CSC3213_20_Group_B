@@ -73,7 +73,7 @@ export function CourseReview({
           <h2 id="course-review-heading" className="font-semibold">
             Review course changes
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Confirm the catalog information before submitting it for review.
           </p>
         </div>
@@ -89,7 +89,10 @@ export function CourseReview({
         ) : null}
       </div>
       {comparePublished ? (
-        <p className="rounded-md border bg-muted/35 p-3 text-sm text-muted-foreground">
+        <p
+          className="bg-muted/35 text-muted-foreground rounded-md border p-3
+            text-sm"
+        >
           Published values are shown crossed out. The comparison cannot replace
           the current course draft.
         </p>

@@ -99,15 +99,20 @@ export default function Home() {
 
   return (
     <>
-      <section className="border-b bg-card">
+      <section className="bg-card border-b">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-sm font-medium text-primary">
+          <p className="text-primary text-sm font-medium">
             Department of Statistics & Computer Science
           </p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-card-foreground sm:text-5xl">
+          <h1
+            className="text-card-foreground mt-3 max-w-3xl text-4xl
+              font-semibold tracking-tight sm:text-5xl"
+          >
             SCS Projects
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
+          <p
+            className="text-muted-foreground mt-4 max-w-2xl text-base leading-7"
+          >
             Browse student projects, research work, department systems, open
             source tools, datasets, and collaborations.
           </p>
@@ -133,7 +138,8 @@ export default function Home() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-md border bg-card p-4 text-sm font-medium text-card-foreground transition-colors hover:bg-muted"
+              className="bg-card text-card-foreground hover:bg-muted rounded-md
+                border p-4 text-sm font-medium transition-colors"
             >
               {link.title}
             </Link>
@@ -141,7 +147,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y bg-card">
+      <section className="bg-card border-y">
         <div className="mx-auto max-w-6xl px-4 py-12">
           <SectionTitle title="Featured projects" />
           {loading ? (
@@ -193,7 +199,7 @@ function SectionTitle({
 }>) {
   return (
     <div className="mb-6 flex items-center justify-between gap-3">
-      <h2 className="mt-2 text-2xl font-semibold text-card-foreground">
+      <h2 className="text-card-foreground mt-2 text-2xl font-semibold">
         {title}
       </h2>
       {actionHref && actionLabel ? (

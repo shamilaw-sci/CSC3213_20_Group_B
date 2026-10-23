@@ -80,12 +80,17 @@ export function SiteHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+        sticky top-0 z-40 border-b backdrop-blur"
     >
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3 sm:px-4">
+      <div
+        className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3
+          sm:px-4"
+      >
         <Link
           href="/"
-          className="mr-auto flex min-h-11 shrink-0 items-center gap-2 rounded-sm font-semibold"
+          className="mr-auto flex min-h-11 shrink-0 items-center gap-2
+            rounded-sm font-semibold"
           onClick={() => setMobileOpen(false)}
         >
           <Image
@@ -109,10 +114,12 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex min-h-11 items-center rounded-sm border-b-2 px-3 text-sm font-medium ${
+                className={`flex min-h-11 items-center rounded-sm border-b-2
+                px-3 text-sm font-medium ${
                   active
                     ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+                    : `text-muted-foreground hover:border-border
+                      hover:text-foreground border-transparent`
                 }`}
               >
                 {item.label}
@@ -147,7 +154,9 @@ export function SiteHeader() {
                 id="projects-browse-menu"
                 role="menu"
                 aria-label="Browse projects"
-                className="absolute top-full right-0 mt-1 max-h-[min(24rem,calc(100vh-6rem))] w-64 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-lg"
+                className="bg-popover text-popover-foreground absolute top-full
+                  right-0 mt-1 max-h-[min(24rem,calc(100vh-6rem))] w-64
+                  overflow-y-auto rounded-md border p-1 shadow-lg"
               >
                 {browseNavigation.map((item) => (
                   <BrowseLink
@@ -181,7 +190,8 @@ export function SiteHeader() {
         <nav
           id="projects-mobile-navigation"
           aria-label="Mobile navigation"
-          className="max-h-[min(24rem,calc(100vh-5rem))] overflow-y-auto border-t bg-background px-3 py-3 md:hidden"
+          className="bg-background max-h-[min(24rem,calc(100vh-5rem))]
+            overflow-y-auto border-t px-3 py-3 md:hidden"
         >
           <div className="mx-auto grid max-w-6xl gap-1 sm:grid-cols-2">
             {[...primaryNavigation, ...browseNavigation].map((item) => {
@@ -191,11 +201,13 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm font-medium ${
-                    active
-                      ? 'border-primary bg-muted'
-                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
+                  className={`flex min-h-11 items-center rounded-md border-l-2
+                    px-3 text-sm font-medium ${
+                      active
+                        ? 'border-primary bg-muted'
+                        : `text-muted-foreground hover:bg-muted
+                          hover:text-foreground border-transparent`
+                    }`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {item.label}
@@ -224,16 +236,18 @@ function BrowseLink({ active, item, onSelect }: BrowseLinkProps) {
       role="menuitem"
       aria-current={active ? 'page' : undefined}
       onClick={onSelect}
-      className={`flex min-h-14 items-center gap-3 rounded-sm border-l-2 px-3 py-2 ${
-        active
-          ? 'border-primary bg-muted'
-          : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-      }`}
+      className={`flex min-h-14 items-center gap-3 rounded-sm border-l-2 px-3
+        py-2 ${
+          active
+            ? 'border-primary bg-muted'
+            : `text-muted-foreground hover:bg-muted hover:text-foreground
+              border-transparent`
+        }`}
     >
-      <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      <Icon className="text-primary size-4 shrink-0" aria-hidden="true" />
       <span>
         <span className="block text-sm font-semibold">{item.label}</span>
-        <span className="block text-xs text-muted-foreground">
+        <span className="text-muted-foreground block text-xs">
           {item.description}
         </span>
       </span>

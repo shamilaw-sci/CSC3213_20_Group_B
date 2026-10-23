@@ -99,34 +99,54 @@ export default function ProfilePage({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
-          <div className="flex items-center justify-between rounded-md border p-4">
+          <div
+            className="flex items-center justify-between rounded-md border p-4"
+          >
             <div className="space-y-1">
               <p className="text-sm font-medium">Google Auth</p>
-              <p className="text-muted-foreground flex items-center gap-1 text-sm">
+              <p
+                className="text-muted-foreground flex items-center gap-1
+                  text-sm"
+              >
                 <GoogleLogo />
                 {googleOAuth ? 'Linked to Google sign-in' : 'Not linked'}
               </p>
             </div>
             {googleOAuth ? (
-              <StatusBadge className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+              <StatusBadge
+                className="border-blue-200 bg-blue-50 text-blue-700
+                  dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300"
+              >
                 Enabled
               </StatusBadge>
             ) : (
-              <StatusBadge className="border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-300">
+              <StatusBadge
+                className="border-slate-200 bg-slate-50 text-slate-700
+                  dark:border-slate-800 dark:bg-slate-950/30
+                  dark:text-slate-300"
+              >
                 Disabled
               </StatusBadge>
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-md border p-4">
+          <div
+            className="flex items-center justify-between rounded-md border p-4"
+          >
             <div className="space-y-1">
               <p className="text-sm font-medium">Email (Magic Code)</p>
-              <p className="text-muted-foreground flex items-center gap-1 text-sm">
+              <p
+                className="text-muted-foreground flex items-center gap-1
+                  text-sm"
+              >
                 <Mail className="size-4" />
                 Sign in using a one-time code sent to your email
               </p>
             </div>
-            <StatusBadge className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+            <StatusBadge
+              className="border-blue-200 bg-blue-50 text-blue-700
+                dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300"
+            >
               Enabled
             </StatusBadge>
           </div>

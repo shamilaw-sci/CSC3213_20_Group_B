@@ -13,7 +13,7 @@ export function ProjectSourceSection({ children }: ProjectSourceSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Source</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Administrative provenance and display metadata for the public
           registry.
         </p>

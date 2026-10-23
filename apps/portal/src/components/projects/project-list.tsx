@@ -64,7 +64,10 @@ export function ProjectList({
         </CardHeader>
         <CardContent className="space-y-4 px-4 sm:px-6">
           <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              className="text-muted-foreground absolute top-1/2 left-3 size-4
+                -translate-y-1/2"
+            />
             <Input
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
@@ -75,12 +78,15 @@ export function ProjectList({
           </div>
           <Separator />
           {projects.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+            <div
+              className="text-muted-foreground flex flex-col items-center gap-2
+                py-10 text-center"
+            >
               <FolderKanban className="size-10 opacity-30" />
               <p className="text-sm">No projects match this search.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-border divide-y">
               {projects.map((project) => {
                 const slug =
                   typeof project.slug === 'string' ? project.slug : '';
@@ -89,13 +95,21 @@ export function ProjectList({
                   <li key={slug} className="py-3 first:pt-0 last:pb-0">
                     <article
                       className={cn(
-                        'w-full rounded-md border p-3 text-left transition-[color,background-color,border-color] hover:border-foreground/25 hover:bg-muted/30',
+                        `hover:border-foreground/25 hover:bg-muted/30 w-full
+                          rounded-md border p-3 text-left
+                          transition-[color,background-color,border-color]`,
                         slug === selectedSlug &&
                           'border-foreground/30 bg-muted/40'
                       )}
                     >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <span className="min-w-0 flex-1 wrap-break-word font-medium sm:truncate">
+                      <div
+                        className="flex flex-col gap-2 sm:flex-row
+                          sm:items-center"
+                      >
+                        <span
+                          className="min-w-0 flex-1 font-medium wrap-break-word
+                            sm:truncate"
+                        >
                           {projectTitle(project)}
                         </span>
                         {typeof project.status === 'string' ? (
@@ -104,7 +118,10 @@ export function ProjectList({
                           </Badge>
                         ) : null}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                      <p
+                        className="text-muted-foreground mt-1 line-clamp-2
+                          text-sm leading-6"
+                      >
                         {typeof project.shortDescription === 'string'
                           ? project.shortDescription
                           : slug}

@@ -55,7 +55,7 @@ html {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background font-sans text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
   body[data-scroll-locked] {
     margin-right: 0 !important;

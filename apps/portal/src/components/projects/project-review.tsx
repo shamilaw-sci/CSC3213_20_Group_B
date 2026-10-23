@@ -124,7 +124,7 @@ export function ProjectReview({
           <h2 id="project-review-heading" className="font-semibold">
             Review project changes
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Check the draft in plain language before submitting it for review.
           </p>
         </div>
@@ -140,7 +140,10 @@ export function ProjectReview({
         ) : null}
       </div>
       {comparePublished ? (
-        <p className="rounded-md border bg-muted/35 p-3 text-sm text-muted-foreground">
+        <p
+          className="bg-muted/35 text-muted-foreground rounded-md border p-3
+            text-sm"
+        >
           Published values are shown crossed out. This comparison is read-only
           and does not replace your draft.
         </p>

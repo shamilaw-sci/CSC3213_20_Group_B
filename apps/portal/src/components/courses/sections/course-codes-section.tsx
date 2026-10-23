@@ -13,7 +13,7 @@ export function CourseCodesSection({ children }: CourseCodesSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Codes</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Choose the primary course code and any equivalent catalog codes.
         </p>
       </div>

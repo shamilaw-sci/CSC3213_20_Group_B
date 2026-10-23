@@ -890,7 +890,10 @@ export default function CourseEditor({
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   {courseOfferings.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                    <div
+                      className="text-muted-foreground rounded-md border p-4
+                        text-sm"
+                    >
                       No offerings are published for this course yet.
                     </div>
                   ) : (
@@ -1145,7 +1148,7 @@ function CourseForm({
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex flex-wrap gap-2">
                 {course.codes.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     No course codes added.
                   </span>
                 ) : (
@@ -1292,7 +1295,7 @@ function OfferingForm({
             ) : null}
           </div>
           {draft.staff.length === 0 ? (
-            <p className="rounded-md border p-3 text-sm text-muted-foreground">
+            <p className="text-muted-foreground rounded-md border p-3 text-sm">
               No teaching staff assigned.
             </p>
           ) : (
@@ -1300,7 +1303,8 @@ function OfferingForm({
               {draft.staff.map((member, index) => (
                 <div
                   key={`${member.staff}-${index}`}
-                  className="grid gap-2 rounded-md border p-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,0.6fr)_auto]"
+                  className="grid gap-2 rounded-md border p-3
+                    sm:grid-cols-[minmax(0,1fr)_minmax(12rem,0.6fr)_auto]"
                 >
                   <div className="space-y-1.5">
                     <FieldLabel htmlFor={`${formId}-staff-${index}`}>

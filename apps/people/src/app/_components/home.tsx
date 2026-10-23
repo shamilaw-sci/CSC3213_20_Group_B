@@ -31,20 +31,25 @@ export default function Home() {
       />
 
       <section className="mb-8">
-        <h2 className="mb-4 text-2xl font-bold text-card-foreground">Staff</h2>
+        <h2 className="text-card-foreground mb-4 text-2xl font-bold">Staff</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Link
             href="/staff/academic"
             onFocus={prefetchAcademicStaff}
             onMouseEnter={prefetchAcademicStaff}
-            className="group flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+            className="group bg-card hover:border-primary/40 hover:bg-muted/50
+              flex min-h-36 flex-col items-start justify-between rounded-md
+              border p-4 text-left transition-colors"
           >
             <GraduationCap
               className={staffIconClassNames.academic}
               strokeWidth={2.5}
               aria-hidden="true"
             />
-            <h3 className="text-base font-semibold text-card-foreground transition-colors group-hover:text-primary">
+            <h3
+              className="text-card-foreground group-hover:text-primary text-base
+                font-semibold transition-colors"
+            >
               Academic Staff
             </h3>
           </Link>
@@ -52,14 +57,19 @@ export default function Home() {
             href="/staff/academic-support"
             onFocus={prefetchAcademicSupportStaff}
             onMouseEnter={prefetchAcademicSupportStaff}
-            className="group flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+            className="group bg-card hover:border-primary/40 hover:bg-muted/50
+              flex min-h-36 flex-col items-start justify-between rounded-md
+              border p-4 text-left transition-colors"
           >
             <Wrench
               className={staffIconClassNames.academicSupport}
               strokeWidth={2.5}
               aria-hidden="true"
             />
-            <h3 className="text-base font-semibold text-card-foreground transition-colors group-hover:text-primary">
+            <h3
+              className="text-card-foreground group-hover:text-primary text-base
+                font-semibold transition-colors"
+            >
               Academic Support
             </h3>
           </Link>
@@ -67,14 +77,19 @@ export default function Home() {
             href="/staff/non-academic"
             onFocus={prefetchNonAcademicStaff}
             onMouseEnter={prefetchNonAcademicStaff}
-            className="group flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+            className="group bg-card hover:border-primary/40 hover:bg-muted/50
+              flex min-h-36 flex-col items-start justify-between rounded-md
+              border p-4 text-left transition-colors"
           >
             <BriefcaseBusiness
               className={staffIconClassNames.nonAcademic}
               strokeWidth={2.5}
               aria-hidden="true"
             />
-            <h3 className="text-base font-semibold text-card-foreground transition-colors group-hover:text-primary">
+            <h3
+              className="text-card-foreground group-hover:text-primary text-base
+                font-semibold transition-colors"
+            >
               Non-Academic
             </h3>
           </Link>
@@ -82,7 +97,7 @@ export default function Home() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-card-foreground">
+        <h2 className="text-card-foreground mb-4 text-2xl font-bold">
           Students
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -98,14 +113,19 @@ export default function Home() {
                 prefetchPeopleManifest();
                 prefetchSubject(slug);
               }}
-              className="group flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+              className="group bg-card hover:border-primary/40 hover:bg-muted/50
+                flex min-h-36 flex-col items-start justify-between rounded-md
+                border p-4 text-left transition-colors"
             >
               <Icon
                 className={`${iconBaseClassName} ${iconClassName}`}
                 strokeWidth={2.5}
                 aria-hidden="true"
               />
-              <h3 className="text-base font-semibold text-card-foreground transition-colors group-hover:text-primary">
+              <h3
+                className="text-card-foreground group-hover:text-primary
+                  text-base font-semibold transition-colors"
+              >
                 {label}
               </h3>
             </Link>

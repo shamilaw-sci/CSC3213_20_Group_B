@@ -24,13 +24,16 @@ const footerLinkClass =
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/45">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+    <footer className="bg-muted/45 border-t">
+      <div
+        className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6
+          md:grid-cols-2 lg:grid-cols-4 lg:px-8"
+      >
         <div>
           <p className="font-semibold">
             Department of Statistics &amp; Computer Science
           </p>
-          <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-6">
             Faculty of Science, University of Peradeniya, Sri Lanka.
           </p>
         </div>
@@ -39,7 +42,10 @@ export function SiteFooter() {
         <FooterGroup title="Connect" links={relatedLinks} />
       </div>
       <div className="border-t">
-        <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-muted-foreground sm:px-6 lg:px-8">
+        <p
+          className="text-muted-foreground mx-auto max-w-7xl px-4 py-5 text-xs
+            sm:px-6 lg:px-8"
+        >
           © {new Date().getFullYear()} University of Peradeniya
         </p>
       </div>

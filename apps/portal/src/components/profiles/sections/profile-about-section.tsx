@@ -13,7 +13,7 @@ export function ProfileAboutSection({ children }: ProfileAboutSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">About you</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           The name, contact information, and image shown in the public
           directory.
         </p>

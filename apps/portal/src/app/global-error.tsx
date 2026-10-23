@@ -33,7 +33,9 @@ export default function GlobalError({
       <head>
         <ThemeInitScript />
       </head>
-      <body className="flex min-h-full items-center bg-background text-foreground">
+      <body
+        className="bg-background text-foreground flex min-h-full items-center"
+      >
         <FeedbackState
           icon={
             <Image

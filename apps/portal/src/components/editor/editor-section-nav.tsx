@@ -18,7 +18,10 @@ export function EditorSectionNav({ sections }: EditorSectionNavProps) {
 
   return (
     <nav aria-label="Editor sections" className="sticky top-20">
-      <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <p
+        className="text-muted-foreground mb-2 text-xs font-semibold
+          tracking-wide uppercase"
+      >
         Sections
       </p>
       <ul className="space-y-1">
@@ -26,7 +29,10 @@ export function EditorSectionNav({ sections }: EditorSectionNavProps) {
           <li key={section.id}>
             <button
               type="button"
-              className="flex min-h-10 w-full items-center rounded-md border-l-2 border-transparent px-3 text-left text-sm text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none"
+              className="text-muted-foreground hover:border-border
+                hover:bg-muted hover:text-foreground flex min-h-10 w-full
+                items-center rounded-md border-l-2 border-transparent px-3
+                text-left text-sm focus-visible:outline-none"
               onClick={() => focusSection(section.id)}
             >
               {section.label}

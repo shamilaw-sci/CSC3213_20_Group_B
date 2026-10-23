@@ -39,21 +39,31 @@ export function SiteHeader() {
     href === '/' ? pathname === href : pathname.startsWith(href);
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <header
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+        sticky top-0 z-40 border-b backdrop-blur"
+    >
+      <div
+        className="mx-auto flex min-h-16 max-w-7xl items-center gap-4 px-4
+          sm:px-6 lg:px-8"
+      >
         <Link
           href="/"
           className="mr-auto flex min-h-11 items-center rounded-sm"
           onClick={() => setMenuOpen(false)}
         >
-          <span className="flex size-9 items-center justify-center rounded-md bg-primary text-sm font-bold tracking-tight text-primary-foreground">
+          <span
+            className="bg-primary text-primary-foreground flex size-9
+              items-center justify-center rounded-md text-sm font-bold
+              tracking-tight"
+          >
             SCS
           </span>
           <span className="ml-3 hidden leading-tight sm:block">
             <span className="block text-sm font-semibold">
               Statistics &amp; Computer Science
             </span>
-            <span className="block text-xs text-muted-foreground">
+            <span className="text-muted-foreground block text-xs">
               University of Peradeniya
             </span>
           </span>
@@ -73,7 +83,8 @@ export function SiteHeader() {
                 className={`${navigationLinkClass} ${
                   active
                     ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+                    : `text-muted-foreground hover:border-border
+                      hover:text-foreground border-transparent`
                 }`}
               >
                 {item.label}
@@ -101,7 +112,7 @@ export function SiteHeader() {
         <nav
           id="web-mobile-navigation"
           aria-label="Mobile navigation"
-          className="border-t bg-background px-4 py-3 xl:hidden"
+          className="bg-background border-t px-4 py-3 xl:hidden"
         >
           <div className="mx-auto grid max-w-7xl gap-1 sm:grid-cols-2">
             {primaryNavigation.map((item) => {
@@ -111,11 +122,13 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm font-medium ${
-                    active
-                      ? 'border-primary bg-muted text-foreground'
-                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
+                  className={`flex min-h-11 items-center rounded-md border-l-2
+                    px-3 text-sm font-medium ${
+                      active
+                        ? 'border-primary bg-muted text-foreground'
+                        : `text-muted-foreground hover:bg-muted
+                          hover:text-foreground border-transparent`
+                    }`}
                   onClick={() => setMenuOpen(false)}
                 >
                   {item.label}

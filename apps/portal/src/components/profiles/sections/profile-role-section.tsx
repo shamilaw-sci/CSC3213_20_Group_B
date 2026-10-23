@@ -13,7 +13,7 @@ export function ProfileRoleSection({ children }: ProfileRoleSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Role and affiliation</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Describe the university role, programme, department, or student
           placement.
         </p>

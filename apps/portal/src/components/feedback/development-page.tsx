@@ -13,10 +13,13 @@ export default function DevPage({
   label = 'Back to Dashboard',
 }: DevPageProps) {
   return (
-    <PageShell className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+    <PageShell
+      className="flex min-h-[60vh] flex-col items-center justify-center
+        text-center"
+    >
       <BackButton fallbackHref={fallbackHref} label={label} preferFallback />
       <Construction className="text-muted-foreground mt-8 mb-4 size-10" />
-      <h1 className="text-2xl font-semibold text-foreground">
+      <h1 className="text-foreground text-2xl font-semibold">
         Page Under Development
       </h1>
       <p className="text-muted-foreground mt-3 max-w-md text-sm leading-6">

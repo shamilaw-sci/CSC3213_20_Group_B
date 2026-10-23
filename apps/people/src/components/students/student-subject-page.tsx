@@ -20,18 +20,20 @@ function BatchCardSkeletonGrid() {
   return (
     <div
       aria-hidden="true"
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4
+        xl:grid-cols-5"
     >
       {Array.from({ length: 8 }, (_, index) => (
         <div
           key={index}
-          className="flex min-h-36 animate-pulse flex-col items-start justify-between rounded-md border bg-card p-4"
+          className="bg-card flex min-h-36 animate-pulse flex-col items-start
+            justify-between rounded-md border p-4"
         >
           <div className="w-full space-y-2">
-            <div className="h-4 w-3/4 rounded bg-muted" />
-            <div className="h-3 w-1/2 rounded bg-muted" />
+            <div className="bg-muted h-4 w-3/4 rounded" />
+            <div className="bg-muted h-3 w-1/2 rounded" />
           </div>
-          <div className="h-6 w-16 rounded-md bg-muted" />
+          <div className="bg-muted h-6 w-16 rounded-md" />
         </div>
       ))}
     </div>
@@ -54,26 +56,37 @@ function BatchRows({
   return (
     <section className="mb-8">
       <div className="mb-3 flex items-end justify-between gap-4">
-        <h2 className="text-lg font-semibold text-card-foreground">{label}</h2>
+        <h2 className="text-card-foreground text-lg font-semibold">{label}</h2>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4
+          xl:grid-cols-5"
+      >
         {batches.map((batch) => (
           <Link
             key={batch.id}
             href={`${getSubjectPath(subject)}/${batch.id.replace(/^s/, '')}`}
             onFocus={() => prefetchSpecialStudents(programme, batch.id)}
             onMouseEnter={() => prefetchSpecialStudents(programme, batch.id)}
-            className="group flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+            className="group bg-card hover:border-primary/40 hover:bg-muted/50
+              flex min-h-36 flex-col items-start justify-between rounded-md
+              border p-4 text-left transition-colors"
           >
             <div>
-              <h3 className="font-medium text-card-foreground group-hover:text-primary">
+              <h3
+                className="text-card-foreground group-hover:text-primary
+                  font-medium"
+              >
                 {batch.displayName} Batch
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Intake {batch.intakeYear}
               </p>
             </div>
-            <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+            <span
+              className="bg-muted text-muted-foreground rounded-md px-2 py-1
+                text-xs font-medium"
+            >
               {label}
             </span>
           </Link>
@@ -145,7 +158,10 @@ export default function StudentSubjectPage({
         description="Current and alumni batches"
       />
 
-      <div className="mb-5 flex items-center gap-2 text-sm font-medium text-primary">
+      <div
+        className="text-primary mb-5 flex items-center gap-2 text-sm
+          font-medium"
+      >
         <BookOpen className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
         Batch Directory
       </div>
@@ -169,7 +185,7 @@ export default function StudentSubjectPage({
       />
 
       {!isLoading && !error && batches.length === 0 && (
-        <div className="mb-6 rounded-md border bg-card p-8 text-center">
+        <div className="bg-card mb-6 rounded-md border p-8 text-center">
           <p className="text-muted-foreground">
             No published student batches found.
           </p>

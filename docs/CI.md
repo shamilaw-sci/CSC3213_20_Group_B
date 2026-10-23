@@ -18,7 +18,8 @@ flowchart TD
   Full --> Install
   Install --> Docs[Documentation policy]
   Docs --> Repo[Repository policy tests]
-  Repo --> Format[Formatting check]
+  Repo --> Knip[Unused code and dependency check]
+  Knip --> Format[Formatting check]
   Format --> Title{Pull request?}
   Title -->|yes| Commitlint[Validate PR title]
   Title -->|no| Verify[Lint + source/test typecheck + tests + builds]
@@ -35,6 +36,7 @@ the complete gate against the integrated repository state.
 | `bun install --frozen-lockfile` | manifest/lockfile drift and unavailable dependencies               |
 | `bun run docs:check`            | misplaced docs, invalid filenames, and broken local Markdown links |
 | `bun run test:repo`             | CI, dependency, documentation, and env-template policy regressions |
+| `bun run knip`                  | unused files, exports, dependencies, and workspace entry points    |
 | `bun run format:check`          | files not formatted by repository Prettier policy                  |
 | `bun run lint`                  | correctness, security, imports, and unused-code issues             |
 | `bun run typecheck`             | production-source TypeScript errors                                |
@@ -62,6 +64,7 @@ For repository policy failures:
 ```powershell
 bun run docs:check
 bun run test:repo
+bun run knip
 bun run format:check
 ```
 
@@ -90,6 +93,7 @@ bunx turbo run lint typecheck typecheck:test test build --dry=json
 | install                  | compare `package.json`, `bun.lock`, `.bun-version`, and `bunfig.toml`                           |
 | documentation            | run `bun run docs:check`, then inspect the exact path/link violation                            |
 | repository policy        | run only the named test under `test/repository`                                                 |
+| Knip                     | trace the reported entry point, export, or dependency before removing or ignoring it            |
 | lint                     | run the owning workspace lint without `--fix`, understand the rule, then use `lint:fix` if safe |
 | source typecheck         | run the workspace `typecheck` and inspect its production TSConfig                               |
 | test typecheck           | run `typecheck:test` and inspect aliases/types in the test TSConfig                             |

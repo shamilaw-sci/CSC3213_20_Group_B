@@ -35,6 +35,7 @@ describe('monorepo CI workflow', () => {
   test('runs repository policy checks before workspace verification', () => {
     const docs = workflow.indexOf('run: bun run docs:check');
     const repositoryTests = workflow.indexOf('run: bun run test:repo');
+    const knip = workflow.indexOf('run: bun run knip');
     const format = workflow.indexOf('run: bun run format:check');
     const turbo = workflow.indexOf(
       'bunx turbo run lint typecheck typecheck:test test build'
@@ -42,7 +43,8 @@ describe('monorepo CI workflow', () => {
 
     expect(docs).toBeGreaterThan(-1);
     expect(repositoryTests).toBeGreaterThan(docs);
-    expect(format).toBeGreaterThan(repositoryTests);
+    expect(knip).toBeGreaterThan(repositoryTests);
+    expect(format).toBeGreaterThan(knip);
     expect(turbo).toBeGreaterThan(format);
   });
 

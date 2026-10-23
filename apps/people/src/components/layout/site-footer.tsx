@@ -9,8 +9,11 @@ const institutionalLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/45">
-      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-7 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+    <footer className="bg-muted/45 border-t">
+      <div
+        className="text-muted-foreground mx-auto flex max-w-6xl flex-col gap-2
+          px-4 py-7 text-sm sm:flex-row sm:items-center sm:justify-between"
+      >
         <p>People directory · University of Peradeniya</p>
         <nav
           aria-label="Institutional links"
@@ -22,7 +25,9 @@ export function SiteFooter() {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-9 items-center underline-offset-4 hover:text-foreground hover:underline focus-visible:rounded-sm focus-visible:outline-none"
+              className="hover:text-foreground inline-flex min-h-9 items-center
+                underline-offset-4 hover:underline focus-visible:rounded-sm
+                focus-visible:outline-none"
             >
               {link.label}
             </a>

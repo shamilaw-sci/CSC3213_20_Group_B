@@ -67,12 +67,17 @@ export function SiteHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+        sticky top-0 z-40 border-b backdrop-blur"
     >
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3 sm:px-4">
+      <div
+        className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3
+          sm:px-4"
+      >
         <Link
           href="/"
-          className="flex min-h-11 shrink-0 items-center gap-2 rounded-sm font-semibold"
+          className="flex min-h-11 shrink-0 items-center gap-2 rounded-sm
+            font-semibold"
           onClick={() => setMobileOpen(false)}
         >
           <Image
@@ -102,7 +107,7 @@ export function SiteHeader() {
                   variant="ghost"
                   aria-expanded={openMenu === menu.id}
                   aria-controls={`${menu.id}-menu`}
-                  className={`min-h-11 border-b-2 rounded-none ${
+                  className={`min-h-11 rounded-none border-b-2 ${
                     active ? 'border-primary' : 'border-transparent'
                   }`}
                   onClick={() =>
@@ -117,7 +122,9 @@ export function SiteHeader() {
                 {openMenu === menu.id ? (
                   <div
                     id={`${menu.id}-menu`}
-                    className="absolute top-full right-0 mt-1 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-lg md:right-auto md:left-0"
+                    className="bg-popover text-popover-foreground absolute
+                      top-full right-0 mt-1 w-56 rounded-md border p-1 shadow-lg
+                      md:right-auto md:left-0"
                   >
                     {menu.links.map((link) => {
                       const activeLink = isActive(link.href);
@@ -126,11 +133,13 @@ export function SiteHeader() {
                           key={link.href}
                           href={link.href}
                           aria-current={activeLink ? 'page' : undefined}
-                          className={`flex min-h-10 items-center rounded-sm border-l-2 px-3 text-sm ${
-                            activeLink
-                              ? 'border-primary bg-muted font-medium'
-                              : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
+                          className={`flex min-h-10 items-center rounded-sm
+                            border-l-2 px-3 text-sm ${
+                              activeLink
+                                ? 'border-primary bg-muted font-medium'
+                                : `text-muted-foreground hover:bg-muted
+                                  hover:text-foreground border-transparent`
+                            }`}
                           onClick={() => setOpenMenu(null)}
                         >
                           {link.label}
@@ -167,12 +176,15 @@ export function SiteHeader() {
         <nav
           id="people-mobile-navigation"
           aria-label="Mobile navigation"
-          className="border-t bg-background px-3 py-3 md:hidden"
+          className="bg-background border-t px-3 py-3 md:hidden"
         >
           <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2">
             {navigationMenus.map((menu) => (
               <div key={menu.id}>
-                <p className="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <p
+                  className="text-muted-foreground px-3 pb-1 text-xs
+                    font-semibold tracking-wide uppercase"
+                >
                   {menu.label}
                 </p>
                 {menu.links.map((link) => {
@@ -182,11 +194,13 @@ export function SiteHeader() {
                       key={link.href}
                       href={link.href}
                       aria-current={active ? 'page' : undefined}
-                      className={`flex min-h-11 items-center rounded-md border-l-2 px-3 text-sm ${
-                        active
-                          ? 'border-primary bg-muted font-medium'
-                          : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}
+                      className={`flex min-h-11 items-center rounded-md
+                        border-l-2 px-3 text-sm ${
+                          active
+                            ? 'border-primary bg-muted font-medium'
+                            : `text-muted-foreground hover:bg-muted
+                              hover:text-foreground border-transparent`
+                        }`}
                       onClick={() => setMobileOpen(false)}
                     >
                       {link.label}

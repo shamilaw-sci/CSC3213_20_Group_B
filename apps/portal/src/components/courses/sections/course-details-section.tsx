@@ -13,7 +13,7 @@ export function CourseDetailsSection({ children }: CourseDetailsSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Details</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Set the stable catalog identity, title, and credit value.
         </p>
       </div>

@@ -22,11 +22,11 @@ export function ValidationSummary({
   return (
     <section
       aria-labelledby="editor-validation-heading"
-      className="rounded-md border border-destructive/40 bg-destructive/5 p-4"
+      className="border-destructive/40 bg-destructive/5 rounded-md border p-4"
     >
       <h2
         id="editor-validation-heading"
-        className="font-semibold text-destructive"
+        className="text-destructive font-semibold"
       >
         {heading}
       </h2>
@@ -35,7 +35,8 @@ export function ValidationSummary({
           <li key={`${issue.field}-${index}`}>
             <button
               type="button"
-              className="text-left underline underline-offset-2 hover:text-destructive focus-visible:outline-none"
+              className="hover:text-destructive text-left underline
+                underline-offset-2 focus-visible:outline-none"
               onClick={() => focusField(issue.field)}
             >
               {issue.message}

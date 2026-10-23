@@ -21,7 +21,7 @@ const JsonEditor = dynamic(
     ),
   {
     loading: () => (
-      <div className="min-h-96 animate-pulse rounded-md border bg-muted/40" />
+      <div className="bg-muted/40 min-h-96 animate-pulse rounded-md border" />
     ),
     ssr: false,
   }
@@ -34,7 +34,7 @@ const JsonPreview = dynamic(
     ),
   {
     loading: () => (
-      <div className="min-h-72 animate-pulse rounded-md border bg-muted/40" />
+      <div className="bg-muted/40 min-h-72 animate-pulse rounded-md border" />
     ),
     ssr: false,
   }
@@ -74,7 +74,7 @@ export function AdvancedJson<T extends object>({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold">Advanced JSON</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
             View the same draft as structured data. Editing is intended for
             advanced users and never changes the published record directly.
           </p>
@@ -93,7 +93,8 @@ export function AdvancedJson<T extends object>({
       {state.json.error ? (
         <p
           role="alert"
-          className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/5 text-destructive
+            rounded-md border p-3 text-sm"
         >
           {state.json.error}
         </p>
@@ -120,7 +121,7 @@ export function AdvancedJson<T extends object>({
           <h3 id="unsaved-json-heading" className="font-semibold">
             Apply or discard your JSON changes
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Your JSON edits have not been applied to the draft. Choose what to
             do before changing views.
           </p>

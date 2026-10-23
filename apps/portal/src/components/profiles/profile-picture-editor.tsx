@@ -111,11 +111,11 @@ function SourceOption({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'h-auto justify-start gap-3 whitespace-normal p-4 text-left',
+        'h-auto justify-start gap-3 p-4 text-left whitespace-normal',
         active && 'border-primary bg-primary/5'
       )}
     >
-      <span className="mt-0.5 text-primary">
+      <span className="text-primary mt-0.5">
         {active ? <CheckCircle2 /> : icon}
       </span>
       <span className="min-w-0 space-y-1">
@@ -313,15 +313,18 @@ export default function ProfilePictureEditor({
             />
           )}
           {customUrlError ? (
-            <p className="text-sm text-destructive">{customUrlError}</p>
+            <p className="text-destructive text-sm">{customUrlError}</p>
           ) : customPreviewStatus === 'loaded' ? (
-            <p className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+            <p
+              className="flex items-center gap-2 text-sm text-green-600
+                dark:text-green-400"
+            >
               <CheckCircle2 className="size-4" />
               Image preview loaded. The server will verify the file type on
               save.
             </p>
           ) : customPreviewStatus === 'error' ? (
-            <p className="flex items-center gap-2 text-sm text-destructive">
+            <p className="text-destructive flex items-center gap-2 text-sm">
               <XCircle className="size-4" />
               Could not load this image preview.
             </p>

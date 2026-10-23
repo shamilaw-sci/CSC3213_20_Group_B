@@ -24,23 +24,26 @@ export default function PortalHome() {
   }, [error, pathname, router]);
 
   return (
-    <section className="flex min-h-[calc(100svh-7rem)] flex-col items-center justify-center bg-muted/45 px-6 py-12 text-center">
+    <section
+      className="bg-muted/45 flex min-h-[calc(100svh-7rem)] flex-col
+        items-center justify-center px-6 py-12 text-center"
+    >
       <div className="mb-6 flex flex-col items-center gap-3">
         <UopLogoIcon className="size-24" />
-        <h1 className="text-4xl font-semibold text-foreground">
+        <h1 className="text-foreground text-4xl font-semibold">
           SCS PDN Portal
         </h1>
       </div>
 
-      <p className="mt-4 text-2xl font-semibold text-foreground">
+      <p className="text-foreground mt-4 text-2xl font-semibold">
         Department of Statistics &amp; Computer Science
       </p>
 
-      <p className="text-lg font-medium text-muted-foreground">
+      <p className="text-muted-foreground text-lg font-medium">
         Faculty of Science, University of Peradeniya
       </p>
 
-      <p className="mt-6 max-w-xl text-sm leading-6 text-muted-foreground">
+      <p className="text-muted-foreground mt-6 max-w-xl text-sm leading-6">
         This portal provides access to academic and administrative services for
         students, staff, and administrators of the Department of Statistics and
         Computer Science.
@@ -49,20 +52,24 @@ export default function PortalHome() {
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link
           href="/login"
-          className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none"
+          className="bg-primary text-primary-foreground hover:bg-primary/90
+            inline-flex min-h-11 items-center rounded-md px-5 text-sm
+            font-medium focus-visible:outline-none"
         >
           Sign in
         </Link>
 
         <Link
           href="/signup"
-          className="inline-flex min-h-11 items-center rounded-md border bg-background px-5 text-sm font-medium hover:bg-accent focus-visible:outline-none"
+          className="bg-background hover:bg-accent inline-flex min-h-11
+            items-center rounded-md border px-5 text-sm font-medium
+            focus-visible:outline-none"
         >
           Create account
         </Link>
       </div>
 
-      <div className="mt-8 flex gap-4 text-sm text-muted-foreground">
+      <div className="text-muted-foreground mt-8 flex gap-4 text-sm">
         <Link href="/privacy" className="hover:text-foreground">
           Privacy Policy
         </Link>

@@ -670,7 +670,10 @@ function TextAreaField({
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <textarea
-        className="border-input bg-background min-h-24 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className="border-input bg-background focus-visible:border-ring
+          focus-visible:ring-ring/50 min-h-24 w-full rounded-md border px-3 py-2
+          text-sm shadow-xs transition-[color,box-shadow] outline-none
+          focus-visible:ring-[3px]"
         rows={rows}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -720,7 +723,8 @@ function OptionGrid({
             key={option}
             type="button"
             variant={value === option ? 'default' : 'outline'}
-            className="h-auto min-h-9 justify-start whitespace-normal px-3 py-2 text-left"
+            className="h-auto min-h-9 justify-start px-3 py-2 text-left
+              whitespace-normal"
             disabled={disabled}
             onClick={() => onChange(option)}
           >
@@ -776,7 +780,7 @@ function ArrayEditor({
       {value.length ? (
         <div className="space-y-3">
           {value.map((item, index) => (
-            <div key={index} className="rounded-md border bg-muted/20 p-3">
+            <div key={index} className="bg-muted/20 rounded-md border p-3">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <Badge variant="outline">#{index + 1}</Badge>
                 <Button
@@ -1159,8 +1163,11 @@ function ProfileForm({
   return (
     <div className="space-y-8">
       {lockedFields.length > 0 ? (
-        <p className="rounded-md border bg-muted/35 p-3 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">
+        <p
+          className="bg-muted/35 text-muted-foreground rounded-md border p-3
+            text-sm"
+        >
+          <span className="text-foreground font-medium">
             Managed by university records.
           </span>{' '}
           Disabled fields come from the official record. Ask an administrator if
@@ -1567,7 +1574,7 @@ function ProfileForm({
             includeAcademicExtra={profileKind === 'academic'}
           />
         ) : (
-          <p className="rounded-md border p-3 text-sm text-muted-foreground">
+          <p className="text-muted-foreground rounded-md border p-3 text-sm">
             This profile type has no additional public work collections.
           </p>
         )}
@@ -2479,7 +2486,10 @@ export default function PublicProfileEditor({
             creates a new PR.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent
+          className="flex flex-col gap-3 sm:flex-row sm:items-center
+            sm:justify-between"
+        >
           <div className="space-y-2">
             <Badge
               variant="outline"
@@ -2509,7 +2519,8 @@ export default function PublicProfileEditor({
                 variant="outline"
                 onClick={() => void discardDraft()}
                 disabled={discarding}
-                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                className="border-destructive/40 text-destructive
+                  hover:bg-destructive/10"
               >
                 <XCircle className="mr-2 size-4" />
                 {discarding ? 'Discarding...' : 'Discard draft'}
@@ -2556,7 +2567,10 @@ export default function PublicProfileEditor({
             onSubmit={() => void submit()}
             renderEdit={(draft) => (
               <div className="space-y-8">
-                <div className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">
+                <div
+                  className="bg-muted/20 text-muted-foreground rounded-md border
+                    p-3 text-sm"
+                >
                   {hasOpenDraft
                     ? `Submitting updates the current PR #${pr?.number}.`
                     : placementLoading

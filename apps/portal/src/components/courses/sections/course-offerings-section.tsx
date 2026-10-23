@@ -15,7 +15,7 @@ export function CourseOfferingsSection({
     >
       <div>
         <h2 className="text-lg font-semibold">Offerings</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Manage year and semester instances without changing the course draft.
         </p>
       </div>

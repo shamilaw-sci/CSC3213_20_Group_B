@@ -46,7 +46,10 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
 
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
+          <div
+            className="flex flex-col items-start gap-6 md:flex-row
+              md:items-center"
+          >
             <Avatar className="h-24 w-24">
               <AvatarImage src={user.picture} alt={user.name} />
               <AvatarFallback className="text-2xl">
@@ -67,7 +70,8 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                 {user.blacklisted ? (
                   <Badge
                     variant="outline"
-                    className="border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                    className="border-red-200 bg-red-50 text-red-700
+                      dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
                   >
                     <UserX className="mr-0.5 size-3" />
                     Blacklisted
@@ -75,14 +79,18 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                 ) : (
                   <Badge
                     variant="outline"
-                    className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400"
+                    className="border-green-200 bg-green-50 text-green-700
+                      dark:border-green-800 dark:bg-green-950/30
+                      dark:text-green-400"
                   >
                     <UserCheck className="mr-0.5 size-3" />
                     Active
                   </Badge>
                 )}
               </div>
-              <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">
+              <div
+                className="text-muted-foreground flex flex-wrap gap-4 text-sm"
+              >
                 <div className="flex items-center gap-1">
                   <Mail className="size-4" />
                   {user.email}
@@ -142,14 +150,17 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
             {user.blacklisted ? (
               <Badge
                 variant="outline"
-                className="border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                className="border-red-200 bg-red-50 text-red-700
+                  dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
               >
                 Blacklisted
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400"
+                className="border-green-200 bg-green-50 text-green-700
+                  dark:border-green-800 dark:bg-green-950/30
+                  dark:text-green-400"
               >
                 Active
               </Badge>
@@ -209,7 +220,9 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                   {user.googleOAuth && (
                     <Badge
                       variant="outline"
-                      className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-400"
+                      className="border-blue-200 bg-blue-50 text-blue-700
+                        dark:border-blue-800 dark:bg-blue-950/30
+                        dark:text-blue-400"
                     >
                       Google
                     </Badge>
@@ -217,7 +230,9 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                   {user.githubOAuth && (
                     <Badge
                       variant="outline"
-                      className="border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/30 dark:text-gray-400"
+                      className="border-gray-200 bg-gray-50 text-gray-700
+                        dark:border-gray-800 dark:bg-gray-950/30
+                        dark:text-gray-400"
                     >
                       GitHub
                     </Badge>

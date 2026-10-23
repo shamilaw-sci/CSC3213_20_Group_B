@@ -15,7 +15,7 @@ export function ProjectAcademicSection({
     >
       <div>
         <h3 className="text-base font-semibold">Academic context</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Classify the project and connect course projects to an existing
           offering.
         </p>

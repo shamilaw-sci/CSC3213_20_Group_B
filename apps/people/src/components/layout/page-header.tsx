@@ -20,7 +20,10 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <header className="mb-6 border-b pb-5">
-      <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <nav
+        className="text-muted-foreground mb-4 flex flex-wrap items-center gap-2
+          text-sm"
+      >
         {breadcrumbs.map((item, index) => (
           <span
             key={`${item.label}-${index}`}
@@ -30,7 +33,7 @@ export default function PageHeader({
             {item.href ? (
               <Link
                 href={item.href}
-                className="transition-colors hover:text-primary"
+                className="hover:text-primary transition-colors"
               >
                 {item.label}
               </Link>
@@ -41,11 +44,11 @@ export default function PageHeader({
         ))}
       </nav>
       {eyebrow && (
-        <p className="mb-2 text-sm font-semibold text-primary">{eyebrow}</p>
+        <p className="text-primary mb-2 text-sm font-semibold">{eyebrow}</p>
       )}
-      <h1 className="text-3xl font-semibold text-card-foreground">{title}</h1>
+      <h1 className="text-card-foreground text-3xl font-semibold">{title}</h1>
       {description && (
-        <p className="mt-1 text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground mt-1">{description}</p>
       )}
     </header>
   );

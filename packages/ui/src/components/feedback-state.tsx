@@ -23,24 +23,33 @@ export function FeedbackState({
     <section
       data-slot="feedback-state"
       className={cn(
-        'mx-auto flex w-full max-w-xl flex-col items-center px-6 py-16 text-center',
+        `mx-auto flex w-full max-w-xl flex-col items-center px-6 py-16
+        text-center`,
         className
       )}
     >
       {icon ? (
-        <div className="mb-6 text-primary" aria-hidden="true">
+        <div className="text-primary mb-6" aria-hidden="true">
           {icon}
         </div>
       ) : null}
       {code ? (
-        <p className="mb-3 text-sm font-semibold tracking-[0.16em] text-primary uppercase">
+        <p
+          className="text-primary mb-3 text-sm font-semibold tracking-[0.16em]
+            uppercase"
+        >
           {code}
         </p>
       ) : null}
-      <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+      <h1
+        className="text-3xl font-semibold tracking-tight text-balance
+          sm:text-4xl"
+      >
         {title}
       </h1>
-      <div className="mt-4 max-w-prose text-base leading-7 text-muted-foreground">
+      <div
+        className="text-muted-foreground mt-4 max-w-prose text-base leading-7"
+      >
         {description}
       </div>
       {actions ? (

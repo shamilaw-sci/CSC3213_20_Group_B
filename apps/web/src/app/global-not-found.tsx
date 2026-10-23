@@ -27,7 +27,9 @@ export default function GlobalNotFound() {
       <head>
         <ThemeInitScript />
       </head>
-      <body className="flex min-h-full items-center bg-background text-foreground">
+      <body
+        className="bg-background text-foreground flex min-h-full items-center"
+      >
         <FeedbackState
           code="404"
           title="Page not found"

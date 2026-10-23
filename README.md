@@ -74,6 +74,7 @@ bun --filter '@scs/api' test
 
 # Complete local quality gate.
 bun run docs:check
+bun run knip
 bun run format:check
 bun run lint
 bun run typecheck

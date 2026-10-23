@@ -14,19 +14,19 @@ function HeaderSkeleton({
       <div className="mb-4 flex items-center gap-2">
         {Array.from({ length: breadcrumbItems }, (_, index) => (
           <div key={index} className="flex items-center gap-2">
-            {index > 0 && <div className="h-4 w-2 rounded bg-muted" />}
+            {index > 0 && <div className="bg-muted h-4 w-2 rounded" />}
             <div
-              className={`h-4 rounded bg-muted ${
+              className={`bg-muted h-4 rounded ${
                 index === 0 ? 'w-12' : 'w-24'
               }`}
             />
           </div>
         ))}
       </div>
-      <div className={`h-9 max-w-full rounded bg-muted ${titleWidth}`} />
+      <div className={`bg-muted h-9 max-w-full rounded ${titleWidth}`} />
       {descriptionWidth && (
         <div
-          className={`mt-3 h-4 max-w-full rounded bg-muted ${descriptionWidth}`}
+          className={`bg-muted mt-3 h-4 max-w-full rounded ${descriptionWidth}`}
         />
       )}
     </header>
@@ -74,15 +74,16 @@ export function IndexCardsLoading({
     <PageLoadingShell breadcrumbItems={breadcrumbItems} titleWidth={titleWidth}>
       {Array.from({ length: sections }, (_, sectionIndex) => (
         <section key={sectionIndex} className="mb-8 last:mb-0">
-          {sections > 1 && <div className="mb-6 h-7 w-24 rounded bg-muted" />}
+          {sections > 1 && <div className="bg-muted mb-6 h-7 w-24 rounded" />}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {Array.from({ length: cards }, (_, cardIndex) => (
               <div
                 key={cardIndex}
-                className="flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4"
+                className="bg-card flex min-h-36 flex-col items-start
+                  justify-between rounded-md border p-4"
               >
-                <div className="h-8 w-8 rounded-md bg-muted" />
-                <div className="h-5 w-32 max-w-full rounded bg-muted" />
+                <div className="bg-muted h-8 w-8 rounded-md" />
+                <div className="bg-muted h-5 w-32 max-w-full rounded" />
               </div>
             ))}
           </div>
@@ -107,24 +108,31 @@ export function PeopleGridLoading({
     <PageLoadingShell breadcrumbItems={breadcrumbItems} titleWidth={titleWidth}>
       {withTabs && (
         <div className="mb-8 grid gap-2 sm:grid-cols-3">
-          <div className="h-10 rounded-md bg-muted" />
-          <div className="h-10 rounded-md bg-muted" />
-          <div className="h-10 rounded-md bg-muted" />
+          <div className="bg-muted h-10 rounded-md" />
+          <div className="bg-muted h-10 rounded-md" />
+          <div className="bg-muted h-10 rounded-md" />
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4
+          xl:grid-cols-5"
+      >
         {Array.from({ length: count }, (_, index) => (
           <div
             key={index}
-            className="flex min-h-80 flex-col gap-4 rounded-md border bg-card p-4"
+            className="bg-card flex min-h-80 flex-col gap-4 rounded-md border
+              p-4"
           >
-            <div className="h-40 w-full rounded-md bg-muted" />
-            <div className="flex min-h-28 w-full flex-1 flex-col items-center space-y-3">
-              <div className="h-4 w-3/4 rounded bg-muted" />
-              <div className="h-3 w-1/2 rounded bg-muted" />
-              <div className="h-3 w-2/3 rounded bg-muted" />
-              <div className="mt-auto h-9 w-full rounded-md bg-muted" />
+            <div className="bg-muted h-40 w-full rounded-md" />
+            <div
+              className="flex min-h-28 w-full flex-1 flex-col items-center
+                space-y-3"
+            >
+              <div className="bg-muted h-4 w-3/4 rounded" />
+              <div className="bg-muted h-3 w-1/2 rounded" />
+              <div className="bg-muted h-3 w-2/3 rounded" />
+              <div className="bg-muted mt-auto h-9 w-full rounded-md" />
             </div>
           </div>
         ))}
@@ -141,20 +149,24 @@ export function BatchDirectoryLoading() {
       descriptionWidth="w-56"
     >
       <div className="mb-5 flex items-center gap-2">
-        <div className="h-5 w-5 rounded bg-muted" />
-        <div className="h-4 w-28 rounded bg-muted" />
+        <div className="bg-muted h-5 w-5 rounded" />
+        <div className="bg-muted h-4 w-28 rounded" />
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4
+          xl:grid-cols-5"
+      >
         {Array.from({ length: 10 }, (_, index) => (
           <div
             key={index}
-            className="flex min-h-36 flex-col items-start justify-between rounded-md border bg-card p-4"
+            className="bg-card flex min-h-36 flex-col items-start
+              justify-between rounded-md border p-4"
           >
             <div className="w-full space-y-2">
-              <div className="h-4 w-3/4 rounded bg-muted" />
-              <div className="h-3 w-1/2 rounded bg-muted" />
+              <div className="bg-muted h-4 w-3/4 rounded" />
+              <div className="bg-muted h-3 w-1/2 rounded" />
             </div>
-            <div className="h-6 w-16 rounded-md bg-muted" />
+            <div className="bg-muted h-6 w-16 rounded-md" />
           </div>
         ))}
       </div>
@@ -166,34 +178,34 @@ export function ProfileLoading() {
   return (
     <PageLoadingShell titleWidth="w-72" descriptionWidth={null}>
       <article className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
-        <aside className="rounded-md border bg-card p-5">
-          <div className="h-80 w-full rounded-md bg-muted" />
+        <aside className="bg-card rounded-md border p-5">
+          <div className="bg-muted h-80 w-full rounded-md" />
           <div className="mt-5 space-y-3">
-            <div className="h-7 w-3/4 rounded bg-muted" />
-            <div className="h-4 w-1/2 rounded bg-muted" />
-            <div className="h-4 w-1/3 rounded bg-muted" />
+            <div className="bg-muted h-7 w-3/4 rounded" />
+            <div className="bg-muted h-4 w-1/2 rounded" />
+            <div className="bg-muted h-4 w-1/3 rounded" />
           </div>
           <div className="mt-6">
-            <div className="mb-3 h-3 w-12 rounded bg-muted" />
+            <div className="bg-muted mb-3 h-3 w-12 rounded" />
             <div className="flex flex-wrap gap-2">
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
             </div>
           </div>
         </aside>
 
         <section>
           <div className="mb-5 flex flex-wrap gap-2 border-b pb-3">
-            <div className="h-8 w-20 rounded-md bg-muted" />
-            <div className="h-8 w-20 rounded-md bg-muted" />
-            <div className="h-8 w-20 rounded-md bg-muted" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
           </div>
-          <div className="rounded-md border bg-card p-5">
+          <div className="bg-card rounded-md border p-5">
             <div className="grid gap-3 sm:grid-cols-2">
               {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className="h-20 rounded-md bg-muted" />
+                <div key={index} className="bg-muted h-20 rounded-md" />
               ))}
             </div>
           </div>

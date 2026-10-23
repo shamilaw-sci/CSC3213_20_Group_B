@@ -128,7 +128,10 @@ export default function StudentSubjectBatchPage({
         <p className="text-muted-foreground">Unable to load this batch.</p>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4
+          xl:grid-cols-5"
+      >
         {programme &&
           batchStudents.map((student) => (
             <StudentCard
@@ -140,7 +143,7 @@ export default function StudentSubjectBatchPage({
       </div>
 
       {!isLoading && !error && batchStudents.length === 0 && (
-        <div className="rounded-md border bg-card p-12 text-center">
+        <div className="bg-card rounded-md border p-12 text-center">
           <p className="text-muted-foreground">
             No {isAlumniBatch ? 'alumni' : 'students'} found in {batchLabel} for{' '}
             {programmeName}.

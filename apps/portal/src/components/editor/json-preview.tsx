@@ -20,7 +20,10 @@ export function JsonPreview({
   const theme = resolvedTheme === 'dark' ? githubDarkTheme : githubLightTheme;
 
   return (
-    <div className="max-w-full overflow-x-auto rounded-md border bg-muted/45 p-3 text-sm sm:p-4">
+    <div
+      className="bg-muted/45 max-w-full overflow-x-auto rounded-md border p-3
+        text-sm sm:p-4"
+    >
       <JsonView
         value={value ?? {}}
         style={{

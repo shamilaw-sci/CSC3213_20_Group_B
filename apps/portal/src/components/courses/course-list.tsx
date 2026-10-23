@@ -42,7 +42,10 @@ export function CourseList({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              className="text-muted-foreground absolute top-1/2 left-3 size-4
+                -translate-y-1/2"
+            />
             <Input
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
@@ -53,7 +56,10 @@ export function CourseList({
           </div>
           <Separator />
           {courses.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+            <div
+              className="text-muted-foreground flex flex-col items-center gap-2
+                py-10 text-center"
+            >
               <BookOpen className="size-10 opacity-30" />
               <p className="text-sm">No courses match this search.</p>
             </div>
@@ -63,12 +69,14 @@ export function CourseList({
                 <Link
                   key={course.id}
                   href={`/academic/courses/${course.id}`}
-                  className="rounded-md border bg-card p-4 shadow-sm transition-[color,background-color,border-color] hover:border-foreground/25 hover:bg-muted/30"
+                  className="bg-card hover:border-foreground/25
+                    hover:bg-muted/30 rounded-md border p-4 shadow-sm
+                    transition-[color,background-color,border-color]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="font-semibold">{course.title}</h2>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {course.id}
                       </p>
                     </div>

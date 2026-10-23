@@ -49,14 +49,17 @@ export function StatePanel({
       )}
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <span
+          className="bg-primary/10 text-primary flex size-12 shrink-0
+            items-center justify-center rounded-md"
+        >
           <Icon className={cn('size-6', iconClassName)} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold text-card-foreground">
+          <h2 className="text-card-foreground text-lg font-semibold">
             {title}
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
             {description}
           </p>
           {action || secondaryAction || onRetry ? (

@@ -174,17 +174,17 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
   if (step === 'verify' || step === 'verifying') {
     return (
       <div className="space-y-3">
-        <p className="text-muted-foreground text-sm text-center">
+        <p className="text-muted-foreground text-center text-sm">
           A verification code was sent to <strong>{maskEmail(email)}</strong>.
         </p>
 
         {countdown ? (
-          <p className="text-muted-foreground text-xs text-center">
+          <p className="text-muted-foreground text-center text-xs">
             Code expires in{' '}
             <span className="font-semibold tabular-nums">{countdown}</span>
           </p>
         ) : expiresAt === null && step === 'verify' ? null : (
-          <p className="text-destructive text-xs text-center">
+          <p className="text-destructive text-center text-xs">
             Code expired. Request a new one.
           </p>
         )}
@@ -197,11 +197,11 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
         />
 
         {codeError && (
-          <p className="text-destructive text-sm text-center">{codeError}</p>
+          <p className="text-destructive text-center text-sm">{codeError}</p>
         )}
 
         {step === 'verifying' && (
-          <p className="text-muted-foreground text-sm text-center">
+          <p className="text-muted-foreground text-center text-sm">
             Verifying…
           </p>
         )}

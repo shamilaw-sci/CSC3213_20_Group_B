@@ -621,7 +621,10 @@ function TextAreaField({
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <textarea
-        className="border-input bg-background min-h-28 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className="border-input bg-background focus-visible:border-ring
+          focus-visible:ring-ring/50 min-h-28 w-full rounded-md border px-3 py-2
+          text-sm shadow-xs transition-[color,box-shadow] outline-none
+          focus-visible:ring-[3px]"
         value={value}
         placeholder={placeholder}
         readOnly={readOnly}
@@ -1209,7 +1212,9 @@ function ProjectForm({
         <div className="space-y-3">
           {people.map((person, index) => (
             <div key={index} className="rounded-md border p-4">
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem_auto]">
+              <div
+                className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem_auto]"
+              >
                 <div className="space-y-1.5">
                   <Label>Username</Label>
                   <Input
@@ -1277,7 +1282,10 @@ function ProjectForm({
                 ) : null}
               </div>
               {person.name || person.email || person.sNumber ? (
-                <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <div
+                  className="text-muted-foreground mt-3 flex flex-wrap gap-x-6
+                    gap-y-2 text-sm"
+                >
                   {person.name ? <span>Name: {person.name}</span> : null}
                   {person.email ? <span>Email: {person.email}</span> : null}
                   {person.sNumber ? (
@@ -2122,7 +2130,10 @@ export default function ProjectEditor({
           description="Only super admins can use the admin projects area."
           icon={<FolderKanban className="text-muted-foreground size-6" />}
         />
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div
+          className="border-destructive/30 bg-destructive/5 text-destructive
+            rounded-md border p-4 text-sm"
+        >
           {error ?? 'Only super admins can use the admin projects area.'}
         </div>
       </PageShell>
@@ -2167,7 +2178,10 @@ export default function ProjectEditor({
         }
         icon={<FolderKanban className="text-muted-foreground size-6" />}
         action={
-          <div className="grid w-full grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap">
+          <div
+            className="grid w-full grid-cols-1 gap-2 min-[420px]:grid-cols-2
+              sm:flex sm:w-auto sm:flex-wrap"
+          >
             <Button
               variant="outline"
               onClick={() => void refresh()}
@@ -2191,7 +2205,10 @@ export default function ProjectEditor({
       />
 
       {error ? (
-        <pre className="border-destructive/30 bg-destructive/5 text-destructive whitespace-pre-wrap rounded-md border p-4 text-sm">
+        <pre
+          className="border-destructive/30 bg-destructive/5 text-destructive
+            rounded-md border p-4 text-sm whitespace-pre-wrap"
+        >
           {error}
         </pre>
       ) : null}
@@ -2215,7 +2232,10 @@ export default function ProjectEditor({
         {showWorkspace ? (
           <Card>
             <CardHeader className="px-4 sm:px-6">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div
+                className="flex flex-col gap-3 lg:flex-row lg:items-start
+                  lg:justify-between"
+              >
                 <div className="min-w-0 space-y-1.5">
                   <CardTitle>
                     {isNew ? 'New Project' : projectTitle(project)}
@@ -2225,7 +2245,9 @@ export default function ProjectEditor({
                       'Project data is validated before a GitHub pull request is opened.'}
                   </CardDescription>
                 </div>
-                <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
+                <div
+                  className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap"
+                >
                   <Button
                     variant="outline"
                     size="sm"
@@ -2244,7 +2266,11 @@ export default function ProjectEditor({
               ) : (
                 <>
                   {pr || prLoading || prError ? (
-                    <div className="flex flex-col gap-3 rounded-md border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                    <div
+                      className="bg-muted/30 flex flex-col gap-3 rounded-md
+                        border p-3 sm:flex-row sm:items-center
+                        sm:justify-between sm:p-4"
+                    >
                       <div className="min-w-0 space-y-2 sm:space-y-0">
                         <div className="flex flex-wrap items-center gap-2">
                           {pr ? (
@@ -2271,7 +2297,10 @@ export default function ProjectEditor({
                           ) : null}
                         </div>
                       </div>
-                      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+                      <div
+                        className="grid w-full grid-cols-2 gap-2 sm:flex
+                          sm:w-auto sm:flex-wrap"
+                      >
                         {selectedSlug ? (
                           <Button
                             variant="outline"
@@ -2354,14 +2383,24 @@ export default function ProjectEditor({
                   />
 
                   {canEdit ? (
-                    <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="text-muted-foreground flex items-start gap-2 text-sm sm:items-center">
+                    <div
+                      className="flex flex-col gap-3 border-t pt-5 sm:flex-row
+                        sm:items-center sm:justify-between"
+                    >
+                      <div
+                        className="text-muted-foreground flex items-start gap-2
+                          text-sm sm:items-center"
+                      >
                         <UserRound className="size-4" />
                         {canSubmitAnyProject
                           ? 'Admin submission can update any project.'
                           : 'Owner submission requires your identity in People.'}
                       </div>
-                      <div className="grid w-full grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap">
+                      <div
+                        className="grid w-full grid-cols-1 gap-2
+                          min-[420px]:grid-cols-2 sm:flex sm:w-auto
+                          sm:flex-wrap"
+                      >
                         {!isNew ? (
                           <Button
                             variant="outline"
@@ -2379,7 +2418,8 @@ export default function ProjectEditor({
                             onClick={openDeleteDialog}
                             disabled={deleting}
                             className={cn(
-                              'w-full border-destructive/40 text-destructive hover:bg-destructive/10 sm:w-auto'
+                              `border-destructive/40 text-destructive
+                                hover:bg-destructive/10 w-full sm:w-auto`
                             )}
                           >
                             <Trash2 className="size-4" />
@@ -2426,7 +2466,10 @@ export default function ProjectEditor({
             <div className="space-y-3">
               <div className="bg-muted/40 rounded-md border p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <code className="bg-background min-w-0 flex-1 truncate rounded-sm border px-2.5 py-2 font-mono text-sm">
+                  <code
+                    className="bg-background min-w-0 flex-1 truncate rounded-sm
+                      border px-2.5 py-2 font-mono text-sm"
+                  >
                     {selectedSlug}
                   </code>
                   <Button

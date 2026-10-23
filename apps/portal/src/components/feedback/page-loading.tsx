@@ -13,7 +13,7 @@ interface PageLoadingPanelProps {
 }
 
 function LoadingBlock({ className }: { className?: string }) {
-  return <div className={cn('rounded-md bg-muted', className)} />;
+  return <div className={cn('bg-muted rounded-md', className)} />;
 }
 
 export function PageLoading({
@@ -29,7 +29,10 @@ export function PageLoading({
         className
       )}
     >
-      <header className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <header
+        className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-end
+          sm:justify-between"
+      >
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <LoadingBlock className="size-6" />
@@ -64,7 +67,8 @@ function CardGridLoading() {
       {Array.from({ length: 6 }, (_, index) => (
         <div
           key={index}
-          className="flex min-h-32 items-start gap-4 rounded-md border bg-card p-5 shadow-sm"
+          className="bg-card flex min-h-32 items-start gap-4 rounded-md border
+            p-5 shadow-sm"
         >
           <LoadingBlock className="size-10 shrink-0" />
           <div className="w-full space-y-3">
@@ -82,8 +86,11 @@ function CardGridLoading() {
 
 function DetailLoading() {
   return (
-    <div className="space-y-4 rounded-md border bg-card p-6 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="bg-card space-y-4 rounded-md border p-6 shadow-sm">
+      <div
+        className="flex flex-col gap-3 sm:flex-row sm:items-center
+          sm:justify-between"
+      >
         <div className="space-y-2">
           <LoadingBlock className="h-5 w-32" />
           <LoadingBlock className="h-4 w-64 max-w-full" />
@@ -110,7 +117,7 @@ function DetailLoading() {
 
 function TableLoading() {
   return (
-    <div className="rounded-md border bg-card shadow-sm">
+    <div className="bg-card rounded-md border shadow-sm">
       <div className="border-b p-4">
         <LoadingBlock className="h-9 w-full max-w-sm" />
       </div>

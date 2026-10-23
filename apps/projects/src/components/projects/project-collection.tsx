@@ -77,12 +77,15 @@ export default function ProjectCollection({
   return (
     <>
       <PageIntro eyebrow={eyebrow} title={title} description={description} />
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_18rem]">
+      <section
+        className="mx-auto grid max-w-6xl gap-8 px-4 py-10
+          lg:grid-cols-[1fr_18rem]"
+      >
         <div>
-          <div className="mb-5 rounded-md border bg-card p-4">
-            <p className="text-sm font-medium text-muted-foreground">
+          <div className="bg-card mb-5 rounded-md border p-4">
+            <p className="text-muted-foreground text-sm font-medium">
               {loading ? 'Loading' : 'Showing'}{' '}
-              <span className="font-semibold text-card-foreground">
+              <span className="text-card-foreground font-semibold">
                 {loading ? '...' : projects.length}
               </span>{' '}
               projects.

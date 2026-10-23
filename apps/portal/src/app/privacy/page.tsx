@@ -40,12 +40,16 @@ const googleScopes = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-muted px-3 py-8 text-foreground sm:px-6 sm:py-12">
+    <main
+      className="bg-muted text-foreground min-h-screen px-3 py-8 sm:px-6
+        sm:py-12"
+    >
       <div className="mx-auto w-full max-w-3xl min-w-0 space-y-5 sm:space-y-6">
         <div className="space-y-2">
           <Link
             href="/"
-            className="text-muted-foreground text-sm font-medium hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground text-sm
+              font-medium"
           >
             SCS PDN Portal
           </Link>
@@ -63,7 +67,10 @@ export default function PrivacyPage() {
               Information We Collect
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               SCS PDN Portal is used by students, staff, and administrators of
               the Department of Statistics and Computer Science, University of
@@ -74,7 +81,10 @@ export default function PrivacyPage() {
             <ul className="list-disc space-y-2 pl-5">
               {googleScopes.map((item) => (
                 <li key={item.scope} className="min-w-0">
-                  <span className="font-medium break-words text-foreground [overflow-wrap:anywhere]">
+                  <span
+                    className="text-foreground font-medium
+                      [overflow-wrap:anywhere] break-words"
+                  >
                     {item.scope}
                   </span>
                   : {item.purpose}
@@ -95,7 +105,10 @@ export default function PrivacyPage() {
               How We Use Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               We use this information to authenticate users, maintain portal
               accounts, authorize access to student, staff, and administrative
@@ -115,7 +128,10 @@ export default function PrivacyPage() {
               Sharing, Retention, and Control
             </CardTitle>
           </CardHeader>
-          <CardContent className="min-w-0 space-y-4 px-4 text-sm leading-7 text-muted-foreground sm:px-6">
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm
+              leading-7 sm:px-6"
+          >
             <p>
               Personal information is shared only with authorized portal
               administrators and service providers that help operate the portal.

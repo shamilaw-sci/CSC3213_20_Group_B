@@ -88,7 +88,9 @@ function PersonImage({
       <div
         role="img"
         aria-label={name}
-        className={`${sizeClass} flex shrink-0 items-center justify-center rounded-md bg-accent/15 text-lg font-semibold text-primary ring-1 ring-primary/15`}
+        className={`${sizeClass} bg-accent/15 text-primary ring-primary/15 flex
+          shrink-0 items-center justify-center rounded-md text-lg font-semibold
+          ring-1`}
       >
         {initialsFrom(name)}
       </div>
@@ -97,7 +99,8 @@ function PersonImage({
 
   return (
     <div
-      className={`${sizeClass} shrink-0 overflow-hidden rounded-md bg-accent/10 ring-1 ring-primary/20`}
+      className={`${sizeClass} bg-accent/10 ring-primary/20 shrink-0
+        overflow-hidden rounded-md ring-1`}
     >
       <Image
         src={src}
@@ -147,22 +150,38 @@ function PersonTile({
   const content = (
     <>
       <PersonImage src={imageUrl} name={name} />
-      <CardHeader className="min-w-0 flex-1 items-start px-0 text-left sm:min-h-28 sm:w-full sm:items-center sm:text-center">
-        <CardTitle className="line-clamp-2 text-sm leading-snug text-card-foreground group-hover:text-primary sm:text-base">
+      <CardHeader
+        className="min-w-0 flex-1 items-start px-0 text-left sm:min-h-28
+          sm:w-full sm:items-center sm:text-center"
+      >
+        <CardTitle
+          className="text-card-foreground group-hover:text-primary line-clamp-2
+            text-sm leading-snug sm:text-base"
+        >
           {title}
         </CardTitle>
-        <p className="mt-1 max-w-full truncate text-sm text-muted-foreground sm:mt-2">
+        <p
+          className="text-muted-foreground mt-1 max-w-full truncate text-sm
+            sm:mt-2"
+        >
           {subtitle}
         </p>
         {meta && (
-          <p className="mt-1 max-w-full truncate text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-1 max-w-full truncate text-xs">
             {meta}
           </p>
         )}
       </CardHeader>
       {href && (
-        <CardFooter className="ml-auto self-end px-0 sm:mt-auto sm:w-full sm:self-auto">
-          <span className="rounded-md border border-primary/30 px-3 py-2 text-center text-sm font-medium text-primary transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground sm:w-full">
+        <CardFooter
+          className="ml-auto self-end px-0 sm:mt-auto sm:w-full sm:self-auto"
+        >
+          <span
+            className="border-primary/30 text-primary group-hover:border-primary
+              group-hover:bg-primary group-hover:text-primary-foreground
+              rounded-md border px-3 py-2 text-center text-sm font-medium
+              transition-colors sm:w-full"
+          >
             View
           </span>
         </CardFooter>
@@ -188,14 +207,21 @@ function PeopleCardSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="flex min-h-0 animate-pulse flex-row items-start gap-4 rounded-md border bg-card p-3 sm:min-h-80 sm:flex-col sm:p-4"
+      className="bg-card flex min-h-0 animate-pulse flex-row items-start gap-4
+        rounded-md border p-3 sm:min-h-80 sm:flex-col sm:p-4"
     >
-      <div className="size-24 shrink-0 rounded-md bg-muted sm:h-40 sm:w-full" />
-      <div className="flex min-w-0 flex-1 flex-col gap-3 sm:min-h-28 sm:w-full sm:items-center">
-        <div className="h-4 w-3/4 rounded bg-muted" />
-        <div className="h-3 w-1/2 rounded bg-muted" />
-        <div className="h-3 w-2/3 rounded bg-muted" />
-        <div className="ml-auto mt-auto h-9 w-16 rounded-md bg-muted sm:ml-0 sm:w-full" />
+      <div className="bg-muted size-24 shrink-0 rounded-md sm:h-40 sm:w-full" />
+      <div
+        className="flex min-w-0 flex-1 flex-col gap-3 sm:min-h-28 sm:w-full
+          sm:items-center"
+      >
+        <div className="bg-muted h-4 w-3/4 rounded" />
+        <div className="bg-muted h-3 w-1/2 rounded" />
+        <div className="bg-muted h-3 w-2/3 rounded" />
+        <div
+          className="bg-muted mt-auto ml-auto h-9 w-16 rounded-md sm:ml-0
+            sm:w-full"
+        />
       </div>
     </div>
   );
@@ -203,7 +229,10 @@ function PeopleCardSkeleton() {
 
 export function PeopleCardSkeletonGrid({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4
+        xl:grid-cols-5"
+    >
       {Array.from({ length: count }, (_, index) => (
         <PeopleCardSkeleton key={index} />
       ))}
@@ -461,7 +490,9 @@ function ProfileLinkList({
             rel={
               link.href.startsWith('http') ? 'noopener noreferrer' : undefined
             }
-            className="flex min-h-10 items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm transition-colors hover:border-primary hover:text-primary"
+            className="bg-card hover:border-primary hover:text-primary flex
+              min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm
+              transition-colors"
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden={true} />
             <span className="truncate">{link.label}</span>
@@ -489,7 +520,10 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
             }
             aria-label={link.label}
             title={link.label}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border bg-card text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            className="bg-card text-muted-foreground hover:border-primary
+              hover:bg-primary hover:text-primary-foreground inline-flex h-10
+              w-10 items-center justify-center rounded-md border
+              transition-colors"
           >
             <Icon className="h-5 w-5" aria-hidden={true} />
           </a>
@@ -508,7 +542,7 @@ function ProfileSection({
 }) {
   return (
     <section className="border-t py-5 first:border-t-0 first:pt-0">
-      <h2 className="mb-3 text-sm font-semibold uppercase text-muted-foreground">
+      <h2 className="text-muted-foreground mb-3 text-sm font-semibold uppercase">
         {title}
       </h2>
       {children}
@@ -526,7 +560,7 @@ function FieldGrid({ fields }: { fields: ProfileField[] }) {
       {visibleFields.map((field) => {
         const Icon = field.icon;
         const value = field.href ? (
-          <a href={field.href} className="break-all hover:text-primary">
+          <a href={field.href} className="hover:text-primary break-all">
             {field.value}
           </a>
         ) : (
@@ -536,11 +570,14 @@ function FieldGrid({ fields }: { fields: ProfileField[] }) {
         return (
           <Card key={field.label} className="rounded-md py-0">
             <CardContent className="p-4">
-              <dt className="mb-1 flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+              <dt
+                className="text-muted-foreground mb-1 flex items-center gap-2
+                  text-xs font-medium uppercase"
+              >
                 {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
                 {field.label}
               </dt>
-              <dd className="text-sm font-medium text-card-foreground">
+              <dd className="text-card-foreground text-sm font-medium">
                 {value}
               </dd>
             </CardContent>
@@ -607,12 +644,12 @@ function TimelineList({
 
         return (
           <li key={`${title}-${index}`} className="p-4">
-            <p className="font-medium text-card-foreground">{title}</p>
+            <p className="text-card-foreground font-medium">{title}</p>
             {meta && (
-              <p className="mt-1 text-sm text-muted-foreground">{meta}</p>
+              <p className="text-muted-foreground mt-1 text-sm">{meta}</p>
             )}
             {item.description && (
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-2 text-sm">
                 {item.description}
               </p>
             )}
@@ -621,7 +658,8 @@ function TimelineList({
                 href={item.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                className="text-primary mt-2 inline-flex items-center gap-1
+                  text-sm hover:underline"
               >
                 Website
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -645,16 +683,16 @@ function QualificationList({
     <ul className="divide-y rounded-md border">
       {qualifications.map((qualification, index) => (
         <li key={`${qualification.degree}-${index}`} className="p-4">
-          <p className="font-medium text-card-foreground">
+          <p className="text-card-foreground font-medium">
             {qualification.degree}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             {[qualification.institution, qualification.graduationYear]
               .filter(Boolean)
               .join(' / ')}
           </p>
           {qualification.description && (
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-sm">
               {qualification.description}
             </p>
           )}
@@ -673,19 +711,19 @@ function PublicationList({ publications }: { publications?: Publication[] }) {
         <li key={`${publication.title}-${index}`} className="p-4">
           <p className="font-medium">{publication.title}</p>
           {(publication.journal || publication.publicationDate) && (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               {[publication.journal, publication.publicationDate]
                 .filter(Boolean)
                 .join(' / ')}
             </p>
           )}
           {publication.coAuthors?.length ? (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Co-authors: {publication.coAuthors.join(', ')}
             </p>
           ) : null}
           {publication.description && (
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-sm">
               {publication.description}
             </p>
           )}
@@ -967,13 +1005,15 @@ export function DetailedPersonCard({
         />
         <div className="mt-5">
           {showIdentity && (
-            <h1 className="text-2xl font-bold leading-tight text-card-foreground">
+            <h1
+              className="text-card-foreground text-2xl leading-tight font-bold"
+            >
               {person.title} {person.fullName}
             </h1>
           )}
-          <p className="mt-2 font-medium text-primary">{role}</p>
+          <p className="text-primary mt-2 font-medium">{role}</p>
           {student && (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               {student.registrationNo}
             </p>
           )}
@@ -981,12 +1021,15 @@ export function DetailedPersonCard({
 
         {visibleProfileLinks.length > 0 && (
           <section className="mt-4">
-            <h2 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+            <h2
+              className="text-muted-foreground mb-2 text-xs font-semibold
+                uppercase"
+            >
               Links
             </h2>
             <ProfileIconLinkList links={visibleProfileLinks} />
             {profileLinks.length > visibleProfileLinks.length && (
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-2 text-xs">
                 More links are available in the Links tab.
               </p>
             )}
@@ -1027,34 +1070,34 @@ export function DetailedPersonCardSkeleton() {
   return (
     <article aria-hidden="true" className="animate-pulse space-y-8">
       <div className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
-        <div className="rounded-md border bg-card p-5">
-          <div className="h-80 w-full rounded-md bg-muted" />
+        <div className="bg-card rounded-md border p-5">
+          <div className="bg-muted h-80 w-full rounded-md" />
           <div className="mt-5 space-y-3">
-            <div className="h-7 w-3/4 rounded bg-muted" />
-            <div className="h-4 w-1/2 rounded bg-muted" />
-            <div className="h-4 w-1/3 rounded bg-muted" />
+            <div className="bg-muted h-7 w-3/4 rounded" />
+            <div className="bg-muted h-4 w-1/2 rounded" />
+            <div className="bg-muted h-4 w-1/3 rounded" />
           </div>
           <div className="mt-6">
-            <div className="mb-3 h-3 w-12 rounded bg-muted" />
+            <div className="bg-muted mb-3 h-3 w-12 rounded" />
             <div className="flex flex-wrap gap-2">
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
-              <div className="h-10 w-10 rounded-md bg-muted" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
+              <div className="bg-muted h-10 w-10 rounded-md" />
             </div>
           </div>
         </div>
 
         <div>
           <div className="mb-5 flex gap-2 border-b pb-3">
-            <div className="h-8 w-20 rounded-md bg-muted" />
-            <div className="h-8 w-20 rounded-md bg-muted" />
-            <div className="h-8 w-20 rounded-md bg-muted" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
+            <div className="bg-muted h-8 w-20 rounded-md" />
           </div>
-          <div className="rounded-md border bg-card p-5">
+          <div className="bg-card rounded-md border p-5">
             <div className="grid gap-3 sm:grid-cols-2">
               {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className="h-20 rounded-md bg-muted" />
+                <div key={index} className="bg-muted h-20 rounded-md" />
               ))}
             </div>
           </div>

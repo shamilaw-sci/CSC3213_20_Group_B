@@ -38,6 +38,7 @@
       ]
     },
     "lint": { "dependsOn": ["^lint"] },
+    "knip": { "dependsOn": ["^knip"] },
     "test": { "dependsOn": ["^test"] },
     "typecheck": { "dependsOn": ["^typecheck"] },
     "typecheck:test": { "dependsOn": ["^typecheck:test"] }

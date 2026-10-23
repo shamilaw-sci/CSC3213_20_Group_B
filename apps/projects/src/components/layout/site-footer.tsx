@@ -10,11 +10,14 @@ const discoveryLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/45">
-      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-end sm:justify-between">
+    <footer className="bg-muted/45 border-t">
+      <div
+        className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row
+          sm:items-end sm:justify-between"
+      >
         <div>
           <p className="font-semibold">SCS Projects</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Student, research, and departmental work from the University of
             Peradeniya.
           </p>
@@ -27,7 +30,9 @@ export function SiteFooter() {
             <Link
               key={link.href}
               href={link.href}
-              className="inline-flex min-h-9 items-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:rounded-sm focus-visible:outline-none"
+              className="text-muted-foreground hover:text-foreground inline-flex
+                min-h-9 items-center text-sm underline-offset-4 hover:underline
+                focus-visible:rounded-sm focus-visible:outline-none"
             >
               {link.label}
             </Link>

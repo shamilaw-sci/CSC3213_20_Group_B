@@ -108,7 +108,7 @@ export default function ProjectDetailPage({
     <>
       <ProjectDetail project={project} />
       <section className="mx-auto max-w-6xl px-4 pb-12">
-        <h2 className="mb-5 text-xl font-semibold text-card-foreground">
+        <h2 className="text-card-foreground mb-5 text-xl font-semibold">
           Related projects
         </h2>
         <ProjectGrid projects={relatedProjects} />

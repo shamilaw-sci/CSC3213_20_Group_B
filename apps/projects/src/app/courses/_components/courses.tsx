@@ -57,7 +57,10 @@ export default function Courses() {
         title="Course projects"
         description="Browse projects connected to SCS courses. For research, systems, datasets, and other work, use Search, Tags, or Categories."
       />
-      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-2 lg:grid-cols-3">
+      <section
+        className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-2
+          lg:grid-cols-3"
+      >
         {loading ? (
           <TileGridLoading
             className="md:col-span-2 lg:col-span-3"
@@ -87,13 +90,16 @@ export default function Courses() {
             href={`/courses/${course.code}/projects`}
             className="group block"
           >
-            <Card className="h-full rounded-md p-5 transition group-hover:-translate-y-0.5 group-hover:bg-muted/35 group-hover:shadow-lg">
+            <Card
+              className="group-hover:bg-muted/35 h-full rounded-md p-5
+                transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
+            >
               <CardHeader className="px-0">
                 <Badge className="w-fit rounded-md">{course.code}</Badge>
                 <CardTitle className="mt-3 text-xl">{course.title}</CardTitle>
               </CardHeader>
               <CardContent className="px-0">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {course.count} projects
                 </p>
               </CardContent>

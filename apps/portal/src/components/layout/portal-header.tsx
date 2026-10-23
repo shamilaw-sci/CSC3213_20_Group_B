@@ -16,11 +16,18 @@ export function PortalHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex min-h-14 max-w-6xl items-center gap-2 px-3 sm:px-4">
+    <header
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/85
+        sticky top-0 z-40 border-b backdrop-blur"
+    >
+      <div
+        className="mx-auto flex min-h-14 max-w-6xl items-center gap-2 px-3
+          sm:px-4"
+      >
         <Link
           href="/"
-          className="mr-auto flex min-h-11 items-center gap-2 rounded-sm font-semibold"
+          className="mr-auto flex min-h-11 items-center gap-2 rounded-sm
+            font-semibold"
         >
           <UopLogoIcon className="size-8" />
           <span>SCS Portal</span>
@@ -69,11 +76,13 @@ function PortalNavigationLink({
     <Link
       href={item.href}
       aria-current={active ? 'page' : undefined}
-      className={`flex min-h-10 items-center rounded-md border-b-2 px-3 text-sm font-medium transition-colors ${
-        active
-          ? 'border-primary bg-muted text-foreground'
-          : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-      } ${className ?? ''}`}
+      className={`flex min-h-10 items-center rounded-md border-b-2 px-3 text-sm
+        font-medium transition-colors ${
+          active
+            ? 'border-primary bg-muted text-foreground'
+            : `text-muted-foreground hover:bg-muted hover:text-foreground
+              border-transparent`
+        } ${className ?? ''}`}
     >
       {item.label}
     </Link>

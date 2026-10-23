@@ -145,7 +145,7 @@ export function PublicProfileReview({
           <h2 id="profile-review-heading" className="font-semibold">
             Review profile changes
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Check how the important public information reads before submitting
             it.
           </p>
@@ -162,7 +162,10 @@ export function PublicProfileReview({
         ) : null}
       </div>
       {comparePublished ? (
-        <p className="rounded-md border bg-muted/35 p-3 text-sm text-muted-foreground">
+        <p
+          className="bg-muted/35 text-muted-foreground rounded-md border p-3
+            text-sm"
+        >
           Published values are shown crossed out. This comparison is read-only.
         </p>
       ) : null}

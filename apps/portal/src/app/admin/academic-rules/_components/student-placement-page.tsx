@@ -516,7 +516,10 @@ export default function StudentPlacementPage() {
         </div>
 
         <Card className="min-w-0">
-          <CardHeader className="has-data-[slot=card-action]:grid-cols-1 sm:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto]">
+          <CardHeader
+            className="has-data-[slot=card-action]:grid-cols-1
+              sm:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto]"
+          >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle>Academic Rules PR</CardTitle>
@@ -529,7 +532,10 @@ export default function StudentPlacementPage() {
                 postgraduate programme rules.
               </CardDescription>
             </div>
-            <CardAction className="col-start-1 row-start-auto justify-self-start sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end">
+            <CardAction
+              className="col-start-1 row-start-auto justify-self-start
+                sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end"
+            >
               <Button
                 variant="outline"
                 size="sm"
@@ -542,13 +548,13 @@ export default function StudentPlacementPage() {
             </CardAction>
           </CardHeader>
           <CardContent>
-            <div className="grid min-w-0 gap-1 text-sm text-muted-foreground">
+            <div className="text-muted-foreground grid min-w-0 gap-1 text-sm">
               {pr?.number && pr.url ? (
                 <a
                   href={pr.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium text-primary hover:underline"
+                  className="text-primary font-medium hover:underline"
                 >
                   PR #{pr.number}
                 </a>
@@ -582,7 +588,10 @@ export default function StudentPlacementPage() {
               Apply placement and alumni state to multiple batches.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_10rem_10rem_7rem_7rem]">
+          <CardContent
+            className="grid min-w-0 gap-3
+              lg:grid-cols-[minmax(0,1fr)_10rem_10rem_7rem_7rem]"
+          >
             <FieldShell label="Batches">
               <Input
                 value={bulkBatches}
@@ -886,7 +895,11 @@ function RulesSection({
 }) {
   return (
     <Card className="min-w-0 overflow-hidden">
-      <CardHeader className="min-w-0 w-full max-w-3xl has-data-[slot=card-action]:grid-cols-1 sm:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto]">
+      <CardHeader
+        className="w-full max-w-3xl min-w-0
+          has-data-[slot=card-action]:grid-cols-1
+          sm:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto]"
+      >
         <div className="min-w-0">
           <CardTitle className="min-w-0 text-wrap">{title}</CardTitle>
           {description ? (
@@ -894,12 +907,15 @@ function RulesSection({
           ) : null}
         </div>
         {action ? (
-          <CardAction className="col-start-1 row-start-auto justify-self-start sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end">
+          <CardAction
+            className="col-start-1 row-start-auto justify-self-start
+              sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end"
+          >
             {action}
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="min-w-0 w-full max-w-3xl">{children}</CardContent>
+      <CardContent className="w-full max-w-3xl min-w-0">{children}</CardContent>
     </Card>
   );
 }
@@ -918,7 +934,8 @@ function RuleGridHeader({
   return (
     <div
       className={cn(
-        'hidden min-w-0 gap-3 border-b pb-2 text-sm font-medium text-muted-foreground md:grid',
+        `text-muted-foreground hidden min-w-0 gap-3 border-b pb-2 text-sm
+        font-medium md:grid`,
         columns
       )}
     >
@@ -941,7 +958,8 @@ function RuleGridRow({
   return (
     <div
       className={cn(
-        'grid min-w-0 gap-3 rounded-md border p-3 md:border-0 md:border-b md:p-0 md:pb-2',
+        `grid min-w-0 gap-3 rounded-md border p-3 md:border-0 md:border-b md:p-0
+        md:pb-2`,
         columns
       )}
     >

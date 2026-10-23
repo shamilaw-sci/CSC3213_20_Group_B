@@ -95,7 +95,7 @@ export function EditorWorkspace<T extends object>({
       <header className="space-y-3 border-b pb-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Editor</p>
+            <p className="text-muted-foreground text-sm font-medium">Editor</p>
             <h2
               id="editor-title"
               className="text-2xl font-semibold tracking-tight"
@@ -133,12 +133,14 @@ export function EditorWorkspace<T extends object>({
       <ValidationSummary issues={state.validationIssues} />
 
       <div
-        className={`${editorTransitionClass(false)} motion-reduce:transform-none motion-reduce:transition-none`}
+        className={`${editorTransitionClass(false)} motion-reduce:transform-none
+          motion-reduce:transition-none`}
       >
         <h2
           ref={headingRef}
           tabIndex={-1}
-          className="sr-only focus:not-sr-only focus:mb-3 focus:text-lg focus:font-semibold focus:outline-none"
+          className="sr-only focus:not-sr-only focus:mb-3 focus:text-lg
+            focus:font-semibold focus:outline-none"
         >
           {surfaceLabels[state.surface]}
         </h2>

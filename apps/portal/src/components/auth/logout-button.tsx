@@ -23,7 +23,8 @@ export function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-muted-foreground hover:text-destructive flex items-center gap-2 text-sm font-medium transition"
+      className="text-muted-foreground hover:text-destructive flex items-center
+        gap-2 text-sm font-medium transition"
     >
       <LogOut className="h-4 w-4" />
       Logout

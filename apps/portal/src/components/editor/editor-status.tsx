@@ -25,7 +25,7 @@ export function EditorStatus({ detail, status }: EditorStatusProps) {
         {statusLabels[status]}
       </Badge>
       {detail ? (
-        <span className="text-sm text-muted-foreground">{detail}</span>
+        <span className="text-muted-foreground text-sm">{detail}</span>
       ) : null}
     </div>
   );

@@ -112,14 +112,23 @@ export default function StudentsPage() {
             }}
             className="group block text-left"
           >
-            <Card className="min-h-36 rounded-md py-0 transition-colors group-hover:border-primary/40 group-hover:bg-muted/50">
-              <CardContent className="flex min-h-36 flex-col items-start justify-between p-4">
+            <Card
+              className="group-hover:border-primary/40 group-hover:bg-muted/50
+                min-h-36 rounded-md py-0 transition-colors"
+            >
+              <CardContent
+                className="flex min-h-36 flex-col items-start justify-between
+                  p-4"
+              >
                 <Icon
                   className={`h-8 w-8 ${iconClassName}`}
                   strokeWidth={2.5}
                   aria-hidden="true"
                 />
-                <h3 className="text-base font-semibold text-card-foreground transition-colors group-hover:text-primary">
+                <h3
+                  className="text-card-foreground group-hover:text-primary
+                    text-base font-semibold transition-colors"
+                >
                   {label}
                 </h3>
               </CardContent>

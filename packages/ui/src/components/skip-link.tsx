@@ -12,7 +12,9 @@ function SkipLink({
     <a
       href={href}
       className={cn(
-        'fixed top-3 left-3 z-50 -translate-y-20 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-transform focus-visible:translate-y-0',
+        `bg-primary text-primary-foreground fixed top-3 left-3 z-50
+        -translate-y-20 rounded-md px-4 py-2 text-sm font-semibold shadow-md
+        transition-transform focus-visible:translate-y-0`,
         className
       )}
       {...props}

@@ -30,10 +30,14 @@ export default function SCSPortalGitHubApp() {
       <div className="space-y-6">
         <div
           role="alert"
-          className="flex items-start gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-5"
+          className="border-destructive/30 bg-destructive/5 flex items-start
+            gap-4 rounded-md border p-5"
         >
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-destructive/30 bg-background">
-            <ShieldAlert className="size-5 text-destructive" />
+          <div
+            className="border-destructive/30 bg-background flex size-10 shrink-0
+              items-center justify-center rounded-md border"
+          >
+            <ShieldAlert className="text-destructive size-5" />
           </div>
 
           <div className="space-y-1">
@@ -50,7 +54,10 @@ export default function SCSPortalGitHubApp() {
           </div>
         </div>
 
-        <section className="space-y-4 rounded-md border bg-card p-6 text-card-foreground shadow-sm">
+        <section
+          className="bg-card text-card-foreground space-y-4 rounded-md border
+            p-6 shadow-sm"
+        >
           <div className="space-y-1">
             <h2 className="font-semibold">Purpose</h2>
 
@@ -85,7 +92,10 @@ export default function SCSPortalGitHubApp() {
           </div>
         </section>
 
-        <div className="flex flex-col gap-3 rounded-md border bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="bg-muted/30 flex flex-col gap-3 rounded-md border p-5
+            sm:flex-row sm:items-center sm:justify-between"
+        >
           <p className="text-muted-foreground text-sm leading-6">
             By installing the app outside its intended environment, you accept
             all risks associated with unsupported use.
@@ -95,7 +105,10 @@ export default function SCSPortalGitHubApp() {
             href="https://github.com/apps/scs-portal-github-app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="bg-primary text-primary-foreground hover:bg-primary/90
+              focus-visible:ring-ring inline-flex h-10 shrink-0 items-center
+              justify-center gap-2 rounded-md px-4 text-sm font-medium
+              transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             View GitHub App
             <ExternalLink className="size-4" />

@@ -149,7 +149,8 @@ export default function ProxySettingsPage({
       />
 
       <div
-        className={`flex flex-col gap-3 rounded-md border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${attemptsTone.className}`}
+        className={`flex flex-col gap-3 rounded-md border px-4 py-3 sm:flex-row
+          sm:items-center sm:justify-between ${attemptsTone.className}`}
       >
         <div className="space-y-1">
           <p className="text-sm font-medium">Edit Attempts Remaining</p>
@@ -164,7 +165,11 @@ export default function ProxySettingsPage({
       </div>
 
       {!canEdit && (
-        <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+        <div
+          className="flex items-center gap-3 rounded-md border border-amber-200
+            bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800
+            dark:bg-amber-950/30 dark:text-amber-400"
+        >
           <AlertCircle className="size-4 shrink-0" />
           <p className="text-sm">
             You have used all your editing attempts for today. Contact an admin
@@ -174,7 +179,11 @@ export default function ProxySettingsPage({
       )}
 
       {canEdit && attemptsRemaining <= 1 && (
-        <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+        <div
+          className="flex items-center gap-3 rounded-md border border-amber-200
+            bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800
+            dark:bg-amber-950/30 dark:text-amber-400"
+        >
           <AlertCircle className="size-4 shrink-0" />
           <p className="text-sm">
             You have{' '}
@@ -197,7 +206,10 @@ export default function ProxySettingsPage({
         <CardContent className="space-y-6">
           {isEditing ? (
             <>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="flex flex-col gap-4 sm:flex-row sm:items-center
+                  sm:justify-between"
+              >
                 <div className="space-y-1">
                   <Label className="text-base">Enable Proxy</Label>
                   <p className="text-muted-foreground text-sm">
@@ -250,7 +262,10 @@ export default function ProxySettingsPage({
             </>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="flex flex-col gap-4 sm:flex-row sm:items-center
+                  sm:justify-between"
+              >
                 <div className="space-y-1">
                   <Label className="text-base">Enable Proxy</Label>
                   <p className="text-muted-foreground text-sm">
@@ -268,7 +283,7 @@ export default function ProxySettingsPage({
 
               <div className="space-y-2">
                 <Label className="text-base">Proxy URL</Label>
-                <p className="break-all text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm break-all">
                   {savedProxyUrl || 'No proxy URL configured'}
                 </p>
               </div>

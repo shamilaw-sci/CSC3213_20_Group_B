@@ -22,7 +22,7 @@ export function ReviewChanges({
   onChangeField,
 }: ReviewChangesProps) {
   if (changes.length === 0) {
-    return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
+    return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
   }
 
   return (
@@ -30,12 +30,13 @@ export function ReviewChanges({
       {changes.map((change) => (
         <div
           key={change.field}
-          className="grid gap-3 p-4 sm:grid-cols-[minmax(9rem,0.35fr)_1fr_auto] sm:items-start"
+          className="grid gap-3 p-4 sm:grid-cols-[minmax(9rem,0.35fr)_1fr_auto]
+            sm:items-start"
         >
           <dt className="text-sm font-medium">{change.label}</dt>
           <dd className="min-w-0 text-sm">
             {change.before !== undefined ? (
-              <p className="mb-1 text-muted-foreground line-through">
+              <p className="text-muted-foreground mb-1 line-through">
                 {change.before}
               </p>
             ) : null}

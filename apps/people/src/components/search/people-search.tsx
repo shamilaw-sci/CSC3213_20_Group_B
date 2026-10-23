@@ -52,7 +52,8 @@ export function PeopleSearch() {
     <div className="relative min-w-0 flex-1 md:max-w-md">
       <div className="relative">
         <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          className="text-muted-foreground pointer-events-none absolute top-1/2
+            left-3 size-4 -translate-y-1/2"
           aria-hidden="true"
         />
         <input
@@ -74,11 +75,15 @@ export function PeopleSearch() {
           onKeyDown={(event) => {
             if (event.key === 'Escape') setIsOpen(false);
           }}
-          className="h-10 w-full rounded-md border bg-background pr-9 pl-9 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="bg-background placeholder:text-muted-foreground
+            focus-visible:border-ring focus-visible:ring-ring/30 h-10 w-full
+            rounded-md border pr-9 pl-9 text-sm transition-colors outline-none
+            focus-visible:ring-2"
         />
         {isLoading ? (
           <Loader2
-            className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+            className="text-muted-foreground absolute top-1/2 right-3 size-4
+              -translate-y-1/2 animate-spin"
             aria-hidden="true"
           />
         ) : query ? (
@@ -89,7 +94,9 @@ export function PeopleSearch() {
               setIsOpen(false);
             }}
             aria-label="Clear people search"
-            className="absolute top-1/2 right-1.5 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground absolute
+              top-1/2 right-1.5 inline-flex size-8 -translate-y-1/2 items-center
+              justify-center rounded-md"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -97,9 +104,13 @@ export function PeopleSearch() {
       </div>
 
       {showPanel ? (
-        <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg">
+        <div
+          className="bg-popover text-popover-foreground absolute top-full
+            right-0 left-0 z-50 mt-2 overflow-hidden rounded-md border
+            shadow-lg"
+        >
           {error ? (
-            <p className="px-3 py-3 text-sm text-muted-foreground">
+            <p className="text-muted-foreground px-3 py-3 text-sm">
               Unable to load people search.
             </p>
           ) : results.length > 0 ? (
@@ -112,12 +123,13 @@ export function PeopleSearch() {
                     setIsOpen(false);
                     setQuery('');
                   }}
-                  className="block px-3 py-2 text-sm transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                  className="hover:bg-muted focus-visible:bg-muted block px-3
+                    py-2 text-sm transition-colors focus-visible:outline-none"
                 >
                   <span className="block truncate font-medium">
                     {entry.name}
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
+                  <span className="text-muted-foreground block truncate text-xs">
                     {[entry.subtitle, entry.email ?? entry.identity]
                       .filter(Boolean)
                       .join(' / ')}
@@ -126,7 +138,7 @@ export function PeopleSearch() {
               ))}
             </div>
           ) : query.trim() && !isLoading ? (
-            <p className="px-3 py-3 text-sm text-muted-foreground">
+            <p className="text-muted-foreground px-3 py-3 text-sm">
               No people found.
             </p>
           ) : null}

@@ -95,7 +95,7 @@ export function SignupForm({
                   </svg>
                   Signup with Google
                 </Button>
-                <p className="text-muted-foreground text-center text-xs mt-2">
+                <p className="text-muted-foreground mt-2 text-center text-xs">
                   For first-time signup only — use Google. You can add other
                   sign-in methods from your account settings later.
                 </p>

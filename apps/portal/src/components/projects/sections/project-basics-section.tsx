@@ -13,7 +13,7 @@ export function ProjectBasicsSection({ children }: ProjectBasicsSectionProps) {
     >
       <div>
         <h3 className="text-base font-semibold">Basics</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Give the project a clear identity and a short public explanation.
         </p>
       </div>

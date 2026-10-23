@@ -71,14 +71,17 @@ export default function NonAcademicStaffPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4
+          xl:grid-cols-5"
+      >
         {nonAcademicStaff.map((staff) => (
           <StaffCard key={staff.email} staff={staff} />
         ))}
       </div>
 
       {!isLoading && !error && nonAcademicStaff.length === 0 && (
-        <div className="rounded-md border bg-card p-12 text-center">
+        <div className="bg-card rounded-md border p-12 text-center">
           <p className="text-muted-foreground">No non-academic staff found.</p>
         </div>
       )}

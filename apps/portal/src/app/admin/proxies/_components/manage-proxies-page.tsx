@@ -205,7 +205,10 @@ export default function ManageProxiesPage({
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Search
+              className="text-muted-foreground absolute top-1/2 left-3 size-4
+                -translate-y-1/2"
+            />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -219,7 +222,9 @@ export default function ManageProxiesPage({
       <div className="space-y-4">
         {filteredProxies.length === 0 && (
           <Card>
-            <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+            <CardContent
+              className="flex flex-col items-center gap-2 py-12 text-center"
+            >
               <AlertCircle className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {search.trim()
@@ -235,7 +240,10 @@ export default function ManageProxiesPage({
           return (
             <Card key={entry.email}>
               <CardHeader className="pb-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div
+                  className="flex flex-col gap-2 sm:flex-row sm:items-start
+                    sm:justify-between"
+                >
                   <div>
                     <CardTitle className="text-base">{entry.email}</CardTitle>
                     <CardDescription>@{entry.username}</CardDescription>
@@ -245,8 +253,12 @@ export default function ManageProxiesPage({
                       variant="outline"
                       className={
                         entry.active
-                          ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400'
-                          : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                          ? `border-green-200 bg-green-50 text-green-700
+                            dark:border-green-800 dark:bg-green-950/30
+                            dark:text-green-400`
+                          : `border-gray-200 bg-gray-50 text-gray-600
+                            dark:border-gray-700 dark:bg-gray-900/30
+                            dark:text-gray-400`
                       }
                     >
                       {entry.active ? 'Active' : 'Inactive'}
@@ -255,8 +267,12 @@ export default function ManageProxiesPage({
                       variant="outline"
                       className={
                         entry.availableAttempts > 0
-                          ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-400'
-                          : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400'
+                          ? `border-blue-200 bg-blue-50 text-blue-700
+                            dark:border-blue-800 dark:bg-blue-950/30
+                            dark:text-blue-400`
+                          : `border-red-200 bg-red-50 text-red-700
+                            dark:border-red-800 dark:bg-red-950/30
+                            dark:text-red-400`
                       }
                     >
                       {entry.availableAttempts} attempt
@@ -344,14 +360,14 @@ export default function ManageProxiesPage({
                   <>
                     <div className="text-muted-foreground space-y-1 text-sm">
                       <p>
-                        <span className="font-medium text-foreground">
+                        <span className="text-foreground font-medium">
                           URL:
                         </span>{' '}
                         {entry.url || <span className="italic">Not set</span>}
                       </p>
                       {entry.updatedAt && (
                         <p>
-                          <span className="font-medium text-foreground">
+                          <span className="text-foreground font-medium">
                             Last updated:
                           </span>{' '}
                           {new Date(entry.updatedAt).toLocaleString()}
@@ -368,7 +384,8 @@ export default function ManageProxiesPage({
                         disabled={!!resetting}
                       >
                         <RefreshCw
-                          className={`mr-1 size-3 ${resetting === entry.email ? 'animate-spin' : ''}`}
+                          className={`mr-1 size-3
+                            ${resetting === entry.email ? 'animate-spin' : ''}`}
                         />
                         {resetting === entry.email
                           ? 'Resetting...'

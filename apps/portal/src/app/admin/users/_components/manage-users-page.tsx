@@ -104,7 +104,10 @@ export default function ManageUsersPage({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
-            <div className="bg-primary/10 flex size-9 items-center justify-center rounded-md">
+            <div
+              className="bg-primary/10 flex size-9 items-center justify-center
+                rounded-md"
+            >
               <Users className="text-primary size-5" />
             </div>
             <div>
@@ -115,7 +118,10 @@ export default function ManageUsersPage({
         </Card>
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
-            <div className="flex size-9 items-center justify-center rounded-md bg-green-100 dark:bg-green-900/30">
+            <div
+              className="flex size-9 items-center justify-center rounded-md
+                bg-green-100 dark:bg-green-900/30"
+            >
               <UserCheck className="size-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
@@ -126,7 +132,10 @@ export default function ManageUsersPage({
         </Card>
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
-            <div className="flex size-9 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/30">
+            <div
+              className="flex size-9 items-center justify-center rounded-md
+                bg-red-100 dark:bg-red-900/30"
+            >
               <UserX className="size-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
@@ -192,7 +201,10 @@ export default function ManageUsersPage({
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Search
+                className="text-muted-foreground absolute top-1/2 left-3 size-4
+                  -translate-y-1/2"
+              />
               <Input
                 placeholder="Search by name or email..."
                 value={search}
@@ -224,7 +236,10 @@ export default function ManageUsersPage({
           <Separator />
 
           {filtered.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center gap-2 py-12 text-center">
+            <div
+              className="text-muted-foreground flex flex-col items-center gap-2
+                py-12 text-center"
+            >
               <Users className="size-10 opacity-30" />
               <p className="text-sm">No users found matching your criteria.</p>
             </div>
@@ -259,14 +274,18 @@ export default function ManageUsersPage({
                       {user.blacklisted ? (
                         <Badge
                           variant="outline"
-                          className="border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                          className="border-red-200 bg-red-50 text-red-700
+                            dark:border-red-800 dark:bg-red-950/30
+                            dark:text-red-400"
                         >
                           Blacklisted
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400"
+                          className="border-green-200 bg-green-50 text-green-700
+                            dark:border-green-800 dark:bg-green-950/30
+                            dark:text-green-400"
                         >
                           Active
                         </Badge>
