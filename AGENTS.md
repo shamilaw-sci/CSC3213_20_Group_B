@@ -92,6 +92,8 @@ gate; diagnose it and document any credential-dependent validation boundary.
 
 ## Git and Concurrent Work
 
+- Never create or use Git worktrees for development in this repository. Work
+  directly in the current checkout.
 - Use Conventional Commit subjects.
 - Commit coherent, verified phases; do not mix unrelated cleanup.
 - Never reset, overwrite, or delete another contributor's uncommitted work.
