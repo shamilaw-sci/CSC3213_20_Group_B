@@ -14,7 +14,7 @@ export const SUBJECTS: SubjectConfig[] = [
     slug: 'computer-science',
     label: 'Computer Science',
     icon: Binary,
-    iconClassName: 'text-blue-600 dark:text-blue-400',
+    iconClassName: 'text-info-surface-foreground',
   },
   {
     slug: 'data-science',
@@ -26,7 +26,7 @@ export const SUBJECTS: SubjectConfig[] = [
     slug: 'statistics',
     label: 'Statistics',
     icon: Sigma,
-    iconClassName: 'text-amber-600 dark:text-amber-400',
+    iconClassName: 'text-warning-surface-foreground',
   },
 ];
 

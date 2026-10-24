@@ -1,11 +1,21 @@
 'use client';
 
 import { Button } from '@scs/ui/components/button';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@scs/ui/components/sheet';
 import { ThemeToggle } from '@scs/ui/components/theme-toggle';
-import { Menu, X } from 'lucide-react';
+import { cn } from '@scs/ui/lib/utils';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 import { LogoutButton } from '@/components/auth/logout-button';
 import { UopLogoIcon } from '@/components/icons/uop-logo';
@@ -24,10 +34,12 @@ const signedInNavigation = [
 type PortalNavigationItem =
   (typeof signedOutNavigation)[number] | (typeof signedInNavigation)[number];
 
+const navigationLinkClass =
+  'flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors';
+
 export function PortalHeader() {
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
   const authenticated = Boolean(session?.user);
   const navigation = isPending
     ? []
@@ -38,17 +50,6 @@ export function PortalHeader() {
     href === '/user/me'
       ? pathname.startsWith('/user/me') || pathname.startsWith('/account/')
       : pathname === href;
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
-    };
-
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [menuOpen]);
 
   return (
     <header
@@ -63,7 +64,6 @@ export function PortalHeader() {
           href="/"
           className="mr-auto flex min-h-11 items-center gap-2 rounded-sm
             font-semibold"
-          onClick={() => setMenuOpen(false)}
         >
           <UopLogoIcon className="size-8" />
           <span>SCS Portal</span>
@@ -83,72 +83,73 @@ export function PortalHeader() {
           {!isPending && authenticated ? <LogoutButton /> : null}
         </nav>
 
-        <ThemeToggle />
+        <ThemeToggle className="hidden md:inline-flex" />
         {!isPending ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-            aria-expanded={menuOpen}
-            aria-controls="portal-mobile-navigation"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open navigation"
+              >
+                <Menu aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              className="w-[min(22rem,calc(100vw-1rem))] p-0 md:hidden"
+            >
+              <SheetHeader className="border-b p-5 pr-14 text-left">
+                <SheetTitle>Portal menu</SheetTitle>
+                <SheetDescription>
+                  {authenticated
+                    ? 'Open your workspace or manage your account.'
+                    : 'Sign in or create an account to use the portal.'}
+                </SheetDescription>
+              </SheetHeader>
+              <nav
+                aria-label="Portal mobile navigation"
+                className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
+              >
+                {navigation.map((item) => (
+                  <SheetClose key={item.href} asChild>
+                    <PortalNavigationLink
+                      item={item}
+                      active={isNavigationItemActive(item.href)}
+                    />
+                  </SheetClose>
+                ))}
+              </nav>
+              <SheetFooter className="border-t">
+                {authenticated ? <LogoutButton /> : null}
+                <ThemeToggle showLabel className="w-full justify-start" />
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         ) : null}
       </div>
-
-      {menuOpen ? (
-        <nav
-          id="portal-mobile-navigation"
-          aria-label="Portal mobile navigation"
-          className="bg-background border-t p-3 md:hidden"
-        >
-          <div className="mx-auto grid max-w-6xl gap-1">
-            {navigation.map((item) => (
-              <PortalNavigationLink
-                key={item.href}
-                item={item}
-                active={isNavigationItemActive(item.href)}
-                onSelect={() => setMenuOpen(false)}
-                className="justify-start border-b-0 border-l-2"
-              />
-            ))}
-            {!isPending && authenticated ? <LogoutButton /> : null}
-          </div>
-        </nav>
-      ) : null}
     </header>
   );
 }
 
 interface PortalNavigationLinkProps {
   active: boolean;
-  className?: string;
   item: PortalNavigationItem;
-  onSelect?: () => void;
 }
 
-function PortalNavigationLink({
-  active,
-  className,
-  item,
-  onSelect,
-}: PortalNavigationLinkProps) {
+function PortalNavigationLink({ active, item }: PortalNavigationLinkProps) {
   return (
     <Link
       href={item.href}
       aria-current={active ? 'page' : undefined}
-      onClick={onSelect}
-      className={`flex min-h-11 items-center rounded-sm border-b-2 px-3 text-sm
-        font-medium transition-colors ${
-          active
-            ? 'border-primary bg-muted text-foreground'
-            : `text-muted-foreground hover:bg-muted hover:text-foreground
-              border-transparent`
-        } ${className ?? ''}`}
+      className={cn(
+        navigationLinkClass,
+        active
+          ? 'bg-accent text-accent-foreground'
+          : `text-muted-foreground hover:bg-accent hover:text-accent-foreground
+            active:bg-accent`
+      )}
     >
       {item.label}
     </Link>

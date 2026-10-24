@@ -16,7 +16,7 @@ export interface ThemeToggleProps {
 export function ThemeToggle({
   className,
   showLabel = false,
-  variant = 'ghost',
+  variant = 'outline',
 }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [hidden, setHidden] = useState(false);

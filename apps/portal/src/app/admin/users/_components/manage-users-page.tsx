@@ -119,10 +119,10 @@ export default function ManageUsersPage({
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
             <div
-              className="flex size-9 items-center justify-center rounded-md
-                bg-green-100 dark:bg-green-900/30"
+              className="bg-success-surface flex size-9 items-center
+                justify-center rounded-md"
             >
-              <UserCheck className="size-5 text-green-600 dark:text-green-400" />
+              <UserCheck className="text-success-surface-foreground size-5" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Active</p>
@@ -133,10 +133,10 @@ export default function ManageUsersPage({
         <Card className="py-3">
           <CardContent className="flex items-center gap-3 px-4">
             <div
-              className="flex size-9 items-center justify-center rounded-md
-                bg-red-100 dark:bg-red-900/30"
+              className="bg-destructive-surface flex size-9 items-center
+                justify-center rounded-md"
             >
-              <UserX className="size-5 text-red-600 dark:text-red-400" />
+              <UserX className="text-destructive-surface-foreground size-5" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Blacklisted</p>
@@ -274,18 +274,17 @@ export default function ManageUsersPage({
                       {user.blacklisted ? (
                         <Badge
                           variant="outline"
-                          className="border-red-200 bg-red-50 text-red-700
-                            dark:border-red-800 dark:bg-red-950/30
-                            dark:text-red-400"
+                          className="border-destructive-border
+                            bg-destructive-surface
+                            text-destructive-surface-foreground"
                         >
                           Blacklisted
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="border-green-200 bg-green-50 text-green-700
-                            dark:border-green-800 dark:bg-green-950/30
-                            dark:text-green-400"
+                          className="border-success-border bg-success-surface
+                            text-success-surface-foreground"
                         >
                           Active
                         </Badge>

@@ -42,6 +42,12 @@ describe('Portal application shell', () => {
     expect(home).toContain('!isPending && !session?.user');
   });
 
+  test('keeps logout in the global header instead of repeating it on dashboard', () => {
+    const dashboard = source('src/app/dashboard/_components/dashboard.tsx');
+
+    expect(dashboard).not.toContain('<LogoutButton');
+  });
+
   test('uses the shared theme without a floating global control', () => {
     const layout = source('src/app/layout.tsx');
 

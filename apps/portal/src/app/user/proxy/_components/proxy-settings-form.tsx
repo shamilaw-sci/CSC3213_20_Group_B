@@ -61,18 +61,18 @@ export default function ProxySettingsPage({
       ? {
           label: 'No attempts left',
           className:
-            'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400',
+            'border-destructive-border bg-destructive-surface text-destructive-surface-foreground',
         }
       : attemptsRemaining <= 1
         ? {
             label: 'Last attempt',
             className:
-              'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400',
+              'border-warning-border bg-warning-surface text-warning-surface-foreground',
           }
         : {
             label: 'Edits available',
             className:
-              'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400',
+              'border-success-border bg-success-surface text-success-surface-foreground',
           };
 
   async function handleSave() {
@@ -166,9 +166,9 @@ export default function ProxySettingsPage({
 
       {!canEdit && (
         <div
-          className="flex items-center gap-3 rounded-md border border-amber-200
-            bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800
-            dark:bg-amber-950/30 dark:text-amber-400"
+          className="border-warning-border bg-warning-surface
+            text-warning-surface-foreground flex items-center gap-3 rounded-md
+            border px-4 py-3"
         >
           <AlertCircle className="size-4 shrink-0" />
           <p className="text-sm">
@@ -180,9 +180,9 @@ export default function ProxySettingsPage({
 
       {canEdit && attemptsRemaining <= 1 && (
         <div
-          className="flex items-center gap-3 rounded-md border border-amber-200
-            bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800
-            dark:bg-amber-950/30 dark:text-amber-400"
+          className="border-warning-border bg-warning-surface
+            text-warning-surface-foreground flex items-center gap-3 rounded-md
+            border px-4 py-3"
         >
           <AlertCircle className="size-4 shrink-0" />
           <p className="text-sm">

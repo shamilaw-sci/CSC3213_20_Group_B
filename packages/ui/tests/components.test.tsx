@@ -59,6 +59,40 @@ function runThemeInit({
   return classes;
 }
 
+function relativeLuminance(hex: string) {
+  const channels = hex
+    .slice(1)
+    .match(/.{2}/gu)!
+    .map((value) => Number.parseInt(value, 16) / 255)
+    .map((value) =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+    );
+
+  return 0.2126 * channels[0]! + 0.7152 * channels[1]! + 0.0722 * channels[2]!;
+}
+
+function contrastRatio(first: string, second: string) {
+  const lighter = Math.max(relativeLuminance(first), relativeLuminance(second));
+  const darker = Math.min(relativeLuminance(first), relativeLuminance(second));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function themeTokens(css: string, selector: ':root' | '.dark') {
+  const block = css.match(
+    new RegExp(
+      `${selector === ':root' ? ':root' : '\\.dark'}\\s*\\{([\\s\\S]*?)\\}`,
+      'u'
+    )
+  )?.[1];
+  if (!block) throw new Error(`Missing ${selector} theme block`);
+
+  return Object.fromEntries(
+    Array.from(block.matchAll(/--([\w-]+):\s*(#[\da-f]{6});/giu)).map(
+      ([, name, value]) => [name, value]
+    )
+  );
+}
+
 describe('shared UI component contracts', () => {
   test('renders one reusable skip link with a stable default target', async () => {
     const modulePath = resolve(
@@ -102,6 +136,28 @@ describe('shared UI component contracts', () => {
 
   test('preserves the canonical button variants', () => {
     expect(buttonVariants({ variant: 'outline' })).toContain('border');
+    expect(buttonVariants({ variant: 'ghost' })).toContain(
+      'hover:text-accent-foreground'
+    );
+    expect(buttonVariants({ variant: 'ghost' })).toContain('active:bg-accent');
+    expect(buttonVariants({ variant: 'ghost' })).not.toContain('dark:hover');
+  });
+
+  test('exports an accessible sheet primitive for mobile navigation', async () => {
+    const modulePromise = import('@scs/ui/components/sheet');
+    await expect(modulePromise).resolves.toBeDefined();
+    const { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } =
+      await modulePromise;
+
+    for (const component of [
+      Sheet,
+      SheetClose,
+      SheetContent,
+      SheetTitle,
+      SheetTrigger,
+    ]) {
+      expect(typeof component).toBe('function');
+    }
   });
 
   test('preserves the people-specific tab styling as an explicit variant', () => {
@@ -167,6 +223,7 @@ describe('shared UI component contracts', () => {
     const labeled = renderToStaticMarkup(<ThemeToggle showLabel />);
 
     expect(iconOnly).toContain('aria-label="Toggle color theme"');
+    expect(iconOnly).toContain('data-variant="outline"');
     expect(iconOnly).not.toContain('>Theme<');
     expect(labeled).toContain('>Theme<');
   });
@@ -221,15 +278,74 @@ describe('shared UI component contracts', () => {
       '--secondary',
       '--muted',
       '--accent',
+      '--destructive-foreground',
+      '--destructive-surface',
+      '--destructive-surface-foreground',
+      '--destructive-border',
+      '--success',
+      '--success-foreground',
+      '--success-surface',
+      '--success-surface-foreground',
+      '--success-border',
+      '--warning',
+      '--warning-foreground',
+      '--warning-surface',
+      '--warning-surface-foreground',
+      '--warning-border',
+      '--info',
+      '--info-foreground',
+      '--info-surface',
+      '--info-surface-foreground',
+      '--info-border',
       '--border',
       '--input',
       '--ring',
+      '--overlay',
       '--sidebar',
     ]) {
       expect(css.match(new RegExp(`${token}:`, 'gu'))?.length).toBe(2);
     }
     expect(css).toContain('prefers-reduced-motion: reduce');
     expect(css).toContain('color-scheme: dark');
+  });
+
+  test('semantic text and focus colors meet WCAG contrast targets', () => {
+    const css = readFileSync(
+      resolve(import.meta.dir, '../src/styles/theme.css'),
+      'utf8'
+    );
+    const pairs = [
+      ['background', 'foreground'],
+      ['card', 'card-foreground'],
+      ['popover', 'popover-foreground'],
+      ['primary', 'primary-foreground'],
+      ['secondary', 'secondary-foreground'],
+      ['muted', 'muted-foreground'],
+      ['accent', 'accent-foreground'],
+      ['destructive', 'destructive-foreground'],
+      ['destructive-surface', 'destructive-surface-foreground'],
+      ['success', 'success-foreground'],
+      ['success-surface', 'success-surface-foreground'],
+      ['warning', 'warning-foreground'],
+      ['warning-surface', 'warning-surface-foreground'],
+      ['info', 'info-foreground'],
+      ['info-surface', 'info-surface-foreground'],
+      ['sidebar', 'sidebar-foreground'],
+    ] as const;
+
+    for (const selector of [':root', '.dark'] as const) {
+      const tokens = themeTokens(css, selector);
+      for (const [background, foreground] of pairs) {
+        expect(
+          contrastRatio(tokens[background]!, tokens[foreground]!),
+          `${selector} ${foreground} on ${background}`
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(
+        contrastRatio(tokens.background!, tokens.ring!),
+        `${selector} focus ring on background`
+      ).toBeGreaterThanOrEqual(3);
+    }
   });
 
   test('publishes the semantic theme stylesheet as a package export', () => {

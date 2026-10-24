@@ -1,10 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ComponentProps } from 'react';
 
 import { SiteHeader } from '@/components/layout/site-header';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
+}));
+
+vi.mock('next/link', () => ({
+  default: ({ onClick, ...props }: ComponentProps<'a'>) => (
+    <a
+      {...props}
+      onClick={(event) => {
+        onClick?.(event);
+        event.preventDefault();
+      }}
+    />
+  ),
 }));
 
 vi.mock('@scs/ui/components/theme-toggle', () => ({
@@ -37,6 +50,12 @@ describe('Projects SiteHeader', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open navigation' }));
 
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Explore projects' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument();
+
     for (const label of [
       'Search',
       'People',
@@ -48,5 +67,8 @@ describe('Projects SiteHeader', () => {
         screen.getAllByRole('link', { name: new RegExp(`^${label}$`) }).length
       ).toBeGreaterThan(0);
     }
+
+    await user.click(screen.getByRole('link', { name: /^Search$/ }));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

@@ -13,8 +13,8 @@ type StatePanelAction = {
 
 const toneClasses = {
   neutral: 'bg-card',
-  warning: 'bg-amber-50/80 dark:bg-amber-400/10',
-  danger: 'bg-red-50/80 dark:bg-red-400/10',
+  warning: 'bg-warning-surface',
+  danger: 'bg-destructive-surface',
 };
 
 export function StatePanel({

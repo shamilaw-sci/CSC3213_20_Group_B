@@ -114,16 +114,14 @@ export default function ProfilePage({
             </div>
             {googleOAuth ? (
               <StatusBadge
-                className="border-blue-200 bg-blue-50 text-blue-700
-                  dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300"
+                className="border-info-border bg-info-surface
+                  text-info-surface-foreground"
               >
                 Enabled
               </StatusBadge>
             ) : (
               <StatusBadge
-                className="border-slate-200 bg-slate-50 text-slate-700
-                  dark:border-slate-800 dark:bg-slate-950/30
-                  dark:text-slate-300"
+                className="border-border bg-muted text-muted-foreground"
               >
                 Disabled
               </StatusBadge>
@@ -144,8 +142,8 @@ export default function ProfilePage({
               </p>
             </div>
             <StatusBadge
-              className="border-blue-200 bg-blue-50 text-blue-700
-                dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300"
+              className="border-info-border bg-info-surface
+                text-info-surface-foreground"
             >
               Enabled
             </StatusBadge>

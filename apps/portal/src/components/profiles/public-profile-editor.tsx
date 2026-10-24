@@ -336,43 +336,43 @@ function defaultKindForEmptyProfile(allowedKinds: ProfileKind[]) {
 
 function statusBadgeClass(status: PublicProfilePr['status']) {
   if (status === 'open') {
-    return 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300';
+    return 'border-success-border bg-success-surface text-success-surface-foreground';
   }
 
   if (status === 'none') {
-    return 'border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-300';
+    return 'border-border bg-muted text-muted-foreground';
   }
 
   if (status === 'auto_merge_queued' || status === 'checks_pending') {
-    return 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300';
+    return 'border-warning-border bg-warning-surface text-warning-surface-foreground';
   }
 
   if (status === 'checks_failed' || status === 'closed') {
-    return 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300';
+    return 'border-destructive-border bg-destructive-surface text-destructive-surface-foreground';
   }
 
   if (status === 'merged') {
-    return 'border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-300';
+    return 'border-info-border bg-info-surface text-info-surface-foreground';
   }
 
-  return 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-300';
+  return 'border-border bg-muted text-muted-foreground   ';
 }
 
 function statusButtonClass(status: PublicProfilePr['status']) {
   if (status === 'open') {
-    return 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300 dark:hover:bg-green-950/50';
+    return 'border-success-border bg-success-surface text-success-surface-foreground hover:bg-success-surface/80';
   }
 
   if (status === 'auto_merge_queued' || status === 'checks_pending') {
-    return 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-950/50';
+    return 'border-warning-border bg-warning-surface text-warning-surface-foreground hover:bg-warning-surface/80';
   }
 
   if (status === 'checks_failed' || status === 'closed') {
-    return 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50';
+    return 'border-destructive-border bg-destructive-surface text-destructive-surface-foreground hover:bg-destructive-surface/80';
   }
 
   if (status === 'merged') {
-    return 'border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-300 dark:hover:bg-teal-950/50';
+    return 'border-info-border bg-info-surface text-info-surface-foreground hover:bg-info-surface/80';
   }
 
   return '';

@@ -1,12 +1,22 @@
 'use client';
 
 import { Button } from '@scs/ui/components/button';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@scs/ui/components/sheet';
 import { ThemeToggle } from '@scs/ui/components/theme-toggle';
-import { Menu, X } from 'lucide-react';
+import { cn } from '@scs/ui/lib/utils';
+import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 const navigation = [
   { href: '/search', label: 'Search' },
@@ -16,25 +26,13 @@ const navigation = [
   { href: '/topics', label: 'Topics' },
 ] as const;
 
+const navigationLinkClass =
+  'flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors';
+
 export function SiteHeader() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false);
-    };
-
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [mobileOpen]);
-
   const isActive = (href: string) =>
-    href === '/'
-      ? pathname === href
-      : pathname === href || pathname.startsWith(`${href}/`);
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header
@@ -50,7 +48,6 @@ export function SiteHeader() {
           aria-label="SCS Projects home"
           className="mr-auto flex min-h-11 shrink-0 items-center gap-2
             rounded-sm font-semibold"
-          onClick={() => setMobileOpen(false)}
         >
           <Image
             src="/favicon/logo-symbol-icon.svg"
@@ -73,13 +70,13 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex min-h-11 items-center rounded-sm border-b-2
-                px-3 text-sm font-medium ${
+                className={cn(
+                  navigationLinkClass,
                   active
-                    ? 'border-primary text-foreground'
-                    : `text-muted-foreground hover:border-border
-                      hover:text-foreground border-transparent`
-                }`}
+                    ? 'bg-accent text-accent-foreground'
+                    : `text-muted-foreground hover:bg-accent
+                      hover:text-accent-foreground`
+                )}
               >
                 {item.label}
               </Link>
@@ -87,51 +84,60 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <ThemeToggle />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="lg:hidden"
-          aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={mobileOpen}
-          aria-controls="projects-mobile-navigation"
-          onClick={() => setMobileOpen((open) => !open)}
-        >
-          {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </Button>
+        <ThemeToggle className="hidden lg:inline-flex" />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="lg:hidden"
+              aria-label="Open navigation"
+            >
+              <Menu aria-hidden="true" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            className="w-[min(22rem,calc(100vw-1rem))] p-0 lg:hidden"
+          >
+            <SheetHeader className="border-b p-5 pr-14 text-left">
+              <SheetTitle>Explore projects</SheetTitle>
+              <SheetDescription>
+                Search the registry or browse projects by people and academic
+                context.
+              </SheetDescription>
+            </SheetHeader>
+            <nav
+              aria-label="Mobile navigation"
+              className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
+            >
+              {navigation.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <SheetClose key={item.href} asChild>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        navigationLinkClass,
+                        active
+                          ? 'bg-accent text-accent-foreground'
+                          : `text-muted-foreground hover:bg-accent
+                            hover:text-accent-foreground active:bg-accent`
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </SheetClose>
+                );
+              })}
+            </nav>
+            <SheetFooter className="border-t">
+              <ThemeToggle showLabel className="w-full justify-start" />
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       </div>
-
-      {mobileOpen ? (
-        <nav
-          id="projects-mobile-navigation"
-          aria-label="Mobile navigation"
-          className="bg-background border-t p-3 lg:hidden"
-        >
-          <div className="mx-auto grid max-w-7xl gap-1 sm:grid-cols-2">
-            {navigation.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-11 items-center rounded-md border-l-2
-                    px-3 text-sm font-medium ${
-                      active
-                        ? 'border-primary bg-muted text-foreground'
-                        : `text-muted-foreground hover:bg-muted
-                          hover:text-foreground border-transparent`
-                    }`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      ) : null}
     </header>
   );
 }

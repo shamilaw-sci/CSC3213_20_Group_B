@@ -70,8 +70,8 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                 {user.blacklisted ? (
                   <Badge
                     variant="outline"
-                    className="border-red-200 bg-red-50 text-red-700
-                      dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                    className="border-destructive-border bg-destructive-surface
+                      text-destructive-surface-foreground"
                   >
                     <UserX className="mr-0.5 size-3" />
                     Blacklisted
@@ -79,9 +79,8 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                 ) : (
                   <Badge
                     variant="outline"
-                    className="border-green-200 bg-green-50 text-green-700
-                      dark:border-green-800 dark:bg-green-950/30
-                      dark:text-green-400"
+                    className="border-success-border bg-success-surface
+                      text-success-surface-foreground"
                   >
                     <UserCheck className="mr-0.5 size-3" />
                     Active
@@ -150,17 +149,16 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
             {user.blacklisted ? (
               <Badge
                 variant="outline"
-                className="border-red-200 bg-red-50 text-red-700
-                  dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                className="border-destructive-border bg-destructive-surface
+                  text-destructive-surface-foreground"
               >
                 Blacklisted
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="border-green-200 bg-green-50 text-green-700
-                  dark:border-green-800 dark:bg-green-950/30
-                  dark:text-green-400"
+                className="border-success-border bg-success-surface
+                  text-success-surface-foreground"
               >
                 Active
               </Badge>
@@ -220,9 +218,8 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                   {user.googleOAuth && (
                     <Badge
                       variant="outline"
-                      className="border-blue-200 bg-blue-50 text-blue-700
-                        dark:border-blue-800 dark:bg-blue-950/30
-                        dark:text-blue-400"
+                      className="border-info-border bg-info-surface
+                        text-info-surface-foreground"
                     >
                       Google
                     </Badge>
@@ -230,9 +227,7 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                   {user.githubOAuth && (
                     <Badge
                       variant="outline"
-                      className="border-gray-200 bg-gray-50 text-gray-700
-                        dark:border-gray-800 dark:bg-gray-950/30
-                        dark:text-gray-400"
+                      className="border-border bg-muted text-muted-foreground"
                     >
                       GitHub
                     </Badge>

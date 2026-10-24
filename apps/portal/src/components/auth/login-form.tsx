@@ -182,9 +182,9 @@ export function LoginForm({
                       {passkeyLoading ? 'Checking passkey...' : 'Use Passkey'}
                       {lastUsedAuth === 'passkey' && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full
-                            bg-blue-500 px-2 py-0.5 text-[10px] font-medium
-                            text-white shadow"
+                          className="bg-info text-info-foreground absolute
+                            -top-2 right-3 rounded-full px-2 py-0.5 text-[10px]
+                            font-medium shadow"
                         >
                           Last Used
                         </span>
@@ -236,9 +236,9 @@ export function LoginForm({
                       Continue with Google
                       {lastUsedAuth === 'google' && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full
-                            bg-blue-500 px-2 py-0.5 text-[10px] font-medium
-                            text-white shadow"
+                          className="bg-info text-info-foreground absolute
+                            -top-2 right-3 rounded-full px-2 py-0.5 text-[10px]
+                            font-medium shadow"
                         >
                           Last Used
                         </span>
@@ -278,9 +278,9 @@ export function LoginForm({
                       Continue with Another Google Account
                       {lastUsedAuth === 'another-google' && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full
-                            bg-blue-500 px-2 py-0.5 text-[10px] font-medium
-                            text-white shadow"
+                          className="bg-info text-info-foreground absolute
+                            -top-2 right-3 rounded-full px-2 py-0.5 text-[10px]
+                            font-medium shadow"
                         >
                           Last Used
                         </span>
@@ -305,9 +305,9 @@ export function LoginForm({
                       Continue with GitHub
                       {lastUsedAuth === 'github' && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full
-                            bg-blue-500 px-2 py-0.5 text-[10px] font-medium
-                            text-white shadow"
+                          className="bg-info text-info-foreground absolute
+                            -top-2 right-3 rounded-full px-2 py-0.5 text-[10px]
+                            font-medium shadow"
                         >
                           Last Used
                         </span>
@@ -333,9 +333,9 @@ export function LoginForm({
                       Continue with Email
                       {lastUsedAuth === 'email' && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full
-                            bg-blue-500 px-2 py-0.5 text-[10px] font-medium
-                            text-white shadow"
+                          className="bg-info text-info-foreground absolute
+                            -top-2 right-3 rounded-full px-2 py-0.5 text-[10px]
+                            font-medium shadow"
                         >
                           Last Used
                         </span>

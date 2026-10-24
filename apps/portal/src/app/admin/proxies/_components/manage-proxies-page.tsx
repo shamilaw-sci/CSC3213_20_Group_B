@@ -253,12 +253,9 @@ export default function ManageProxiesPage({
                       variant="outline"
                       className={
                         entry.active
-                          ? `border-green-200 bg-green-50 text-green-700
-                            dark:border-green-800 dark:bg-green-950/30
-                            dark:text-green-400`
-                          : `border-gray-200 bg-gray-50 text-gray-600
-                            dark:border-gray-700 dark:bg-gray-900/30
-                            dark:text-gray-400`
+                          ? `border-success-border bg-success-surface
+                            text-success-surface-foreground`
+                          : 'border-border bg-muted text-muted-foreground'
                       }
                     >
                       {entry.active ? 'Active' : 'Inactive'}
@@ -267,12 +264,10 @@ export default function ManageProxiesPage({
                       variant="outline"
                       className={
                         entry.availableAttempts > 0
-                          ? `border-blue-200 bg-blue-50 text-blue-700
-                            dark:border-blue-800 dark:bg-blue-950/30
-                            dark:text-blue-400`
-                          : `border-red-200 bg-red-50 text-red-700
-                            dark:border-red-800 dark:bg-red-950/30
-                            dark:text-red-400`
+                          ? `border-info-border bg-info-surface
+                            text-info-surface-foreground`
+                          : `border-destructive-border bg-destructive-surface
+                            text-destructive-surface-foreground`
                       }
                     >
                       {entry.availableAttempts} attempt

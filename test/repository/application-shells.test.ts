@@ -33,6 +33,33 @@ describe('application shell contracts', () => {
     expect(portalHeader, 'portal').not.toContain('focus-visible:outline-none');
   });
 
+  test('mobile application navigation uses the shared accessible sheet', () => {
+    for (const app of ['web', 'people', 'projects']) {
+      const header = source(
+        `apps/${app}/src/components/layout/site-header.tsx`
+      );
+
+      expect(header, app).toContain('@scs/ui/components/sheet');
+      expect(header, app).toContain('<SheetContent');
+      expect(header, app).toContain('<SheetTitle');
+      expect(header, app).toMatch(
+        /<SheetClose(?:\s+key=\{item\.href\})?\s+asChild>/u
+      );
+      expect(header, app).toContain('<ThemeToggle showLabel');
+    }
+
+    const portalHeader = source(
+      'apps/portal/src/components/layout/portal-header.tsx'
+    );
+    expect(portalHeader).toContain('@scs/ui/components/sheet');
+    expect(portalHeader).toContain('<SheetContent');
+    expect(portalHeader).toContain('<SheetTitle');
+    expect(portalHeader).toMatch(
+      /<SheetClose(?:\s+key=\{item\.href\})?\s+asChild>/u
+    );
+    expect(portalHeader).toContain('<ThemeToggle showLabel');
+  });
+
   test('Web provides a themed and zoom-accessible document shell', () => {
     const layout = source('apps/web/src/app/layout.tsx');
 
@@ -61,9 +88,8 @@ describe('application shell contracts', () => {
       expect(header).toContain(`href: '${destination}'`);
     }
 
-    expect(header).toContain("'Close navigation' : 'Open navigation'");
-    expect(header).toContain('aria-expanded={menuOpen}');
-    expect(header).toContain("event.key === 'Escape'");
+    expect(header).toContain('aria-label="Open navigation"');
+    expect(header).toContain('<SheetContent');
     expect(header).toContain("aria-current={active ? 'page' : undefined}");
     expect(header).toContain('<ThemeToggle');
   });
@@ -104,9 +130,9 @@ describe('application shell contracts', () => {
       expect(header).toContain(`href: '${destination}'`);
     }
 
-    expect(header).toContain("event.key === 'Escape'");
+    expect(header).toContain('<SheetContent');
     expect(header).toContain('aria-current={active');
-    expect(header).toContain('border-l-2');
+    expect(header).toContain('hover:bg-accent');
     expect(header).toContain('<PeopleSearch');
     expect(header).toContain('<ThemeToggle');
     expect(header).toContain('aria-label="SCS People home"');
@@ -148,7 +174,7 @@ describe('application shell contracts', () => {
     expect(header).not.toContain('browseOpen');
     expect(header).not.toContain('Course-linked work');
     expect(header).toContain('aria-label="SCS Projects home"');
-    expect(header).toContain("event.key === 'Escape'");
+    expect(header).toContain('<SheetContent');
     expect(header).not.toContain('transition-all');
   });
 
@@ -162,6 +188,6 @@ describe('application shell contracts', () => {
     expect(header).toContain('authClient.useSession()');
     expect(header).toContain('isNavigationItemActive');
     expect(header).toContain("aria-current={active ? 'page' : undefined}");
-    expect(header).toContain('border-primary');
+    expect(header).toContain('bg-accent text-accent-foreground');
   });
 });

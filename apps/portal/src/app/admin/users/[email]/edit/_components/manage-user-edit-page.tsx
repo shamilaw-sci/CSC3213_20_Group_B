@@ -263,8 +263,8 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
               {blacklisted && (
                 <Badge
                   variant="outline"
-                  className="border-red-200 bg-red-50 text-red-700
-                    dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                  className="border-destructive-border bg-destructive-surface
+                    text-destructive-surface-foreground"
                 >
                   <UserX className="mr-0.5 size-3" />
                   Blacklisted

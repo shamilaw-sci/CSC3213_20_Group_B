@@ -316,8 +316,8 @@ export default function ProfilePictureEditor({
             <p className="text-destructive text-sm">{customUrlError}</p>
           ) : customPreviewStatus === 'loaded' ? (
             <p
-              className="flex items-center gap-2 text-sm text-green-600
-                dark:text-green-400"
+              className="text-success-surface-foreground flex items-center gap-2
+                text-sm"
             >
               <CheckCircle2 className="size-4" />
               Image preview loaded. The server will verify the file type on

@@ -303,13 +303,13 @@ function emptyOffering(course: CourseRecord): OfferingRecord {
 
 function prBadgeClass(status: AcademicPr['status']) {
   if (status === 'open') {
-    return 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300';
+    return 'border-success-border bg-success-surface text-success-surface-foreground';
   }
   if (status === 'closed' || status === 'checks_failed') {
     return 'border-destructive/30 bg-destructive/10 text-destructive';
   }
   if (status === 'merged' || status === 'auto_merge_queued') {
-    return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300';
+    return 'border-info-border bg-info-surface text-info-surface-foreground';
   }
   return 'border-muted-foreground/20 text-muted-foreground';
 }

@@ -533,13 +533,13 @@ function projectTitle(project: ProjectRecord | null, fallback = 'Project') {
 
 function statusBadgeClass(status: ProjectPr['status']) {
   if (status === 'open') {
-    return 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300';
+    return 'border-success-border bg-success-surface text-success-surface-foreground';
   }
   if (status === 'checks_failed' || status === 'closed') {
-    return 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300';
+    return 'border-destructive-border bg-destructive-surface text-destructive-surface-foreground';
   }
   if (status === 'checks_pending' || status === 'auto_merge_queued') {
-    return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300';
+    return 'border-warning-border bg-warning-surface text-warning-surface-foreground';
   }
   return 'border-border bg-muted text-muted-foreground';
 }

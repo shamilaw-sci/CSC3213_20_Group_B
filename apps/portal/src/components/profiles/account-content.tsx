@@ -527,8 +527,9 @@ export default function ProfileContent({
                   variant="outline"
                   className={
                     googleOAuth
-                      ? 'border-green-200 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-gray-50 text-gray-600'
+                      ? `border-success-border bg-success-surface
+                        text-success-surface-foreground`
+                      : 'border-border bg-muted text-muted-foreground'
                   }
                 >
                   {googleOAuth ? 'Connected' : 'Not connected'}
@@ -560,8 +561,9 @@ export default function ProfileContent({
                     variant="outline"
                     className={
                       githubOAuth
-                        ? 'border-green-200 bg-green-50 text-green-700'
-                        : 'border-gray-200 bg-gray-50 text-gray-600'
+                        ? `border-success-border bg-success-surface
+                          text-success-surface-foreground`
+                        : 'border-border bg-muted text-muted-foreground'
                     }
                   >
                     {githubOAuth ? 'Connected' : 'Not connected'}
@@ -572,7 +574,8 @@ export default function ProfileContent({
                       size="sm"
                       onClick={handleDisconnectGithub}
                       disabled={oauthActionLoading}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-destructive-surface-foreground
+                        hover:text-destructive-surface-foreground"
                     >
                       {oauthActionLoading ? 'Disconnecting...' : 'Disconnect'}
                     </Button>
@@ -605,7 +608,8 @@ export default function ProfileContent({
                 </div>
                 <Badge
                   variant="outline"
-                  className="w-fit border-blue-200 bg-blue-50 text-blue-700"
+                  className="border-info-border bg-info-surface
+                    text-info-surface-foreground w-fit"
                 >
                   Enabled
                 </Badge>
@@ -651,10 +655,12 @@ export default function ProfileContent({
                       variant="outline"
                       className={
                         passkeyCredentials.length > 0
-                          ? 'border-green-200 bg-green-50 text-green-700'
+                          ? `border-success-border bg-success-surface
+                            text-success-surface-foreground`
                           : passkeySupported
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-gray-200 bg-gray-50 text-gray-600'
+                            ? `border-info-border bg-info-surface
+                              text-info-surface-foreground`
+                            : 'border-border bg-muted text-muted-foreground'
                       }
                     >
                       {passkeyCredentials.length > 0

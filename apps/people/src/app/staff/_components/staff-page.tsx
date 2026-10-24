@@ -13,8 +13,8 @@ import {
 const iconBaseClassName = 'h-8 w-8';
 const staffIconClassNames = {
   academic: `${iconBaseClassName} text-primary`,
-  academicSupport: `${iconBaseClassName} text-slate-600 dark:text-slate-300`,
-  nonAcademic: `${iconBaseClassName} text-orange-700 dark:text-orange-400`,
+  academicSupport: `${iconBaseClassName} text-muted-foreground`,
+  nonAcademic: `${iconBaseClassName} text-warning-surface-foreground`,
 };
 
 export default function StaffPage() {

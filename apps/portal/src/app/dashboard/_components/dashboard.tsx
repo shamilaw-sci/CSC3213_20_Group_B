@@ -12,7 +12,6 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-import { LogoutButton } from '@/components/auth/logout-button';
 import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
@@ -139,7 +138,6 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="Quick access to portal tools and account areas."
-        action={<LogoutButton />}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

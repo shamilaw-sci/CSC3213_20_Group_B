@@ -116,7 +116,8 @@ export function AdvancedJson<T extends object>({
       {hasPendingNavigation ? (
         <section
           aria-labelledby="unsaved-json-heading"
-          className="rounded-md border border-amber-500/45 bg-amber-500/10 p-4"
+          className="border-warning-border bg-warning-surface rounded-md border
+            p-4"
         >
           <h3 id="unsaved-json-heading" className="font-semibold">
             Apply or discard your JSON changes
