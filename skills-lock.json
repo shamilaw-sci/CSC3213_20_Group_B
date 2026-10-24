@@ -145,6 +145,12 @@
       "skillPath": "prisma-postgres/SKILL.md",
       "computedHash": "8d46220ef3c7aeea1e60f90f4333c272d69ef19081ea438f50d9c0ca4e956395"
     },
+    "react-email": {
+      "source": "resend/react-email",
+      "sourceType": "github",
+      "skillPath": "skills/react-email/SKILL.md",
+      "computedHash": "aafd7a5f1e1e44dae83dc545eb2fac7c45d5eb20c1dd47afbebd879eb825fa64"
+    },
     "shadcn": {
       "source": "shadcn-ui/ui",
       "sourceType": "github",
