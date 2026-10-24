@@ -20,15 +20,14 @@ function isValidProxyUrl(value: string): boolean {
 
   if (url.port !== '') {
     const port = Number(url.port);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) return false;
+    if (!Number.isInteger(port) || port < 1 || port > 65_535) return false;
   }
 
   const hostname = url.hostname;
   if (hostname.startsWith('[') && hostname.endsWith(']')) return true;
-
   if (/^\d+(?:\.\d+){3}$/.test(hostname)) return true;
-
   if (hostname.length > 253) return false;
+
   return hostname
     .split('.')
     .every(
@@ -39,22 +38,22 @@ function isValidProxyUrl(value: string): boolean {
     );
 }
 
-const proxyUrlSchema = z
+export const ProxyUrlSchema = z
   .string()
   .trim()
   .min(1, INVALID_PROXY_URL_MESSAGE)
   .max(2048, INVALID_PROXY_URL_MESSAGE)
   .refine(isValidProxyUrl, INVALID_PROXY_URL_MESSAGE);
 
-export const proxyUpdateRequestSchema = z
+export const ProxyUpdateRequestSchema = z
   .object({
     email: z
       .string({ error: 'Enter a valid target email.' })
       .min(1, 'Enter a valid target email.')
       .optional(),
     active: z.boolean({ error: 'active must be a boolean.' }),
-    url: proxyUrlSchema,
+    url: ProxyUrlSchema,
   })
   .strict();
 
-export type ProxyUpdateRequestDto = z.infer<typeof proxyUpdateRequestSchema>;
+export type ProxyUpdateRequest = z.infer<typeof ProxyUpdateRequestSchema>;

@@ -2,7 +2,6 @@
 
 import {
   AcademicDepartmentCodeSchema,
-  type EntityRevision,
   type MutationAccepted,
   type ProjectLinks,
   type ProjectPerson,
@@ -12,6 +11,9 @@ import {
   type ProjectSource,
   ProjectStatusSchema,
   ProjectTypeSchema,
+  type PublicProjectPr as ProjectPr,
+  type PublicProjectResponse as ProjectResponse,
+  type PublicProjectSchemaResponse as ProjectSchemaResponse,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
@@ -149,13 +151,6 @@ interface PeopleDirectoryProfile {
   registrationNo?: string;
 }
 
-interface ProjectResponse {
-  project: ProjectRecord | null;
-  targetProjectFile?: string;
-  targetAggregateFile?: string;
-  targetManifestFile?: string;
-}
-
 function normalizeProjectResponse(value: unknown): ProjectResponse {
   if (isRecord(value) && 'project' in value) {
     return value as unknown as ProjectResponse;
@@ -164,40 +159,6 @@ function normalizeProjectResponse(value: unknown): ProjectResponse {
   return {
     project: isRecord(value) ? value : null,
   };
-}
-
-interface ProjectSchemaResponse {
-  canSubmitOwnedProjects: boolean;
-  canSubmitAnyProject: boolean;
-  identity: {
-    email: string;
-    username: string;
-    sNumber: string | null;
-  };
-  lockedFields: string[];
-  note: string;
-}
-
-interface ProjectPr {
-  status:
-    | 'none'
-    | 'open'
-    | 'merged'
-    | 'closed'
-    | 'checks_pending'
-    | 'checks_failed'
-    | 'auto_merge_queued';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: EntityRevision;
-  revision?: EntityRevision;
-  canEdit: boolean;
-  updatedAt?: string;
-  targetProjectFile?: string;
-  targetAggregateFile?: string;
-  targetManifestFile?: string;
-  draftProject?: ProjectRecord | null;
 }
 
 function emptyProjectPr(): ProjectPr {

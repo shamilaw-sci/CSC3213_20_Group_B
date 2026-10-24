@@ -15,6 +15,11 @@ the schemas exported by `@scs/schemas`, remain the executable source of truth.
 The browser-facing API uses the `/api` namespace. The GitHub App and Mailer
 routes are internal and must not be called directly from browser code.
 
+Browser-facing editor responses, proxy updates, mailer requests and responses,
+and API-to-GitHub-App mutation requests are defined by `@scs/schemas`. Producers
+and consumers import those contracts directly so independently deployable
+workspaces cannot drift behind parallel interfaces or validators.
+
 ## Common Browser API Rules
 
 - Send session cookies with protected requests.

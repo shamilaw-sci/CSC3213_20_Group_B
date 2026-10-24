@@ -1,4 +1,10 @@
 import { ApiErrorEnvelopeSchema, MutationAcceptedSchema } from '@scs/schemas';
+import {
+  discardPublicProfilePrRequestSchema,
+  getPublicProfileQuerySchema,
+  submitPublicProfileOperationRequestSchema,
+  updatePublicProfileRequestSchema,
+} from '@scs/schemas';
 
 import {
   getPublicProfile,
@@ -17,12 +23,6 @@ import { createOperationExecutor } from '@/operations/queue.consumer';
 import { OperationIdempotencyConflictError } from '@/operations/operation.executor';
 import type { OperationRecord } from '@/operations/operation.types';
 import type { GithubAppEnv } from '@/types/env';
-import {
-  discardPublicProfilePrRequestSchema,
-  getPublicProfileQuerySchema,
-  submitPublicProfileOperationRequestSchema,
-  updatePublicProfileRequestSchema,
-} from '@/schemas/request.schema';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 
 export async function handleGetPublicProfile(req: Request): Promise<Response> {

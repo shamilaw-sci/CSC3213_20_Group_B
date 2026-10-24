@@ -1,9 +1,12 @@
 // API
+export * from '#schemas/api/editor.schema';
 export * from '#schemas/api/error.schema';
+export * from '#schemas/api/github-app-request.schema';
 export * from '#schemas/api/mailer.schema';
 export * from '#schemas/api/mutation.schema';
 export * from '#schemas/api/operation.schema';
 export * from '#schemas/api/pagination.schema';
+export * from '#schemas/api/proxy.schema';
 
 // Academics
 export * from '#schemas/academics/academic-organization.schema';

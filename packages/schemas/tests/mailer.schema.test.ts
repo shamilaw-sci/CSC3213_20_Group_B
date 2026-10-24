@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { MailerSendRequestSchema } from '#index';
+import { MailerSendRequestSchema, MailerSendResponseSchema } from '#index';
 
 describe('mailer send request contract', () => {
   test('exports a shared request schema for API and mailer callers', () => {
@@ -46,5 +46,24 @@ describe('mailer send request contract', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe('mailer send response contract', () => {
+  test('accepts success and bounded failure responses', () => {
+    expect(MailerSendResponseSchema.parse({ ok: true })).toEqual({ ok: true });
+    expect(
+      MailerSendResponseSchema.parse({ ok: false, error: 'Delivery failed' })
+    ).toEqual({ ok: false, error: 'Delivery failed' });
+  });
+
+  test('requires an error only for failed sends', () => {
+    expect(
+      MailerSendResponseSchema.safeParse({ ok: false }).success
+    ).toBeFalse();
+    expect(
+      MailerSendResponseSchema.safeParse({ ok: true, error: 'unexpected' })
+        .success
+    ).toBeFalse();
   });
 });

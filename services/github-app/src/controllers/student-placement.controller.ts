@@ -1,12 +1,13 @@
 import {
+  discardStudentPlacementMetadataRequestSchema,
+  updateStudentPlacementMetadataRequestSchema,
+} from '@scs/schemas';
+
+import {
   discardStudentPlacementPrs,
   getStudentPlacementPrStatus,
   upsertStudentPlacementPr,
 } from '@/repositories/student-placement.repo';
-import {
-  discardStudentPlacementMetadataRequestSchema,
-  updateStudentPlacementMetadataRequestSchema,
-} from '@/schemas/request.schema';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 
 export async function handleGetStudentPlacementPrStatus(): Promise<Response> {

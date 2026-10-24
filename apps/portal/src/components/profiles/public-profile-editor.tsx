@@ -5,9 +5,7 @@ import {
   AcademicRankSchema,
   AcademicSubjectCodeSchema,
   AcademicSupportPositionSchema,
-  type AcademicSupportStaff,
   AcademicSupportStaffSchema,
-  type AcademicTeachingStaff,
   AcademicTeachingStaffSchema,
   AcademicUnitCodeSchema,
   detectKnownSocialUrl,
@@ -16,15 +14,20 @@ import {
   type KnownSocialPlatform,
   type MutationAccepted,
   NonAcademicPositionSchema,
-  type NonAcademicStaff,
   NonAcademicStaffSchema,
   normalizeKnownSocialUrl,
   PersonSchema,
+  type PostgraduateProgramme,
+  type PublicProfileKind as ProfileKind,
+  type PublicProfilePr,
+  type PublicProfileResponse,
+  type PublicProfileSchemaResponse as ProfileSchemaResponse,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
   ScienceAcademicUnits,
   type Student,
   StudentLevelSchema,
+  type StudentPlacementResponse,
   StudentSchema,
   StudentStatusSchema,
   StudentTrackSchema,
@@ -53,7 +56,6 @@ import { ExternalLink, Plus, RefreshCw, Trash2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { z } from 'zod';
 
 import {
   createEditorState,
@@ -66,14 +68,8 @@ import { PageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import type {
-  PostgraduateProgramme,
-  ProfileKind,
   ProfileRecord,
-  ProfileSchemaResponse,
   PublicProfileInitialData,
-  PublicProfilePr,
-  PublicProfileResponse,
-  StudentPlacementResponse,
 } from '@/components/profiles/profile-types';
 import { PublicProfileReview } from '@/components/profiles/public-profile-review';
 import { ProfileAboutSection } from '@/components/profiles/sections/profile-about-section';
@@ -102,17 +98,6 @@ import {
   waitForMutationOperation,
 } from '@/lib/mutation-operation';
 import { useOperationPollingSignal } from '@/lib/use-operation-polling';
-
-type ProfileByKind = {
-  academic: AcademicTeachingStaff;
-  'academic-support': AcademicSupportStaff;
-  'non-academic': NonAcademicStaff;
-  student: Student;
-};
-
-type ProfileSchemaMap = {
-  [Kind in ProfileKind]: z.ZodType<ProfileByKind[Kind]>;
-};
 
 function normalizePublicProfileResponse(value: unknown): PublicProfileResponse {
   if (isRecord(value) && 'profile' in value) {
@@ -201,7 +186,7 @@ const PROFILE_SCHEMAS = {
   'academic-support': AcademicSupportStaffSchema,
   'non-academic': NonAcademicStaffSchema,
   student: StudentSchema,
-} satisfies ProfileSchemaMap;
+};
 
 const SOCIAL_FIELDS = [
   ['linkedin', 'LinkedIn'],
@@ -503,16 +488,15 @@ function trustedProfileForSchema(input: {
     nextProfile.registrationNo = input.identity.username.toUpperCase();
   }
 
-  if (locked.has('level') && input.identity?.studentPlacement?.level) {
-    nextProfile.level = input.identity.studentPlacement.level;
-  }
-
-  if (locked.has('status') && input.identity?.studentPlacement?.status) {
-    nextProfile.status = input.identity.studentPlacement.status;
-  }
-
-  if (locked.has('slqfLevel') && input.identity?.studentPlacement?.slqfLevel) {
-    nextProfile.slqfLevel = input.identity.studentPlacement.slqfLevel;
+  const placement = input.identity?.studentPlacement;
+  if (placement) {
+    if (locked.has('status')) nextProfile.status = placement.status;
+    if (placement.studentType === 'UNDERGRADUATE' && locked.has('level')) {
+      nextProfile.level = placement.level;
+    }
+    if (placement.studentType === 'POSTGRADUATE' && locked.has('slqfLevel')) {
+      nextProfile.slqfLevel = placement.slqfLevel;
+    }
   }
 
   if (locked.has('staffType')) {

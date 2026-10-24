@@ -5,7 +5,7 @@ import {
   removeProfile,
   publishedProfileMetadataFromProfile,
 } from '@/repositories/public-profile.repo';
-import { updatePublicProfileRequestSchema } from '@/schemas/request.schema';
+import { updatePublicProfileRequestSchema } from '@scs/schemas';
 
 const student = {
   title: 'Mr',

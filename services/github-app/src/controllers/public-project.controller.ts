@@ -1,4 +1,10 @@
 import { ApiErrorEnvelopeSchema, MutationAcceptedSchema } from '@scs/schemas';
+import {
+  deletePublicProjectRequestSchema,
+  getPublicProjectQuerySchema,
+  submitPublicProjectOperationRequestSchema,
+  updatePublicProjectRequestSchema,
+} from '@scs/schemas';
 
 import {
   createProjectOperationCommand,
@@ -16,12 +22,6 @@ import {
   PublicProjectConflictError,
   upsertPublicProjectPr,
 } from '@/repositories/public-project.repo';
-import {
-  deletePublicProjectRequestSchema,
-  getPublicProjectQuerySchema,
-  submitPublicProjectOperationRequestSchema,
-  updatePublicProjectRequestSchema,
-} from '@/schemas/request.schema';
 import type { GithubAppEnv } from '@/types/env';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 

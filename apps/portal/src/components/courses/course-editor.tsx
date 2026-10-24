@@ -4,6 +4,8 @@ import {
   AcademicDepartmentCodeSchema,
   CourseCodeSchema,
   type MutationAccepted,
+  type PublicAcademicPr as AcademicPr,
+  type PublicCourseSchemaResponse as SchemaResponse,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
@@ -92,35 +94,6 @@ interface OfferingRecord {
     role:
       'COURSE_COORDINATOR' | 'LECTURER' | 'INSTRUCTOR' | 'TEACHING_ASSISTANT';
   }[];
-}
-
-interface AcademicPr {
-  status:
-    | 'none'
-    | 'open'
-    | 'merged'
-    | 'closed'
-    | 'checks_pending'
-    | 'checks_failed'
-    | 'auto_merge_queued';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  revision?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-  draftRecord?: Record<string, unknown> | null;
-}
-
-interface SchemaResponse {
-  canEditCourses: boolean;
-  identity: {
-    email: string;
-    username: string;
-  };
-  lockedFields: string[];
-  note: string;
 }
 
 const ACADEMIC_DEPARTMENTS = AcademicDepartmentCodeSchema.options;

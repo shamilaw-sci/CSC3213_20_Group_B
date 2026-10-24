@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import type { Project } from '@scs/schemas';
 
 import { publicAcademicPaths } from '@/repositories/public-course.repo';
-import { updatePublicProjectRequestSchema } from '@/schemas/request.schema';
+import { updatePublicProjectRequestSchema } from '@scs/schemas';
 
 const project = {
   id: 'prj-example',

@@ -1,5 +1,6 @@
 'use client';
 
+import { ProxyUrlSchema } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
 import {
@@ -35,7 +36,7 @@ import {
   readApiError,
   userProxyApiUrl,
 } from '@/lib/api';
-import { getProxyUrlError, proxyUrlSchema } from '@/lib/proxy-url';
+import { getProxyUrlError } from '@/lib/proxy-url';
 import { AdminProxyEntry } from '@/types/proxy';
 
 interface ManageProxiesPageProps {
@@ -131,7 +132,7 @@ export default function ManageProxiesPage({
 
   async function saveEdit() {
     if (!editing || saving) return;
-    const parsedProxyUrl = proxyUrlSchema.safeParse(editing.proxyUrl);
+    const parsedProxyUrl = ProxyUrlSchema.safeParse(editing.proxyUrl);
     if (!parsedProxyUrl.success) {
       setProxyUrlError(parsedProxyUrl.error.issues[0]?.message);
       return;

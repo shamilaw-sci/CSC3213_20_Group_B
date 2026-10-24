@@ -1,16 +1,17 @@
-import {
-  AcademicSupportStaffSchema,
-  AcademicTeachingStaffSchema,
-  CourseOfferingSchema,
-  CourseSchema,
-  EntityRevisionSchema,
-  HonoursProgrammeStudentStreamMap,
-  IdempotencyKeySchema,
-  NonAcademicStaffSchema,
-  ProjectSchema,
-  StudentSchema,
-} from '@scs/schemas';
 import { z } from 'zod';
+
+import { HonoursProgrammeStudentStreamMap } from '#schemas/academics/academic-organization.schema';
+import {
+  EntityRevisionSchema,
+  IdempotencyKeySchema,
+} from '#schemas/api/mutation.schema';
+import { CourseSchema } from '#schemas/courses/course.schema';
+import { CourseOfferingSchema } from '#schemas/courses/course-offering.schema';
+import { AcademicSupportStaffSchema } from '#schemas/people/staff/academic-support/academic-support-staff.schema';
+import { AcademicTeachingStaffSchema } from '#schemas/people/staff/academic-teaching/academic-teaching-staff.schema';
+import { NonAcademicStaffSchema } from '#schemas/people/staff/non-academic/non-academic-staff.schema';
+import { StudentSchema } from '#schemas/people/students/student.schema';
+import { ProjectSchema } from '#schemas/projects/project.schema';
 
 const usernameSchema = z
   .string()
@@ -166,7 +167,8 @@ function usernameFromProfile(profile: {
   registrationNo?: string;
 }) {
   if (profile.registrationNo) return profile.registrationNo.toLowerCase();
-  return profile.email?.split('@')[0].toLowerCase() ?? '';
+  const [username] = profile.email?.split('@') ?? [];
+  return username?.toLowerCase() ?? '';
 }
 
 function batchFromRegistrationNo(registrationNo: string): string | null {
@@ -182,10 +184,7 @@ function departmentStaffAggregatePath(
     return null;
   }
 
-  const department = profile.department
-    .trim()
-    .toLowerCase()
-    .replaceAll('_', '-');
+  const department = profile.department.trim().toLowerCase().replace(/_/g, '-');
   return `public/people/v2/staff/${department}/${staffKind}.json`;
 }
 

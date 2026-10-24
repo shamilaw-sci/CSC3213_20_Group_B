@@ -11,7 +11,7 @@ import {
 import {
   deletePublicProjectRequestSchema,
   updatePublicProjectRequestSchema,
-} from '@/schemas/request.schema';
+} from '@scs/schemas';
 
 const project = {
   id: 'prj-scholarship-management-system',

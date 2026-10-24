@@ -128,10 +128,16 @@ Shared API contracts include:
 - `PaginationRequestSchema` and page metadata for bounded lists;
 - `MutationControlSchema` for idempotency and expected revisions;
 - `MailerSendRequestSchema` for raw messages and named transactional templates;
+- `ProxyUrlSchema` and `ProxyUpdateRequestSchema` for the Portal/API proxy boundary;
+- profile, project, and course editor response and pull-request schemas;
+- GitHub automation request schemas used by both the API producer and Worker;
 - accepted/status/outcome schemas for durable operations.
 
 Keep provider-specific GitHub or Cloudflare payloads behind adapters rather
-than exposing them as public contracts.
+than exposing them as public contracts. Environment parsing and Durable Object
+storage records remain in the owning workspace because they are runtime-local,
+not cross-workspace transport contracts. Consumers import shared contracts
+directly from `@scs/schemas`; do not create pass-through re-export modules.
 
 ## Verification
 

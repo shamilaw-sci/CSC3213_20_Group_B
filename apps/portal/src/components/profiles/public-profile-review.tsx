@@ -1,5 +1,6 @@
 'use client';
 
+import type { PublicProfileKind as ProfileKind } from '@scs/schemas';
 import { Button } from '@scs/ui/components/button';
 import { useState } from 'react';
 
@@ -7,10 +8,7 @@ import {
   type ReviewChange,
   ReviewChanges,
 } from '@/components/editor/review-changes';
-import type {
-  ProfileKind,
-  ProfileRecord,
-} from '@/components/profiles/profile-types';
+import type { ProfileRecord } from '@/components/profiles/profile-types';
 
 interface PublicProfileReviewProps {
   draft: ProfileRecord;

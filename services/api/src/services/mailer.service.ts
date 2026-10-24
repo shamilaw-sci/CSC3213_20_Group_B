@@ -1,9 +1,8 @@
-import type { MailerSendRequest, PortalSignInOtpRequest } from '@scs/schemas';
-
-export interface MailerSendResponse {
-  ok: boolean;
-  error?: string;
-}
+import type {
+  MailerSendRequest,
+  MailerSendResponse,
+  PortalSignInOtpRequest,
+} from '@scs/schemas';
 
 async function sendEmail(
   payload: MailerSendRequest,

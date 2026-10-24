@@ -1,6 +1,8 @@
 import {
+  CorrelationIdSchema,
   IdempotencyKeySchema,
   OperationActorSchema,
+  OperationIdSchema,
   OperationOutcomeSchema,
   OperationResourceSchema,
   OperationStatusSchema,
@@ -30,14 +32,14 @@ export interface OperationQueueMessage {
 export const OperationRecordSchema = z
   .object({
     version: z.literal(1),
-    operationId: z.string().min(16).max(128),
+    operationId: OperationIdSchema,
     idempotencyHash: z.string().regex(/^[a-f0-9]{64}$/),
     idempotencyKey: IdempotencyKeySchema,
     actor: OperationActorSchema,
     resource: OperationResourceSchema,
     action: z.string().trim().min(1).max(128),
     payload: z.unknown(),
-    correlationId: z.string().trim().min(8).max(128),
+    correlationId: CorrelationIdSchema,
     status: OperationStatusSchema,
     attempt: z.number().int().nonnegative(),
     maxAttempts: z.number().int().positive().max(10),

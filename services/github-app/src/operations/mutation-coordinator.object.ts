@@ -1,7 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
+import { OperationIdSchema } from '@scs/schemas';
 import { z } from 'zod';
 
-const OperationIdSchema = z.string().min(16).max(128);
 const LeaseDurationSchema = z.number().int().positive().max(300_000);
 
 interface LeaseRow {

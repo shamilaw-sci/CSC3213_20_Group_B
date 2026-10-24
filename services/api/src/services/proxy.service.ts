@@ -1,7 +1,8 @@
 import {
-  proxyUpdateRequestSchema,
-  type ProxyUpdateRequestDto,
-} from '@/dto/proxy/proxy-update-request.dto';
+  ProxyUpdateRequestSchema,
+  type ProxyUpdateRequest,
+} from '@scs/schemas';
+
 import {
   createCorsHeaders,
   createJsonErrorResponse,
@@ -98,7 +99,7 @@ function parseTargetEmail(input: {
 }
 
 function parseProxyBodyError(
-  body: ReturnType<typeof proxyUpdateRequestSchema.safeParse>,
+  body: ReturnType<typeof ProxyUpdateRequestSchema.safeParse>,
   origin: string
 ): Response | null {
   if (body.success) return null;
@@ -133,7 +134,7 @@ function attemptsExhaustedResponse(origin: string): Response {
 
 async function readUpdateBody(
   req: Request
-): Promise<ProxyUpdateRequestDto | Response> {
+): Promise<ProxyUpdateRequest | Response> {
   const origin = getRequestOrigin(req);
   let parsed: unknown;
   try {
@@ -142,7 +143,7 @@ async function readUpdateBody(
     console.error('Failed to parse JSON body:', error);
     return createTextErrorResponse('Invalid JSON body', 400, origin);
   }
-  const validatedBody = proxyUpdateRequestSchema.safeParse(parsed);
+  const validatedBody = ProxyUpdateRequestSchema.safeParse(parsed);
   const errorResponse = parseProxyBodyError(validatedBody, origin);
   if (errorResponse) return errorResponse;
   if (!validatedBody.success) {

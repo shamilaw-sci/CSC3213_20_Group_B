@@ -1,4 +1,12 @@
 import { ApiErrorEnvelopeSchema, MutationAcceptedSchema } from '@scs/schemas';
+import {
+  deletePublicCourseOfferingRequestSchema,
+  deletePublicCourseRequestSchema,
+  getPublicAcademicRecordQuerySchema,
+  submitPublicAcademicOperationRequestSchema,
+  updatePublicCourseOfferingRequestSchema,
+  updatePublicCourseRequestSchema,
+} from '@scs/schemas';
 
 import {
   createAcademicOperationCommand,
@@ -16,14 +24,6 @@ import {
   PublicAcademicConflictError,
   upsertPublicAcademicPr,
 } from '@/repositories/public-course.repo';
-import {
-  deletePublicCourseOfferingRequestSchema,
-  deletePublicCourseRequestSchema,
-  getPublicAcademicRecordQuerySchema,
-  submitPublicAcademicOperationRequestSchema,
-  updatePublicCourseOfferingRequestSchema,
-  updatePublicCourseRequestSchema,
-} from '@/schemas/request.schema';
 import type { GithubAppEnv } from '@/types/env';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 

@@ -43,7 +43,18 @@ export const MailerSendRequestSchema = z.union([
   PortalSignInOtpRequestSchema,
 ]);
 
+export const MailerSendResponseSchema = z.discriminatedUnion('ok', [
+  z.object({ ok: z.literal(true) }).strict(),
+  z
+    .object({
+      ok: z.literal(false),
+      error: z.string().trim().min(1).max(1_000),
+    })
+    .strict(),
+]);
+
 export type MailerSendRequest = z.infer<typeof MailerSendRequestSchema>;
+export type MailerSendResponse = z.infer<typeof MailerSendResponseSchema>;
 export type PortalSignInOtpRequest = z.infer<
   typeof PortalSignInOtpRequestSchema
 >;

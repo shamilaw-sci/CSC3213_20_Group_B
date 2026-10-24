@@ -1,4 +1,9 @@
-import { type EntityRevision, ProjectSchema, type Project } from '@scs/schemas';
+import {
+  ProjectSchema,
+  type Project,
+  type PublicProjectPr,
+  type PublicProjectSchemaResponse,
+} from '@scs/schemas';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import {
@@ -25,46 +30,10 @@ import {
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
-type ProjectPrStatus =
-  | 'none'
-  | 'open'
-  | 'merged'
-  | 'closed'
-  | 'checks_pending'
-  | 'checks_failed'
-  | 'auto_merge_queued';
-
-interface PublicProjectPr {
-  status: ProjectPrStatus;
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: EntityRevision;
-  revision?: EntityRevision;
-  canEdit: boolean;
-  updatedAt?: string;
-  targetProjectFile?: string;
-  targetAggregateFile?: string;
-  targetManifestFile?: string;
-  draftProject?: Record<string, unknown> | null;
-}
-
 interface PublicProjectUserContext {
   email: string;
   role: AppRole;
   isSuperAdmin: boolean;
-}
-
-interface PublicProjectSchemaResponse {
-  canSubmitOwnedProjects: boolean;
-  canSubmitAnyProject: boolean;
-  identity: {
-    email: string;
-    username: string;
-    sNumber: string | null;
-  };
-  lockedFields: string[];
-  note: string;
 }
 
 function usernameFromEmail(email: string): string {

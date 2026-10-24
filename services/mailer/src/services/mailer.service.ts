@@ -1,9 +1,9 @@
 import { createTransport } from 'nodemailer';
 import { render } from '@react-email/render';
+import type { MailerSendRequest } from '@scs/schemas';
 
 import { env } from '@/config/env';
 import { PortalSignInOtpEmail } from '@/emails/portal-sign-in-otp.email';
-import type { SendRequest } from '@/types';
 
 interface ResolvedMailMessage {
   to: string | string[];
@@ -24,7 +24,7 @@ const transporter = createTransport({
 });
 
 export async function resolveMailMessage(
-  payload: SendRequest
+  payload: MailerSendRequest
 ): Promise<ResolvedMailMessage> {
   if ('template' in payload) {
     const email = PortalSignInOtpEmail(payload.template.props);
@@ -39,7 +39,9 @@ export async function resolveMailMessage(
   return payload;
 }
 
-export async function sendMail(payload: SendRequest): Promise<{ ok: true }> {
+export async function sendMail(
+  payload: MailerSendRequest
+): Promise<{ ok: true }> {
   const message = await resolveMailMessage(payload);
   await transporter.sendMail({
     from: env.SMTP_FROM,

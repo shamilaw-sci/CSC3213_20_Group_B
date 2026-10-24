@@ -1,4 +1,9 @@
-import { CourseOfferingSchema, CourseSchema } from '@scs/schemas';
+import {
+  CourseOfferingSchema,
+  CourseSchema,
+  type PublicAcademicPr,
+  type PublicCourseSchemaResponse,
+} from '@scs/schemas';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import {
@@ -27,43 +32,10 @@ import {
 import type { Env } from '@/types/env';
 
 type AcademicRegistryKind = 'course' | 'offering';
-type PublicAcademicPrStatus =
-  | 'none'
-  | 'open'
-  | 'merged'
-  | 'closed'
-  | 'checks_pending'
-  | 'checks_failed'
-  | 'auto_merge_queued';
-
-interface PublicAcademicPr {
-  status: PublicAcademicPrStatus;
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  revision?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-  targetRecordFile?: string;
-  targetAggregateFile?: string;
-  draftRecord?: Record<string, unknown> | null;
-}
-
 interface PublicAcademicUserContext {
   email: string;
   role: AppRole;
   isSuperAdmin: boolean;
-}
-
-interface PublicCourseSchemaResponse {
-  canEditCourses: boolean;
-  identity: {
-    email: string;
-    username: string;
-  };
-  lockedFields: string[];
-  note: string;
 }
 
 function usernameFromEmail(email: string): string {

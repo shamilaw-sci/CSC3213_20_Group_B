@@ -1,5 +1,6 @@
 'use client';
 
+import { ProxyUrlSchema } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
 import {
@@ -21,7 +22,7 @@ import { toast } from 'sonner';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
-import { getProxyUrlError, proxyUrlSchema } from '@/lib/proxy-url';
+import { getProxyUrlError } from '@/lib/proxy-url';
 
 interface ProxySettingsPageProps {
   active: boolean;
@@ -77,7 +78,7 @@ export default function ProxySettingsPage({
 
   async function handleSave() {
     if (saving || !canEdit) return;
-    const parsedProxyUrl = proxyUrlSchema.safeParse(proxyUrl);
+    const parsedProxyUrl = ProxyUrlSchema.safeParse(proxyUrl);
     if (!parsedProxyUrl.success) {
       setProxyUrlError(parsedProxyUrl.error.issues[0]?.message);
       return;

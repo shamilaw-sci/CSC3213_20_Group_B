@@ -3,15 +3,27 @@ import {
   AcademicTeachingStaffSchema,
   HonoursProgrammeStudentStreamMap,
   NonAcademicStaffSchema,
+  PostgraduateProgrammeSchema,
+  PublicProfileKindSchema,
   StudentPlacementSchema,
+  StudentStreamSchema,
+  StudentTrackSchema,
   StudentSchema,
+  SlqfLevelSchema,
   type AcademicSupportStaff,
   type AcademicTeachingStaff,
   type NonAcademicStaff,
   type OperationStatusResponse,
+  type PostgraduateProgramme,
+  type PublicProfileKind as ProfileKind,
+  type PublicProfilePr,
+  type PublicProfileSchemaResponse,
+  type SlqfLevel,
   type Student,
+  type StudentPlacementResponse,
+  type StudentStream as SpecialStream,
+  type StudentTrack,
 } from '@scs/schemas';
-import type { z } from 'zod';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import {
@@ -34,49 +46,13 @@ import {
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
-const PROFILE_KINDS = [
-  'academic',
-  'academic-support',
-  'non-academic',
-  'student',
-] as const;
+const PROFILE_KINDS = PublicProfileKindSchema.options;
+const SPECIAL_STREAMS = StudentStreamSchema.options;
+const STUDENT_TRACKS = StudentTrackSchema.options;
+const POSTGRADUATE_PROGRAMMES = PostgraduateProgrammeSchema.options;
+const SLQF_LEVELS = SlqfLevelSchema.options;
 
-const SPECIAL_STREAMS = [
-  'biomedical-science',
-  'botany',
-  'computer-science',
-  'data-science',
-  'geology',
-  'mathematics',
-  'microbiology',
-  'molecular-biology',
-  'physics',
-  'statistics',
-  'zoology',
-  'applied-science',
-  'statistics-and-operations-research',
-] as const;
-const STUDENT_TRACKS = ['GENERAL', 'HONOURS'] as const;
-const POSTGRADUATE_PROGRAMMES = [
-  'POSTGRADUATE_CERTIFICATE',
-  'POSTGRADUATE_DIPLOMA',
-  'MASTERS_COURSEWORK',
-  'MSC',
-  'MPHIL',
-  'MPHIL_UPGRADE_FROM_MSC',
-  'PHD',
-  'PHD_UPGRADE_FROM_MSC',
-  'PHD_UPGRADE_FROM_MPHIL',
-] as const;
-const SLQF_LEVELS = ['L7', 'L8', 'L9', 'L10', 'L11', 'L12'] as const;
-
-type ProfileKind = (typeof PROFILE_KINDS)[number];
-type SpecialStream = (typeof SPECIAL_STREAMS)[number];
-type StudentTrack = (typeof STUDENT_TRACKS)[number];
 type StudentLevel = NonNullable<Student['level']>;
-type StudentStatus = 'CURRENT' | 'ALUMNI';
-type PostgraduateProgramme = (typeof POSTGRADUATE_PROGRAMMES)[number];
-type SlqfLevel = (typeof SLQF_LEVELS)[number];
 
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
@@ -86,36 +62,6 @@ type ProfileByKind = {
 };
 
 type PublicProfile = ProfileByKind[ProfileKind];
-
-type ProfileSchemaMap = {
-  [Kind in ProfileKind]: z.ZodType<ProfileByKind[Kind]>;
-};
-
-type ProfilePrStatus =
-  | 'none'
-  | 'open'
-  | 'merged'
-  | 'closed'
-  | 'checks_pending'
-  | 'checks_failed'
-  | 'auto_merge_queued';
-
-interface PublicProfilePr {
-  status: ProfilePrStatus;
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  currentUserFileSha?: string | null;
-  revision?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-  profileKind?: ProfileKind;
-  stream?: string;
-  targetUserFile?: string;
-  targetAggregateFiles?: string[];
-  draftProfile?: Record<string, unknown> | null;
-}
 
 interface StudentPlacementPr {
   status: 'none' | 'open' | 'merged' | 'closed';
@@ -170,26 +116,6 @@ interface StudentPlacementRequest {
   postgraduateProgramme?: unknown;
 }
 
-interface StudentPlacement {
-  registrationNo: string;
-  studentType: 'UNDERGRADUATE';
-  studentTrack: StudentTrack;
-  level: StudentLevel;
-  status: StudentStatus;
-  lockedFields: string[];
-}
-
-interface PostgraduatePlacement {
-  registrationNo: string;
-  studentType: 'POSTGRADUATE';
-  postgraduateProgramme: PostgraduateProgramme;
-  slqfLevel: SlqfLevel;
-  status: StudentStatus;
-  lockedFields: string[];
-}
-
-type StudentPlacementResponse = StudentPlacement | PostgraduatePlacement;
-
 interface DiscardProfilePrRequest {
   prNumber: number;
   expectedHeadSha: string;
@@ -200,16 +126,6 @@ interface PublicProfileUserContext {
   email: string;
   role: AppRole;
   isSuperAdmin: boolean;
-}
-
-interface PublicProfileSchemaResponse {
-  allowedKinds: ProfileKind[];
-  identity: {
-    email: string;
-    username: string;
-  };
-  lockedFields: string[];
-  note: string;
 }
 
 interface StudentPlacementRecord {
@@ -241,7 +157,7 @@ const schemas = {
   'academic-support': AcademicSupportStaffSchema,
   'non-academic': NonAcademicStaffSchema,
   student: StudentSchema,
-} satisfies ProfileSchemaMap;
+};
 
 function isProfileKind(value: unknown): value is ProfileKind {
   return (
