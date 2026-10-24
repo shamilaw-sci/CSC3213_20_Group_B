@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   candidateAggregatePathsForIdentity,
   removeProfile,
-  publishedProfileMetadataFromMembership,
+  publishedProfileMetadataFromProfile,
 } from '@/repositories/public-profile.repo';
 import { updatePublicProfileRequestSchema } from '@/schemas/request.schema';
 
@@ -13,6 +13,7 @@ const student = {
   registrationNo: 'S21513',
   studentType: 'UNDERGRADUATE',
   studentTrack: 'HONOURS',
+  honoursProgramme: 'COMPUTER_SCIENCE',
   level: '4000',
   status: 'CURRENT',
 };
@@ -108,15 +109,27 @@ describe('public profile aggregate reconciliation helpers', () => {
     expect(result.success).toBe(false);
   });
 
-  test('classifies published special students from aggregate membership', () => {
+  test('rejects a special path that disagrees with the honours programme', () => {
+    const result = updatePublicProfileRequestSchema.safeParse({
+      username: 's21513',
+      updatedBy: 'admin@pdn.ac.lk',
+      profileKind: 'student',
+      userPath: 'public/people/v2/users/s21513.json',
+      aggregatePaths: [
+        'public/people/v2/students/s21.json',
+        'public/people/v2/special/data-science/s21.json',
+      ],
+      profile: student,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  test('derives published special membership from the honours programme', () => {
     expect(
-      publishedProfileMetadataFromMembership({
+      publishedProfileMetadataFromProfile({
         username: 's21513',
         profile: student,
-        specialMembership: {
-          stream: 'computer-science',
-          path: 'public/people/v2/special/computer-science/s21.json',
-        },
       })
     ).toEqual({
       profileKind: 'student',
@@ -130,9 +143,13 @@ describe('public profile aggregate reconciliation helpers', () => {
 
   test('classifies published normal students without special membership', () => {
     expect(
-      publishedProfileMetadataFromMembership({
+      publishedProfileMetadataFromProfile({
         username: 's21513',
-        profile: student,
+        profile: {
+          ...student,
+          studentTrack: 'GENERAL',
+          honoursProgramme: undefined,
+        },
       })
     ).toEqual({
       profileKind: 'student',

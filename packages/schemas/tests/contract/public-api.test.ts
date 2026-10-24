@@ -52,6 +52,7 @@ const expectedRuntimeExports = [
   'EntityRevisionSchema',
   'FacultyCodeSchema',
   'HonoursProgrammeDepartmentMap',
+  'HonoursProgrammeStudentStreamMap',
   'HonoursStreamSchema',
   'HonoursProgrammeCodeSchema',
   'IdempotencyKeySchema',

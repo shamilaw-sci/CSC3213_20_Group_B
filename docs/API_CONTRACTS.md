@@ -167,6 +167,11 @@ the current permission record so blacklisting and role changes take effect.
 Admin profile suffixes include `/schema`, `/pr`, and `/student-placement`.
 Unknown suffixes are rejected rather than interpreted as repository paths.
 
+For undergraduate honours profiles, `honoursProgramme` is required and is the
+only source used to derive the owning department and special-directory path.
+Profile mutation requests do not accept an independently selected directory
+stream.
+
 ## Projects and Academics
 
 | Methods                        | Route                                    | Purpose                           |

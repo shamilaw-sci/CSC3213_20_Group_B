@@ -117,6 +117,25 @@ export const StudentSchema = PersonSchema.extend({
   const hasSpecialDegreeSubject = subjects.some((subject) =>
     SpecialDegreeSubjects.has(subject)
   );
+  const isHonoursUndergraduate =
+    student.studentType === 'UNDERGRADUATE' &&
+    student.studentTrack === 'HONOURS';
+
+  if (isHonoursUndergraduate && !student.honoursProgramme) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['honoursProgramme'],
+      message: 'Honours students require an honours programme',
+    });
+  }
+
+  if (!isHonoursUndergraduate && student.honoursProgramme) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['honoursProgramme'],
+      message: 'Honours programme is only available to honours undergraduates',
+    });
+  }
 
   if (
     subjects.includes(Subject.APPLIED_SCIENCES) &&

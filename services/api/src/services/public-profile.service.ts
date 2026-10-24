@@ -1,6 +1,7 @@
 import {
   AcademicSupportStaffSchema,
   AcademicTeachingStaffSchema,
+  HonoursProgrammeStudentStreamMap,
   NonAcademicStaffSchema,
   StudentPlacementSchema,
   StudentSchema,
@@ -55,21 +56,6 @@ const SPECIAL_STREAMS = [
   'applied-science',
   'statistics-and-operations-research',
 ] as const;
-const HONOURS_PROGRAMME_STREAMS: Record<string, SpecialStream> = {
-  APPLIED_SCIENCES: 'applied-science',
-  BIOMEDICAL_SCIENCE: 'biomedical-science',
-  BOTANY: 'botany',
-  COMPUTER_SCIENCE: 'computer-science',
-  DATA_SCIENCE: 'data-science',
-  GEOLOGY: 'geology',
-  MATHEMATICS: 'mathematics',
-  MICROBIOLOGY: 'microbiology',
-  MOLECULAR_BIOLOGY_AND_BIOTECHNOLOGY: 'molecular-biology',
-  PHYSICS: 'physics',
-  STATISTICS: 'statistics',
-  STATISTICS_AND_OPERATIONS_RESEARCH: 'statistics-and-operations-research',
-  ZOOLOGY: 'zoology',
-};
 const STUDENT_TRACKS = ['GENERAL', 'HONOURS'] as const;
 const POSTGRADUATE_PROGRAMMES = [
   'POSTGRADUATE_CERTIFICATE',
@@ -148,7 +134,6 @@ interface ProfileConcurrency {
 
 interface ProfilePatchRequest {
   profileKind: ProfileKind;
-  stream?: SpecialStream;
   profile: unknown;
   concurrency?: ProfileConcurrency;
   control?: {
@@ -219,7 +204,6 @@ interface PublicProfileUserContext {
 
 interface PublicProfileSchemaResponse {
   allowedKinds: ProfileKind[];
-  specialStreams: readonly SpecialStream[];
   identity: {
     email: string;
     username: string;
@@ -276,8 +260,12 @@ function streamFromHonoursProgramme(
   profile: PublicProfile
 ): SpecialStream | null {
   if (!('honoursProgramme' in profile)) return null;
-  const stream = HONOURS_PROGRAMME_STREAMS[profile.honoursProgramme ?? ''];
-  return stream ?? null;
+  const programme = profile.honoursProgramme;
+  if (!programme || !(programme in HonoursProgrammeStudentStreamMap)) {
+    return null;
+  }
+  const stream = HonoursProgrammeStudentStreamMap[programme];
+  return isSpecialStream(stream) ? stream : null;
 }
 
 function departmentSlug(value: unknown): string | null {
@@ -368,7 +356,6 @@ function schemaDetailsForUser(
 ): PublicProfileSchemaResponse {
   return {
     allowedKinds: allowedKindsForRole(user.role),
-    specialStreams: SPECIAL_STREAMS,
     identity: {
       email: user.email,
       username: usernameFromEmail(user.email),
@@ -432,7 +419,6 @@ function trustedProfileForTarget(input: {
 
 function targetPaths(input: {
   profileKind: ProfileKind;
-  stream?: SpecialStream;
   profile: PublicProfile;
   username: string;
 }): { userPath: string; aggregatePaths: string[] } | null {
@@ -486,7 +472,7 @@ function targetPaths(input: {
   if (!batch) return null;
 
   const aggregatePaths = [`public/people/v2/students/${batch}.json`];
-  const stream = input.stream ?? streamFromHonoursProgramme(input.profile);
+  const stream = streamFromHonoursProgramme(input.profile);
   if (
     'studentTrack' in input.profile &&
     input.profile.studentTrack === 'HONOURS' &&
@@ -1206,17 +1192,9 @@ export async function upsertMyPublicProfilePr(
   }
 
   const patchRequest = body as ProfilePatchRequest;
-  const { profileKind, stream, profile } = patchRequest;
+  const { profileKind, profile } = patchRequest;
   if (!isProfileKind(profileKind)) {
     return createJsonErrorResponse('Invalid profile kind', 400, origin);
-  }
-
-  if (
-    profileKind === 'student' &&
-    stream !== undefined &&
-    !isSpecialStream(stream)
-  ) {
-    return createJsonErrorResponse('Invalid honours stream', 400, origin);
   }
 
   if (!allowedKindsForRole(user.role).includes(profileKind)) {
@@ -1296,7 +1274,6 @@ export async function upsertMyPublicProfilePr(
 
   const paths = targetPaths({
     profileKind,
-    stream,
     profile: validatedProfile,
     username,
   });
@@ -1366,17 +1343,9 @@ export async function upsertAdminUserPublicProfilePr(
   }
 
   const patchRequest = body as ProfilePatchRequest;
-  const { profileKind, stream, profile } = patchRequest;
+  const { profileKind, profile } = patchRequest;
   if (!isProfileKind(profileKind)) {
     return createJsonErrorResponse('Invalid profile kind', 400, origin);
-  }
-
-  if (
-    profileKind === 'student' &&
-    stream !== undefined &&
-    !isSpecialStream(stream)
-  ) {
-    return createJsonErrorResponse('Invalid honours stream', 400, origin);
   }
 
   if (!allowedKindsForRole(verified.target.role).includes(profileKind)) {
@@ -1449,7 +1418,6 @@ export async function upsertAdminUserPublicProfilePr(
 
   const paths = targetPaths({
     profileKind,
-    stream,
     profile: validatedProfile,
     username,
   });

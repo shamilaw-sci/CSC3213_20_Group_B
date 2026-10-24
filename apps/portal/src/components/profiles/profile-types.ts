@@ -38,7 +38,6 @@ export interface ProfileSchemaResponse {
   };
   lockedFields?: string[];
   note: string;
-  specialStreams: string[];
 }
 
 export interface PublicProfilePr {
@@ -58,7 +57,6 @@ export interface PublicProfilePr {
     | 'checks_pending'
     | 'checks_failed'
     | 'auto_merge_queued';
-  stream?: string;
   targetAggregateFiles?: string[];
   targetUserFile?: string;
   updatedAt?: string;
@@ -68,7 +66,6 @@ export interface PublicProfilePr {
 export interface PublicProfileResponse {
   profile: ProfileRecord | null;
   profileKind?: ProfileKind;
-  stream?: string;
   targetAggregateFiles?: string[];
   targetUserFile?: string;
 }

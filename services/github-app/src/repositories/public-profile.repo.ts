@@ -1,10 +1,11 @@
 import { Buffer } from 'node:buffer';
 
+import { HonoursProgrammeStudentStreamMap } from '@scs/schemas';
+
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
 import {
   inferProfileKind,
-  profileIdentity,
   projectProfileMembership,
   removeProfileMembership as removeProfile,
   searchEntryForProfile,
@@ -617,38 +618,9 @@ async function findProfilePullRequest(
   );
 }
 
-async function findPublishedSpecialMembership(
-  username: string,
-  batch: string
-): Promise<{ stream: string; path: string } | null> {
-  for (const stream of SPECIAL_STREAMS) {
-    const specialPath = `public/people/v2/special/${stream}/${batch}.json`;
-    const entry = await readFile(specialPath);
-    if (!entry) continue;
-
-    const value = parseJson(entry.content);
-    const records = Array.isArray(value) ? value : [];
-    const hasProfile = records.some((record) => {
-      return (
-        record !== null &&
-        typeof record === 'object' &&
-        !Array.isArray(record) &&
-        profileIdentity(record as Record<string, unknown>) === username
-      );
-    });
-
-    if (hasProfile) {
-      return { stream, path: specialPath };
-    }
-  }
-
-  return null;
-}
-
-export function publishedProfileMetadataFromMembership(input: {
+export function publishedProfileMetadataFromProfile(input: {
   username: string;
   profile: Record<string, unknown>;
-  specialMembership?: { stream: string; path: string } | null;
 }): {
   profileKind?: PublicProfileKind;
   stream?: string;
@@ -674,11 +646,22 @@ export function publishedProfileMetadataFromMembership(input: {
   }
 
   const studentPath = `public/people/v2/students/${batch}.json`;
-  if (input.specialMembership) {
+  const honoursProgramme = input.profile.honoursProgramme;
+  const stream =
+    typeof honoursProgramme === 'string' &&
+    honoursProgramme in HonoursProgrammeStudentStreamMap
+      ? HonoursProgrammeStudentStreamMap[
+          honoursProgramme as keyof typeof HonoursProgrammeStudentStreamMap
+        ]
+      : undefined;
+  if (input.profile.studentTrack === 'HONOURS' && stream) {
     return {
       profileKind: 'student',
-      stream: input.specialMembership.stream,
-      targetAggregateFiles: [studentPath, input.specialMembership.path],
+      stream,
+      targetAggregateFiles: [
+        studentPath,
+        `public/people/v2/special/${stream}/${batch}.json`,
+      ],
     };
   }
 
@@ -686,25 +669,6 @@ export function publishedProfileMetadataFromMembership(input: {
     profileKind: 'student',
     targetAggregateFiles: [studentPath],
   };
-}
-
-async function publishedProfileMetadata(input: {
-  username: string;
-  profile: Record<string, unknown>;
-}): Promise<{
-  profileKind?: PublicProfileKind;
-  stream?: string;
-  targetAggregateFiles: string[];
-}> {
-  const batch = studentBatchFromIdentity(input.username);
-  const specialMembership = batch
-    ? await findPublishedSpecialMembership(input.username, batch)
-    : null;
-
-  return publishedProfileMetadataFromMembership({
-    ...input,
-    specialMembership,
-  });
 }
 
 export async function getPublicProfile(
@@ -715,7 +679,7 @@ export async function getPublicProfile(
   const entry = await readFile(path);
   if (!entry) return null;
   const profile = JSON.parse(entry.content) as Record<string, unknown>;
-  const metadata = await publishedProfileMetadata({
+  const metadata = publishedProfileMetadataFromProfile({
     username: normalizedUsername,
     profile,
   });

@@ -74,12 +74,19 @@ describe('StudentSchema', () => {
     registrationNo: 'S22SP123',
     studentType: 'UNDERGRADUATE' as const,
     studentTrack: 'HONOURS' as const,
+    honoursProgramme: 'COMPUTER_SCIENCE' as const,
     level: '4000' as const,
     status: 'CURRENT' as const,
   };
 
   it('accepts a minimal valid student', () => {
     expect(() => StudentSchema.parse(validStudent)).not.toThrow();
+  });
+
+  it('rejects an honours student without an honours programme', () => {
+    expect(() =>
+      StudentSchema.parse({ ...validStudent, honoursProgramme: undefined })
+    ).toThrow('Honours students require an honours programme');
   });
 
   it('accepts a student with optional fields', () => {
@@ -130,19 +137,28 @@ describe('StudentSchema', () => {
   });
 
   it('accepts all valid student type enum values', () => {
-    const studentTypes = ['UNDERGRADUATE', 'POSTGRADUATE'] as const;
-    for (const studentType of studentTypes) {
-      expect(() =>
-        StudentSchema.parse({ ...validStudent, studentType })
-      ).not.toThrow();
-    }
+    expect(() => StudentSchema.parse(validStudent)).not.toThrow();
+    expect(() =>
+      StudentSchema.parse({
+        ...validStudent,
+        studentType: 'POSTGRADUATE',
+        studentTrack: undefined,
+        level: undefined,
+        honoursProgramme: undefined,
+      })
+    ).not.toThrow();
   });
 
   it('accepts all valid student track enum values', () => {
     const studentTracks = ['GENERAL', 'HONOURS'] as const;
     for (const studentTrack of studentTracks) {
       expect(() =>
-        StudentSchema.parse({ ...validStudent, studentTrack })
+        StudentSchema.parse({
+          ...validStudent,
+          studentTrack,
+          honoursProgramme:
+            studentTrack === 'HONOURS' ? 'COMPUTER_SCIENCE' : undefined,
+        })
       ).not.toThrow();
     }
   });
@@ -172,12 +188,22 @@ describe('StudentSchema', () => {
         studentType: 'POSTGRADUATE',
         studentTrack: undefined,
         level: undefined,
+        honoursProgramme: undefined,
         postgraduateProgramme: 'MSC',
         slqfLevel: 'L10',
         subjects: ['COMPUTER_SCIENCE', 'STATISTICS'],
-        honoursProgramme: 'COMPUTER_SCIENCE',
       })
     ).not.toThrow();
+  });
+
+  it('rejects an honours programme outside the honours undergraduate track', () => {
+    expect(() =>
+      StudentSchema.parse({
+        ...validStudent,
+        studentTrack: 'GENERAL',
+        honoursProgramme: 'COMPUTER_SCIENCE',
+      })
+    ).toThrow('Honours programme is only available to honours undergraduates');
   });
 
   it('rejects student subjects with fewer than two subjects', () => {

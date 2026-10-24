@@ -59,6 +59,10 @@ Dedicated identifier schemas prevent arbitrary strings from crossing domain
 boundaries. Person records validate student and staff variants; staff variants
 cover academic teaching, academic support, and non-academic roles.
 
+An undergraduate `HONOURS` student must declare `honoursProgramme`. The shared
+programme maps determine department ownership and any public student-directory
+projection; general and postgraduate profiles cannot carry that field.
+
 ## Validation Boundaries
 
 ```mermaid

@@ -4,6 +4,7 @@ import {
   CourseOfferingSchema,
   CourseSchema,
   EntityRevisionSchema,
+  HonoursProgrammeStudentStreamMap,
   IdempotencyKeySchema,
   NonAcademicStaffSchema,
   ProjectSchema,
@@ -265,28 +266,16 @@ export const updatePublicProfileRequestSchema = z
       const batch = batchFromRegistrationNo(value.profile.registrationNo);
       if (batch) {
         expectedAggregatePaths.push(`public/people/v2/students/${batch}.json`);
-        if (value.profile.studentTrack === 'HONOURS') {
-          const specialPath = value.aggregatePaths.find((path) =>
-            path.startsWith('public/people/v2/special/')
-          );
-          const specialMatch = specialPath
-            ? /^public\/people\/v2\/special\/([^/]+)\/(s\d{2})\.json$/.exec(
-                specialPath
-              )
-            : null;
-          if (specialMatch) {
-            const [, stream, specialBatch] = specialMatch;
-            if (
-              stream &&
-              specialBatch &&
-              specialStreams.includes(
-                stream as (typeof specialStreams)[number]
-              ) &&
-              specialBatch === batch &&
-              specialPath
-            ) {
-              expectedAggregatePaths.push(specialPath);
-            }
+        if (
+          value.profile.studentTrack === 'HONOURS' &&
+          value.profile.honoursProgramme
+        ) {
+          const stream =
+            HonoursProgrammeStudentStreamMap[value.profile.honoursProgramme];
+          if (stream) {
+            expectedAggregatePaths.push(
+              `public/people/v2/special/${stream}/${batch}.json`
+            );
           }
         }
       }

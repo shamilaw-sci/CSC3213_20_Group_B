@@ -12,6 +12,7 @@ import {
   AcademicUnitCodeSchema,
   detectKnownSocialUrl,
   HonoursProgrammeCodeSchema,
+  HonoursProgrammeDepartmentMap,
   type KnownSocialPlatform,
   type MutationAccepted,
   NonAcademicPositionSchema,
@@ -471,6 +472,12 @@ function normalizeStudentProfileFields(
     )
   ) {
     nextProfile.postgraduateProgramme = undefined;
+  }
+  if (
+    nextProfile.studentType !== 'UNDERGRADUATE' ||
+    nextProfile.studentTrack !== 'HONOURS'
+  ) {
+    nextProfile.honoursProgramme = undefined;
   }
 
   return nextProfile;
@@ -1103,24 +1110,18 @@ function OtherPlatformIconEditor({
 
 interface FormProps {
   profileKind: ProfileKind;
-  stream: string;
-  streams: string[];
   profile: ProfileRecord;
   identity?: ProfileSchemaResponse['identity'];
   lockedFields: string[];
   onProfileChange: (profile: ProfileRecord) => void;
-  onStreamChange: (stream: string) => void;
 }
 
 function ProfileForm({
   profileKind,
-  stream,
-  streams,
   profile,
   identity,
   lockedFields,
   onProfileChange,
-  onStreamChange,
 }: FormProps) {
   function setField(key: string, value: unknown) {
     onProfileChange({ ...profile, [key]: value });
@@ -1138,6 +1139,14 @@ function ProfileForm({
     isStudent &&
     !isPostgraduate &&
     asString(profile.studentTrack) === 'HONOURS';
+  const honoursProgramme = HONOURS_PROGRAMMES.includes(
+    profile.honoursProgramme as (typeof HONOURS_PROGRAMMES)[number]
+  )
+    ? (profile.honoursProgramme as (typeof HONOURS_PROGRAMMES)[number])
+    : undefined;
+  const honoursDepartment = honoursProgramme
+    ? HonoursProgrammeDepartmentMap[honoursProgramme]
+    : undefined;
   const undergraduateTrack = asString(profile.studentTrack) || 'GENERAL';
   const undergraduateLevelOptions = studentLevelsForTrack(undergraduateTrack);
   const undergraduateLevel = studentLevelForTrack(
@@ -1262,6 +1271,10 @@ function ProfileForm({
                     ...profile,
                     studentTrack: value,
                     level: studentLevelForTrack(value, profile.level),
+                    honoursProgramme:
+                      value === 'HONOURS'
+                        ? profile.honoursProgramme
+                        : undefined,
                   })
                 }
                 required
@@ -1270,18 +1283,6 @@ function ProfileForm({
                   GENERAL: 'General',
                   HONOURS: 'Honours',
                 }}
-              />
-            ) : null}
-            {isHonoursStudent && streams.length ? (
-              <SelectField
-                label="Directory Stream"
-                value={stream}
-                options={streams.map((option) => ({
-                  value: option,
-                  label: option.toUpperCase(),
-                }))}
-                onChange={onStreamChange}
-                description="Optional grouping for the public honours directory."
               />
             ) : null}
             {!isPostgraduate ? (
@@ -1301,16 +1302,29 @@ function ProfileForm({
                     '4000': '4000 Level',
                   }}
                 />
-                <SelectField
-                  label="Honours Programme"
-                  value={asString(profile.honoursProgramme)}
-                  options={HONOURS_PROGRAMMES.map((programme) => ({
-                    value: programme,
-                    label: HONOURS_PROGRAMME_LABELS[programme],
-                  }))}
-                  onChange={(value) => setField('honoursProgramme', value)}
-                  description="Special degree programme, if the student is following one."
-                />
+                {isHonoursStudent ? (
+                  <>
+                    <SelectField
+                      label="Honours Programme"
+                      value={asString(profile.honoursProgramme)}
+                      options={HONOURS_PROGRAMMES.map((programme) => ({
+                        value: programme,
+                        label: HONOURS_PROGRAMME_LABELS[programme],
+                      }))}
+                      onChange={(value) => setField('honoursProgramme', value)}
+                      description="Required. Your department and any eligible public directory are assigned automatically from this programme."
+                    />
+                    {honoursDepartment ? (
+                      <p
+                        className="bg-muted/35 text-muted-foreground rounded-md
+                          border p-3 text-sm"
+                      >
+                        Department:{' '}
+                        {ACADEMIC_DEPARTMENT_LABELS[honoursDepartment]}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
                 <StringArrayEditor
                   label="Subjects"
                   value={
@@ -2022,12 +2036,6 @@ export default function PublicProfileEditor({
   );
   const [profileKind, setProfileKind] =
     useState<ProfileKind>(initialProfileKind);
-  const [stream, setStream] = useState(
-    initialData.pr.stream ??
-      initialData.profile.stream ??
-      initialData.schema.specialStreams[0] ??
-      'cs'
-  );
   const [editorState, setEditorState] = useState<EditorState<ProfileRecord>>(
     () => createEditorState(initialEditableProfile, initialPublishedProfile)
   );
@@ -2041,9 +2049,6 @@ export default function PublicProfileEditor({
   const allowedKinds = schema?.allowedKinds.length
     ? schema.allowedKinds
     : [profileKind];
-  const streams = schema?.specialStreams.length
-    ? schema.specialStreams
-    : ['cs', 'ds', 'stat', 'sor'];
   const lockedFields = schema?.lockedFields ?? [];
 
   function profileUrl() {
@@ -2132,12 +2137,6 @@ export default function PublicProfileEditor({
       setDraftProfile(nextDraftProfile);
       setProfileKind(nextKind);
       setEditorState(createEditorState(editableProfile, nextPublishedProfile));
-      setStream(
-        nextPr.stream ??
-          profileBody.stream ??
-          nextSchema.specialStreams[0] ??
-          'cs'
-      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load');
     } finally {
@@ -2352,9 +2351,6 @@ export default function PublicProfileEditor({
         }),
         body: JSON.stringify({
           profileKind,
-          ...(asString(payloadProfile.studentTrack) === 'HONOURS' && stream
-            ? { stream }
-            : {}),
           ...(pr?.headSha
             ? { concurrency: { expectedPrHeadSha: pr.headSha } }
             : {
@@ -2587,13 +2583,10 @@ export default function PublicProfileEditor({
                 />
                 <ProfileForm
                   profileKind={profileKind}
-                  stream={stream}
-                  streams={streams}
                   profile={draft}
                   identity={schema?.identity}
                   lockedFields={lockedFields}
                   onProfileChange={handleProfileChange}
-                  onStreamChange={setStream}
                 />
               </div>
             )}

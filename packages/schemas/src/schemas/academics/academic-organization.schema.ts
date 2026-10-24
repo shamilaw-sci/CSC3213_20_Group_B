@@ -173,6 +173,25 @@ export const HonoursProgrammeDepartmentMap = {
   [HonoursProgramme.ZOOLOGY]: Department.ZOOLOGY,
 } satisfies Record<HonoursProgrammeCode, AcademicDepartmentCode>;
 
+export const HonoursProgrammeStudentStreamMap = {
+  [HonoursProgramme.APPLIED_SCIENCES]: 'applied-science',
+  [HonoursProgramme.BIOMEDICAL_SCIENCE]: 'biomedical-science',
+  [HonoursProgramme.BOTANY]: 'botany',
+  [HonoursProgramme.CHEMISTRY]: undefined,
+  [HonoursProgramme.COMPUTER_SCIENCE]: 'computer-science',
+  [HonoursProgramme.DATA_SCIENCE]: 'data-science',
+  [HonoursProgramme.ENVIRONMENTAL_SCIENCE]: undefined,
+  [HonoursProgramme.GEOLOGY]: 'geology',
+  [HonoursProgramme.MATHEMATICS]: 'mathematics',
+  [HonoursProgramme.MICROBIOLOGY]: 'microbiology',
+  [HonoursProgramme.MOLECULAR_BIOLOGY_AND_BIOTECHNOLOGY]: 'molecular-biology',
+  [HonoursProgramme.PHYSICS]: 'physics',
+  [HonoursProgramme.STATISTICS]: 'statistics',
+  [HonoursProgramme.STATISTICS_AND_OPERATIONS_RESEARCH]:
+    'statistics-and-operations-research',
+  [HonoursProgramme.ZOOLOGY]: 'zoology',
+} as const satisfies Record<HonoursProgrammeCode, string | undefined>;
+
 export const AcademicSubjectDepartmentMap = {
   [Subject.APPLIED_SCIENCES]: [
     Department.ENVIRONMENTAL_AND_INDUSTRIAL_SCIENCES,
