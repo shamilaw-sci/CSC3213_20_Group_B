@@ -8,8 +8,11 @@ const config = [
   ...workerConfig,
   typescriptProjectRoot(import.meta.dirname),
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
       globals: {
         ...globals.bunBuiltin,
         ...globals.node,

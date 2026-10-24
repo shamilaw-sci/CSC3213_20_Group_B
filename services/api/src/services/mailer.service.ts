@@ -1,16 +1,11 @@
-export interface MailerSendRequest {
-  to: string | string[];
-  subject: string;
-  html?: string;
-  text?: string;
-}
+import type { MailerSendRequest, PortalSignInOtpRequest } from '@scs/schemas';
 
 export interface MailerSendResponse {
   ok: boolean;
   error?: string;
 }
 
-export async function sendEmail(
+async function sendEmail(
   payload: MailerSendRequest,
   apiUrl: string,
   apiKey: string
@@ -30,4 +25,22 @@ export async function sendEmail(
   }
 
   return res.json();
+}
+
+export async function sendPortalSignInOtpEmail(
+  to: string,
+  otp: string,
+  expiresInMinutes: number,
+  apiUrl: string,
+  apiKey: string
+): Promise<MailerSendResponse> {
+  const payload = {
+    to,
+    template: {
+      name: 'portal-sign-in-otp',
+      props: { otp, expiresInMinutes },
+    },
+  } satisfies PortalSignInOtpRequest;
+
+  return sendEmail(payload, apiUrl, apiKey);
 }

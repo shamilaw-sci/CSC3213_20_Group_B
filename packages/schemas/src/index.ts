@@ -1,5 +1,6 @@
 // API
 export * from '#schemas/api/error.schema';
+export * from '#schemas/api/mailer.schema';
 export * from '#schemas/api/mutation.schema';
 export * from '#schemas/api/operation.schema';
 export * from '#schemas/api/pagination.schema';

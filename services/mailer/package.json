@@ -6,16 +6,26 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
-    "lint": "eslint \"src/**/*.ts\" --cache --cache-strategy content --cache-location .cache/eslint/",
-    "lint:fix": "eslint \"src/**/*.ts\" --cache --cache-strategy content --cache-location .cache/eslint/ --fix",
+    "test": "bun test",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --cache --cache-strategy content --cache-location .cache/eslint/",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --cache --cache-strategy content --cache-location .cache/eslint/ --fix",
+    "knip": "knip",
+    "knip:depcheck": "knip --dependencies",
+    "knip:fix": "knip --fix",
     "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "bun run typecheck && prettier --check .",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.1",
+    "@scs/schemas": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "hono": "^4.12.30",
     "nodemailer": "^6.10.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -23,8 +33,11 @@
     "@scs/tsconfig": "workspace:*",
     "@types/bun": "^1.4.3",
     "@types/nodemailer": "^8.0.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "eslint": "^9.39.5",
     "globals": "^17.7.0",
+    "knip": "^6.41.0",
     "prettier": "^3.9.10",
     "typescript": "^6.0.3"
   }

@@ -123,6 +123,7 @@ Shared API contracts include:
 - `ApiErrorEnvelopeSchema` for stable machine-readable errors;
 - `PaginationRequestSchema` and page metadata for bounded lists;
 - `MutationControlSchema` for idempotency and expected revisions;
+- `MailerSendRequestSchema` for raw messages and named transactional templates;
 - accepted/status/outcome schemas for durable operations.
 
 Keep provider-specific GitHub or Cloudflare payloads behind adapters rather

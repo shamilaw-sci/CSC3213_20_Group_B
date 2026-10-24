@@ -9,7 +9,7 @@ import {
   PASSKEY_RP_IDS,
   PASSKEY_RP_NAME,
 } from '@/config/client.config';
-import { sendEmail } from '@/services/mailer.service';
+import { sendPortalSignInOtpEmail } from '@/services/mailer.service';
 import {
   ACCESS_LEVEL,
   defaultRoleForEmail,
@@ -63,13 +63,6 @@ function requestOrigin(request: Request): string {
 
 function passkeyRpId(request: Request): string {
   return PASSKEY_RP_IDS[requestOrigin(request)] ?? 'scs-pdn.space';
-}
-
-function otpEmail(otp: string): { html: string; text: string } {
-  return {
-    html: `<p>Your SCS Portal sign-in code is <strong>${otp}</strong>.</p><p>It expires in 5 minutes. If you did not request it, ignore this email.</p>`,
-    text: `Your SCS Portal sign-in code is ${otp}. It expires in 5 minutes. If you did not request it, ignore this email.`,
-  };
 }
 
 export function createAuth(request: Request, env: Env) {
@@ -190,13 +183,10 @@ export function createAuth(request: Request, env: Env) {
         rateLimit: { window: 60, max: 3 },
         async sendVerificationOTP({ email, otp, type }) {
           if (type !== 'sign-in') return;
-          const content = otpEmail(otp);
-          await sendEmail(
-            {
-              to: email,
-              subject: 'SCS Portal sign-in code',
-              ...content,
-            },
+          await sendPortalSignInOtpEmail(
+            email,
+            otp,
+            OTP_EXPIRES_IN_SECONDS / 60,
             env.MAILER_API_URL,
             env.MAILER_API_KEY
           );

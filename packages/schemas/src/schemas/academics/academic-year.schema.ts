@@ -6,6 +6,7 @@ const AcademicYearRangeSchema = z
   .regex(/^\d{4}\/\d{4}$/, 'Academic year must be YYYY/YYYY, such as 2025/2026')
   .refine((value) => {
     const [startYear, endYear] = value.split('/').map(Number);
+    if (startYear === undefined || endYear === undefined) return false;
     return endYear === startYear + 1;
   }, 'The ending year must immediately follow the starting year');
 

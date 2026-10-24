@@ -74,7 +74,7 @@ fallback.
 | `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes  |
 | `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials               |
 | `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state    |
-| `services/mailer`        | authenticated mail requests and SMTP delivery                                        | application permissions                       |
+| `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                       |
 | `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration       |
 | `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions        |
 | `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points |

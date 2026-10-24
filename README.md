@@ -53,7 +53,7 @@ workspaces.
 | `apps/portal`            | `@scs/portal`        | Authentication and management workflows          |
 | `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and D1 state    |
 | `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
-| `services/mailer`        | `@scs/mailer`        | Authenticated SMTP delivery API                  |
+| `services/mailer`        | `@scs/mailer`        | Authenticated templated email and SMTP delivery  |
 | `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
 | `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |

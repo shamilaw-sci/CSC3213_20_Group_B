@@ -1,6 +1,4 @@
-import type { SendRequest } from '@/types';
-
-const MAX_RECIPIENTS = 50;
+import { sendRequestSchema, type SendRequest } from '@/types';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -10,44 +8,12 @@ export class ValidationError extends Error {
 }
 
 export function validateSendBody(body: unknown): asserts body is SendRequest {
-  if (!body || typeof body !== 'object') {
-    throw new ValidationError('Request body must be a JSON object');
-  }
-
-  const raw = body as Record<string, unknown>;
-  const { subject, html, text } = raw;
-
-  const recipients = Array.isArray(raw.to)
-    ? raw.to
-    : raw.to !== undefined
-      ? [raw.to]
-      : [];
-
-  if (
-    recipients.length === 0 ||
-    recipients.length > MAX_RECIPIENTS ||
-    !recipients.every((addr) => typeof addr === 'string' && addr.includes('@'))
-  ) {
+  const result = sendRequestSchema.safeParse(body);
+  if (!result.success) {
     throw new ValidationError(
-      `"to" must be a valid email or an array of 1–${MAX_RECIPIENTS} valid email addresses`
+      result.error.issues[0]?.message ?? 'Invalid request'
     );
   }
 
-  /* Preserve the assertion signature while passing normalized recipients downstream. */
-  (body as Record<string, unknown>).to = recipients;
-
-  if (!subject || typeof subject !== 'string' || subject.trim().length === 0) {
-    throw new ValidationError(
-      '"subject" is required and must be a non-empty string'
-    );
-  }
-
-  const hasHtml = typeof html === 'string' && html.trim().length > 0;
-  const hasText = typeof text === 'string' && text.trim().length > 0;
-
-  if (!hasHtml && !hasText) {
-    throw new ValidationError(
-      'At least one of "html" or "text" must be provided and non-empty'
-    );
-  }
+  Object.assign(body as object, result.data);
 }

@@ -1,7 +1,16 @@
 import { createTransport } from 'nodemailer';
+import { render } from '@react-email/render';
 
 import { env } from '@/config/env';
+import { PortalSignInOtpEmail } from '@/emails/portal-sign-in-otp.email';
 import type { SendRequest } from '@/types';
+
+interface ResolvedMailMessage {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+}
 
 /** Reuse one SMTP transport so warm requests can reuse pooled connections. */
 const transporter = createTransport({
@@ -14,13 +23,27 @@ const transporter = createTransport({
   },
 });
 
+export async function resolveMailMessage(
+  payload: SendRequest
+): Promise<ResolvedMailMessage> {
+  if ('template' in payload) {
+    const email = PortalSignInOtpEmail(payload.template.props);
+    return {
+      to: payload.to,
+      subject: 'SCS Portal sign-in code',
+      html: await render(email),
+      text: await render(email, { plainText: true }),
+    };
+  }
+
+  return payload;
+}
+
 export async function sendMail(payload: SendRequest): Promise<{ ok: true }> {
+  const message = await resolveMailMessage(payload);
   await transporter.sendMail({
     from: env.SMTP_FROM,
-    to: payload.to,
-    subject: payload.subject,
-    html: payload.html,
-    text: payload.text,
+    ...message,
   });
 
   return { ok: true };

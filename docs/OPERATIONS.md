@@ -178,6 +178,9 @@ SMTP settings.
 ```powershell
 bun --filter '@scs/mailer' lint
 bun --filter '@scs/mailer' typecheck
+bun --filter '@scs/mailer' typecheck:test
+bun --filter '@scs/mailer' test
+bun --filter '@scs/mailer' knip
 bun --filter '@scs/mailer' check
 ```
 

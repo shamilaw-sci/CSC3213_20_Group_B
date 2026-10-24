@@ -223,7 +223,8 @@ change.
 
 ## Mailer API
 
-`POST /send` requires `Authorization: Bearer <MAILER_API_KEY>` and JSON:
+`POST /send` requires `Authorization: Bearer <MAILER_API_KEY>`. Existing
+callers can provide a raw message:
 
 ```json
 {
@@ -234,9 +235,28 @@ change.
 }
 ```
 
-`to` contains 1–50 valid addresses, `subject` is required, and at least one of
-`html` or `text` is required. Success returns `{ "ok": true }`; validation,
-authentication, and upstream SMTP failures return `400`, `401`, and `502`.
+For supported transactional messages, callers should provide a named template
+instead of presentation markup. The Portal sign-in request is:
+
+```json
+{
+  "to": "user@pdn.ac.lk",
+  "template": {
+    "name": "portal-sign-in-otp",
+    "props": {
+      "otp": "123456",
+      "expiresInMinutes": 5
+    }
+  }
+}
+```
+
+The mailer owns the template subject and renders both HTML and plain text with
+React Email before SMTP delivery. `to` contains 1–50 valid addresses. Raw
+requests require a non-empty `subject` and at least one of `html` or `text`;
+the OTP template requires a six-digit code and an expiry from 1–60 minutes.
+Success returns `{ "ok": true }`; validation, authentication, and upstream
+SMTP failures return `400`, `401`, and `502`.
 
 ## Changing a Contract
 

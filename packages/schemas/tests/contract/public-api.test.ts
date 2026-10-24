@@ -57,6 +57,7 @@ const expectedRuntimeExports = [
   'IdempotencyKeySchema',
   'KnownSocialIcons',
   'KnownSocialPlatforms',
+  'MailerSendRequestSchema',
   'NonAcademicPositionSchema',
   'NonAcademicStaffSchema',
   'OpaqueCursorSchema',
