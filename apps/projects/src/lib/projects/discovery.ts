@@ -263,14 +263,14 @@ const discoveryKeys = [
   'person',
 ] as const;
 
-export function buildDiscoveryUrl(state: ProjectDiscoveryState) {
+export function buildDiscoveryUrl(state: Partial<ProjectDiscoveryState>) {
   const params = new URLSearchParams();
 
   for (const key of discoveryKeys) {
     if (state[key]) params.set(key, state[key]);
   }
 
-  if (state.page > 1) params.set('page', String(state.page));
+  if ((state.page ?? 1) > 1) params.set('page', String(state.page));
 
   const query = params.toString();
   return query ? `/?${query}` : '/';

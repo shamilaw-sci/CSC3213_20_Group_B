@@ -142,10 +142,7 @@ export function ProjectDetailLoading({
           <ContentPanelLoading lines={5} />
           <ContentPanelLoading lines={3} />
         </div>
-        <div className="space-y-5">
-          <ContentPanelLoading lines={5} />
-          <ContentPanelLoading lines={3} />
-        </div>
+        <ContentPanelLoading lines={5} />
       </section>
     </LoadingRegion>
   );
@@ -297,7 +294,7 @@ function ProjectListSkeleton({ count }: Readonly<{ count: number }>) {
         <div
           key={index}
           className="bg-card grid gap-4 rounded-md border p-4 shadow-sm
-            md:grid-cols-[2.5rem_minmax(0,1fr)_auto] md:items-start"
+            sm:grid-cols-[2.5rem_minmax(0,1fr)] sm:items-start"
         >
           <Skeleton className="size-10" />
           <div className="min-w-0 space-y-3">
@@ -313,7 +310,6 @@ function ProjectListSkeleton({ count }: Readonly<{ count: number }>) {
               <Skeleton className="h-5 w-16" />
             </div>
           </div>
-          <Skeleton className="h-9 w-24" />
         </div>
       ))}
     </div>

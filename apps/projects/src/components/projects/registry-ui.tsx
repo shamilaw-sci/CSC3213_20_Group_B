@@ -15,7 +15,6 @@ import {
 import { cn } from 'cn';
 import {
   Activity,
-  ArrowRight,
   BookOpen,
   Braces,
   ChartNoAxesCombined,
@@ -46,7 +45,9 @@ import {
   type ProjectCourse,
   type ProjectFacet,
 } from '@/lib/projects/api-client';
+import { buildDiscoveryUrl } from '@/lib/projects/discovery';
 import {
+  labelFromSlug,
   projectStatusLabels,
   projectTypeLabels,
   slugify,
@@ -142,29 +143,26 @@ export function ProjectGrid({
 function ProjectCard({ project }: Readonly<{ project: Project }>) {
   const Icon = iconMap[project.media.icon] ?? FolderKanban;
   const visibleTags = project.tags.slice(0, 2);
-  const hiddenTagCount = Math.max(project.tags.length - visibleTags.length, 0);
 
   return (
     <Link
       href={`/projects/${project.slug}`}
-      aria-label={`View project ${project.title}`}
-      className="group focus-visible:ring-ring/50 block rounded-md
-        focus-visible:ring-[3px] focus-visible:outline-none"
+      aria-label={project.title}
+      className="group focus-visible:ring-ring/50 block min-w-0 overflow-hidden
+        rounded-md focus-visible:ring-[3px] focus-visible:outline-none"
     >
       <Card
-        className="group-hover:bg-muted/35 grid w-full gap-4 rounded-md p-4
-          transition group-hover:-translate-y-0.5 group-hover:shadow-lg
-          md:grid-cols-[2.5rem_minmax(0,1fr)_auto] md:items-start"
+        className="group-hover:bg-muted/35 grid w-full min-w-0 gap-4 rounded-md
+          p-4 transition-[background-color,border-color,box-shadow,transform]
+          group-hover:-translate-y-0.5 group-hover:shadow-lg
+          sm:grid-cols-[2.5rem_minmax(0,1fr)] sm:items-start"
       >
-        <div
-          className="flex min-w-0 items-start justify-between gap-4 md:w-10
-            md:justify-start"
-        >
+        <div className="flex min-w-0 items-start sm:w-10">
           <span
             className="bg-primary/10 text-primary flex size-10 shrink-0
               items-center justify-center rounded-md"
           >
-            <Icon className="size-5" />
+            <Icon aria-hidden="true" className="size-5" />
           </span>
         </div>
         <CardContent className="min-w-0 px-0">
@@ -178,40 +176,31 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
             <Badge variant="secondary" className="rounded-md">
               {projectTypeLabels[project.projectType]}
             </Badge>
-            <Badge variant="secondary" className="rounded-md">
-              {project.academicYear ?? 'No academic year'}
-            </Badge>
             <StatusBadge status={project.status} />
-          </div>
-          <p className="text-muted-foreground mt-2 line-clamp-1 text-sm/6">
-            {project.shortDescription}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {visibleTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-md">
-                {tag}
+            {project.course ? (
+              <Badge variant="outline" className="rounded-md">
+                {project.course.code}
               </Badge>
-            ))}
-            {hiddenTagCount > 0 ? (
-              <Badge variant="secondary" className="rounded-md">
-                +{hiddenTagCount} topics
+            ) : null}
+            {project.academicYear ? (
+              <Badge variant="outline" className="rounded-md">
+                {project.academicYear}
               </Badge>
             ) : null}
           </div>
+          <p className="text-muted-foreground mt-2 line-clamp-2 text-sm/6">
+            {project.shortDescription}
+          </p>
+          {visibleTags.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {visibleTags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="rounded-md">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
         </CardContent>
-        <div
-          className="flex items-center justify-end border-t pt-3 md:block
-            md:min-w-24 md:border-t-0 md:pt-0"
-        >
-          <Button asChild size="sm" variant="outline" className="md:mt-1">
-            <span>
-              View
-              <ArrowRight
-                className="size-4 transition group-hover:translate-x-0.5"
-              />
-            </span>
-          </Button>
-        </div>
       </Card>
     </Link>
   );
@@ -288,7 +277,7 @@ export function FacetRail() {
 export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
   const Icon = iconMap[project.media.icon] ?? FolderKanban;
   const linkedCategories = project.categories.map((category) => ({
-    href: `/categories/${category}`,
+    href: buildDiscoveryUrl({ category }),
     label: category.replaceAll('-', ' '),
   }));
 
@@ -305,17 +294,33 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
             className="object-cover opacity-12 dark:opacity-10"
           />
         ) : null}
-        <div
-          className="absolute inset-0
-            bg-[linear-gradient(90deg,var(--card)_0%,color-mix(in_srgb,var(--card)_88%,transparent)_68%,transparent_100%)]"
-        />
+        <div className="bg-card/90 absolute inset-0" />
         <div className="relative mx-auto max-w-6xl px-4 py-14">
           <div className="flex max-w-4xl flex-col gap-5">
+            <nav
+              aria-label="Breadcrumb"
+              className="text-muted-foreground text-sm"
+            >
+              <ol className="flex min-w-0 items-center gap-2">
+                <li>
+                  <Link
+                    href="/"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Projects
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li className="text-foreground min-w-0 truncate">
+                  {project.title}
+                </li>
+              </ol>
+            </nav>
             <span
               className="bg-primary/10 text-primary flex size-14 items-center
                 justify-center rounded-md"
             >
-              <Icon className="size-8" />
+              <Icon aria-hidden="true" className="size-8" />
             </span>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={project.status} />
@@ -329,7 +334,9 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                   className="hover:bg-primary hover:text-primary-foreground
                     rounded-md transition-colors"
                 >
-                  <Link href={`/courses/${project.course.code}/projects`}>
+                  <Link
+                    href={buildDiscoveryUrl({ course: project.course.code })}
+                  >
                     {project.course.code}
                   </Link>
                 </Badge>
@@ -354,12 +361,12 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
           lg:grid-cols-[1fr_20rem]"
       >
         <div className="space-y-8">
-          <InfoPanel title="Overview">
+          <InfoPanel title="About This Project">
             <p className="text-muted-foreground text-sm/7">
               {project.description}
             </p>
           </InfoPanel>
-          <InfoPanel title="Team and contributors">
+          <InfoPanel title="People">
             <div className="grid gap-3 sm:grid-cols-2">
               {project.people.map((person) =>
                 person.username ? (
@@ -384,7 +391,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                           className="text-muted-foreground mt-1 text-xs
                             font-medium tracking-wide uppercase"
                         >
-                          {person.role}
+                          {labelFromSlug(person.role)}
                         </p>
                         {person.sNumber ? (
                           <p className="text-muted-foreground mt-2 text-sm">
@@ -407,7 +414,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                         className="text-muted-foreground mt-1 text-xs
                           font-medium tracking-wide uppercase"
                       >
-                        {person.role}
+                        {labelFromSlug(person.role)}
                       </p>
                       {person.sNumber ? (
                         <p className="text-muted-foreground mt-2 text-sm">
@@ -420,7 +427,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               )}
             </div>
           </InfoPanel>
-          <InfoPanel title="Collections and subjects">
+          <InfoPanel title="Topics and Collections">
             <div className="flex flex-wrap gap-2">
               {linkedCategories.map((category) => (
                 <Link
@@ -440,7 +447,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               {project.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/topics/${slugify(tag)}`}
+                  href={buildDiscoveryUrl({ topic: slugify(tag) })}
                   className="inline-flex"
                 >
                   <Badge
@@ -476,32 +483,29 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 label="Project type"
                 value={projectTypeLabels[project.projectType]}
               />
-              <MetadataRow
-                label="Academic year"
-                value={
-                  project.academicYear
-                    ? String(project.academicYear)
-                    : 'Not specified'
-                }
-              />
-              <MetadataRow
-                label="Course"
-                value={project.course?.code ?? 'Optional'}
-              />
-              <MetadataRow
-                label="Departments"
-                value={
-                  project.departments.length
-                    ? project.departments
-                        .map((department) => departmentLabel(department))
-                        .join(', ')
-                    : 'Optional'
-                }
-              />
-              <MetadataRow label="Batch" value={project.batch ?? 'Optional'} />
+              {project.academicYear ? (
+                <MetadataRow
+                  label="Academic year"
+                  value={String(project.academicYear)}
+                />
+              ) : null}
+              {project.course ? (
+                <MetadataRow label="Course" value={project.course.code} />
+              ) : null}
+              {project.departments.length ? (
+                <MetadataRow
+                  label="Departments"
+                  value={project.departments
+                    .map((department) => departmentLabel(department))
+                    .join(', ')}
+                />
+              ) : null}
+              {project.batch ? (
+                <MetadataRow label="Batch" value={project.batch} />
+              ) : null}
               <MetadataRow
                 label="Last updated"
-                value={project.dates.lastUpdatedAt}
+                value={formatProjectDate(project.dates.lastUpdatedAt)}
               />
             </dl>
           </InfoPanel>
@@ -601,11 +605,24 @@ function InfoPanel({
   return (
     <Card className="rounded-md p-5">
       <CardHeader className="px-0">
-        <CardTitle className="text-base">{title}</CardTitle>
+        <h2 className="text-base font-semibold">{title}</h2>
       </CardHeader>
       <CardContent className="px-0">{children}</CardContent>
     </Card>
   );
+}
+
+function formatProjectDate(value: string) {
+  const date = /^\d{4}-\d{2}-\d{2}$/u.test(value)
+    ? new Date(`${value}T00:00:00Z`)
+    : new Date(value);
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
 }
 
 function MetadataRow({
