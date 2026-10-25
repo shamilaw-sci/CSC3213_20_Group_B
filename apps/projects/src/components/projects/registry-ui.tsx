@@ -39,6 +39,7 @@ import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import publicEnvConfig from '@/config/public.env.config';
 import {
   buildCollectionPath,
+  canonicalizeCollectionSegment,
   PROJECT_TYPE_SEGMENTS,
 } from '@/lib/projects/collection-navigation';
 import {
@@ -193,10 +194,13 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
 
 export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
   const Icon = iconMap[project.media.icon] ?? FolderKanban;
-  const linkedCategories = project.categories.map((category) => ({
-    href: buildCollectionPath({ kind: 'category', value: category }),
-    label: category.replaceAll('-', ' '),
-  }));
+  const linkedCategories = project.categories
+    .filter(canonicalizeCollectionSegment)
+    .map((category) => ({
+      href: buildCollectionPath({ kind: 'category', value: category }),
+      label: category.replaceAll('-', ' '),
+    }));
+  const linkedTopics = project.tags.filter(canonicalizeCollectionSegment);
   const typeCollection = {
     kind: 'type' as const,
     projectType: project.projectType,
@@ -370,7 +374,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                   </Badge>
                 </Link>
               ))}
-              {project.tags.map((tag) => (
+              {linkedTopics.map((tag) => (
                 <Link
                   key={tag}
                   href={buildCollectionPath({ kind: 'topic', value: tag })}

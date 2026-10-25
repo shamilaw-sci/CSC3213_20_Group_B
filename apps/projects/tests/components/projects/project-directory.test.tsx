@@ -73,6 +73,26 @@ describe('ProjectDirectory', () => {
     }
   });
 
+  test('exposes populated collection paths from the complete directory', async () => {
+    fetchProjectsMock.mockResolvedValue([project(1)]);
+    render(<ProjectDirectory collection={{ kind: 'browse' }} page={1} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Explore collections' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Research Project' })
+    ).toHaveAttribute('href', '/types/research-projects');
+    expect(screen.getByRole('link', { name: 'Research' })).toHaveAttribute(
+      'href',
+      '/categories/research'
+    );
+    expect(screen.getByRole('link', { name: 'Accessibility' })).toHaveAttribute(
+      'href',
+      '/topics/accessibility'
+    );
+  });
+
   test('submits search terms to a path and sends an empty search to browse', async () => {
     fetchProjectsMock.mockResolvedValue([]);
     const user = userEvent.setup();
@@ -84,6 +104,10 @@ describe('ProjectDirectory', () => {
     expect(push).toHaveBeenLastCalledWith('/search/c%2B%2B-data');
 
     await user.clear(input);
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    expect(push).toHaveBeenLastCalledWith('/browse');
+
+    await user.type(input, '---');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     expect(push).toHaveBeenLastCalledWith('/browse');
   });

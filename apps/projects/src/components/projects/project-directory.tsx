@@ -21,11 +21,48 @@ import {
   type ProjectCollection,
 } from '@/lib/projects/collection-navigation';
 import {
+  type CollectionSummary,
   deriveCollectionSummaries,
   filterProjectsByCollection,
   paginateProjects,
 } from '@/lib/projects/collections';
 import { projectTypeLabels } from '@/lib/projects/metadata';
+
+function CollectionLinkGroup({
+  title,
+  summaries,
+}: Readonly<{
+  title: string;
+  summaries: CollectionSummary[];
+}>) {
+  if (summaries.length === 0) return null;
+
+  return (
+    <div className="min-w-0">
+      <h3
+        className="text-muted-foreground text-xs font-semibold tracking-wide
+          uppercase"
+      >
+        {title}
+      </h3>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {summaries.slice(0, 8).map((summary) => (
+          <Link
+            key={buildCollectionPath(summary.collection)}
+            href={buildCollectionPath(summary.collection)}
+            className="border-border bg-card text-card-foreground
+              hover:border-primary/40 hover:bg-muted focus-visible:ring-ring/50
+              inline-flex min-h-9 items-center rounded-md border px-3 text-sm
+              font-medium transition-colors focus-visible:ring-[3px]
+              focus-visible:outline-none"
+          >
+            {summary.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function labelFromSegment(value: string) {
   return value
@@ -166,6 +203,28 @@ export function ProjectDirectory({
           />
         </div>
       </header>
+
+      {collection.kind === 'browse' &&
+      (summaries.types.length > 0 ||
+        summaries.categories.length > 0 ||
+        summaries.topics.length > 0) ? (
+        <section
+          className="border-b py-7"
+          aria-labelledby="collections-heading"
+        >
+          <h2 id="collections-heading" className="text-lg font-semibold">
+            Explore collections
+          </h2>
+          <div className="mt-5 grid gap-6 md:grid-cols-3">
+            <CollectionLinkGroup title="Types" summaries={summaries.types} />
+            <CollectionLinkGroup
+              title="Categories"
+              summaries={summaries.categories}
+            />
+            <CollectionLinkGroup title="Topics" summaries={summaries.topics} />
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-8" aria-labelledby="directory-results-heading">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">

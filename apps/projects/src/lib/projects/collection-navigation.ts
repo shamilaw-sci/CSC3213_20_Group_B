@@ -29,13 +29,15 @@ const projectTypeBySegment = new Map(
 );
 
 function canonicalizePathValue(value: string) {
-  return value
+  const segment = value
     .normalize('NFKC')
     .trim()
     .toLowerCase()
     .replace(/[\s/\\]+/gu, '-')
     .replace(/-+/gu, '-')
     .replace(/^-|-$/gu, '');
+
+  return segment === '.' || segment === '..' ? '' : segment;
 }
 
 export function canonicalizeCollectionSegment(value: string) {
@@ -53,9 +55,10 @@ export function resolveProjectTypeSegment(segment: string) {
 export function parseCollectionPage(segments?: string[]) {
   if (!segments || segments.length === 0) return 1;
   if (segments.length !== 2 || segments[0] !== 'page') return null;
+  if (!/^[1-9]\d*$/u.test(segments[1])) return null;
 
   const page = Number(segments[1]);
-  return Number.isInteger(page) && page > 0 ? page : null;
+  return Number.isSafeInteger(page) && page > 1 ? page : null;
 }
 
 function collectionBasePath(collection: ProjectCollection) {
@@ -65,12 +68,17 @@ function collectionBasePath(collection: ProjectCollection) {
     case 'type':
       return `/types/${PROJECT_TYPE_SEGMENTS[collection.projectType]}`;
     case 'category':
-      return `/categories/${encodeURIComponent(canonicalizeCollectionSegment(collection.value))}`;
+      return collectionValuePath('categories', collection.value);
     case 'topic':
-      return `/topics/${encodeURIComponent(canonicalizeCollectionSegment(collection.value))}`;
+      return collectionValuePath('topics', collection.value);
     case 'search':
-      return `/search/${encodeURIComponent(canonicalizeSearchSegment(collection.query))}`;
+      return collectionValuePath('search', collection.query);
   }
+}
+
+function collectionValuePath(prefix: string, value: string) {
+  const segment = canonicalizePathValue(value);
+  return segment ? `/${prefix}/${encodeURIComponent(segment)}` : '/browse';
 }
 
 export function buildCollectionPath(collection: ProjectCollection, page = 1) {

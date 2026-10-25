@@ -68,6 +68,16 @@ describe('project collection navigation', () => {
     expect(canonicalizeSearchSegment('  C++ / data  ')).toBe('c++-data');
   });
 
+  test('never emits empty or browser-reserved collection paths', () => {
+    for (const value of ['/', '---', '.', '..']) {
+      expect(canonicalizeCollectionSegment(value)).toBe('');
+      expect(canonicalizeSearchSegment(value)).toBe('');
+      expect(buildCollectionPath({ kind: 'search', query: value })).toBe(
+        '/browse'
+      );
+    }
+  });
+
   test('accepts only the canonical optional pagination grammar', () => {
     expect(parseCollectionPage()).toBe(1);
     expect(parseCollectionPage([])).toBe(1);
@@ -77,6 +87,12 @@ describe('project collection navigation', () => {
       ['2'],
       ['page'],
       ['page', '0'],
+      ['page', '1'],
+      ['page', '02'],
+      ['page', '2.0'],
+      ['page', '2e0'],
+      ['page', '0x2'],
+      ['page', ' 2 '],
       ['page', '-1'],
       ['page', '1.5'],
       ['page', 'two'],

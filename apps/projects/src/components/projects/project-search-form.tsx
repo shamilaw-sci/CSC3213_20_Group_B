@@ -7,7 +7,10 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 
-import { buildCollectionPath } from '@/lib/projects/collection-navigation';
+import {
+  buildCollectionPath,
+  canonicalizeSearchSegment,
+} from '@/lib/projects/collection-navigation';
 
 export function ProjectSearchForm({
   defaultValue = '',
@@ -17,7 +20,9 @@ export function ProjectSearchForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const query = String(formData.get('query') ?? '').trim();
+    const query = canonicalizeSearchSegment(
+      String(formData.get('query') ?? '')
+    );
 
     router.push(
       query
