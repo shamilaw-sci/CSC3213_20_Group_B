@@ -11,12 +11,15 @@ const publicEnvConfig = createEnv({
     NEXT_PUBLIC_PEOPLE_SITE_URL: z
       .url()
       .default('https://people.scs-pdn.space'),
+    NEXT_PUBLIC_DEPARTMENT_SITE_URL: z.url().default('https://scs.pdn.ac.lk'),
   },
   runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_PROJECTS_DATA_BASE_URL:
       process.env.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL,
     NEXT_PUBLIC_PEOPLE_SITE_URL: process.env.NEXT_PUBLIC_PEOPLE_SITE_URL,
+    NEXT_PUBLIC_DEPARTMENT_SITE_URL:
+      process.env.NEXT_PUBLIC_DEPARTMENT_SITE_URL,
   },
   emptyStringAsUndefined: true,
 });

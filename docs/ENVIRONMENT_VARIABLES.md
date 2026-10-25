@@ -71,6 +71,7 @@ by the named hosting adapter. No currently supported name is unused.
 | `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
 | `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | project records            |
 | `NEXT_PUBLIC_PEOPLE_SITE_URL`        | `browser` | `template` | `runtime` | People app destinations    |
+| `NEXT_PUBLIC_DEPARTMENT_SITE_URL`    | `browser` | `template` | `runtime` | department course indexes  |
 
 ### Portal
 
@@ -174,6 +175,7 @@ override it with a secret value shared only with the proxy Worker.
 | `NEXT_PUBLIC_SITE_URL`               | browser    | `https://projects.scs-pdn.space`         |
 | `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | browser    | `https://data.scs-pdn.space/projects/v2` |
 | `NEXT_PUBLIC_PEOPLE_SITE_URL`        | browser    | `https://people.scs-pdn.space`           |
+| `NEXT_PUBLIC_DEPARTMENT_SITE_URL`    | browser    | `https://scs.pdn.ac.lk`                  |
 
 The projects data base may use the workspace's documented local fixture mode
 where supported; production uses a valid public data URL.

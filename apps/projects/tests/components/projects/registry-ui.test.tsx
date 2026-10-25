@@ -1,9 +1,9 @@
+import type { Project } from '@scs/schemas';
 import { render, screen, waitFor, within } from '@testing-library/react';
 
 import ProjectDetailPage from '@/app/projects/[project_slug]/_components/project-detail-page';
 import { ProjectDetail, ProjectGrid } from '@/components/projects/registry-ui';
 import { fetchProject, fetchProjects } from '@/lib/projects/api-client';
-import type { Project } from '@/lib/projects/types';
 
 vi.mock('@/lib/projects/api-client', () => ({
   fetchProject: vi.fn(),
@@ -76,10 +76,29 @@ describe('Project presentation', () => {
     expect(screen.queryByText('User research')).toBeNull();
     expect(screen.queryByText(/topics/u)).toBeNull();
     expect(cardLink).toHaveClass('min-w-0', 'overflow-hidden');
+    expect(screen.getByText('A Very Clear Project')).toHaveClass(
+      'wrap-break-word'
+    );
     expect(container.querySelector('svg')).toHaveAttribute(
       'aria-hidden',
       'true'
     );
+  });
+
+  test('uses a published cover image instead of the declared icon fallback', () => {
+    const { container } = render(
+      <ProjectGrid
+        projects={[
+          project({
+            media: { icon: 'FolderKanban', coverImage: '/cover.png' },
+          }),
+        ]}
+      />
+    );
+
+    expect(container.querySelector('img')).toHaveAttribute('src', '/cover.png');
+    expect(container.querySelector('svg')).toBeNull();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
   test('uses canonical discovery links and omits facts that do not exist', () => {
@@ -93,17 +112,20 @@ describe('Project presentation', () => {
 
     expect(
       screen.getByRole('navigation', { name: 'Breadcrumb' })
-    ).toHaveTextContent(/Projects.*A Very Clear Project/u);
-    expect(screen.getByRole('link', { name: 'Projects' })).toHaveAttribute(
+    ).toHaveTextContent(/Home.*Course Projects.*A Very Clear Project/u);
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute(
       'href',
       '/'
     );
     expect(
+      screen.getByRole('link', { name: 'Course Projects' })
+    ).toHaveAttribute('href', '/types/course-projects');
+    expect(
       screen.getByRole('link', { name: 'student innovation' })
-    ).toHaveAttribute('href', '/?category=student-innovation');
+    ).toHaveAttribute('href', '/categories/student-innovation');
     expect(screen.getByRole('link', { name: 'Accessibility' })).toHaveAttribute(
       'href',
-      '/?topic=accessibility'
+      '/topics/accessibility'
     );
     expect(screen.queryByText('Optional')).toBeNull();
     expect(screen.queryByText('Academic year')).toBeNull();
@@ -124,10 +146,10 @@ describe('Project presentation', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Project contributor')).toBeNull();
     expect(screen.getByText('26 Jul 2026')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'CSC3213' })).toHaveAttribute(
-      'href',
-      '/?course=CSC3213'
-    );
+    expect(screen.queryByRole('link', { name: /CSC3213/u })).toBeNull();
+    expect(
+      screen.getByText('CSC3213 — Software Systems Design Project')
+    ).toBeInTheDocument();
   });
 
   test('does not render an empty related-project section', async () => {
@@ -145,5 +167,28 @@ describe('Project presentation', () => {
     expect(
       screen.queryByRole('heading', { name: /Related Projects/iu })
     ).toBeNull();
+  });
+
+  test('finds related work through a shared schema type without inventing roles', async () => {
+    const selectedProject = project({ categories: ['Unique category'] });
+    const relatedProject = project({
+      id: 'related-project',
+      slug: 'related-project',
+      title: 'Related by Type',
+      categories: ['Different category'],
+      tags: ['Different topic'],
+    });
+    fetchProjectMock.mockResolvedValue(selectedProject);
+    fetchProjectsMock.mockResolvedValue([selectedProject, relatedProject]);
+
+    render(<ProjectDetailPage projectSlug={selectedProject.slug} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Related Projects' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Related by Type' })
+    ).toHaveAttribute('href', '/projects/related-project');
+    expect(screen.queryByText('Project contributor')).toBeNull();
   });
 });

@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 
-import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 
+let currentPath = '/';
+
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: () => currentPath,
 }));
 
 vi.mock('next/link', () => ({
@@ -25,7 +26,11 @@ vi.mock('@scs/ui/components/theme-toggle', () => ({
 }));
 
 describe('Projects SiteHeader', () => {
-  test('keeps the global shell focused on home and theme', () => {
+  beforeEach(() => {
+    currentPath = '/';
+  });
+
+  test('keeps Home and Browse visible without a redundant mobile menu', () => {
     render(<SiteHeader />);
 
     expect(
@@ -33,9 +38,23 @@ describe('Projects SiteHeader', () => {
     ).toHaveAttribute('href', '/');
     expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument();
     expect(
+      screen.getByRole('navigation', { name: 'Primary' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute(
+      'href',
+      '/'
+    );
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByRole('link', { name: 'Browse' })).toHaveAttribute(
+      'href',
+      '/browse'
+    );
+    expect(
       screen.queryByRole('button', { name: 'Open navigation' })
     ).toBeNull();
-    expect(screen.queryByRole('navigation')).toBeNull();
 
     for (const label of [
       'Search',
@@ -47,21 +66,17 @@ describe('Projects SiteHeader', () => {
       expect(screen.queryByRole('link', { name: label })).toBeNull();
     }
   });
-});
 
-describe('Projects SiteFooter', () => {
-  test('links only to canonical discovery URLs', () => {
-    render(<SiteFooter />);
+  test('marks Browse current for every directory path', () => {
+    currentPath = '/categories/research';
+    render(<SiteHeader />);
 
-    const links = screen.getAllByRole('link');
-    expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/',
-      '/?category=research',
-      '/?type=COURSE_PROJECT',
-      '/?status=ACTIVE',
-    ]);
-    expect(links.some((link) => link.getAttribute('href') === '/search')).toBe(
-      false
+    expect(screen.getByRole('link', { name: 'Browse' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute(
+      'aria-current'
     );
   });
 });

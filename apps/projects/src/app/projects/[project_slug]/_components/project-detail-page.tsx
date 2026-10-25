@@ -1,5 +1,6 @@
 'use client';
 
+import type { Project } from '@scs/schemas';
 import { useEffect, useState } from 'react';
 
 import {
@@ -13,17 +14,41 @@ import {
   fetchProjects,
   ProjectDataNotFoundError,
 } from '@/lib/projects/api-client';
-import type { Project } from '@/lib/projects/types';
+import { canonicalizeCollectionSegment } from '@/lib/projects/collection-navigation';
 
 function getRelatedProjects(project: Project, projects: Project[]) {
+  const categories = new Set(
+    project.categories.map(canonicalizeCollectionSegment)
+  );
+  const topics = new Set(project.tags.map(canonicalizeCollectionSegment));
+
   return projects
     .filter((candidate) => candidate.slug !== project.slug)
-    .filter((candidate) =>
-      candidate.categories.some((category) =>
-        project.categories.includes(category)
-      )
+    .map((candidate) => {
+      const sharedCategories = candidate.categories.filter((category) =>
+        categories.has(canonicalizeCollectionSegment(category))
+      ).length;
+      const sharedTopics = candidate.tags.filter((topic) =>
+        topics.has(canonicalizeCollectionSegment(topic))
+      ).length;
+      const score =
+        (candidate.projectType === project.projectType ? 3 : 0) +
+        sharedCategories * 2 +
+        sharedTopics;
+
+      return { candidate, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        b.candidate.dates.lastUpdatedAt.localeCompare(
+          a.candidate.dates.lastUpdatedAt
+        ) ||
+        a.candidate.slug.localeCompare(b.candidate.slug)
     )
-    .slice(0, 3);
+    .slice(0, 3)
+    .map(({ candidate }) => candidate);
 }
 
 export default function ProjectDetailPage({

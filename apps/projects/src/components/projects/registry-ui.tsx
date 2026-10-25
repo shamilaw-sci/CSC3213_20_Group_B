@@ -2,6 +2,8 @@
 
 import {
   type AcademicDepartmentCode,
+  type Project,
+  type ProjectLinks,
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
@@ -36,15 +38,14 @@ import { type ComponentType, type ReactNode } from 'react';
 import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import publicEnvConfig from '@/config/public.env.config';
 import {
-  buildDiscoveryUrl,
-  normalizeDiscoveryFacet,
-} from '@/lib/projects/discovery';
+  buildCollectionPath,
+  PROJECT_TYPE_SEGMENTS,
+} from '@/lib/projects/collection-navigation';
 import {
   labelFromSlug,
   projectStatusLabels,
   projectTypeLabels,
 } from '@/lib/projects/metadata';
-import type { Project, ProjectLinks } from '@/lib/projects/types';
 
 const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   Activity,
@@ -77,6 +78,14 @@ function peopleProfileHref(username: string) {
   )}`;
 }
 
+function labelFromSegment(value: string) {
+  return value
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export function ProjectGrid({
   projects,
   emptyTitle = 'No projects to show',
@@ -93,7 +102,7 @@ export function ProjectGrid({
   }
 
   return (
-    <div className="grid w-full gap-5">
+    <div className="grid w-full gap-5 md:grid-cols-2 xl:grid-cols-3">
       {projects.map((project) => (
         <ProjectCard key={project.id} project={project} />
       ))}
@@ -113,23 +122,38 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
         rounded-md focus-visible:ring-[3px] focus-visible:outline-none"
     >
       <Card
-        className="group-hover:bg-muted/35 grid w-full min-w-0 gap-4 rounded-md
-          p-4 transition-[background-color,border-color,box-shadow,transform]
-          group-hover:-translate-y-0.5 group-hover:shadow-lg
-          sm:grid-cols-[2.5rem_minmax(0,1fr)] sm:items-start"
+        className="group-hover:border-primary/40 h-full min-w-0 gap-0
+          overflow-hidden rounded-md py-0
+          transition-[border-color,box-shadow,transform]
+          group-hover:-translate-y-0.5 group-hover:shadow-lg"
       >
-        <div className="flex min-w-0 items-start sm:w-10">
-          <span
-            className="bg-primary/10 text-primary flex size-10 shrink-0
-              items-center justify-center rounded-md"
-          >
-            <Icon aria-hidden="true" className="size-5" />
-          </span>
+        <div
+          className="bg-muted/45 relative flex aspect-16/7 items-center
+            justify-center overflow-hidden border-b"
+        >
+          {project.media.coverImage ? (
+            <Image
+              src={project.media.coverImage}
+              alt=""
+              fill
+              unoptimized
+              sizes="(min-width: 1280px) 22rem, (min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-transform duration-300
+                group-hover:scale-[1.02]"
+            />
+          ) : (
+            <span
+              className="bg-primary/10 text-primary flex size-12 items-center
+                justify-center rounded-md"
+            >
+              <Icon aria-hidden="true" className="size-6" />
+            </span>
+          )}
         </div>
-        <CardContent className="min-w-0 px-0">
+        <CardContent className="min-w-0 p-5">
           <CardTitle
             className="text-card-foreground line-clamp-2 text-base/snug
-              md:text-lg"
+              wrap-break-word md:text-lg"
           >
             {project.title}
           </CardTitle>
@@ -170,9 +194,16 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
 export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
   const Icon = iconMap[project.media.icon] ?? FolderKanban;
   const linkedCategories = project.categories.map((category) => ({
-    href: buildDiscoveryUrl({ category }),
+    href: buildCollectionPath({ kind: 'category', value: category }),
     label: category.replaceAll('-', ' '),
   }));
+  const typeCollection = {
+    kind: 'type' as const,
+    projectType: project.projectType,
+  };
+  const typeCollectionLabel = labelFromSegment(
+    PROJECT_TYPE_SEGMENTS[project.projectType]
+  );
 
   return (
     <article>
@@ -200,7 +231,16 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                     href="/"
                     className="hover:text-foreground transition-colors"
                   >
-                    Projects
+                    Home
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link
+                    href={buildCollectionPath(typeCollection)}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {typeCollectionLabel}
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>
@@ -217,21 +257,14 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
             </span>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={project.status} />
-              <Badge variant="secondary" className="rounded-md">
-                {projectTypeLabels[project.projectType]}
+              <Badge asChild variant="secondary" className="rounded-md">
+                <Link href={buildCollectionPath(typeCollection)}>
+                  {projectTypeLabels[project.projectType]}
+                </Link>
               </Badge>
               {project.course ? (
-                <Badge
-                  asChild
-                  variant="secondary"
-                  className="hover:bg-primary hover:text-primary-foreground
-                    rounded-md transition-colors"
-                >
-                  <Link
-                    href={buildDiscoveryUrl({ course: project.course.code })}
-                  >
-                    {project.course.code}
-                  </Link>
+                <Badge variant="outline" className="rounded-md">
+                  {project.course.code}
                 </Badge>
               ) : null}
             </div>
@@ -340,9 +373,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               {project.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={buildDiscoveryUrl({
-                    topic: normalizeDiscoveryFacet(tag),
-                  })}
+                  href={buildCollectionPath({ kind: 'topic', value: tag })}
                   className="inline-flex"
                 >
                   <Badge
@@ -385,7 +416,10 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
                 />
               ) : null}
               {project.course ? (
-                <MetadataRow label="Course" value={project.course.code} />
+                <MetadataRow
+                  label="Course"
+                  value={`${project.course.code} — ${project.course.title}`}
+                />
               ) : null}
               {project.departments.length ? (
                 <MetadataRow
