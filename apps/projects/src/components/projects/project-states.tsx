@@ -128,46 +128,61 @@ export function ProjectHomeLoading() {
   return (
     <LoadingRegion label="Loading projects…">
       <section className="bg-card border-b">
-        <div className="mx-auto max-w-6xl space-y-4 px-4 py-10 sm:py-12">
+        <div className="mx-auto max-w-6xl space-y-4 px-4 py-12 sm:py-16">
           <Skeleton className="h-4 w-64 max-w-full" />
           <Skeleton className="h-12 w-72 max-w-full" />
           <Skeleton className="h-5 w-full max-w-3xl" />
-          <div className="max-w-3xl space-y-2 pt-2">
+          <div className="max-w-2xl space-y-2 pt-3">
             <Skeleton className="h-4 w-28" />
             <div className="flex gap-2">
               <Skeleton className="h-11 min-w-0 flex-1" />
-              <Skeleton className="h-11 w-36" />
+              <Skeleton className="h-11 w-24" />
             </div>
-            <Skeleton className="h-4 w-80 max-w-full" />
           </div>
         </div>
       </section>
-      <section className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:py-10">
-        <div className="space-y-4">
+      <div className="mx-auto max-w-6xl space-y-14 px-4 py-10 sm:py-14">
+        <section className="space-y-6">
           <div className="space-y-2">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-64 max-w-full" />
+            <Skeleton className="h-8 w-64 max-w-full" />
+            <Skeleton className="h-4 w-80 max-w-full" />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-9 w-full" />
+              <div key={index} className="flex gap-4 rounded-md border p-5">
+                <Skeleton className="size-10 shrink-0" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
               </div>
             ))}
           </div>
-        </div>
-        <div className="space-y-5">
-          <div className="flex items-end justify-between gap-3 border-b pb-4">
+        </section>
+        <section className="space-y-6">
+          <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-80 max-w-full" />
             </div>
-            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-9 w-40" />
           </div>
           <ProjectListSkeleton count={3} />
-        </div>
-      </section>
+        </section>
+        <section className="grid gap-10 border-t pt-10 lg:grid-cols-2">
+          {Array.from({ length: 2 }, (_, index) => (
+            <div key={index} className="space-y-4">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-8 w-28" />
+                <Skeleton className="h-8 w-36" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
     </LoadingRegion>
   );
 }

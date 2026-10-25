@@ -1,67 +1,58 @@
 'use client';
 
+import type { Project } from '@scs/schemas';
+import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
-import { Input } from '@scs/ui/components/input';
-import { Label } from '@scs/ui/components/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@scs/ui/components/select';
-import { cn } from 'cn';
-import { ListFilter, Search, X } from 'lucide-react';
+import { Card, CardContent } from '@scs/ui/components/card';
+import { ArrowRight, FolderKanban } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { ProjectSearchForm } from '@/components/projects/project-search-form';
 import {
   ProjectErrorPanel,
   ProjectHomeLoading,
+  StatePanel,
 } from '@/components/projects/project-states';
 import { ProjectGrid } from '@/components/projects/registry-ui';
 import { fetchProjects } from '@/lib/projects/api-client';
 import {
-  buildDiscoveryUrl,
-  deriveDiscoveryOptions,
-  type DiscoveryOption,
-  filterProjects,
-  paginateProjects,
-  parseProjectDiscoveryParams,
-  patchProjectDiscoveryState,
-  type ProjectDiscoveryState,
-} from '@/lib/projects/discovery';
-import type { Project } from '@/lib/projects/types';
+  buildCollectionPath,
+  PROJECT_TYPE_SEGMENTS,
+} from '@/lib/projects/collection-navigation';
+import {
+  type CollectionSummary,
+  deriveCollectionSummaries,
+  recentProjects,
+} from '@/lib/projects/collections';
 
-type FilterKey = Exclude<keyof ProjectDiscoveryState, 'q' | 'page'>;
+function labelFromSegment(value: string) {
+  return value
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
 
-const ALL_FILTER_VALUE = '__project_discovery_all__';
-const FILTER_OPTION_PREFIX = 'project-discovery-option:';
+function countLabel(count: number) {
+  return `${count} ${count === 1 ? 'project' : 'projects'}`;
+}
 
 export default function Home() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const state = useMemo(
-    () => parseProjectDiscoveryParams(new URLSearchParams(searchParams)),
-    [searchParams]
-  );
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadProjects() {
       setLoading(true);
+      setLoadFailed(false);
 
       try {
         setProjects(await fetchProjects(controller.signal));
-        setLoadFailed(false);
       } catch {
         if (!controller.signal.aborted) {
           setProjects([]);
@@ -76,365 +67,216 @@ export default function Home() {
     return () => controller.abort();
   }, [reloadKey]);
 
-  const options = useMemo(() => deriveDiscoveryOptions(projects), [projects]);
-  const filteredProjects = useMemo(
-    () => filterProjects(projects, state),
-    [projects, state]
+  const summaries = useMemo(
+    () => deriveCollectionSummaries(projects),
+    [projects]
   );
-  const projectPage = useMemo(
-    () => paginateProjects(filteredProjects, state.page),
-    [filteredProjects, state.page]
-  );
-  const activeFilters = activeFilterLabels(state, options);
-  const hasFilters = activeFilters.length > 0;
-
-  function navigate(patch: Partial<ProjectDiscoveryState>) {
-    router.push(buildDiscoveryUrl(patchProjectDiscoveryState(state, patch)));
-  }
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    navigate({ q: String(formData.get('q') ?? '') });
-  }
+  const recent = useMemo(() => recentProjects(projects, 6), [projects]);
 
   if (loading) return <ProjectHomeLoading />;
 
   return (
     <>
       <section className="bg-card border-b">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <p className="text-primary text-sm font-medium">
-            Department of Statistics & Computer Science
+            Department of Statistics &amp; Computer Science
           </p>
           <h1
             className="text-card-foreground mt-3 max-w-3xl text-4xl
               font-semibold tracking-tight text-balance sm:text-5xl"
           >
-            Find Projects
+            Projects from SCS
           </h1>
-          <p className="text-muted-foreground mt-4 max-w-3xl text-base/7">
-            Search and browse student projects, research, department systems,
-            datasets, open-source work, and collaborations.
-          </p>
-
-          <form
-            key={state.q}
-            onSubmit={handleSearch}
-            className="mt-7 max-w-3xl"
+          <p
+            className="text-muted-foreground mt-4 max-w-3xl text-base/7
+              sm:text-lg/8"
           >
-            <Label htmlFor="project-search">Search Projects</Label>
-            <div className="mt-2 flex gap-2">
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  aria-hidden="true"
-                  className="text-muted-foreground pointer-events-none absolute
-                    top-1/2 left-3 size-4 -translate-y-1/2"
-                />
-                <Input
-                  id="project-search"
-                  name="q"
-                  defaultValue={state.q}
-                  placeholder="Example: CSC3213, accessibility, or a student name…"
-                  autoComplete="off"
-                  className="h-11 pl-10"
-                />
-              </div>
-              <Button type="submit" className="h-11">
-                Search Projects
-              </Button>
-            </div>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Try a title, course code, person, or technology.
-            </p>
-          </form>
+            Explore student work, research, open-source tools, datasets, and
+            department systems published by our community.
+          </p>
+          <div className="mt-8">
+            <ProjectSearchForm />
+          </div>
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
-        <section aria-labelledby="filter-heading">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 id="filter-heading" className="font-semibold">
-                Narrow the Results
-              </h2>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Choose only the details you already know.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="md:hidden"
-                aria-expanded={filtersOpen}
-                aria-controls="project-filter-controls"
-                onClick={() => setFiltersOpen((open) => !open)}
-              >
-                <ListFilter aria-hidden="true" />
-                {filtersOpen ? 'Hide filters' : 'Show filters'}
-              </Button>
-              {hasFilters ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push('/')}
-                >
-                  Clear Filters
-                </Button>
-              ) : null}
-            </div>
-          </div>
+      <div className="mx-auto w-full max-w-6xl space-y-14 px-4 py-10 sm:py-14">
+        {loadFailed ? (
+          <ProjectErrorPanel onRetry={() => setReloadKey((key) => key + 1)} />
+        ) : projects.length === 0 ? (
+          <StatePanel
+            title="No projects published yet"
+            description="Published projects will appear here when they become available."
+          />
+        ) : (
+          <>
+            {summaries.types.length > 0 ? (
+              <section aria-labelledby="project-types-heading">
+                <SectionHeading
+                  id="project-types-heading"
+                  title="Explore by project type"
+                  description="Start with the kind of work you want to discover."
+                />
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {summaries.types.map((summary) => {
+                    if (summary.collection.kind !== 'type') return null;
+                    const title = labelFromSegment(
+                      PROJECT_TYPE_SEGMENTS[summary.collection.projectType]
+                    );
 
-          <div
-            id="project-filter-controls"
-            className={cn(
-              'mt-4 gap-3 sm:grid-cols-2 lg:grid-cols-3',
-              filtersOpen ? 'grid' : 'hidden md:grid'
-            )}
-          >
-            <DiscoverySelect
-              id="category-filter"
-              label="Category"
-              value={state.category}
-              options={options.categories}
-              onValueChange={(value) => navigate({ category: value })}
-            />
-            <DiscoverySelect
-              id="topic-filter"
-              label="Topic"
-              value={state.topic}
-              options={options.topics}
-              onValueChange={(value) => navigate({ topic: value })}
-            />
-            <DiscoverySelect
-              id="course-filter"
-              label="Course"
-              value={state.course}
-              options={options.courses}
-              onValueChange={(value) => navigate({ course: value })}
-            />
-            <DiscoverySelect
-              id="status-filter"
-              label="Status"
-              value={state.status}
-              options={options.statuses}
-              onValueChange={(value) =>
-                navigate({ status: value as ProjectDiscoveryState['status'] })
-              }
-            />
-            <DiscoverySelect
-              id="type-filter"
-              label="Project Type"
-              value={state.type}
-              options={options.types}
-              onValueChange={(value) =>
-                navigate({ type: value as ProjectDiscoveryState['type'] })
-              }
-            />
-            <DiscoverySelect
-              id="person-filter"
-              label="Person"
-              value={state.person}
-              options={options.people}
-              onValueChange={(value) => navigate({ person: value })}
-            />
-          </div>
-
-          {hasFilters ? (
-            <div
-              className="mt-4 flex flex-wrap gap-2"
-              aria-label="Active filters"
-            >
-              {activeFilters.map((filter) => (
-                <Button
-                  key={filter.key}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="max-w-full overflow-hidden"
-                  aria-label={`Remove ${filter.name} ${filter.label}`}
-                  onClick={() => navigate({ [filter.key]: '' })}
-                >
-                  <span className="min-w-0 truncate">{filter.label}</span>
-                  <X aria-hidden="true" className="shrink-0" />
-                </Button>
-              ))}
-            </div>
-          ) : null}
-        </section>
-
-        <section className="mt-10" aria-labelledby="project-results-heading">
-          <div
-            className="mb-5 flex flex-wrap items-end justify-between gap-3
-              border-b pb-4"
-          >
-            <div>
-              <h2
-                id="project-results-heading"
-                className="text-2xl font-semibold text-balance"
-              >
-                {hasFilters ? 'Matching Projects' : 'All Projects'}
-              </h2>
-              <p
-                className="text-muted-foreground mt-1 text-sm"
-                aria-live="polite"
-              >
-                {resultCountLabel(projectPage.totalItems)}
-              </p>
-            </div>
-            {projectPage.totalPages > 1 ? (
-              <p className="text-muted-foreground text-sm tabular-nums">
-                Page {projectPage.page} of {projectPage.totalPages}
-              </p>
+                    return (
+                      <Link
+                        key={summary.collection.projectType}
+                        href={buildCollectionPath(summary.collection)}
+                        className="group focus-visible:ring-ring/50 rounded-md
+                          focus-visible:ring-[3px] focus-visible:outline-none"
+                      >
+                        <Card
+                          className="group-hover:border-primary/40 h-full
+                            rounded-md py-0 transition-colors"
+                        >
+                          <CardContent
+                            className="flex h-full items-start gap-4 p-5"
+                          >
+                            <span
+                              className="bg-primary/10 text-primary flex size-10
+                                shrink-0 items-center justify-center rounded-md"
+                            >
+                              <FolderKanban
+                                aria-hidden="true"
+                                className="size-5"
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className="text-card-foreground block
+                                  font-semibold"
+                              >
+                                {title}
+                              </span>
+                              <span
+                                className="text-muted-foreground mt-1 block
+                                  text-sm"
+                              >
+                                {countLabel(summary.count)}
+                              </span>
+                            </span>
+                            <ArrowRight
+                              aria-hidden="true"
+                              className="text-muted-foreground mt-1 size-4
+                                shrink-0 transition-transform
+                                group-hover:translate-x-0.5"
+                            />
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
             ) : null}
-          </div>
 
-          {loadFailed ? (
-            <ProjectErrorPanel onRetry={() => setReloadKey((key) => key + 1)} />
-          ) : (
-            <ProjectGrid
-              projects={projectPage.projects}
-              emptyTitle="No projects match these filters"
-              emptyDescription="Remove a filter or try a broader search."
-            />
-          )}
+            {recent.length > 0 ? (
+              <section aria-labelledby="recent-projects-heading">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <SectionHeading
+                    id="recent-projects-heading"
+                    title="Recently updated"
+                    description="The latest published changes across the project registry."
+                  />
+                  <Button asChild variant="outline">
+                    <Link href="/browse">
+                      Browse all projects
+                      <ArrowRight aria-hidden="true" className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+                <div className="mt-6">
+                  <ProjectGrid projects={recent} />
+                </div>
+              </section>
+            ) : null}
 
-          {!loadFailed && projectPage.totalPages > 1 ? (
-            <nav
-              aria-label="Project result pages"
-              className="mt-8 flex items-center justify-between gap-3"
-            >
-              {projectPage.page > 1 ? (
-                <Button asChild variant="outline">
-                  <Link
-                    href={buildDiscoveryUrl(
-                      patchProjectDiscoveryState(state, {
-                        page: projectPage.page - 1,
-                      })
-                    )}
-                  >
-                    Previous
-                  </Link>
-                </Button>
-              ) : (
-                <span />
-              )}
-              {projectPage.page < projectPage.totalPages ? (
-                <Button asChild variant="outline">
-                  <Link
-                    href={buildDiscoveryUrl(
-                      patchProjectDiscoveryState(state, {
-                        page: projectPage.page + 1,
-                      })
-                    )}
-                  >
-                    Next
-                  </Link>
-                </Button>
-              ) : null}
-            </nav>
-          ) : null}
-        </section>
+            {summaries.categories.length > 0 || summaries.topics.length > 0 ? (
+              <div className="grid gap-10 border-t pt-10 lg:grid-cols-2">
+                {summaries.categories.length > 0 ? (
+                  <CollectionLinks
+                    headingId="project-categories-heading"
+                    title="Browse by category"
+                    description="Explore the broader areas these projects contribute to."
+                    summaries={summaries.categories}
+                  />
+                ) : null}
+                {summaries.topics.length > 0 ? (
+                  <CollectionLinks
+                    headingId="project-topics-heading"
+                    title="Explore topics"
+                    description="Jump to technologies and subjects used across projects."
+                    summaries={summaries.topics}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </>
   );
 }
 
-function DiscoverySelect({
+function SectionHeading({
   id,
-  label,
-  value,
-  options,
-  onValueChange,
-}: Readonly<{
-  id: string;
-  label: string;
-  value: string;
-  options: DiscoveryOption[];
-  onValueChange: (value: string) => void;
-}>) {
+  title,
+  description,
+}: Readonly<{ id: string; title: string; description: string }>) {
   return (
-    <div className="min-w-0">
-      <Label htmlFor={id}>{label}</Label>
-      <Select
-        value={value ? toSelectValue(value) : ALL_FILTER_VALUE}
-        onValueChange={(nextValue) => onValueChange(fromSelectValue(nextValue))}
+    <div>
+      <h2
+        id={id}
+        className="text-foreground text-2xl font-semibold text-balance"
       >
-        <SelectTrigger id={id} className="mt-2 w-full">
-          <SelectValue placeholder={`All ${label.toLowerCase()}`} />
-        </SelectTrigger>
-        <SelectContent position="popper" align="start">
-          <SelectGroup>
-            <SelectItem value={ALL_FILTER_VALUE}>
-              All {label.toLowerCase()}
-            </SelectItem>
-            {options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={toSelectValue(option.value)}
-              >
-                {option.label} ({option.count})
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+        {title}
+      </h2>
+      <p className="text-muted-foreground mt-2 max-w-2xl text-sm/6">
+        {description}
+      </p>
     </div>
   );
 }
 
-function toSelectValue(value: string) {
-  return `${FILTER_OPTION_PREFIX}${value}`;
-}
-
-function fromSelectValue(value: string) {
-  return value === ALL_FILTER_VALUE
-    ? ''
-    : value.slice(FILTER_OPTION_PREFIX.length);
-}
-
-function resultCountLabel(count: number) {
-  return `${count} ${count === 1 ? 'project' : 'projects'}`;
-}
-
-function activeFilterLabels(
-  state: ProjectDiscoveryState,
-  options: ReturnType<typeof deriveDiscoveryOptions>
-) {
-  const labels: Array<{
-    key: 'q' | FilterKey;
-    name: string;
-    label: string;
-  }> = [];
-
-  if (state.q) labels.push({ key: 'q', name: 'search', label: state.q });
-
-  const filters: Array<{
-    key: FilterKey;
-    name: string;
-    options: DiscoveryOption[];
-  }> = [
-    { key: 'category', name: 'category', options: options.categories },
-    { key: 'topic', name: 'topic', options: options.topics },
-    { key: 'course', name: 'course', options: options.courses },
-    { key: 'status', name: 'status', options: options.statuses },
-    { key: 'type', name: 'project type', options: options.types },
-    { key: 'person', name: 'person', options: options.people },
-  ];
-
-  for (const filter of filters) {
-    const value = state[filter.key];
-    if (!value) continue;
-    labels.push({
-      key: filter.key,
-      name: filter.name,
-      label:
-        filter.options.find((option) => option.value === value)?.label ?? value,
-    });
-  }
-
-  return labels;
+function CollectionLinks({
+  headingId,
+  title,
+  description,
+  summaries,
+}: Readonly<{
+  headingId: string;
+  title: string;
+  description: string;
+  summaries: CollectionSummary[];
+}>) {
+  return (
+    <section aria-labelledby={headingId}>
+      <SectionHeading id={headingId} title={title} description={description} />
+      <div className="mt-5 flex flex-wrap gap-2">
+        {summaries.slice(0, 12).map((summary) => (
+          <Badge
+            key={buildCollectionPath(summary.collection)}
+            asChild
+            variant="secondary"
+            className="hover:bg-accent hover:text-accent-foreground rounded-md
+              px-3 py-1.5 transition-colors"
+          >
+            <Link href={buildCollectionPath(summary.collection)}>
+              {summary.label}
+              <span className="text-muted-foreground ml-1.5 tabular-nums">
+                {summary.count}
+              </span>
+            </Link>
+          </Badge>
+        ))}
+      </div>
+    </section>
+  );
 }
