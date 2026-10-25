@@ -23,6 +23,18 @@ describe('Projects discovery architecture', () => {
     }
   });
 
+  test('owns the canonical path-based discovery routes', () => {
+    for (const relativePath of [
+      'src/app/browse/[[...segments]]/page.tsx',
+      'src/app/types/[type]/[[...segments]]/page.tsx',
+      'src/app/categories/[category]/[[...segments]]/page.tsx',
+      'src/app/topics/[topic]/[[...segments]]/page.tsx',
+      'src/app/search/[query]/[[...segments]]/page.tsx',
+    ]) {
+      expect(existsSync(path.join(workspaceRoot, relativePath))).toBe(true);
+    }
+  });
+
   test('contains no internal links to removed discovery routes', () => {
     const combinedSource = sourceFiles(/\.(?:ts|tsx)$/u)
       .map((file) => readFileSync(file, 'utf8'))

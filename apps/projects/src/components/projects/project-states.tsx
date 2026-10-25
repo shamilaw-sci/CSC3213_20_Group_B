@@ -172,6 +172,25 @@ export function ProjectHomeLoading() {
   );
 }
 
+export function ProjectDirectoryLoading() {
+  return (
+    <LoadingRegion label="Loading project directory">
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-10 sm:py-12">
+        <div className="space-y-4 border-b pb-7">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-72 max-w-full" />
+          <Skeleton className="h-5 w-full max-w-2xl" />
+          <Skeleton className="h-11 w-full max-w-2xl" />
+        </div>
+        <div className="space-y-5">
+          <Skeleton className="h-7 w-28" />
+          <ProjectListSkeleton count={3} />
+        </div>
+      </div>
+    </LoadingRegion>
+  );
+}
+
 function LoadingRegion({
   children,
   className,
