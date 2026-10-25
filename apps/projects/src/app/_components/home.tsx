@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
-import { Search, X } from 'lucide-react';
+import { cn } from 'cn';
+import { ListFilter, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
@@ -36,6 +37,9 @@ import type { Project } from '@/lib/projects/types';
 
 type FilterKey = Exclude<keyof ProjectDiscoveryState, 'q' | 'page'>;
 
+const ALL_FILTER_VALUE = '__project_discovery_all__';
+const FILTER_OPTION_PREFIX = 'project-discovery-option:';
+
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,6 +47,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const state = useMemo(
     () => parseProjectDiscoveryParams(new URLSearchParams(searchParams)),
     [searchParams]
@@ -146,7 +151,7 @@ export default function Home() {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
         <section aria-labelledby="filter-heading">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -157,19 +162,39 @@ export default function Home() {
                 Choose only the details you already know.
               </p>
             </div>
-            {hasFilters ? (
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => router.push('/')}
+                className="md:hidden"
+                aria-expanded={filtersOpen}
+                aria-controls="project-filter-controls"
+                onClick={() => setFiltersOpen((open) => !open)}
               >
-                Clear Filters
+                <ListFilter aria-hidden="true" />
+                {filtersOpen ? 'Hide filters' : 'Show filters'}
               </Button>
-            ) : null}
+              {hasFilters ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/')}
+                >
+                  Clear Filters
+                </Button>
+              ) : null}
+            </div>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            id="project-filter-controls"
+            className={cn(
+              'mt-4 gap-3 sm:grid-cols-2 lg:grid-cols-3',
+              filtersOpen ? 'grid' : 'hidden md:grid'
+            )}
+          >
             <DiscoverySelect
               id="category-filter"
               label="Category"
@@ -229,11 +254,12 @@ export default function Home() {
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="max-w-full overflow-hidden"
                   aria-label={`Remove ${filter.name} ${filter.label}`}
                   onClick={() => navigate({ [filter.key]: '' })}
                 >
-                  {filter.label}
-                  <X aria-hidden="true" />
+                  <span className="min-w-0 truncate">{filter.label}</span>
+                  <X aria-hidden="true" className="shrink-0" />
                 </Button>
               ))}
             </div>
@@ -312,7 +338,7 @@ export default function Home() {
             </nav>
           ) : null}
         </section>
-      </main>
+      </div>
     </>
   );
 }
@@ -334,19 +360,22 @@ function DiscoverySelect({
     <div className="min-w-0">
       <Label htmlFor={id}>{label}</Label>
       <Select
-        value={value || 'all'}
-        onValueChange={(nextValue) =>
-          onValueChange(nextValue === 'all' ? '' : nextValue)
-        }
+        value={value ? toSelectValue(value) : ALL_FILTER_VALUE}
+        onValueChange={(nextValue) => onValueChange(fromSelectValue(nextValue))}
       >
         <SelectTrigger id={id} className="mt-2 w-full">
           <SelectValue placeholder={`All ${label.toLowerCase()}`} />
         </SelectTrigger>
         <SelectContent position="popper" align="start">
           <SelectGroup>
-            <SelectItem value="all">All {label.toLowerCase()}</SelectItem>
+            <SelectItem value={ALL_FILTER_VALUE}>
+              All {label.toLowerCase()}
+            </SelectItem>
             {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem
+                key={option.value}
+                value={toSelectValue(option.value)}
+              >
                 {option.label} ({option.count})
               </SelectItem>
             ))}
@@ -355,6 +384,16 @@ function DiscoverySelect({
       </Select>
     </div>
   );
+}
+
+function toSelectValue(value: string) {
+  return `${FILTER_OPTION_PREFIX}${value}`;
+}
+
+function fromSelectValue(value: string) {
+  return value === ALL_FILTER_VALUE
+    ? ''
+    : value.slice(FILTER_OPTION_PREFIX.length);
 }
 
 function resultCountLabel(count: number) {

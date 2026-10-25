@@ -19,7 +19,7 @@ vi.mock('@/lib/projects/api-client', () => ({
 
 const fetchProjectsMock = vi.mocked(fetchProjects);
 
-function project(id: number): Project {
+function project(id: number, overrides: Partial<Project> = {}): Project {
   return {
     id: `project-${id}`,
     slug: `project-${id}`,
@@ -51,6 +51,7 @@ function project(id: number): Project {
     },
     media: { icon: 'FolderKanban' },
     dates: { lastUpdatedAt: '2026-10-25' },
+    ...overrides,
   };
 }
 
@@ -95,6 +96,24 @@ describe('Projects unified discovery home', () => {
     );
     expect(screen.getByRole('link', { name: 'Next' })).toBeInTheDocument();
     expect(container.querySelector('.overflow-x-auto')).toBeNull();
+    expect(container.querySelector('main')).toBeNull();
+  });
+
+  test('progressively discloses secondary filters on narrow screens', async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const toggle = await screen.findByRole('button', { name: 'Show filters' });
+    const controls = document.querySelector('#project-filter-controls');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(controls).toHaveClass('hidden', 'md:grid');
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAccessibleName('Hide filters');
+    expect(controls).toHaveClass('grid');
+    expect(controls).not.toHaveClass('hidden');
   });
 
   test('submits search text to the canonical root URL', async () => {
@@ -121,6 +140,19 @@ describe('Projects unified discovery home', () => {
     expect(push).toHaveBeenCalledWith('/?category=research');
   });
 
+  test('does not confuse a real all facet with the unfiltered option', async () => {
+    fetchProjectsMock.mockResolvedValueOnce([
+      project(1, { categories: ['all'] }),
+    ]);
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(await screen.findByLabelText('Category'));
+    await user.click(screen.getByRole('option', { name: 'All (1)' }));
+
+    expect(push).toHaveBeenCalledWith('/?category=all');
+  });
+
   test('shows removable active filters and clears them together', async () => {
     currentParams = 'q=Project&status=ACTIVE&page=2';
     const user = userEvent.setup();
@@ -132,6 +164,12 @@ describe('Projects unified discovery home', () => {
     expect(
       screen.getByRole('button', { name: 'Remove status Active' })
     ).toBeInTheDocument();
+
+    const searchFilter = screen.getByRole('button', {
+      name: 'Remove search Project',
+    });
+    expect(searchFilter).toHaveClass('max-w-full', 'overflow-hidden');
+    expect(searchFilter.querySelector('span')).toHaveClass('truncate');
 
     await user.click(screen.getByRole('button', { name: 'Clear Filters' }));
     expect(push).toHaveBeenCalledWith('/');
