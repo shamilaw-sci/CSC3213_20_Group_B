@@ -1,241 +1,289 @@
-# Project Discovery Simplification
+# Projects Showcase and Discovery
 
 ## Intent
 
-Make the public Projects site immediately understandable to students, staff,
-and visitors who may not know the registry's internal vocabulary. A visitor
-should be able to search or browse from the first screen, understand what each
-result represents, and reach useful project details without choosing between
-overlapping navigation paths.
+Make the public Projects site feel like a showcase of departmental work rather
+than a filter dashboard. Visitors should understand the kinds of work the
+department produces, see representative recent projects immediately, and move
+through readable collection paths without learning the registry schema.
+
+The Computer Engineering projects site is an information-architecture
+reference, not a visual template. This design borrows its progression from
+showcase to collection to project while deriving every collection from the SCS
+project contract.
+
+## Schema Model
+
+The shared `ProjectSchema` determines the information architecture:
+
+- `projectType` is the controlled, single-valued primary classification.
+- `categories` are required, flexible, many-to-many editorial collections.
+- `tags` are optional topics and technologies.
+- `status` describes lifecycle and is supporting metadata, not a primary
+  collection.
+- `course` and `courseOffering` connect course projects to the academic domain.
+- `departments`, `academicYear`, `batch`, `groupNumber`, and `people` provide
+  context without defining the main navigation hierarchy.
+- `dates.lastUpdatedAt` supports a truthful recently updated section.
+- `media.coverImage` and `media.icon` support project presentation.
+
+The schema has no featured or popularity signal. The UI must not invent either
+one from repository links, array order, or visual preference.
 
 ## Goals
 
-- Make the home page the single canonical **Find Projects** experience.
-- Let visitors search by title, course, person, technology, year, status, or
-  category from the same experience.
-- Use consistent reader-facing terms: **Categories**, **Topics**, **Courses**,
-  and **People**.
-- Reduce visual and copy noise in navigation, project cards, result summaries,
-  and project details.
-- Keep search and filter state shareable in the URL.
-- Preserve the published project entity contract and independent deployment of
-  `apps/projects`; compatibility with the site's old discovery routes and
-  query names is explicitly not required.
+- Lead with a visual, content-rich showcase instead of six simultaneous
+  filters.
+- Use project types as the primary browse collections.
+- Make categories and topics useful secondary collection paths.
+- Give every public collection and search result a readable path rather than a
+  query-string URL.
+- Keep all project links canonical under `/projects/[project_slug]` while
+  preserving `/p/[project_slug]` as the short redirect.
+- Keep course ownership with the department Web app rather than creating a
+  second course directory inside Projects.
+- Remain useful with today's small dataset and expand naturally as more valid
+  project types, categories, topics, and media are published.
 
 ## Non-goals
 
-- Do not change project entity schemas, public JSON projections, or service
-  APIs unless the implementation proves a contract change is required.
-- Do not add project editing or authentication to the public site.
-- Do not change public asset ownership or introduce new illustration assets.
-- Do not remove canonical project detail URLs. Add `/p/[project_slug]` as the
-  only intentional short URL; it permanently redirects to
-  `/projects/[project_slug]` and is not a second rendering path.
-- Do not introduce a new CSS framework or duplicate shared shadcn primitives.
+- Do not change the shared project, course, or offering schemas.
+- Do not modify the separate public-data repository in this work.
+- Do not infer a project type, course, offering, popularity, or featured status
+  from names or categories.
+- Do not add Projects-owned course or offering directory routes.
+- Do not add public assets or a new styling framework.
+- Do not recreate the reference site's visual design or its exact hierarchy.
 
 ## Anti-goals
 
-- Do not replace the current confusion with a dashboard full of controls.
-- Do not expose registry terms such as “facets” or alternate between
-  “collections/categories” and “tags/topics.”
-- Do not display missing values as “Optional”; omit nonessential missing facts
-  or use “Not provided” only when the absence is important.
-- Do not make cards fully decorative or hide essential project identity behind
-  icons, hover states, or unexplained badges.
-- Do not add another competing navigation layer.
-
-## Constraints
-
-- All project data continues to come from the published public-data service.
-- Browser code remains inside `apps/projects`; shared packages keep their
-  existing ownership boundaries.
-- Product compositions remain app-owned, while controls continue to use
-  `@scs/ui` primitives and semantic theme tokens.
-- The remaining Next.js routes, metadata, loading states, error states, and
-  static/dynamic rendering boundaries must continue to build independently.
-- Implementation uses aliases for cross-directory imports.
+- No filter dashboard on the homepage.
+- No user-facing `?key=value` discovery URLs.
+- No duplicate ways to reach the same collection.
+- No flat wall of every project before visitors understand the collection.
+- No empty showcase sections or placeholder cards.
+- No hardcoded colors in application TSX; use semantic theme tokens.
 
 ## Approaches Considered
 
-### 1. Polish the existing five-destination model
+### 1. Keep the unified query-driven directory
 
-Keep Search, People, Courses, Categories, and Topics equally prominent and
-improve their copy and styling.
+Keep every dimension as a filter on `/` and improve its styling. This preserves
+the current implementation but continues to make the site feel like a registry
+search tool rather than a public showcase.
 
-This is the lowest-risk change, but it leaves visitors to understand the
-difference between overlapping search modes before they can begin. It treats
-the symptom rather than the information architecture.
+### 2. Schema-led showcase with path-based collections — selected
 
-### 2. Make one unified discovery flow primary
+Use project types as the primary showcase collections, categories and topics as
+secondary collections, a separate all-projects directory, and a dedicated
+search path. This reflects the schema without exposing every field as a route.
 
-Use **Find Projects** as the primary route and surface, but retain secondary
-directory routes.
+### 3. Give every project field a directory
 
-This gives new visitors one obvious starting point, but leaves duplicated route
-compositions, terminology, loading states, and navigation paths to maintain.
+Add routes for status, department, academic year, batch, people, courses,
+offerings, categories, tags, and types. This is technically complete but
+recreates the navigation complexity the redesign is intended to remove.
 
-### 3. Replace legacy discovery routes with one canonical home — selected
+## Canonical Routes
 
-Make `/` the complete search-and-browse experience. Remove `/search`,
-`/find-by`, `/categories`, `/topics`, `/courses`, and their filtered child
-routes instead of maintaining redirects or compatibility wrappers. Keep only
-canonical project detail routes under `/projects/[project_slug]`, plus the
-explicit `/p/[project_slug]` permanent-redirect shortcut.
+The Projects app owns these routes:
 
-This creates one mental model and one implementation. Category, topic, course,
-status, type, and person links point back to the home page with canonical query
-parameters. The page must progressively disclose its filters so it still feels
-like a public directory rather than an administrative dashboard. The user
-explicitly chose removal over legacy-route preservation.
+| Path                                 | Purpose                                               |
+| ------------------------------------ | ----------------------------------------------------- |
+| `/`                                  | Showcase homepage                                     |
+| `/browse`                            | All projects directory                                |
+| `/browse/page/[page]`                | Bounded all-projects pages                            |
+| `/types/[type]`                      | One controlled project-type collection                |
+| `/types/[type]/page/[page]`          | Bounded project-type pages                            |
+| `/categories/[category]`             | One category collection                               |
+| `/categories/[category]/page/[page]` | Bounded category pages                                |
+| `/topics/[topic]`                    | One tag/topic collection                              |
+| `/topics/[topic]/page/[page]`        | Bounded topic pages                                   |
+| `/search/[query]`                    | Search results for one encoded search phrase          |
+| `/search/[query]/page/[page]`        | Bounded search-result pages                           |
+| `/projects/[project_slug]`           | Canonical project detail                              |
+| `/p/[project_slug]`                  | Permanent short-link redirect to the canonical detail |
 
-## Information Architecture
+Project-type path segments use an explicit stable mapping rather than exposing
+enum casing directly: `course-projects`, `research-projects`,
+`student-innovations`, `open-source`, `department-systems`, `datasets`,
+`publication-artifacts`, `industry-collaborations`,
+`faculty-collaborations`, `hackathons`, and `other`.
 
-### Global header
+Category and topic segments use one shared Unicode-safe canonicalizer. Links,
+route matching, sitemap generation, and tests must use the same helper. Invalid
+or nonexistent collection segments return the application not-found surface.
 
-The header contains the SCS Projects brand/home link and the theme control. It
-does not need a second home link or a mobile navigation sheet when there are no
-competing discovery destinations. Project detail pages use the same header and
-provide their own clear return path to Find Projects.
+The canonicalizer applies NFKC normalization, locale-independent lowercase,
+trims surrounding whitespace, replaces whitespace and URL path delimiters with
+single hyphens, and preserves Unicode letters and numbers. Values that resolve
+to the same segment are treated as the same logical collection and their counts
+are combined. Project types are schema-valid even when they currently contain
+no projects; category and topic paths are valid only when derived from at least
+one published project. Only non-empty collections are listed in the sitemap.
 
-### Home page
+Search submits by navigation to an encoded `/search/[query]` path. Empty search
+submissions go to `/browse`. Before encoding, search input is NFKC-normalized,
+trimmed, and whitespace or path separators become single hyphens. Other
+reserved characters are percent-encoded, so searches such as `C++` and `C#`
+remain representable without a query string. Discovery controls must not emit
+query strings.
 
-The home page is also the complete discovery page. It answers three questions
-in order:
+Legacy query-string discovery state is not preserved. A request carrying old
+discovery parameters redirects to the same route without those parameters;
+multi-filter state is intentionally discarded rather than translated into a
+second URL model.
 
-1. **What is this?** A directory of student, research, and departmental work.
-2. **How do I find something?** A prominent search field with examples and
-   immediately understandable filters.
-3. **What is available?** The matching project count and project results.
+## Course Ownership
 
-With no search or filters, the results section is **All Projects**, ordered by
-the registry's existing most-recently-updated order. Do not infer “featured”
-status because the data contract has no editorial featured field.
+Projects displays available course code, title, academic year, and semester as
+project context. It does not own `/courses` or `/offerings` routes.
 
-### Find Projects experience
+When the department Web app exposes a known course destination, course links
+go there. Until Web owns a stable per-course route or the shared contract
+publishes a canonical course URL, Projects links only to a known Web course
+index; otherwise course metadata remains readable text. Projects must not infer
+undergraduate or postgraduate ownership from a course code.
 
-The page is a discovery surface, not an empty search form.
+For the current Web route surface, the Projects footer may link directly to the
+Web app's Undergraduate Courses and Postgraduate Courses indexes. Individual
+project records render course metadata as text until Web provides a stable
+per-course destination.
 
-- With no query or filters, load the published project list and label it
-  **All Projects**.
-- Place a full-width search field first. Its visible label is **Search
-  Projects**, and helper copy gives concrete examples.
-- Provide secondary filters for Category, Topic, Course, Status, and Project
-  Type. Use the existing shadcn `Select` control for longer option sets.
-- Store `q`, `category`, `topic`, `course`, `status`, `type`, and `person` in URL query
-  parameters. Submitting or changing a filter updates the URL.
-- Store the current result page in the canonical `page` query parameter. Show
-  12 projects per page with Previous and Next navigation. Changing or clearing
-  any discovery filter resets `page` to 1.
-- Show active filters as removable, clearly labeled controls and provide one
-  **Clear Filters** action when any filter is active.
-- Announce result-count changes with a polite live region.
-- Use singular/plural result copy correctly and avoid punctuation fragments
-  such as “Showing 1 projects.”
-- General search includes a person's name, username, email, and student number.
-  The optional Person filter performs an exact normalized username match. There
-  is no second person-search page.
+## Homepage Showcase
 
-### Removed legacy discovery surfaces
+The homepage answers four questions in order:
 
-Remove the route folders and app-owned compositions for Search, Find by
-Username, Categories, Topics, Courses, and their filtered result pages. Remove
-the repeated facet rail and legacy browse tiles. Update the sitemap, metadata,
-footer, project cards, project details, empty states, and related-project links
-so they emit only `/`, `/projects/[project_slug]`, and canonical home query
-URLs. Do not add redirects, aliases, or hidden compatibility exports.
-The sole exception is the approved `/p/[project_slug]` short-link redirect.
+1. **What is this?** A concise department-project introduction.
+2. **What can I explore?** Project-type collection cards generated only for
+   types present in published data.
+3. **What changed recently?** A bounded row of projects ordered by the required
+   `lastUpdatedAt` value.
+4. **What other areas exist?** Compact category and topic links generated from
+   published data, with an obvious route to `/browse`.
 
-Remove data-adapter and server-query functions that exist only for the deleted
-routes, including separate free-text search, exact-username projection lookup,
-legacy category/topic result helpers, and unused registry-stat exports. Keep
-only helpers consumed by the canonical home and project-detail experiences.
+Search remains prominent in the opening section but does not push the showcase
+below a large filter form. The homepage does not render status, person, course,
+batch, year, or department controls.
+
+Sections with no valid records are omitted. The type order is deliberate and
+stable, but a type card appears only when at least one project has that exact
+schema value. `OTHER` remains honest and visible when published records use it;
+the UI does not silently reinterpret `coursework` categories as course
+projects.
+
+## Collection Pages
+
+All collection pages share one route-owned composition:
+
+- breadcrumb back to Home and `/browse`; no empty `/types`, `/categories`, or
+  `/topics` index routes are added solely for breadcrumbs;
+- clear collection title, plain-language description, and project count;
+- a bounded project grid;
+- path-based Previous and Next links when another page exists;
+- nearby cross-links to useful types, categories, or topics;
+- a collection-specific empty or not-found state.
+
+`/browse` provides the complete directory and lightweight links to the
+available type, category, and topic collections. It is not another six-control
+dashboard. Status and other contextual values remain visible on cards and
+details without becoming competing global directories.
 
 ## Project Cards
 
-Each result card has one navigation target and a stable reading order:
+Showcase and collection cards prioritize:
 
-1. Project title.
-2. Two-line short description.
-3. Project type and status.
-4. One concise context row containing course or academic year when present.
-5. At most 2 topic labels when topics add useful context.
+1. cover image when provided, otherwise the declared icon in a semantic
+   fallback surface;
+2. project title;
+3. concise description;
+4. project type and status;
+5. one useful academic context line when available;
+6. at most two category or topic labels.
 
-Remove the nested-looking **View** button; the card itself is the link and gets
-a visible hover and focus treatment. Keep the icon decorative and hide it from
-assistive technology. Do not render “No academic year” as a badge. Long titles,
-descriptions, topic names, and identifiers must wrap or truncate predictably.
+The whole card has one canonical project link. There is no nested View button.
+Cards use stable aspect ratios, bounded text, visible keyboard focus, semantic
+hover states, and no interaction that exists only on hover.
 
-## Project Detail Page
+## Project Detail
 
-- Add a small breadcrumb/back link to `/` before the title.
-- Keep project title, concise description, status/type, and available external
-  actions in the header.
-- Use plain section labels: **About This Project**, **People**, **Categories and
-  Topics**, and **Project Details**.
-- Show a person's role only within that project; do not infer a global role.
-- Omit absent Course, Departments, Batch, and Academic Year rows instead of
-  saying “Optional.”
-- Format the last-updated date with `Intl.DateTimeFormat`.
-- Show Related Projects only when matches exist; do not render an empty panel.
+The detail page keeps the existing project-centered structure and adds
+collection-aware navigation:
 
-## Interaction and Responsive Behavior
+- breadcrumb to Home and the project's type collection;
+- title, description, type, status, media, and external actions;
+- project-scoped people and their exact published roles;
+- categories and topics linked to their path-based collections;
+- course information linked according to the Course Ownership rules;
+- departments, academic year, batch, group, and dates only when present;
+- related projects selected from shared type, category, or topic values;
+- no empty related section and no inferred global role for a person.
 
-- Desktop and mobile expose the same single discovery destination and
-  terminology without a redundant mobile menu.
-- Search controls stack on narrow screens without horizontal scrolling.
-- Filters remain usable with keyboard, touch, and screen readers.
-- Links remain links so modifier-click and browser navigation work.
-- Interactive states use semantic theme colors and increase contrast on hover,
-  active, and focus states.
-- Motion is limited to short transform/opacity feedback and respects reduced
-  motion.
+## Header and Footer
+
+The header provides direct links to Home and Browse plus the theme control.
+These destinations remain visible at narrow widths; a mobile sheet is not
+needed for two primary links. The active destination has an accessible current
+state.
+
+The footer links to Browse and currently available type collections. It does
+not hardcode category or topic values that may disappear from published data.
+Course navigation belongs to the department Web app.
 
 ## Loading, Empty, and Error States
 
-- Page-specific skeletons mirror the new search controls, result summary, and
-  card geometry.
-- Loading copy uses the ellipsis character where visible.
-- Empty results explain that the current filters produced no matches and offer
-  **Clear Filters** back to the canonical unfiltered home.
-- Data failures preserve entered URL state and offer retry without navigating
-  away.
-- The root loading skeleton must not retain the removed hero actions, browse
-  tiles, Featured section, or View-button geometry.
+- Homepage loading mirrors the intro, type cards, recent row, and secondary
+  collection links.
+- Collection loading mirrors the breadcrumb, summary, and bounded card grid.
+- Detail and short-link loading retain the project-detail skeleton.
+- Missing collections use not-found; valid empty collections explain why no
+  records are currently published.
+- Data failures provide retry without replacing the current route.
 
 ## Metadata and Indexing
 
-- The sitemap contains only `/` and canonical project detail URLs.
-- Short `/p/[project_slug]` redirects are not listed in the sitemap.
-- Root metadata describes the combined search-and-browse experience.
-- Remove feed alternate links that do not have corresponding routes.
-- Filtered query URLs remain usable and shareable but are not expanded into
-  separate sitemap entries.
+- The sitemap contains Home, Browse, every valid type/category/topic
+  collection, bounded collection pages when needed, and canonical project
+  details.
+- Search-result and short-link routes are excluded from the sitemap.
+- Collection metadata uses the resolved human label and count.
+- Canonical URLs never include discovery query parameters.
+
+## Accessibility and Visual Rules
+
+- Use semantic headings and landmarks with one page-level `main` from the root
+  layout.
+- Preserve visible focus, keyboard operation, reduced-motion preferences, and
+  minimum touch targets.
+- Use semantic theme tokens for text, surfaces, borders, focus, and state.
+- Do not use embedded color utilities or color values in application TSX.
+- Do not rely on cover imagery for project identity; icon and text fallbacks
+  must remain complete.
+- Keep layouts readable under text zoom, long titles, Unicode categories, and
+  narrow screens.
 
 ## Testing and Verification
 
-- Replace the legacy header tests with tests for the simplified header and the
-  absence of a redundant mobile menu.
-- Add query-state tests covering canonical parameter names, combined filters,
-  exact person filtering, pagination, page reset after filter changes, clearing
-  filters, and singular/plural result labels.
-- Add component tests for card information priority and removal of the
-  redundant View control.
-- Add detail tests for omitted missing metadata and project-scoped contributor
-  roles.
-- Add route/architecture tests proving superseded discovery pages, components,
-  compatibility exports, sitemap entries, and metadata alternates are removed.
-- Run the Projects workspace lint, production/test typechecks, tests, and build.
-- Run Knip and the repository-wide documentation, formatting, lint, typecheck,
-  test, build, and diff checks before completion.
+- Pure tests cover route builders, type mappings, Unicode collection segments,
+  search paths, page bounds, counts, recent ordering, and related-project
+  selection.
+- Component tests cover homepage section priority, omission of empty sections,
+  single-link cards, and external course-link behavior.
+- Route tests cover every canonical path, not-found behavior, pagination,
+  sitemap membership, and the `/p/[project_slug]` redirect.
+- Architecture tests prohibit legacy query-string discovery links and
+  Projects-owned course routes.
+- Run the Projects workspace gate, `bun run test:repo`, Knip, and the complete
+  monorepo gate before committing.
 
 ## Implementation Calls Left to the Builder
 
-- Choose the smallest app-owned component boundaries that avoid duplicating
-  search controls and result summaries.
-- Reuse the existing cached public-data adapter; add only pure query helpers
-  needed to keep URL parsing, filtering, pagination, and labels testable.
-- Delete route-level metadata, loading files, and components owned only by
-  removed routes. Keep the home and project-detail loading/error geometry
-  specific to those pages.
-- Prefer existing shared primitives. Add a shared primitive only if it is
-  generic and used beyond this product workflow.
+- Choose route-private versus shared Projects compositions according to the
+  repository ownership rules.
+- Reuse the validated public project adapter and pure domain helpers; do not
+  create parallel project types.
+- Keep collection data derived at runtime/build time from published records so
+  adding a valid type, category, or topic does not require editing navigation
+  source.
+- Preserve application independence and use alias imports for cross-directory
+  modules.

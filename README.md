@@ -107,17 +107,18 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 ## Documentation
 
-| Guide                                                                          | Read it when you need to…                                       |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| [Development](docs/DEVELOPMENT.md)                                             | set up the repository, make a change, or diagnose local tooling |
-| [Architecture](docs/ARCHITECTURE.md)                                           | understand boundaries, data ownership, and request flows        |
-| [API Contracts](docs/API_CONTRACTS.md)                                         | call or change HTTP endpoints and durable operations            |
-| [Schemas](docs/SCHEMAS.md)                                                     | add or evolve shared domain contracts                           |
-| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)                         | configure local or deployed runtimes                            |
-| [Continuous Integration](docs/CI.md)                                           | understand required checks and merge behavior                   |
-| [Operations](docs/OPERATIONS.md)                                               | deploy, migrate, observe, or recover a service                  |
-| [Security](docs/SECURITY.md)                                                   | handle authentication, secrets, permissions, or incidents       |
-| [Project Discovery Design](docs/superpowers/specs/PROJECT_DISCOVERY_DESIGN.md) | review the approved Projects-site experience                    |
+| Guide                                                                              | Read it when you need to…                                       |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [Development](docs/DEVELOPMENT.md)                                                 | set up the repository, make a change, or diagnose local tooling |
+| [Architecture](docs/ARCHITECTURE.md)                                               | understand boundaries, data ownership, and request flows        |
+| [API Contracts](docs/API_CONTRACTS.md)                                             | call or change HTTP endpoints and durable operations            |
+| [Schemas](docs/SCHEMAS.md)                                                         | add or evolve shared domain contracts                           |
+| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)                             | configure local or deployed runtimes                            |
+| [Continuous Integration](docs/CI.md)                                               | understand required checks and merge behavior                   |
+| [Operations](docs/OPERATIONS.md)                                                   | deploy, migrate, observe, or recover a service                  |
+| [Security](docs/SECURITY.md)                                                       | handle authentication, secrets, permissions, or incidents       |
+| [Project Discovery Design](docs/superpowers/specs/PROJECT_DISCOVERY_DESIGN.md)     | review the approved Projects-site experience                    |
+| [Project Showcase Plan](docs/superpowers/plans/PROJECT_SHOWCASE_IMPLEMENTATION.md) | implement the approved Projects-site experience                 |
 
 Documentation is maintained with the code. Run `bun run docs:check` after
 adding, renaming, linking, or removing a Markdown file.

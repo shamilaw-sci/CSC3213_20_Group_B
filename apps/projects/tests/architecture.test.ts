@@ -14,10 +14,7 @@ function sourceFiles(extension: RegExp) {
 describe('Projects discovery architecture', () => {
   test('contains no legacy discovery routes or composed components', () => {
     for (const relativePath of [
-      'src/app/search',
       'src/app/find-by',
-      'src/app/categories',
-      'src/app/topics',
       'src/app/courses',
       'src/components/projects/facet-index.tsx',
       'src/components/projects/project-collection.tsx',
@@ -31,13 +28,7 @@ describe('Projects discovery architecture', () => {
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
 
-    for (const legacyRoute of [
-      '/search',
-      '/find-by',
-      '/categories',
-      '/topics',
-      '/courses',
-    ]) {
+    for (const legacyRoute of ['/find-by', '/courses']) {
       expect(combinedSource).not.toContain(legacyRoute);
     }
   });
