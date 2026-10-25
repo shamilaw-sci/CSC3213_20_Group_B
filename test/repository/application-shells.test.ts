@@ -33,8 +33,8 @@ describe('application shell contracts', () => {
     expect(portalHeader, 'portal').not.toContain('focus-visible:outline-none');
   });
 
-  test('mobile application navigation uses the shared accessible sheet', () => {
-    for (const app of ['web', 'people', 'projects']) {
+  test('headers with mobile navigation use the shared accessible sheet', () => {
+    for (const app of ['web', 'people']) {
       const header = source(
         `apps/${app}/src/components/layout/site-header.tsx`
       );
@@ -161,20 +161,22 @@ describe('application shell contracts', () => {
     expect(layout).toMatch(/<main\s+id="main-content"/);
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
-    for (const destination of [
+    for (const legacyDestination of [
       '/search',
       '/find-by',
       '/courses',
       '/categories',
       '/topics',
     ]) {
-      expect(header).toContain(`href: '${destination}'`);
+      expect(header).not.toContain(legacyDestination);
     }
 
     expect(header).not.toContain('browseOpen');
     expect(header).not.toContain('Course-linked work');
+    expect(header).toContain('href="/"');
     expect(header).toContain('aria-label="SCS Projects home"');
-    expect(header).toContain('<SheetContent');
+    expect(header).toContain('<ThemeToggle');
+    expect(header).not.toContain('<SheetContent');
     expect(header).not.toContain('transition-all');
   });
 

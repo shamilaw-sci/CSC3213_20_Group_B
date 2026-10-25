@@ -66,8 +66,6 @@ describe('application composition ownership', () => {
       'apps/people/src/components/students/student-subject-page.tsx',
       'apps/people/src/components/students/student-subject-batch-page.tsx',
       'apps/projects/src/components/projects/registry-ui.tsx',
-      'apps/projects/src/components/projects/project-collection.tsx',
-      'apps/projects/src/components/projects/facet-index.tsx',
       'apps/portal/src/components/profiles/account-settings.tsx',
       'apps/portal/src/lib/auth/auth-errors.ts',
     ];

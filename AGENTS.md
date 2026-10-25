@@ -78,6 +78,7 @@ repository-wide change, run:
 
 ```powershell
 bun run docs:check
+bun run test:repo
 bun run format:check
 bun run lint
 bun run typecheck
