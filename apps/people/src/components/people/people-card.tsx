@@ -18,6 +18,7 @@ import { cn } from 'cn';
 import {
   BriefcaseBusiness,
   Building2,
+  ChevronRight,
   ExternalLink,
   FileText,
   Globe,
@@ -41,6 +42,10 @@ import {
   FaYoutube,
 } from 'react-icons/fa6';
 
+import {
+  getStudentProgrammeField,
+  getStudentSubjectLabels,
+} from '@/lib/student-academic-details';
 import type {
   AcademicTeachingStaff,
   Publication,
@@ -52,11 +57,9 @@ import {
   ACADEMIC_RANK_LABELS,
   ACADEMIC_SUPPORT_POSITION_LABELS,
   getAcademicDepartmentLabel,
-  getAcademicSubjectLabel,
   getAcademicUnitLabel,
-  getHonoursProgrammeLabel,
-  getPostgraduateProgrammeLabel,
   getSlqfLevelLabel,
+  getStaffTypeLabel,
   getStudentLevelLabel,
   getStudentRoleLabel,
   NON_ACADEMIC_POSITION_LABELS,
@@ -144,7 +147,7 @@ function PersonTile({
   imageUrl?: string;
   name: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   meta?: string;
 }) {
   const content = (
@@ -160,12 +163,14 @@ function PersonTile({
         >
           {title}
         </CardTitle>
-        <p
-          className="text-muted-foreground mt-1 max-w-full truncate text-sm
-            sm:mt-2"
-        >
-          {subtitle}
-        </p>
+        {subtitle && (
+          <p
+            className="text-muted-foreground mt-1 max-w-full truncate text-sm
+              sm:mt-2"
+          >
+            {subtitle}
+          </p>
+        )}
         {meta && (
           <p className="text-muted-foreground mt-1 max-w-full truncate text-xs">
             {meta}
@@ -174,15 +179,17 @@ function PersonTile({
       </CardHeader>
       {href && (
         <CardFooter
-          className="ml-auto self-end px-0 sm:mt-auto sm:w-full sm:self-auto"
+          className="ml-auto self-center px-0 sm:mt-auto sm:w-full sm:self-auto"
         >
           <span
-            className="border-primary/30 text-primary group-hover:border-primary
-              group-hover:bg-primary group-hover:text-primary-foreground
-              rounded-md border px-3 py-2 text-center text-sm font-medium
-              transition-colors sm:w-full"
+            className="border-border text-muted-foreground
+              group-hover:border-primary/40 group-hover:bg-primary/5
+              group-hover:text-primary flex size-9 items-center justify-center
+              rounded-full border transition-colors sm:w-full sm:gap-1
+              sm:rounded-md sm:px-3"
           >
-            View
+            <span className="sr-only sm:not-sr-only">View Profile</span>
+            <ChevronRight className="size-4" aria-hidden="true" />
           </span>
         </CardFooter>
       )}
@@ -219,8 +226,8 @@ function PeopleCardSkeleton() {
         <div className="bg-muted h-3 w-1/2 rounded" />
         <div className="bg-muted h-3 w-2/3 rounded" />
         <div
-          className="bg-muted mt-auto ml-auto h-9 w-16 rounded-md sm:ml-0
-            sm:w-full"
+          className="bg-muted mt-auto ml-auto size-9 rounded-full sm:ml-0 sm:h-9
+            sm:w-full sm:rounded-md"
         />
       </div>
     </div>
@@ -253,21 +260,14 @@ export function StaffCard({ staff }: { staff: Staff }) {
   );
 }
 
-export function StudentCard({
-  student,
-  subject,
-}: {
-  student: Student;
-  subject: string;
-}) {
+export function StudentCard({ student }: { student: Student }) {
   return (
     <PersonTile
       href={`/people/${encodeURIComponent(student.registrationNo.toLowerCase())}`}
       imageUrl={student.profileImageUrl}
       name={student.fullName}
       title={`${student.title} ${student.fullName}`}
-      subtitle={getStudentRoleLabel(student)}
-      meta={student.registrationNo || subject}
+      meta={student.registrationNo}
     />
   );
 }
@@ -350,31 +350,6 @@ function getPositions(person: Staff | Student) {
   if (isAcademicTeachingStaff(person)) return person.positionsHeld ?? [];
   if (isStudentPerson(person)) return person.positions ?? [];
   return [];
-}
-
-function getStudentProgrammeLabel(student: Student): string | undefined {
-  if (student.postgraduateProgramme) {
-    return getPostgraduateProgrammeLabel(student.postgraduateProgramme);
-  }
-
-  if (student.honoursProgramme) {
-    return getHonoursProgrammeLabel(student.honoursProgramme);
-  }
-
-  return undefined;
-}
-
-function getStudentAcademicTags(student: Student): string[] {
-  return [
-    ...(student.subjects?.map(getAcademicSubjectLabel) ?? []),
-    ...(student.honoursProgramme
-      ? [getHonoursProgrammeLabel(student.honoursProgramme)]
-      : []),
-    ...(student.postgraduateProgramme
-      ? [getPostgraduateProgrammeLabel(student.postgraduateProgramme)]
-      : []),
-    ...(student.slqfLevel ? [getSlqfLevelLabel(student.slqfLevel)] : []),
-  ];
 }
 
 function getSocialProfileLinks(socialLinks?: SocialLinks): ProfileLink[] {
@@ -786,7 +761,10 @@ export function DetailedPersonCard({
       ? (person.qualifications ?? [])
       : [];
   const teachings = academic?.teachings ?? [];
-  const studentAcademicTags = student ? getStudentAcademicTags(student) : [];
+  const studentSubjects = student ? getStudentSubjectLabels(student) : [];
+  const studentProgramme = student
+    ? getStudentProgrammeField(student)
+    : undefined;
   const staffDepartment =
     isStaff && person.department
       ? getAcademicDepartmentLabel(person.department)
@@ -795,16 +773,20 @@ export function DetailedPersonCard({
     isStaff && person.unit ? getAcademicUnitLabel(person.unit) : undefined;
 
   const overviewFields: ProfileField[] = [
-    { label: 'Role', value: role, icon: User },
+    {
+      label: student ? 'Student Category' : 'Role',
+      value: role,
+      icon: User,
+    },
     student
       ? {
-          label: 'Registration',
+          label: 'Registration Number',
           value: student.registrationNo,
           icon: GraduationCap,
         }
       : {
-          label: 'Staff Type',
-          value: isStaff ? person.staffType.replaceAll('_', ' ') : undefined,
+          label: 'Staff Category',
+          value: isStaff ? getStaffTypeLabel(person.staffType) : undefined,
           icon: BriefcaseBusiness,
         },
     {
@@ -824,13 +806,13 @@ export function DetailedPersonCard({
           icon: MapPin,
         }
       : {
-          label: 'Level',
+          label: 'Academic Level',
           value: student ? getStudentLevelLabel(student.level) : undefined,
           icon: GraduationCap,
         },
     {
-      label: 'Programme',
-      value: student ? getStudentProgrammeLabel(student) : undefined,
+      label: studentProgramme?.label ?? 'Programme',
+      value: studentProgramme?.value,
       icon: GraduationCap,
     },
     {
@@ -885,7 +867,7 @@ export function DetailedPersonCard({
       academicQualifications.length > 0 ||
       supportQualifications.length > 0 ||
       teachings.length > 0 ||
-      studentAcademicTags.length > 0 ||
+      studentSubjects.length > 0 ||
       allResearchInterests.length > 0
     ) {
       nextTabs.push({
@@ -908,9 +890,9 @@ export function DetailedPersonCard({
                 <ChipList items={teachings} />
               </ProfileSection>
             )}
-            {studentAcademicTags.length > 0 && (
-              <ProfileSection title="Student Details">
-                <ChipList items={studentAcademicTags} />
+            {studentSubjects.length > 0 && (
+              <ProfileSection title="Subjects">
+                <ChipList items={studentSubjects} />
               </ProfileSection>
             )}
             {allResearchInterests.length > 0 && (
@@ -992,7 +974,9 @@ export function DetailedPersonCard({
     return [...nextTabs, ...extraTabs];
   })();
 
-  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+  const selectedTabId = tabs.some((tab) => tab.id === activeTabId)
+    ? activeTabId
+    : tabs[0].id;
 
   return (
     <article className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
@@ -1035,12 +1019,12 @@ export function DetailedPersonCard({
       </Card>
 
       <div className="min-w-0">
-        {tabs.length > 1 && (
-          <Tabs
-            value={activeTab.id}
-            onValueChange={setActiveTabId}
-            className="mb-5"
-          >
+        <Tabs
+          value={selectedTabId}
+          onValueChange={setActiveTabId}
+          className="gap-5"
+        >
+          {tabs.length > 1 && (
             <TabsList
               variant="brand"
               className="h-auto flex-wrap justify-start"
@@ -1051,13 +1035,13 @@ export function DetailedPersonCard({
                 </TabsTrigger>
               ))}
             </TabsList>
-            {tabs.map((tab) => (
-              <TabsContent key={tab.id} value={tab.id} className="hidden" />
-            ))}
-          </Tabs>
-        )}
-
-        <Card className="rounded-md p-5">{activeTab.content}</Card>
+          )}
+          {tabs.map((tab) => (
+            <TabsContent key={tab.id} value={tab.id}>
+              <Card className="rounded-md p-5">{tab.content}</Card>
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
     </article>
   );

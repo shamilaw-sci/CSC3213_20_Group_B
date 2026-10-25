@@ -5,13 +5,9 @@ import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
-import { Open_Sans } from 'next/font/google';
 import Image from 'next/image';
 
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
-  subsets: ['latin'],
-});
+import { openSans } from '@/config/font.config';
 
 export const metadata: Metadata = {
   title: '404 - Page Not Found | SCS People',

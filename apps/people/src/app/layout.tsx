@@ -2,19 +2,13 @@ import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
 import { SkipLink } from '@scs/ui/components/skip-link';
-import { Toaster } from '@scs/ui/components/sonner';
 import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
-import { Open_Sans } from 'next/font/google';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { openSans } from '@/config/font.config';
 import publicEnvConfig from '@/config/public.env.config';
-
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -161,7 +155,6 @@ export default function RootLayout({
             </main>
             <SiteFooter />
           </div>
-          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

@@ -80,9 +80,9 @@ function TabsTrigger({
         dark:group-data-[variant=brand]/tabs-list:hover:text-primary
         dark:group-data-[variant=line]/tabs-list:text-muted-foreground
         dark:group-data-[variant=line]/tabs-list:hover:text-foreground relative
-        inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center
-        gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm
-        font-medium whitespace-nowrap
+        inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-md
+        border border-transparent px-2 py-1 text-sm font-medium
+        whitespace-nowrap
         transition-[color,background-color,border-color,box-shadow]
         group-data-[orientation=vertical]/tabs:w-full
         group-data-[orientation=vertical]/tabs:justify-start

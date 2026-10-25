@@ -134,11 +134,7 @@ export default function StudentSubjectBatchPage({
       >
         {programme &&
           batchStudents.map((student) => (
-            <StudentCard
-              key={student.registrationNo}
-              student={student}
-              subject={programme.name}
-            />
+            <StudentCard key={student.registrationNo} student={student} />
           ))}
       </div>
 

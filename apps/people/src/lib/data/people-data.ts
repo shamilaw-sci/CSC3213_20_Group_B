@@ -52,6 +52,8 @@ export interface StudentDirectoryContext {
   batch: PeopleBatch;
 }
 
+export type StudentDirectoryCandidate = StudentDirectoryContext;
+
 export interface PersonProject {
   id: string;
   slug: string;
@@ -554,37 +556,56 @@ export async function getSubjectPublishedBatchDefinitions(
   return getProgrammeBatchesFromManifest(manifest, programme);
 }
 
+export function getStudentDirectoryCandidates(
+  manifest: PeopleManifest,
+  registrationNo: string
+): StudentDirectoryCandidate[] {
+  const registrationMatch = /^s(?<batch>\d{2})(?:sp)?\d{3}$/i.exec(
+    registrationNo.trim()
+  );
+  const batchId = registrationMatch?.groups?.batch;
+  if (!batchId) return [];
+
+  const normalizedBatchId = `s${batchId}`.toLowerCase();
+  const batch = manifest.batches.find(
+    (candidate) => candidate.id.toLowerCase() === normalizedBatchId
+  );
+  if (!batch) return [];
+
+  return manifest.programmes.flatMap((programme) => {
+    if (
+      !isSubjectSlug(programme.slug) ||
+      !programme.batches.some(
+        (programmeBatch) => programmeBatch.toLowerCase() === normalizedBatchId
+      )
+    ) {
+      return [];
+    }
+
+    return [{ subject: programme.slug, programme, batch }];
+  });
+}
+
 export async function getStudentDirectoryContext(
   registrationNo: string
 ): Promise<StudentDirectoryContext | undefined> {
   const manifest = await getPeopleManifest();
   const normalizedRegistrationNo = registrationNo.toLowerCase();
+  const candidates = getStudentDirectoryCandidates(manifest, registrationNo);
+  const candidateMatches = await Promise.all(
+    candidates.map(async (candidate) => ({
+      candidate,
+      students: await getSpecialStudents(
+        candidate.programme,
+        candidate.batch.id
+      ),
+    }))
+  );
 
-  for (const programme of manifest.programmes) {
-    if (!isSubjectSlug(programme.slug)) continue;
-
-    for (const batchId of programme.batches) {
-      const students = await getSpecialStudents(programme, batchId);
-      const hasStudent = students.some(
-        (student) =>
-          student.registrationNo.toLowerCase() === normalizedRegistrationNo
-      );
-
-      if (!hasStudent) continue;
-
-      const batch = manifest.batches.find(
-        (candidate) => candidate.id.toLowerCase() === batchId.toLowerCase()
-      );
-
-      if (!batch) return undefined;
-
-      return {
-        subject: programme.slug,
-        programme,
-        batch,
-      };
-    }
-  }
-
-  return undefined;
+  return candidateMatches.find(({ students }) =>
+    students.some(
+      (student) =>
+        student.registrationNo.toLowerCase() === normalizedRegistrationNo
+    )
+  )?.candidate;
 }

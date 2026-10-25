@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --cache --cache-strategy content --cache-location .cache/eslint/",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --cache --cache-strategy content --cache-location .cache/eslint/ --fix",

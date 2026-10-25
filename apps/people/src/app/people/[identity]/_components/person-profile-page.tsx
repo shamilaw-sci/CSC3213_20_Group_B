@@ -91,7 +91,7 @@ function ProjectProfileTab({
   );
 }
 
-function MinimalProjectPersonProfile({
+export function MinimalProjectPersonProfile({
   identity,
   projects,
 }: {
@@ -99,10 +99,6 @@ function MinimalProjectPersonProfile({
   projects: PersonProject[];
 }) {
   const username = identity.trim().toLowerCase();
-  const roles = Array.from(
-    new Set(projects.map((project) => project.role).filter(Boolean))
-  );
-  const roleLabel = roles.length > 0 ? roles.slice(0, 2).join(', ') : 'Member';
   const initials = username.slice(0, 2).toUpperCase();
 
   return (
@@ -124,9 +120,9 @@ function MinimalProjectPersonProfile({
           >
             @{username}
           </h1>
-          <p className="text-primary mt-2 font-medium">Project contributor</p>
-          <p className="text-muted-foreground mt-1 text-sm capitalize">
-            {roleLabel}
+          <p className="text-primary mt-2 font-medium">Project-Only Profile</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Roles are listed with each project.
           </p>
         </div>
       </aside>

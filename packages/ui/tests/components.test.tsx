@@ -171,6 +171,8 @@ describe('shared UI component contracts', () => {
 
     expect(markup).toContain('data-variant="brand"');
     expect(markup).toContain('group-data-[variant=brand]/tabs-list');
+    expect(markup).toContain('h-full');
+    expect(markup).not.toContain('h-[calc(100%-1px)]');
   });
 
   test('exports the shared toaster component', () => {

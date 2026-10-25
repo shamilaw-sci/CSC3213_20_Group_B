@@ -90,6 +90,15 @@ const POSTGRADUATE_PROGRAMME_LABELS = {
   PHD_UPGRADE_FROM_MSC: 'PhD Upgrade from MSc',
   PHD_UPGRADE_FROM_MPHIL: 'PhD Upgrade from MPhil',
 } satisfies Record<PostgraduateProgramme, string>;
+const STAFF_TYPE_LABELS = {
+  ACADEMIC_TEACHING: 'Academic Teaching Staff',
+  ACADEMIC_SUPPORT: 'Academic Support Staff',
+  NON_ACADEMIC: 'Non-Academic Staff',
+} satisfies Record<Staff['staffType'], string>;
+
+export function getStaffTypeLabel(staffType: Staff['staffType']): string {
+  return STAFF_TYPE_LABELS[staffType];
+}
 
 export function getStudentRoleLabel(student: Student) {
   if (student.status === 'ALUMNI') return 'Alumni';
