@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 
+import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 
 vi.mock('next/navigation', () => ({
@@ -25,36 +25,17 @@ vi.mock('@scs/ui/components/theme-toggle', () => ({
 }));
 
 describe('Projects SiteHeader', () => {
-  test('keeps every discovery destination directly visible on desktop', () => {
+  test('keeps the global shell focused on home and theme', () => {
     render(<SiteHeader />);
 
-    for (const label of [
-      'Search',
-      'People',
-      'Courses',
-      'Categories',
-      'Topics',
-    ]) {
-      expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
-    }
     expect(
       screen.getByRole('link', { name: 'SCS Projects home' })
     ).toHaveAttribute('href', '/');
-    expect(screen.queryByRole('link', { name: 'Home' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Browse' })).toBeNull();
-  });
-
-  test('keeps all discovery destinations in the mobile menu', async () => {
-    const user = userEvent.setup();
-    render(<SiteHeader />);
-
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }));
-
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: 'Explore projects' })
-    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Open navigation' })
+    ).toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
 
     for (const label of [
       'Search',
@@ -63,12 +44,24 @@ describe('Projects SiteHeader', () => {
       'Categories',
       'Topics',
     ]) {
-      expect(
-        screen.getAllByRole('link', { name: new RegExp(`^${label}$`) }).length
-      ).toBeGreaterThan(0);
+      expect(screen.queryByRole('link', { name: label })).toBeNull();
     }
+  });
+});
 
-    await user.click(screen.getByRole('link', { name: /^Search$/ }));
-    expect(screen.queryByRole('dialog')).toBeNull();
+describe('Projects SiteFooter', () => {
+  test('links only to canonical discovery URLs', () => {
+    render(<SiteFooter />);
+
+    const links = screen.getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/',
+      '/?category=research',
+      '/?type=COURSE_PROJECT',
+      '/?status=ACTIVE',
+    ]);
+    expect(links.some((link) => link.getAttribute('href') === '/search')).toBe(
+      false
+    );
   });
 });

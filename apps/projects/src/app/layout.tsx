@@ -18,7 +18,7 @@ const openSans = Open_Sans({
 
 const siteName = 'SCS PDN Projects';
 const siteDescription =
-  'Browse student projects, research work, department systems, datasets, open-source tools, and collaborations from the Department of Statistics and Computer Science, University of Peradeniya.';
+  'Search and filter student projects, research, department systems, datasets, open-source work, and collaborations from the Department of Statistics and Computer Science, University of Peradeniya.';
 const ogImage = `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/images/science-projects-hero.png`;
 
 export const metadata: Metadata = {
@@ -66,11 +66,6 @@ export const metadata: Metadata = {
     canonical: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}`,
     languages: {
       en: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}`,
-    },
-    types: {
-      'application/atom+xml': `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/feed.xml`,
-      'application/json': `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/feed.json`,
-      'application/rss+xml': `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/rss.xml`,
     },
   },
 

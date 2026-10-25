@@ -1,11 +1,10 @@
 import Link from 'next/link';
 
 const discoveryLinks = [
-  { href: '/search', label: 'Search projects' },
-  { href: '/find-by', label: 'Find by person' },
-  { href: '/courses', label: 'Browse courses' },
-  { href: '/categories', label: 'Browse categories' },
-  { href: '/topics', label: 'Browse topics' },
+  { href: '/', label: 'All projects' },
+  { href: '/?category=research', label: 'Research' },
+  { href: '/?type=COURSE_PROJECT', label: 'Course projects' },
+  { href: '/?status=ACTIVE', label: 'Active projects' },
 ] as const;
 
 export function SiteFooter() {
