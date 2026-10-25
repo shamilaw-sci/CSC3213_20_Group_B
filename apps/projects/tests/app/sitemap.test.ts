@@ -8,9 +8,6 @@ vi.mock('next/font/google', () => ({
 
 vi.mock('@/lib/projects/queries', () => ({
   getAllProjects: vi.fn(),
-  getCategories: vi.fn().mockResolvedValue([]),
-  getCourses: vi.fn().mockResolvedValue([]),
-  getTags: vi.fn().mockResolvedValue([]),
 }));
 
 const getAllProjectsMock = vi.mocked(getAllProjects);

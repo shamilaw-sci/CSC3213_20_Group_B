@@ -55,7 +55,7 @@ export default function Home() {
       setLoading(true);
 
       try {
-        setProjects(await fetchProjects(undefined, controller.signal));
+        setProjects(await fetchProjects(controller.signal));
         setLoadFailed(false);
       } catch {
         if (!controller.signal.aborted) {

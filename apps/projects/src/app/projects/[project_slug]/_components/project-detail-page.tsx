@@ -47,7 +47,7 @@ export default function ProjectDetailPage({
       try {
         const [nextProject, allProjects] = await Promise.all([
           fetchProject(projectSlug, controller.signal),
-          fetchProjects(undefined, controller.signal),
+          fetchProjects(controller.signal),
         ]);
 
         setProject(nextProject);
@@ -97,8 +97,7 @@ export default function ProjectDetailPage({
         <StatePanel
           title="Project not found"
           description="This project page is not in the published registry. It may have been moved, renamed, or removed."
-          action={{ href: '/search', label: 'Search projects' }}
-          secondaryAction={{ href: '/categories', label: 'Browse collections' }}
+          action={{ href: '/', label: 'Find projects' }}
         />
       </div>
     );

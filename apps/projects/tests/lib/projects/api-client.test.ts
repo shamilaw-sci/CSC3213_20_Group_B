@@ -1,11 +1,6 @@
 import {
   clearProjectDataCacheForTests,
-  fetchCategories,
-  fetchCourses,
   fetchProjects,
-  fetchProjectsByUsername,
-  fetchProjectSearch,
-  fetchTags,
 } from '@/lib/projects/api-client';
 
 const project = {
@@ -60,47 +55,11 @@ describe('project API client cache', () => {
     ) as unknown as typeof fetch;
     vi.stubGlobal('fetch', fetchMock);
 
-    await Promise.all([
-      fetchProjects(),
-      fetchCategories(),
-      fetchTags(),
-      fetchCourses(),
-      fetchProjectSearch('cache'),
-    ]);
+    await Promise.all([fetchProjects(), fetchProjects(), fetchProjects()]);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       'https://data.scs-pdn.space/projects/v2/projects.json'
-    );
-  });
-
-  test('finds projects from public by-person username indexes', async () => {
-    const fetchMock = vi.fn(async (url: string) => {
-      if (url.endsWith('/by-person/s21sp001.json')) {
-        return Response.json([
-          {
-            slug: project.slug,
-            role: 'student',
-          },
-        ]);
-      }
-
-      if (url.endsWith(`/projects/${project.slug}.json`)) {
-        return Response.json(project);
-      }
-
-      return new Response(null, { status: 404 });
-    }) as unknown as typeof fetch;
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(fetchProjectsByUsername(' S21SP001 ')).resolves.toEqual([
-      project,
-    ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://data.scs-pdn.space/projects/v2/by-person/s21sp001.json'
-    );
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://data.scs-pdn.space/projects/v2/projects/cache-test-project.json'
     );
   });
 });

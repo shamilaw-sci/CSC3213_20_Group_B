@@ -15,7 +15,6 @@ import {
 import { cn } from 'cn';
 import {
   Activity,
-  BookOpen,
   Braces,
   ChartNoAxesCombined,
   Database,
@@ -25,26 +24,17 @@ import {
   FolderKanban,
   GraduationCap,
   HeartPulse,
-  Layers3,
   Link as LinkIcon,
   Map,
   ShieldCheck,
-  Tag,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
+import { type ComponentType, type ReactNode } from 'react';
 
 import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import publicEnvConfig from '@/config/public.env.config';
-import {
-  fetchCategories,
-  fetchCourses,
-  fetchTags,
-  type ProjectCourse,
-  type ProjectFacet,
-} from '@/lib/projects/api-client';
 import { buildDiscoveryUrl } from '@/lib/projects/discovery';
 import {
   labelFromSlug,
@@ -83,37 +73,6 @@ function peopleProfileHref(username: string) {
   return `${publicEnvConfig.NEXT_PUBLIC_PEOPLE_SITE_URL}/people/${encodeURIComponent(
     username.toLowerCase()
   )}`;
-}
-
-export function PageIntro({
-  eyebrow,
-  title,
-  description,
-}: Readonly<{
-  eyebrow: string;
-  title: string;
-  description: string;
-}>) {
-  return (
-    <section className="bg-card border-b">
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <p
-          className="text-primary text-xs font-semibold tracking-wide uppercase"
-        >
-          {eyebrow}
-        </p>
-        <h1
-          className="text-card-foreground mt-3 max-w-4xl text-3xl font-semibold
-            tracking-tight sm:text-5xl"
-        >
-          {title}
-        </h1>
-        <p className="text-muted-foreground mt-4 max-w-3xl text-base/7">
-          {description}
-        </p>
-      </div>
-    </section>
-  );
 }
 
 export function ProjectGrid({
@@ -203,74 +162,6 @@ function ProjectCard({ project }: Readonly<{ project: Project }>) {
         </CardContent>
       </Card>
     </Link>
-  );
-}
-
-export function FacetRail() {
-  const [categories, setCategories] = useState<ProjectFacet[]>([]);
-  const [tags, setTags] = useState<ProjectFacet[]>([]);
-  const [courses, setCourses] = useState<ProjectCourse[]>([]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadFacets() {
-      try {
-        const [nextCategories, nextTags, nextCourses] = await Promise.all([
-          fetchCategories(controller.signal),
-          fetchTags(controller.signal),
-          fetchCourses(controller.signal),
-        ]);
-
-        setCategories(nextCategories);
-        setTags(nextTags);
-        setCourses(nextCourses);
-      } catch {
-        if (!controller.signal.aborted) {
-          setCategories([]);
-          setTags([]);
-          setCourses([]);
-        }
-      }
-    }
-
-    void loadFacets();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  return (
-    <aside className="space-y-6">
-      <FacetBlock
-        title="Collections"
-        icon={Layers3}
-        items={categories.slice(0, 8).map((category) => ({
-          href: `/categories/${category.slug}`,
-          label: category.label,
-          count: category.count,
-        }))}
-      />
-      <FacetBlock
-        title="Subjects and technologies"
-        icon={Tag}
-        items={tags.slice(0, 10).map((tag) => ({
-          href: `/topics/${tag.slug}`,
-          label: tag.label,
-          count: tag.count,
-        }))}
-      />
-      <FacetBlock
-        title="Courses"
-        icon={BookOpen}
-        items={courses.map((course) => ({
-          href: `/courses/${course.code}/projects`,
-          label: course.code,
-          count: course.count,
-        }))}
-      />
-    </aside>
   );
 }
 
@@ -427,7 +318,7 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               )}
             </div>
           </InfoPanel>
-          <InfoPanel title="Topics and Collections">
+          <InfoPanel title="Categories and Topics">
             <div className="flex flex-wrap gap-2">
               {linkedCategories.map((category) => (
                 <Link
@@ -531,43 +422,6 @@ function StatusBadge({ status }: Readonly<{ status: Project['status'] }>) {
     >
       {projectStatusLabels[status]}
     </Badge>
-  );
-}
-
-function FacetBlock({
-  title,
-  icon: Icon,
-  items,
-}: Readonly<{
-  title: string;
-  icon: ComponentType<{ className?: string }>;
-  items: { href: string; label: string; count: number }[];
-}>) {
-  return (
-    <Card className="rounded-md p-4">
-      <CardHeader className="px-0">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Icon className="text-primary size-4" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-2 px-0">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="text-muted-foreground hover:bg-muted
-              hover:text-foreground flex items-center justify-between rounded-md
-              p-2 text-sm font-medium transition-colors"
-          >
-            <span>{item.label}</span>
-            <Badge variant="outline" className="rounded-md">
-              {item.count}
-            </Badge>
-          </Link>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "../tsconfig.test.json",
+  "include": [
+    "../next-env.d.ts",
+    "../src/**/*.ts",
+    "../src/**/*.tsx",
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}

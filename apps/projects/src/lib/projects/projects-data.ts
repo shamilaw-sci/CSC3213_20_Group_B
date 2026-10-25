@@ -21,12 +21,6 @@ const ProjectListSchema = {
   },
 };
 
-const ProjectProfileSchema = {
-  parse(input: unknown): Project {
-    return ProjectSchema.parse(input);
-  },
-};
-
 async function fetchProjectData<T>(
   path: string,
   schema: Schema<T>,
@@ -82,31 +76,4 @@ async function fetchProjectDataUncached<T>(
 
 export function getAllProjectData(): Promise<Project[]> {
   return fetchProjectData('projects.json', ProjectListSchema, []);
-}
-
-export async function getProjectDataBySlug(
-  slug: string
-): Promise<Project | undefined> {
-  if (publicEnvConfig.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL === 'local') {
-    return undefined;
-  }
-
-  const response = await fetch(
-    `${publicEnvConfig.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL}/projects/${encodeURIComponent(slug)}.json`,
-    {
-      cache: 'no-store',
-    }
-  );
-
-  if (response.status === 404) {
-    return undefined;
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch project data for ${slug}: ${response.status} ${response.statusText}`
-    );
-  }
-
-  return ProjectProfileSchema.parse(await response.json());
 }

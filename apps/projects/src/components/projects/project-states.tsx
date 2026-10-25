@@ -93,30 +93,6 @@ export function StatePanel({
   );
 }
 
-export function ProjectListLoading({
-  count = 3,
-  className,
-  label = 'Loading projects',
-}: Readonly<{ count?: number; className?: string; label?: string }>) {
-  return (
-    <LoadingRegion className={className} label={label}>
-      <ProjectListSkeleton count={count} />
-    </LoadingRegion>
-  );
-}
-
-export function TileGridLoading({
-  count = 6,
-  className,
-  label = 'Loading items',
-}: Readonly<{ count?: number; className?: string; label?: string }>) {
-  return (
-    <LoadingRegion className={className} label={label}>
-      <TileGridSkeleton count={count} />
-    </LoadingRegion>
-  );
-}
-
 export function ProjectDetailLoading({
   className,
   label = 'Loading project',
@@ -143,62 +119,6 @@ export function ProjectDetailLoading({
           <ContentPanelLoading lines={3} />
         </div>
         <ContentPanelLoading lines={5} />
-      </section>
-    </LoadingRegion>
-  );
-}
-
-export function ProjectCollectionLoading({
-  label = 'Loading project collection',
-}: Readonly<{ label?: string }>) {
-  return (
-    <LoadingRegion label={label}>
-      <PageIntroLoading />
-      <section
-        className="mx-auto grid max-w-6xl gap-8 px-4 py-10
-          lg:grid-cols-[1fr_18rem]"
-      >
-        <div className="space-y-5">
-          <Skeleton className="h-14 w-full" />
-          <ProjectListSkeleton count={3} />
-        </div>
-        <div className="space-y-5">
-          <ContentPanelLoading lines={5} />
-          <ContentPanelLoading lines={4} />
-        </div>
-      </section>
-    </LoadingRegion>
-  );
-}
-
-export function ProjectIndexLoading({
-  label = 'Loading project index',
-}: Readonly<{ label?: string }>) {
-  return (
-    <LoadingRegion label={label}>
-      <PageIntroLoading />
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <TileGridSkeleton count={6} />
-      </section>
-    </LoadingRegion>
-  );
-}
-
-export function ProjectSearchLoading({
-  label = 'Loading project search',
-}: Readonly<{ label?: string }>) {
-  return (
-    <LoadingRegion label={label}>
-      <section className="bg-card border-b">
-        <div className="mx-auto max-w-6xl space-y-4 px-4 py-10">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-10 w-72 max-w-full" />
-          <Skeleton className="h-11 w-full max-w-2xl" />
-        </div>
-      </section>
-      <section className="mx-auto max-w-6xl space-y-5 px-4 py-10">
-        <Skeleton className="h-20 w-full" />
-        <ProjectListSkeleton count={3} />
       </section>
     </LoadingRegion>
   );
@@ -275,18 +195,6 @@ function LoadingRegion({
   );
 }
 
-function PageIntroLoading() {
-  return (
-    <section className="bg-card border-b">
-      <div className="mx-auto max-w-6xl space-y-4 px-4 py-12">
-        <Skeleton className="h-4 w-36" />
-        <Skeleton className="h-11 w-2/3 max-w-2xl" />
-        <Skeleton className="h-5 w-full max-w-3xl" />
-      </div>
-    </section>
-  );
-}
-
 function ProjectListSkeleton({ count }: Readonly<{ count: number }>) {
   return (
     <div className="grid gap-5">
@@ -316,25 +224,6 @@ function ProjectListSkeleton({ count }: Readonly<{ count: number }>) {
   );
 }
 
-function TileGridSkeleton({ count }: Readonly<{ count: number }>) {
-  return (
-    <div
-      className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]
-        gap-4"
-    >
-      {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="bg-card space-y-4 rounded-md border p-5">
-          <div className="flex items-start justify-between gap-4">
-            <Skeleton className="h-6 w-36" />
-            <Skeleton className="h-5 w-10" />
-          </div>
-          <Skeleton className="h-4 w-4/5" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ContentPanelLoading({ lines }: Readonly<{ lines: number }>) {
   return (
     <div className="bg-card space-y-4 rounded-md border p-5">
@@ -351,7 +240,7 @@ function ContentPanelLoading({ lines }: Readonly<{ lines: number }>) {
 
 export function EmptyProjectsPanel({
   title = 'No projects to show',
-  description = 'Try a broader search or browse the project collections.',
+  description = 'Try a broader search or remove a filter.',
   className,
 }: Readonly<{
   title?: string;
@@ -363,8 +252,7 @@ export function EmptyProjectsPanel({
       title={title}
       description={description}
       icon={Search}
-      action={{ href: '/search', label: 'Search projects' }}
-      secondaryAction={{ href: '/categories', label: 'Browse collections' }}
+      action={{ href: '/', label: 'Clear filters' }}
       className={className}
     />
   );
@@ -389,7 +277,6 @@ export function ProjectErrorPanel({
       tone="warning"
       onRetry={onRetry}
       action={onRetry ? undefined : { href: '/', label: 'Go home' }}
-      secondaryAction={{ href: '/search', label: 'Open search' }}
       className={className}
     />
   );
