@@ -177,6 +177,20 @@ describe('shared UI component contracts', () => {
     expect(typeof Toaster).toBe('function');
   });
 
+  test('exports a semantic skeleton primitive with customizable geometry', async () => {
+    const modulePromise = import('@scs/ui/components/skeleton');
+    await expect(modulePromise).resolves.toBeDefined();
+    const { Skeleton } = await modulePromise;
+    const markup = renderToStaticMarkup(
+      <Skeleton className="custom-skeleton h-8" />
+    );
+
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('animate-pulse');
+    expect(markup).toContain('bg-muted');
+    expect(markup).toContain('custom-skeleton');
+  });
+
   test('renders feedback with one semantic heading and caller actions', async () => {
     const modulePromise = import('@scs/ui/components/feedback-state');
     await expect(modulePromise).resolves.toBeDefined();

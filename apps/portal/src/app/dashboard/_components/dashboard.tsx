@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-import { PageLoading } from '@/components/feedback/page-loading';
+import { DashboardLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import {
@@ -131,7 +131,7 @@ export default function Dashboard() {
     return baseItems;
   }, [isSuperAdmin, showCourses, showProxySettings]);
 
-  if (!loaded) return <PageLoading />;
+  if (!loaded) return <DashboardLoading />;
 
   return (
     <PageShell width="wide">

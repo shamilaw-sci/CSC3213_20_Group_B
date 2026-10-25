@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PageLoading } from '@/components/feedback/page-loading';
+import { ProfilePageLoading } from '@/components/feedback/page-loading';
 import ProfilePage from '@/components/profiles/profile-overview';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import { AppRole } from '@/types/role';
@@ -58,7 +58,7 @@ export default function Me() {
   }, []);
 
   if (!user) {
-    return <PageLoading variant="detail" />;
+    return <ProfilePageLoading />;
   }
 
   return <ProfilePage {...user} />;

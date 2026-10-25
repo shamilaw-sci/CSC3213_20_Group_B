@@ -67,7 +67,7 @@ import {
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
 import {
-  PageLoading,
+  EditorPageLoading,
   PageLoadingPanel,
 } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
@@ -2075,7 +2075,7 @@ export default function ProjectEditor({
   }
 
   if (loading) {
-    return <PageLoading variant="table" />;
+    return <EditorPageLoading />;
   }
 
   if (admin && user && !effectiveAdmin) {

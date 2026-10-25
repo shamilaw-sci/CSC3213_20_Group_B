@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 import FindByUsernamePage from '@/app/find-by/_components/find-by-username-page';
-import { ProjectListLoading } from '@/components/projects/project-states';
+import { ProjectSearchLoading } from '@/components/projects/project-states';
 
 export const metadata = {
   title: 'Find Projects by Username',
@@ -11,11 +11,7 @@ export const metadata = {
 export default function Page() {
   return (
     <Suspense
-      fallback={
-        <main className="mx-auto max-w-6xl px-4 py-10">
-          <ProjectListLoading />
-        </main>
-      }
+      fallback={<ProjectSearchLoading label="Loading username search" />}
     >
       <FindByUsernamePage />
     </Suspense>

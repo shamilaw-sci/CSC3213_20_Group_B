@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import ProxySettingsPage from '@/app/user/proxy/_components/proxy-settings-form';
-import { PageLoading } from '@/components/feedback/page-loading';
+import { SettingsPageLoading } from '@/components/feedback/page-loading';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 
 export default function ProxySettings() {
@@ -58,7 +58,7 @@ export default function ProxySettings() {
   }, []);
 
   if (!proxy) {
-    return <PageLoading variant="detail" />;
+    return <SettingsPageLoading />;
   }
 
   return (

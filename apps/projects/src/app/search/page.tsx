@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import SearchPage from '@/app/search/_components/search-page';
-import { ProjectListLoading } from '@/components/projects/project-states';
+import { ProjectSearchLoading } from '@/components/projects/project-states';
 
 export const metadata: Metadata = {
   title: 'Search Projects',
@@ -12,13 +12,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <main className="mx-auto max-w-6xl px-4 py-10">
-          <ProjectListLoading />
-        </main>
-      }
-    >
+    <Suspense fallback={<ProjectSearchLoading />}>
       <SearchPage />
     </Suspense>
   );

@@ -46,9 +46,13 @@ function PageLoadingShell({
 }) {
   return (
     <main
-      aria-hidden="true"
+      role="status"
+      aria-label="Loading directory"
+      aria-live="polite"
+      aria-busy="true"
       className="mx-auto w-full max-w-6xl animate-pulse px-4 py-6"
     >
+      <span className="sr-only">Loading directory</span>
       <HeaderSkeleton
         breadcrumbItems={breadcrumbItems}
         titleWidth={titleWidth}

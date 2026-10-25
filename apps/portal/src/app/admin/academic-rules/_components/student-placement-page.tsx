@@ -36,7 +36,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { PageLoading } from '@/components/feedback/page-loading';
+import { AcademicRulesLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import {
@@ -466,7 +466,7 @@ export default function StudentPlacementPage() {
     }
   }
 
-  if (loading && !data) return <PageLoading variant="detail" />;
+  if (loading && !data) return <AcademicRulesLoading />;
 
   return (
     <PageShell width="wide">

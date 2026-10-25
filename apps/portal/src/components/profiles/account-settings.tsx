@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PageLoading } from '@/components/feedback/page-loading';
+import { SettingsPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import ProfileContent from '@/components/profiles/account-content';
@@ -63,7 +63,7 @@ export default function Settings({ from }: SettingsProps) {
   }, []);
 
   if (!user) {
-    return <PageLoading variant="detail" />;
+    return <SettingsPageLoading />;
   }
 
   return (

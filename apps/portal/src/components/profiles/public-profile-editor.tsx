@@ -64,7 +64,7 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
-import { PageLoading } from '@/components/feedback/page-loading';
+import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import type {
@@ -2433,7 +2433,7 @@ export default function PublicProfileEditor({
         : 'new';
 
   if (loading && !schema) {
-    return <PageLoading variant="detail" />;
+    return <EditorPageLoading />;
   }
 
   return (

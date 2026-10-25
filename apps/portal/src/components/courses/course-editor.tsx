@@ -49,7 +49,7 @@ import {
   type EditorState,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
-import { PageLoading } from '@/components/feedback/page-loading';
+import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import {
@@ -711,7 +711,7 @@ export default function CourseEditor({
     }
   }
 
-  if (loading) return <PageLoading />;
+  if (loading) return <EditorPageLoading />;
 
   if (!canEditCoursesRole(user ?? {})) {
     return (
