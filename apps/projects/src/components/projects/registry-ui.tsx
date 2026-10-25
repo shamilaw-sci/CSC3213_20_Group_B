@@ -35,12 +35,14 @@ import { type ComponentType, type ReactNode } from 'react';
 
 import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import publicEnvConfig from '@/config/public.env.config';
-import { buildDiscoveryUrl } from '@/lib/projects/discovery';
+import {
+  buildDiscoveryUrl,
+  normalizeDiscoveryFacet,
+} from '@/lib/projects/discovery';
 import {
   labelFromSlug,
   projectStatusLabels,
   projectTypeLabels,
-  slugify,
 } from '@/lib/projects/metadata';
 import type { Project, ProjectLinks } from '@/lib/projects/types';
 
@@ -338,7 +340,9 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
               {project.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={buildDiscoveryUrl({ topic: slugify(tag) })}
+                  href={buildDiscoveryUrl({
+                    topic: normalizeDiscoveryFacet(tag),
+                  })}
                   className="inline-flex"
                 >
                   <Badge

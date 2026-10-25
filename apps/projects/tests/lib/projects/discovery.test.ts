@@ -256,6 +256,33 @@ describe('project discovery state', () => {
     });
   });
 
+  test('keeps Unicode and punctuation-only facets usable as select values', () => {
+    const projects = [
+      project(1, {
+        categories: ['පර්යේෂණ'],
+        tags: ['C++', 'தமிழ்'],
+      }),
+    ];
+
+    const options = deriveDiscoveryOptions(projects);
+
+    expect(options.categories[0]?.value).toBe('පර්යේෂණ');
+    expect(options.topics.map((option) => option.value)).toEqual(
+      expect.arrayContaining(['c++', 'தமிழ்'])
+    );
+    const punctuationTopic = options.topics.find(
+      (option) => option.value === 'c++'
+    );
+    expect(
+      filterProjects(
+        projects,
+        parseProjectDiscoveryParams(
+          new URLSearchParams({ topic: punctuationTopic?.value ?? '' })
+        )
+      )
+    ).toEqual(projects);
+  });
+
   test('builds canonical URLs and resets pagination when filters change', () => {
     const initial = parseProjectDiscoveryParams(
       new URLSearchParams({ q: 'search', status: 'active', page: '4' })

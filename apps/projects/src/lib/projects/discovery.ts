@@ -2,7 +2,6 @@ import {
   labelFromSlug,
   projectStatusLabels,
   projectTypeLabels,
-  slugify,
 } from '@/lib/projects/metadata';
 import type { Project, ProjectStatus, ProjectType } from '@/lib/projects/types';
 
@@ -57,6 +56,14 @@ function textValue(value: string | null) {
   return value?.trim() ?? '';
 }
 
+export function normalizeDiscoveryFacet(value: string) {
+  return value
+    .normalize('NFKC')
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/\s+/gu, '-');
+}
+
 function positivePage(value: string | null) {
   const page = Number(value);
   return Number.isInteger(page) && page > 0 ? page : 1;
@@ -70,8 +77,8 @@ export function parseProjectDiscoveryParams(
 
   return {
     q: textValue(params.get('q')),
-    category: category ? slugify(category) : '',
-    topic: topic ? slugify(topic) : '',
+    category: category ? normalizeDiscoveryFacet(category) : '',
+    topic: topic ? normalizeDiscoveryFacet(topic) : '',
     course: textValue(params.get('course')).toUpperCase(),
     status: enumValue(params.get('status'), statusValues),
     type: enumValue(params.get('type'), typeValues),
@@ -119,7 +126,7 @@ export function filterProjects(
     if (
       state.category &&
       !project.categories.some(
-        (category) => slugify(category) === state.category
+        (category) => normalizeDiscoveryFacet(category) === state.category
       )
     ) {
       return false;
@@ -127,7 +134,9 @@ export function filterProjects(
 
     if (
       state.topic &&
-      !project.tags.some((topic) => slugify(topic) === state.topic)
+      !project.tags.some(
+        (topic) => normalizeDiscoveryFacet(topic) === state.topic
+      )
     ) {
       return false;
     }
@@ -199,7 +208,7 @@ export function deriveDiscoveryOptions(projects: Project[]): DiscoveryOptions {
     categories: countedOptions(
       projects.flatMap((project) =>
         project.categories.map((category) => ({
-          value: slugify(category),
+          value: normalizeDiscoveryFacet(category),
           label: labelFromSlug(category),
         }))
       )
@@ -207,7 +216,7 @@ export function deriveDiscoveryOptions(projects: Project[]): DiscoveryOptions {
     topics: countedOptions(
       projects.flatMap((project) =>
         project.tags.map((topic) => ({
-          value: slugify(topic),
+          value: normalizeDiscoveryFacet(topic),
           label: labelFromSlug(topic),
         }))
       )
