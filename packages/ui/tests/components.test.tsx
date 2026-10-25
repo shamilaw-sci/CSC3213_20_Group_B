@@ -160,17 +160,25 @@ describe('shared UI component contracts', () => {
     }
   });
 
-  test('preserves the people-specific tab styling as an explicit variant', () => {
+  test('lets tab lists grow around taller triggers without vertical overflow', () => {
     const markup = renderToStaticMarkup(
       <Tabs defaultValue="one">
         <TabsList variant="brand">
-          <TabsTrigger value="one">One</TabsTrigger>
+          <TabsTrigger value="one" className="min-h-9">
+            One
+          </TabsTrigger>
         </TabsList>
       </Tabs>
     );
 
     expect(markup).toContain('data-variant="brand"');
     expect(markup).toContain('group-data-[variant=brand]/tabs-list');
+    expect(markup).toContain(
+      'group-data-[orientation=horizontal]/tabs:min-h-9'
+    );
+    expect(markup).not.toContain(
+      'group-data-[orientation=horizontal]/tabs:h-9'
+    );
     expect(markup).toContain('h-full');
     expect(markup).not.toContain('h-[calc(100%-1px)]');
   });
