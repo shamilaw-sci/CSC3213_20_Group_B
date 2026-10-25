@@ -1,30 +1,31 @@
 # Environment Variables
 
-This is the canonical configuration catalog. Each deployable owns its template
-and typed validator so it can run and deploy independently.
+This is the canonical configuration catalog. Each deployable owns a safe local
+template and runtime validator so applications and services remain
+independently deployable.
 
 ## Configuration Model
 
 ```mermaid
 flowchart LR
   Template[Safe example file] --> Local[Ignored local env file]
-  Provider[Deployment secret/config store] --> Runtime[Runtime environment]
+  Provider[Deployment config or secret store] --> Runtime[Runtime environment]
+  Wrangler[Wrangler configuration] --> Runtime
   Local --> Runtime
   Runtime --> Validator[Typed config or binding validation]
-  Validator --> App[Application/service code]
+  Validator --> App[Application or service]
 ```
 
-There are three kinds of configuration:
+| Kind                   | Rule                                                          |
+| ---------------------- | ------------------------------------------------------------- |
+| public browser value   | may enter client bundles; must never contain a secret         |
+| server value or secret | available only to server or Worker code                       |
+| Cloudflare binding     | configured by Wrangler and passed on the request/runtime env  |
+| deployment adapter     | consumed by the hosting platform rather than application code |
 
-| Kind                   | Example                | Rule                                                             |
-| ---------------------- | ---------------------- | ---------------------------------------------------------------- |
-| public browser value   | `NEXT_PUBLIC_SITE_URL` | may be included in client bundles; never put a secret here       |
-| server value or secret | `BETTER_AUTH_SECRET`   | available only to server/Worker code and deployment stores       |
-| Cloudflare binding     | `AUTH_DB`              | configured by Wrangler and passed through the Worker environment |
-
-Next.js apps use `@t3-oss/env-nextjs`. Bun processes use
-`@t3-oss/env-core`. Worker bindings are request-scoped and typed; do not copy
-them into `process.env`.
+Next.js applications use `@t3-oss/env-nextjs`, and Bun services use
+`@t3-oss/env-core`. Cloudflare bindings are request-scoped; do not copy them
+into `process.env`.
 
 ## Workspace Index
 
@@ -40,14 +41,15 @@ them into `process.env`.
 
 ## Audited Configuration Matrix
 
-The audit status describes a verified consumer, not merely a declaration.
-`runtime` values are read by application or adapter code, `binding` values are
-injected and consumed by Cloudflare, and `deployment-only` values are consumed
-by the named hosting adapter. No currently supported name is unused.
+Each row records the supported name, exposure kind, source, runtime status,
+and owner. `runtime` means application or adapter code reads the value;
+`binding` means Cloudflare injects and consumes the resource; and
+`deployment-only` means the hosting adapter owns it. No listed value is known
+to be unused.
 
 ### Web
 
-| Name                   | Kind      | Supply     | Status    | Consumer / purpose              |
+| Name                   | Kind      | Supply     | Status    | Purpose                         |
 | ---------------------- | --------- | ---------- | --------- | ------------------------------- |
 | `NEXT_PUBLIC_SITE_URL` | `browser` | `template` | `runtime` | canonical URL and metadata      |
 | `BASE_DOMAIN`          | `server`  | `template` | `runtime` | application domain construction |
@@ -57,7 +59,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### People
 
-| Name                                 | Kind      | Supply     | Status    | Consumer / purpose         |
+| Name                                 | Kind      | Supply     | Status    | Purpose                    |
 | ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
 | `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
 | `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`   | `browser` | `template` | `runtime` | people records             |
@@ -66,7 +68,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### Projects
 
-| Name                                 | Kind      | Supply     | Status    | Consumer / purpose         |
+| Name                                 | Kind      | Supply     | Status    | Purpose                    |
 | ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
 | `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
 | `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | project records            |
@@ -75,7 +77,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### Portal
 
-| Name                                       | Kind      | Supply     | Status    | Consumer / purpose             |
+| Name                                       | Kind      | Supply     | Status    | Purpose                        |
 | ------------------------------------------ | --------- | ---------- | --------- | ------------------------------ |
 | `NEXT_PUBLIC_SITE_URL`                     | `browser` | `template` | `runtime` | canonical URL and metadata     |
 | `NEXT_PUBLIC_BASE_API_URL`                 | `browser` | `template` | `runtime` | browser API client             |
@@ -86,7 +88,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### API Worker
 
-| Name                         | Kind      | Supply     | Status    | Consumer / purpose                   |
+| Name                         | Kind      | Supply     | Status    | Purpose                              |
 | ---------------------------- | --------- | ---------- | --------- | ------------------------------------ |
 | `BETTER_AUTH_SECRET`         | `secret`  | `template` | `runtime` | Better Auth signing                  |
 | `BETTER_AUTH_URL`            | `server`  | `wrangler` | `runtime` | Better Auth base URL                 |
@@ -104,7 +106,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### GitHub App
 
-| Name                              | Kind      | Supply     | Status    | Consumer / purpose                  |
+| Name                              | Kind      | Supply     | Status    | Purpose                             |
 | --------------------------------- | --------- | ---------- | --------- | ----------------------------------- |
 | `GITHUB_APP_ID`                   | `server`  | `template` | `runtime` | GitHub App authentication           |
 | `GITHUB_PRIVATE_KEY`              | `secret`  | `template` | `runtime` | GitHub App authentication           |
@@ -120,7 +122,7 @@ by the named hosting adapter. No currently supported name is unused.
 
 ### Mailer
 
-| Name                           | Kind      | Supply     | Status            | Consumer / purpose                   |
+| Name                           | Kind      | Supply     | Status            | Purpose                              |
 | ------------------------------ | --------- | ---------- | ----------------- | ------------------------------------ |
 | `MAILER_API_KEY`               | `secret`  | `template` | `runtime`         | bearer authentication                |
 | `SMTP_HOST`                    | `server`  | `template` | `runtime`         | SMTP connection                      |
@@ -131,162 +133,61 @@ by the named hosting adapter. No currently supported name is unused.
 | `PORT`                         | `adapter` | `template` | `runtime`         | Bun listener                         |
 | `VERCEL_EXPERIMENTAL_BACKENDS` | `adapter` | `provider` | `deployment-only` | Vercel backend routing during deploy |
 
-## Local Files
+## Local Setup
 
-Copy only what you need. These destinations are ignored and must remain
-untracked:
+Copy only the templates needed for the workspaces you will run. Next.js apps
+use `.env.local`; Wrangler uses `.dev.vars`; Bun services use `.env`.
 
 ```powershell
+Copy-Item apps/web/.env.example apps/web/.env.local
+Copy-Item apps/people/.env.example apps/people/.env.local
+Copy-Item apps/projects/.env.example apps/projects/.env.local
 Copy-Item apps/portal/.env.example apps/portal/.env.local
 Copy-Item services/api/.dev.vars.example services/api/.dev.vars
 Copy-Item services/github-app/.env.example services/github-app/.env
 Copy-Item services/mailer/.env.example services/mailer/.env
 ```
 
-Do not reuse production secrets locally. Empty strings are treated as missing
-by the typed config packages.
+These destinations are ignored. Never reuse production secrets locally or
+commit populated files. Empty strings are treated as missing by typed config.
+Defaults and safe local examples live in the validator and template; avoid
+duplicating them in another guide.
 
-## Web
+The Portal and API origins must agree with Better Auth trusted origins, CORS,
+passkey relying-party settings, and cookie-domain behavior. The API and GitHub
+App internal secrets must also match.
 
-| Variable               | Visibility | Default / requirement             |
-| ---------------------- | ---------- | --------------------------------- |
-| `NEXT_PUBLIC_SITE_URL` | browser    | `https://scs.pdn.ac.lk`           |
-| `BASE_DOMAIN`          | server     | `scs.pdn.ac.lk`                   |
-| `MOODLE_URL`           | server     | `https://scilms.pdn.ac.lk`        |
-| `WORKER_URL`           | server     | proxy Worker URL                  |
-| `CF_SECRET`            | secret     | shared proxy authentication value |
+## Production Configuration
 
-`CF_SECRET` has a development fallback so the app can load, but production must
-override it with a secret value shared only with the proxy Worker.
-
-## People
-
-| Variable                             | Visibility | Default                                  |
-| ------------------------------------ | ---------- | ---------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`               | browser    | `https://people.scs-pdn.space`           |
-| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`   | browser    | `https://data.scs-pdn.space/people/v2`   |
-| `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | browser    | `https://data.scs-pdn.space/projects/v2` |
-| `NEXT_PUBLIC_PROJECTS_SITE_URL`      | browser    | `https://projects.scs-pdn.space`         |
-
-## Projects
-
-| Variable                             | Visibility | Default                                  |
-| ------------------------------------ | ---------- | ---------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`               | browser    | `https://projects.scs-pdn.space`         |
-| `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | browser    | `https://data.scs-pdn.space/projects/v2` |
-| `NEXT_PUBLIC_PEOPLE_SITE_URL`        | browser    | `https://people.scs-pdn.space`           |
-| `NEXT_PUBLIC_DEPARTMENT_SITE_URL`    | browser    | `https://scs.pdn.ac.lk`                  |
-
-The projects data base may use the workspace's documented local fixture mode
-where supported; production uses a valid public data URL.
-
-## Portal
-
-| Variable                                   | Visibility | Default                                |
-| ------------------------------------------ | ---------- | -------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                     | browser    | `https://portal.scs-pdn.space`         |
-| `NEXT_PUBLIC_BASE_API_URL`                 | browser    | `https://api.scs-pdn.space`            |
-| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`         | browser    | `https://data.scs-pdn.space/people/v2` |
-| `NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH` | browser    | positive integer, `6`                  |
-| `NEXT_PUBLIC_API_CLIENT_ID`                | browser    | `portal`                               |
-| `COOKIE_DOMAIN`                            | server     | `.scs-pdn.space`                       |
-
-The local Portal and API origins must agree with Better Auth trusted origins,
-CORS policy, passkey relying-party rules, and cookie domain behavior.
-
-## API Worker
-
-### Wrangler Variables
-
-`services/api/wrangler.jsonc` defines non-secret runtime values:
-
-- `BETTER_AUTH_URL`
-- `GOOGLE_CLIENT_ID`
-- `GITHUB_CLIENT_ID`
-- `MAILER_API_URL`
-- `GITHUB_APP_API_URL`
-- `DATA_PUBLIC_BASE_URL`
-
-### Secrets
-
-Local names are listed in `services/api/.dev.vars.example`:
-
-- `BETTER_AUTH_SECRET`
-- `GOOGLE_CLIENT_SECRET`
-- `GITHUB_CLIENT_SECRET`
-- `MAILER_API_KEY`
-- `GITHUB_APP_INTERNAL_SECRET`
-
-Configure production secrets from `services/api`:
+Non-secret API and GitHub App values, resource bindings, and required secret
+names are declared in their `wrangler.jsonc` files. Store values in the
+provider, never in Wrangler configuration:
 
 ```powershell
-wrangler secret put BETTER_AUTH_SECRET
-wrangler secret put GOOGLE_CLIENT_SECRET
-wrangler secret put GITHUB_CLIENT_SECRET
-wrangler secret put MAILER_API_KEY
-wrangler secret put GITHUB_APP_INTERNAL_SECRET
+Set-Location services/api
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+bunx wrangler secret put GITHUB_CLIENT_SECRET
+bunx wrangler secret put MAILER_API_KEY
+bunx wrangler secret put GITHUB_APP_INTERNAL_SECRET
+
+Set-Location ../github-app
+bunx wrangler secret put GITHUB_PRIVATE_KEY
+bunx wrangler secret put X_INTERNAL_SECRET
 ```
 
-The API `wrangler.jsonc` declares these names under `secrets.required`.
-Wrangler therefore checks that deployed secrets exist and loads only those
-declared names from `.dev.vars` during local development. Values stay in local
-ignored files or Cloudflare's encrypted secret store and must never be added to
-the Wrangler configuration.
+`AUTH_DB` and `GITHUB_APP` belong to the API Worker. `OPERATION_STATE`,
+`MUTATION_COORDINATOR`, and `OPERATION_QUEUE` belong to the GitHub App Worker.
+Durable Object state is independent of API D1 migrations.
 
-### Bindings
-
-| Binding      | Type            | Ownership                                            |
-| ------------ | --------------- | ---------------------------------------------------- |
-| `AUTH_DB`    | D1              | auth, rate limits, permissions, and proxy settings   |
-| `GITHUB_APP` | service binding | preferred private call path to the GitHub App Worker |
-
-`GITHUB_APP_API_URL` is the independently deployable HTTP fallback.
-
-## GitHub App
-
-| Variable                          | Kind          | Requirement                                 |
-| --------------------------------- | ------------- | ------------------------------------------- |
-| `GITHUB_APP_ID`                   | configuration | GitHub App identifier                       |
-| `GITHUB_PRIVATE_KEY`              | secret        | required; escaped newlines are normalized   |
-| `GITHUB_INSTALLATION_ID`          | configuration | installation identifier                     |
-| `GITHUB_OWNER`                    | configuration | repository owner                            |
-| `GITHUB_PEOPLE_DATA_REPOSITORY`   | configuration | people data repository name                 |
-| `GITHUB_PROJECTS_DATA_REPOSITORY` | configuration | project data repository name                |
-| `X_INTERNAL_SECRET`               | secret        | must match API `GITHUB_APP_INTERNAL_SECRET` |
-| `PORT`                            | Bun adapter   | integer 1–65535; default `3000`             |
-
-Production non-secrets and Cloudflare resources are defined in
-`services/github-app/wrangler.jsonc`. Configure secrets from that workspace:
-
-```powershell
-wrangler secret put GITHUB_PRIVATE_KEY
-wrangler secret put X_INTERNAL_SECRET
-```
-
-The GitHub App `wrangler.jsonc` declares both names under
-`secrets.required`. The declaration contains names only; secret values remain
-in Cloudflare or the ignored local environment file.
-
-Never store a PEM file in the repository.
-
-## Mailer
-
-| Variable                       | Kind                 | Default / requirement          |
-| ------------------------------ | -------------------- | ------------------------------ |
-| `MAILER_API_KEY`               | secret               | required                       |
-| `SMTP_HOST`                    | configuration        | `smtp.example.com`             |
-| `SMTP_SECURE`                  | configuration        | `false`                        |
-| `SMTP_USER`                    | secret/configuration | empty by default               |
-| `SMTP_PASS`                    | secret               | empty by default               |
-| `SMTP_FROM`                    | configuration        | falls back to `SMTP_USER`      |
-| `PORT`                         | Bun adapter          | `3000`                         |
-| `VERCEL_EXPERIMENTAL_BACKENDS` | deployment adapter   | optional; not read by app code |
-
-The Mailer refuses to start without `MAILER_API_KEY`.
+The GitHub private key may contain escaped newlines but must never be stored as
+a tracked PEM file. The Mailer refuses to start without `MAILER_API_KEY`; verify
+its SMTP sender and delivery in a non-production mailbox. Vercel owns
+`VERCEL_EXPERIMENTAL_BACKENDS`; application code does not read it.
 
 ## Adding or Changing Configuration
 
-Update all relevant layers in one change:
+Update all affected layers in one change:
 
 1. typed schema or Worker environment type;
 2. runtime config module;
@@ -294,8 +195,8 @@ Update all relevant layers in one change:
 4. Wrangler or hosting configuration for non-secret values;
 5. deployment secret store for secrets;
 6. repository environment-policy tests;
-7. this catalog and any affected operations guide;
+7. this catalog and [Operations](OPERATIONS.md) when deployment changes;
 8. focused config tests, typecheck, and build.
 
-Never print a secret to confirm it exists. Validate presence, length, or a
+Never print a secret to prove it exists. Validate presence, length, or a
 provider response without echoing the value.

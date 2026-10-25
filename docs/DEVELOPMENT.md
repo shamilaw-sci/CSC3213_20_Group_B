@@ -86,12 +86,14 @@ Root commands coordinate only tasks declared by workspaces:
 ```powershell
 bun run docs:check
 bun run test:repo
+bun run knip
 bun run format:check
 bun run lint
 bun run typecheck
 bun run typecheck:test
 bun run test
 bun run build
+git diff --check
 ```
 
 Run a focused task with a package filter:
@@ -143,7 +145,8 @@ production types should not accidentally depend on Bun/Vitest globals.
 Put tests under the workspace's `test` or `tests` directory. Use the runner
 declared by the workspace:
 
-- API, GitHub App, Portal, Schemas, UI, and ESLint config use Bun tests;
+- API, GitHub App, Mailer, People, Portal, Schemas, UI, and ESLint config use
+  Bun tests;
 - Projects uses Vitest.
 
 Do not run `bun test` as evidence for a Vitest suite. Use

@@ -9,7 +9,7 @@ but every application and service remains independently deployable.
 Install the pinned Bun version shown in `.bun-version`, then run:
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
 Set-Location scs-pdn-monorepo
 bun install --frozen-lockfile
 bun --filter '@scs/web' dev
@@ -88,36 +88,23 @@ bun run build
 fixtures, and runner globals. A workspace without a test script has no test
 coverage; Turbo does not treat it as a passing suite.
 
-## Projects Showcase
+## Handover Boundaries
 
-`apps/projects` presents published projects as a schema-led showcase. Its
-homepage introduces the available project types and recently updated work;
-the complete directory lives at `/browse`. Public discovery uses canonical,
-path-based collections:
+The repository is production-oriented, but source control cannot prove or
+replace external provider state:
 
-- `/types/[type]` for the controlled project type;
-- `/categories/[category]` and `/topics/[topic]` for published secondary
-  collections;
-- `/search/[query]` for encoded search phrases;
-- `/projects/[project_slug]` for the canonical detail page, with
-  `/p/[project_slug]` as its permanent short redirect.
+- the public-data repository is deployed and validated separately;
+- OAuth applications, Cloudflare bindings, queues, D1, SMTP, DNS, hosting
+  projects, protected environments, and repository rulesets require operator
+  access;
+- root commands verify code but do not deploy every workspace as one release;
+- production validation must record the deployed commit and any checks that
+  require real credentials or provider consoles.
 
-Every collection has bounded `/page/[page]` pagination. The Projects app shows
-course and offering data only as project context. Course catalog ownership
-remains with `apps/web`, so Projects does not define `/courses` or `/offerings`
-directories and does not guess a course destination from its code.
-
-Run the Projects workspace gate with:
-
-```powershell
-bun --filter '@scs/projects' lint
-bun --filter '@scs/projects' typecheck
-bun --filter '@scs/projects' typecheck:test
-bun --filter '@scs/projects' test
-bun --filter '@scs/projects' build
-```
-
-Route and repository-policy coverage also runs through `bun run test:repo`.
+Use [Operations](docs/OPERATIONS.md) for deployment, migration, recovery, and
+the remaining provider-side checks. Use
+[Environment Variables](docs/ENVIRONMENT_VARIABLES.md) for the complete
+configuration inventory.
 
 ## Repository Rules
 
@@ -139,17 +126,16 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 ## Documentation
 
-| Guide                                                                          | Read it when you need to…                                       |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| [Development](docs/DEVELOPMENT.md)                                             | set up the repository, make a change, or diagnose local tooling |
-| [Architecture](docs/ARCHITECTURE.md)                                           | understand boundaries, data ownership, and request flows        |
-| [API Contracts](docs/API_CONTRACTS.md)                                         | call or change HTTP endpoints and durable operations            |
-| [Schemas](docs/SCHEMAS.md)                                                     | add or evolve shared domain contracts                           |
-| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)                         | configure local or deployed runtimes                            |
-| [Continuous Integration](docs/CI.md)                                           | understand required checks and merge behavior                   |
-| [Operations](docs/OPERATIONS.md)                                               | deploy, migrate, observe, or recover a service                  |
-| [Security](docs/SECURITY.md)                                                   | handle authentication, secrets, permissions, or incidents       |
-| [Project Discovery Design](docs/superpowers/specs/PROJECT_DISCOVERY_DESIGN.md) | review the approved Projects-site experience                    |
+| Guide                                                  | Read it when you need to…                                       |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| [Development](docs/DEVELOPMENT.md)                     | set up the repository, make a change, or diagnose local tooling |
+| [Architecture](docs/ARCHITECTURE.md)                   | understand boundaries, data ownership, and request flows        |
+| [API Contracts](docs/API_CONTRACTS.md)                 | call or change HTTP endpoints and durable operations            |
+| [Schemas](docs/SCHEMAS.md)                             | add or evolve shared domain contracts                           |
+| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) | configure local or deployed runtimes                            |
+| [Continuous Integration](docs/CI.md)                   | understand required checks and merge behavior                   |
+| [Operations](docs/OPERATIONS.md)                       | deploy, migrate, observe, or recover a service                  |
+| [Security](docs/SECURITY.md)                           | handle authentication, secrets, permissions, or incidents       |
 
 Documentation is maintained with the code. Run `bun run docs:check` after
 adding, renaming, linking, or removing a Markdown file.

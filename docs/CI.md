@@ -44,8 +44,8 @@ the complete gate against the integrated repository state.
 | `bun run test`                  | declared workspace behavior suites                                 |
 | `bun run build`                 | Next.js, schema, and Worker production compilation                 |
 
-`typecheck:test` currently exists in API, GitHub App, Projects, and Schemas.
-Add it when another workspace gains test-only compiler requirements.
+`typecheck:test` currently exists in API, GitHub App, Mailer, Projects, and
+Schemas. Add it when another workspace gains test-only compiler requirements.
 
 ## Caching and Concurrency
 

@@ -129,6 +129,7 @@ stateDiagram-v2
   running --> conflicted
   running --> failed
   running --> queued: retryable failure
+  queued --> failed: retry limit reached
 ```
 
 Read or request cancellation of the caller's operation with:
@@ -193,6 +194,7 @@ stream.
 | `GET`                          | `/api/academic/v2/offerings`             | read the offering reference array |
 | `GET`                          | `/api/academic/v2/offerings/page`        | list a bounded offering page      |
 | `GET`                          | `/api/academic/v2/offerings/:id`         | read one offering                 |
+| `GET`                          | `/api/academic/v2/offerings/:id/schema`  | read offering schema metadata     |
 | `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/pr`      | manage an offering mutation       |
 
 The unbounded project collection route is intentionally unavailable. Course
@@ -226,10 +228,10 @@ Every route requires `X-Internal-Secret`. Operation reads also require
 | `/projects/public-project*`    | read project state and manage project PRs/operations   |
 | `/academic/public-course*`     | read academic state and manage academic PRs/operations |
 
-The `POST .../operations` routes are the durable mutation entry points. Some
-synchronous PR routes remain compatibility adapters for trusted callers. Do not
-remove them without production caller evidence and a coordinated contract
-change.
+The `POST .../operations` routes are the durable mutation entry points. The
+documented PR routes are also active trusted-service contracts. Do not remove
+either contract without tracing production callers and coordinating the API,
+Worker, Portal, and deployment rollout.
 
 ## Mailer API
 

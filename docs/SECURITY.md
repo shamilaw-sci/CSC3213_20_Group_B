@@ -9,15 +9,18 @@ the current trust model, required safeguards, and incident response process.
 flowchart LR
   Browser[Untrusted browser]
   PublicData[Untrusted public JSON]
+  PublicApps[Public Next.js apps]
   API[API Worker]
   GitHubApp[Private GitHub App Worker]
   Mailer[Private Mailer]
   Providers[GitHub, OAuth, SMTP]
   D1[(D1)]
 
+  Browser --> PublicApps
   Browser -->|session + validated input| API
-  PublicData -->|schema validation| Browser
+  PublicData -->|schema validation| PublicApps
   API --> D1
+  API -->|OAuth| Providers
   API -->|internal secret/service binding| GitHubApp
   API -->|bearer key| Mailer
   GitHubApp --> Providers
@@ -87,7 +90,12 @@ Required properties:
 - Escape or safely render user-controlled content; do not inject raw HTML.
 - Keep CORS origins and allowed headers explicit.
 - Return stable bounded error codes/messages, never provider dumps or stacks.
-- Keep lists paginated and request bodies size-bounded.
+- Keep lists paginated and accepted fields bounded by their schemas.
+
+The services do not currently share a repository-owned transport-level request
+body byte limit. Cloudflare and the hosting provider still impose platform
+limits, but maintainers should add an explicit per-service guard if a lower
+application limit is required by the deployment threat model.
 
 See [API Contracts](API_CONTRACTS.md) for status and response contracts.
 

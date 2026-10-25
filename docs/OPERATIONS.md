@@ -65,6 +65,8 @@ Complete root gate:
 ```powershell
 bun install --frozen-lockfile
 bun run docs:check
+bun run test:repo
+bun run knip
 bun run format:check
 bun run lint
 bun run typecheck
@@ -87,7 +89,7 @@ bun run typecheck
 bun run typecheck:test
 bun run test
 bun run build
-wrangler deploy
+bun run deploy
 ```
 
 Configure the secrets listed in [Environment Variables](ENVIRONMENT_VARIABLES.md)
@@ -96,7 +98,8 @@ to the intended environment.
 
 Both Worker configurations declare required secret names. A deployment fails
 instead of silently publishing an unusable Worker when one is missing. Set
-values with `wrangler secret put`; never add secret values to `wrangler.jsonc`.
+values with `bunx wrangler secret put`; never add secret values to
+`wrangler.jsonc`.
 
 ### D1 Migrations
 
@@ -133,7 +136,7 @@ bun run typecheck
 bun run typecheck:test
 bun run test
 bun run build
-wrangler deploy
+bunx wrangler deploy
 ```
 
 The Worker uses:
@@ -146,13 +149,15 @@ The Worker uses:
 ```mermaid
 sequenceDiagram
   participant API
+  participant Worker as GitHub App Worker
   participant State as Operation state
   participant Queue
   participant Executor
   participant GitHub
 
-  API->>State: Create/reuse idempotent operation
-  State->>Queue: Enqueue
+  API->>Worker: Submit idempotent operation
+  Worker->>State: Create or reuse operation
+  Worker->>Queue: Enqueue
   Queue->>Executor: Deliver attempt
   Executor->>GitHub: Compare and mutate
   alt success
@@ -241,12 +246,33 @@ Monitor at minimum:
 ## Post-Deployment Verification
 
 - Confirm the deployed commit and environment.
-- Exercise health and one representative read flow.
+- Confirm the provider deployment status and exercise one representative read
+  flow.
 - For auth changes, test session creation, protected access, and sign-out.
 - For mutation changes, test submission, polling, final outcome, and conflict.
 - Check that unrelated apps/services were not redeployed unnecessarily.
 - Review logs and queue state without exposing sensitive data.
 - Record remaining production-only checks instead of describing them as passed.
+
+## Provider-Side Handover Checks
+
+These controls are intentionally outside source control and must be verified
+by a maintainer with provider access:
+
+- GitHub required checks, merge queue, protected environments, and repository
+  permissions;
+- Cloudflare custom domains, D1 and Durable Object bindings, queue and
+  dead-letter resources, Worker build tokens, and runtime secrets;
+- OAuth redirect origins and client configuration;
+- Vercel project roots, build commands, environment values, and domain
+  assignments for each independently deployed application or service;
+- SMTP sender verification, delivery credentials, and a non-production test
+  mailbox;
+- deployment and validation of the separate public-data repository.
+
+Record the verified provider, environment, deployed commit, operator, and date
+in the owning operational system. Do not store secret values or temporary
+handover checklists in this repository.
 
 ## Workers Builds Credential Recovery
 

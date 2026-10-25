@@ -70,7 +70,7 @@ fallback.
 | ------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------- |
 | `apps/web`               | department content, public navigation, external learning links                       | authenticated administration                  |
 | `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                  |
-| `apps/projects`          | project discovery, filtering, and public project details                             | project write workflows                       |
+| `apps/projects`          | project collections, search, and public project details                              | project write workflows                       |
 | `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes  |
 | `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials               |
 | `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state    |
@@ -94,7 +94,7 @@ sequenceDiagram
 
   Repo->>Data: Publish validated projections
   Browser->>App: Request page
-  App->>Data: Fetch bounded JSON record or index
+  App->>Data: Fetch validated JSON record or projection
   Data-->>App: Public JSON
   App-->>Browser: Rendered page
 ```
@@ -244,6 +244,14 @@ query-string state, and old discovery parameters are discarded rather than
 translated into another competing URL model. Sitemap entries include
 published collections and canonical project details, but exclude search and
 short redirects.
+
+Category, topic, and search segments share one Unicode-aware canonicalizer.
+It normalizes case, whitespace, and path delimiters, rejects empty or
+browser-reserved segments, and percent-encodes remaining reserved characters.
+Collection pages publish their own canonical metadata; search pages remain
+outside the sitemap and are marked not to be indexed. A controlled project
+type with no records is a valid empty collection, while an unpublished
+category or topic is a missing collection.
 
 Projects may display a project's course and offering fields as context. The
 department Web application owns course catalogs and their destinations;
