@@ -226,6 +226,32 @@ route-only compositions beside their route, and promote a composition to a
 named responsibility or domain folder only when multiple routes reuse it. Do
 not recreate either ambiguous layer as a second route or component tree.
 
+### Projects Discovery Ownership
+
+The Projects application is a public showcase, not a second academic catalog.
+It derives navigation from the shared project contract and owns these route
+families:
+
+- `/browse` for the bounded all-projects directory;
+- `/types/[type]`, `/categories/[category]`, and `/topics/[topic]` for
+  schema-backed collections;
+- `/search/[query]` for path-based search;
+- `/projects/[project_slug]` for canonical details and `/p/[project_slug]` for
+  permanent short-link redirects.
+
+Collection pagination appends `/page/[page]`. Discovery controls do not create
+query-string state, and old discovery parameters are discarded rather than
+translated into another competing URL model. Sitemap entries include
+published collections and canonical project details, but exclude search and
+short redirects.
+
+Projects may display a project's course and offering fields as context. The
+department Web application owns course catalogs and their destinations;
+Projects must not add `/courses` or `/offerings` directories or infer a course
+URL from a course code. Until Web or the shared contract supplies a stable
+per-course destination, course metadata remains text and navigation may point
+only to known Web course indexes.
+
 ### Portal Editor State
 
 Project, course, offering, and public-profile editors use one canonical draft

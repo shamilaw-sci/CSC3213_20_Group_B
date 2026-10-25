@@ -74,6 +74,7 @@ bun --filter '@scs/api' test
 
 # Complete local quality gate.
 bun run docs:check
+bun run test:repo
 bun run knip
 bun run format:check
 bun run lint
@@ -86,6 +87,37 @@ bun run build
 `typecheck` covers production source. `typecheck:test` covers test-only aliases,
 fixtures, and runner globals. A workspace without a test script has no test
 coverage; Turbo does not treat it as a passing suite.
+
+## Projects Showcase
+
+`apps/projects` presents published projects as a schema-led showcase. Its
+homepage introduces the available project types and recently updated work;
+the complete directory lives at `/browse`. Public discovery uses canonical,
+path-based collections:
+
+- `/types/[type]` for the controlled project type;
+- `/categories/[category]` and `/topics/[topic]` for published secondary
+  collections;
+- `/search/[query]` for encoded search phrases;
+- `/projects/[project_slug]` for the canonical detail page, with
+  `/p/[project_slug]` as its permanent short redirect.
+
+Every collection has bounded `/page/[page]` pagination. The Projects app shows
+course and offering data only as project context. Course catalog ownership
+remains with `apps/web`, so Projects does not define `/courses` or `/offerings`
+directories and does not guess a course destination from its code.
+
+Run the Projects workspace gate with:
+
+```powershell
+bun --filter '@scs/projects' lint
+bun --filter '@scs/projects' typecheck
+bun --filter '@scs/projects' typecheck:test
+bun --filter '@scs/projects' test
+bun --filter '@scs/projects' build
+```
+
+Route and repository-policy coverage also runs through `bun run test:repo`.
 
 ## Repository Rules
 
