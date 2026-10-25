@@ -1,77 +1,59 @@
 'use client';
 
 import { Button } from '@scs/ui/components/button';
+import { Input } from '@scs/ui/components/input';
+import { Label } from '@scs/ui/components/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@scs/ui/components/select';
+import { Search, X } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
   ProjectErrorPanel,
-  ProjectListLoading,
+  ProjectHomeLoading,
 } from '@/components/projects/project-states';
 import { ProjectGrid } from '@/components/projects/registry-ui';
 import { fetchProjects } from '@/lib/projects/api-client';
-import type { Project, ProjectType } from '@/lib/projects/types';
+import {
+  buildDiscoveryUrl,
+  deriveDiscoveryOptions,
+  type DiscoveryOption,
+  filterProjects,
+  paginateProjects,
+  parseProjectDiscoveryParams,
+  patchProjectDiscoveryState,
+  type ProjectDiscoveryState,
+} from '@/lib/projects/discovery';
+import type { Project } from '@/lib/projects/types';
 
-const browseLinks = [
-  {
-    href: '/categories/research',
-    title: 'Research',
-  },
-  {
-    href: '/courses',
-    title: 'Course projects',
-  },
-  {
-    href: '/categories/department-systems',
-    title: 'Department systems',
-  },
-  {
-    href: '/categories/open-source',
-    title: 'Open source',
-  },
-  {
-    href: '/categories/datasets',
-    title: 'Datasets',
-  },
-  {
-    href: '/categories/student-innovation',
-    title: 'Student innovation',
-  },
-];
-
-const featuredPriorityTypes: ProjectType[] = [
-  'DEPARTMENT_SYSTEM',
-  'RESEARCH_PROJECT',
-  'PUBLICATION_ARTIFACT',
-  'COURSE_PROJECT',
-];
-
-function getFeaturedProjects(projects: Project[]) {
-  return [...projects]
-    .sort((a, b) => {
-      const typeScore =
-        featuredPriorityTypes.indexOf(a.projectType) -
-        featuredPriorityTypes.indexOf(b.projectType);
-
-      if (typeScore !== 0) {
-        return typeScore;
-      }
-
-      return b.dates.lastUpdatedAt.localeCompare(a.dates.lastUpdatedAt);
-    })
-    .slice(0, 4);
-}
+type FilterKey = Exclude<keyof ProjectDiscoveryState, 'q' | 'page'>;
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const state = useMemo(
+    () => parseProjectDiscoveryParams(new URLSearchParams(searchParams)),
+    [searchParams]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadProjects() {
+      setLoading(true);
+
       try {
         setProjects(await fetchProjects(undefined, controller.signal));
         setLoadFailed(false);
@@ -81,130 +63,339 @@ export default function Home() {
           setLoadFailed(true);
         }
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     void loadProjects();
-
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [reloadKey]);
 
-  const featuredProjects = getFeaturedProjects(projects);
-  const recentProjects = projects.slice(0, 3);
+  const options = useMemo(() => deriveDiscoveryOptions(projects), [projects]);
+  const filteredProjects = useMemo(
+    () => filterProjects(projects, state),
+    [projects, state]
+  );
+  const projectPage = useMemo(
+    () => paginateProjects(filteredProjects, state.page),
+    [filteredProjects, state.page]
+  );
+  const activeFilters = activeFilterLabels(state, options);
+  const hasFilters = activeFilters.length > 0;
+
+  function navigate(patch: Partial<ProjectDiscoveryState>) {
+    router.push(buildDiscoveryUrl(patchProjectDiscoveryState(state, patch)));
+  }
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    navigate({ q: String(formData.get('q') ?? '') });
+  }
+
+  if (loading) return <ProjectHomeLoading />;
 
   return (
     <>
       <section className="bg-card border-b">
-        <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
           <p className="text-primary text-sm font-medium">
             Department of Statistics & Computer Science
           </p>
           <h1
             className="text-card-foreground mt-3 max-w-3xl text-4xl
-              font-semibold tracking-tight sm:text-5xl"
+              font-semibold tracking-tight text-balance sm:text-5xl"
           >
-            SCS Projects
+            Find Projects
           </h1>
-          <p className="text-muted-foreground mt-4 max-w-2xl text-base/7">
-            Browse student projects, research work, department systems, open
-            source tools, datasets, and collaborations.
+          <p className="text-muted-foreground mt-4 max-w-3xl text-base/7">
+            Search and browse student projects, research, department systems,
+            datasets, open-source work, and collaborations.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild>
-              <Link href="/search">Search by anything</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/find-by">Find by username</Link>
-            </Button>
+
+          <form
+            key={state.q}
+            onSubmit={handleSearch}
+            className="mt-7 max-w-3xl"
+          >
+            <Label htmlFor="project-search">Search Projects</Label>
+            <div className="mt-2 flex gap-2">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  aria-hidden="true"
+                  className="text-muted-foreground pointer-events-none absolute
+                    top-1/2 left-3 size-4 -translate-y-1/2"
+                />
+                <Input
+                  id="project-search"
+                  name="q"
+                  defaultValue={state.q}
+                  placeholder="Example: CSC3213, accessibility, or a student name…"
+                  autoComplete="off"
+                  className="h-11 pl-10"
+                />
+              </div>
+              <Button type="submit" className="h-11">
+                Search Projects
+              </Button>
+            </div>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Try a title, course code, person, or technology.
+            </p>
+          </form>
+        </div>
+      </section>
+
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+        <section aria-labelledby="filter-heading">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="filter-heading" className="font-semibold">
+                Narrow the Results
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Choose only the details you already know.
+              </p>
+            </div>
+            {hasFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/')}
+              >
+                Clear Filters
+              </Button>
+            ) : null}
           </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <SectionTitle
-          title="Start with a collection"
-          actionHref="/categories"
-          actionLabel="See more"
-        />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {browseLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="bg-card text-card-foreground hover:bg-muted rounded-md
-                border p-4 text-sm font-medium transition-colors"
-            >
-              {link.title}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-card border-y">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <SectionTitle title="Featured projects" />
-          {loading ? (
-            <ProjectListLoading count={4} label="Loading featured projects" />
-          ) : loadFailed ? (
-            <ProjectErrorPanel
-              description="Featured projects could not be loaded from the published registry."
-              onRetry={() => setReloadKey((key) => key + 1)}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <DiscoverySelect
+              id="category-filter"
+              label="Category"
+              value={state.category}
+              options={options.categories}
+              onValueChange={(value) => navigate({ category: value })}
             />
+            <DiscoverySelect
+              id="topic-filter"
+              label="Topic"
+              value={state.topic}
+              options={options.topics}
+              onValueChange={(value) => navigate({ topic: value })}
+            />
+            <DiscoverySelect
+              id="course-filter"
+              label="Course"
+              value={state.course}
+              options={options.courses}
+              onValueChange={(value) => navigate({ course: value })}
+            />
+            <DiscoverySelect
+              id="status-filter"
+              label="Status"
+              value={state.status}
+              options={options.statuses}
+              onValueChange={(value) =>
+                navigate({ status: value as ProjectDiscoveryState['status'] })
+              }
+            />
+            <DiscoverySelect
+              id="type-filter"
+              label="Project Type"
+              value={state.type}
+              options={options.types}
+              onValueChange={(value) =>
+                navigate({ type: value as ProjectDiscoveryState['type'] })
+              }
+            />
+            <DiscoverySelect
+              id="person-filter"
+              label="Person"
+              value={state.person}
+              options={options.people}
+              onValueChange={(value) => navigate({ person: value })}
+            />
+          </div>
+
+          {hasFilters ? (
+            <div
+              className="mt-4 flex flex-wrap gap-2"
+              aria-label="Active filters"
+            >
+              {activeFilters.map((filter) => (
+                <Button
+                  key={filter.key}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label={`Remove ${filter.name} ${filter.label}`}
+                  onClick={() => navigate({ [filter.key]: '' })}
+                >
+                  {filter.label}
+                  <X aria-hidden="true" />
+                </Button>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="mt-10" aria-labelledby="project-results-heading">
+          <div
+            className="mb-5 flex flex-wrap items-end justify-between gap-3
+              border-b pb-4"
+          >
+            <div>
+              <h2
+                id="project-results-heading"
+                className="text-2xl font-semibold text-balance"
+              >
+                {hasFilters ? 'Matching Projects' : 'All Projects'}
+              </h2>
+              <p
+                className="text-muted-foreground mt-1 text-sm"
+                aria-live="polite"
+              >
+                {resultCountLabel(projectPage.totalItems)}
+              </p>
+            </div>
+            {projectPage.totalPages > 1 ? (
+              <p className="text-muted-foreground text-sm tabular-nums">
+                Page {projectPage.page} of {projectPage.totalPages}
+              </p>
+            ) : null}
+          </div>
+
+          {loadFailed ? (
+            <ProjectErrorPanel onRetry={() => setReloadKey((key) => key + 1)} />
           ) : (
             <ProjectGrid
-              projects={featuredProjects}
-              emptyTitle="No featured projects yet"
-              emptyDescription="The published registry is online, but there are no projects ready to feature."
+              projects={projectPage.projects}
+              emptyTitle="No projects match these filters"
+              emptyDescription="Remove a filter or try a broader search."
             />
           )}
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <SectionTitle title="Recently updated" />
-        {loading ? (
-          <ProjectListLoading label="Loading recently updated projects" />
-        ) : loadFailed ? (
-          <ProjectErrorPanel
-            description="Recently updated projects could not be loaded from the published registry."
-            onRetry={() => setReloadKey((key) => key + 1)}
-          />
-        ) : (
-          <ProjectGrid
-            projects={recentProjects}
-            emptyTitle="No recent updates yet"
-            emptyDescription="Published projects will appear here as soon as the registry has entries."
-          />
-        )}
-      </section>
+          {!loadFailed && projectPage.totalPages > 1 ? (
+            <nav
+              aria-label="Project result pages"
+              className="mt-8 flex items-center justify-between gap-3"
+            >
+              {projectPage.page > 1 ? (
+                <Button asChild variant="outline">
+                  <Link
+                    href={buildDiscoveryUrl(
+                      patchProjectDiscoveryState(state, {
+                        page: projectPage.page - 1,
+                      })
+                    )}
+                  >
+                    Previous
+                  </Link>
+                </Button>
+              ) : (
+                <span />
+              )}
+              {projectPage.page < projectPage.totalPages ? (
+                <Button asChild variant="outline">
+                  <Link
+                    href={buildDiscoveryUrl(
+                      patchProjectDiscoveryState(state, {
+                        page: projectPage.page + 1,
+                      })
+                    )}
+                  >
+                    Next
+                  </Link>
+                </Button>
+              ) : null}
+            </nav>
+          ) : null}
+        </section>
+      </main>
     </>
   );
 }
 
-function SectionTitle({
-  title,
-  actionHref,
-  actionLabel,
+function DiscoverySelect({
+  id,
+  label,
+  value,
+  options,
+  onValueChange,
 }: Readonly<{
-  title: string;
-  actionHref?: string;
-  actionLabel?: string;
+  id: string;
+  label: string;
+  value: string;
+  options: DiscoveryOption[];
+  onValueChange: (value: string) => void;
 }>) {
   return (
-    <div className="mb-6 flex items-center justify-between gap-3">
-      <h2 className="text-card-foreground mt-2 text-2xl font-semibold">
-        {title}
-      </h2>
-      {actionHref && actionLabel ? (
-        <Button asChild variant="outline" size="sm">
-          <Link href={actionHref}>{actionLabel}</Link>
-        </Button>
-      ) : null}
+    <div className="min-w-0">
+      <Label htmlFor={id}>{label}</Label>
+      <Select
+        value={value || 'all'}
+        onValueChange={(nextValue) =>
+          onValueChange(nextValue === 'all' ? '' : nextValue)
+        }
+      >
+        <SelectTrigger id={id} className="mt-2 w-full">
+          <SelectValue placeholder={`All ${label.toLowerCase()}`} />
+        </SelectTrigger>
+        <SelectContent position="popper" align="start">
+          <SelectGroup>
+            <SelectItem value="all">All {label.toLowerCase()}</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </div>
   );
+}
+
+function resultCountLabel(count: number) {
+  return `${count} ${count === 1 ? 'project' : 'projects'}`;
+}
+
+function activeFilterLabels(
+  state: ProjectDiscoveryState,
+  options: ReturnType<typeof deriveDiscoveryOptions>
+) {
+  const labels: Array<{
+    key: 'q' | FilterKey;
+    name: string;
+    label: string;
+  }> = [];
+
+  if (state.q) labels.push({ key: 'q', name: 'search', label: state.q });
+
+  const filters: Array<{
+    key: FilterKey;
+    name: string;
+    options: DiscoveryOption[];
+  }> = [
+    { key: 'category', name: 'category', options: options.categories },
+    { key: 'topic', name: 'topic', options: options.topics },
+    { key: 'course', name: 'course', options: options.courses },
+    { key: 'status', name: 'status', options: options.statuses },
+    { key: 'type', name: 'project type', options: options.types },
+    { key: 'person', name: 'person', options: options.people },
+  ];
+
+  for (const filter of filters) {
+    const value = state[filter.key];
+    if (!value) continue;
+    labels.push({
+      key: filter.key,
+      name: filter.name,
+      label:
+        filter.options.find((option) => option.value === value)?.label ?? value,
+    });
+  }
+
+  return labels;
 }
