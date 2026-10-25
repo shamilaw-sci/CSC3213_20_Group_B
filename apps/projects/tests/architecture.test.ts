@@ -73,6 +73,21 @@ describe('Projects discovery architecture', () => {
     }
   });
 
+  test('has no superseded discovery module or local schema re-export', () => {
+    expect(existsSync(path.join(sourceRoot, 'lib/projects/discovery.ts'))).toBe(
+      false
+    );
+    expect(existsSync(path.join(sourceRoot, 'lib/projects/types.ts'))).toBe(
+      false
+    );
+
+    const combinedSource = sourceFiles(/\.(?:ts|tsx)$/u)
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    expect(combinedSource).not.toContain('@/lib/projects/types');
+    expect(combinedSource).not.toContain("'/?");
+  });
+
   test('uses category and topic consistently in user-facing Projects copy', () => {
     const userInterfaceSource = sourceFiles(/\.tsx$/u)
       .map((file) => readFileSync(file, 'utf8'))

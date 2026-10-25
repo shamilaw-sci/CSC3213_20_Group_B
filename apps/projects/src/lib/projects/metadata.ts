@@ -1,4 +1,4 @@
-import type { ProjectStatus, ProjectType } from '@/lib/projects/types';
+import type { ProjectStatus, ProjectType } from '@scs/schemas';
 
 export const projectTypeLabels: Record<ProjectType, string> = {
   COURSE_PROJECT: 'Course Project',

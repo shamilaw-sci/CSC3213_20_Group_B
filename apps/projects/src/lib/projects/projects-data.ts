@@ -1,8 +1,7 @@
-import { ProjectSchema } from '@scs/schemas';
+import { type Project, ProjectSchema } from '@scs/schemas';
 
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
-import type { Project } from '@/lib/projects/types';
 
 type Schema<T> = {
   parse(input: unknown): T;

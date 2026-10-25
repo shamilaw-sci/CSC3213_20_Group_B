@@ -13,20 +13,45 @@ vi.mock('@/lib/projects/queries', () => ({
 const getAllProjectsMock = vi.mocked(getAllProjects);
 
 describe('Projects canonical indexing', () => {
-  test('indexes only home and canonical project detail routes', async () => {
-    getAllProjectsMock.mockResolvedValue([
-      {
-        slug: 'clear-project',
+  test('indexes populated path collections, required pages, and canonical details', async () => {
+    getAllProjectsMock.mockResolvedValue(
+      Array.from({ length: 13 }, (_, index) => ({
+        id: `project-${index + 1}`,
+        slug: `project-${index + 1}`,
+        title: `Project ${index + 1}`,
+        shortDescription: 'Short description',
+        description: 'Detailed description',
+        projectType: 'RESEARCH_PROJECT',
+        status: 'ACTIVE',
+        categories: ['Research'],
+        tags: ['Accessibility'],
+        departments: [],
+        people: [{ name: 'Student', role: 'student' }],
+        links: {},
+        source: { kind: 'MANUAL', curator: 'SCS' },
+        media: { icon: 'FolderKanban' },
         dates: { lastUpdatedAt: '2026-07-26' },
-      },
-    ] as Awaited<ReturnType<typeof getAllProjects>>);
+      })) as Awaited<ReturnType<typeof getAllProjects>>
+    );
 
     const entries = await sitemap();
-    expect(entries.map((entry) => new URL(entry.url).pathname)).toEqual([
+    const paths = entries.map((entry) => new URL(entry.url).pathname);
+    expect(paths.slice(0, 8)).toEqual([
       '/',
-      '/projects/clear-project',
+      '/browse',
+      '/browse/page/2',
+      '/types/research-projects',
+      '/types/research-projects/page/2',
+      '/categories/research',
+      '/categories/research/page/2',
+      '/topics/accessibility',
     ]);
+    expect(paths).toContain('/topics/accessibility/page/2');
+    expect(paths).toContain('/projects/project-1');
+    expect(paths).toContain('/projects/project-13');
     expect(entries.some((entry) => entry.url.includes('/p/'))).toBe(false);
+    expect(entries.some((entry) => entry.url.includes('/search/'))).toBe(false);
+    expect(entries.some((entry) => entry.url.includes('?'))).toBe(false);
   });
 
   test('does not advertise feeds that the app does not publish', () => {

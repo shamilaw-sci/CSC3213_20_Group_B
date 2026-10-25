@@ -161,19 +161,16 @@ describe('application shell contracts', () => {
     expect(layout).toMatch(/<main\s+id="main-content"/);
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
-    for (const legacyDestination of [
-      '/search',
-      '/find-by',
-      '/courses',
-      '/categories',
-      '/topics',
-    ]) {
+    for (const legacyDestination of ['/find-by', '/courses']) {
       expect(header).not.toContain(legacyDestination);
     }
 
     expect(header).not.toContain('browseOpen');
     expect(header).not.toContain('Course-linked work');
     expect(header).toContain('href="/"');
+    expect(header).toContain("href: '/browse'");
+    expect(header).toContain('usePathname');
+    expect(header).toContain('aria-label="Primary"');
     expect(header).toContain('aria-label="SCS Projects home"');
     expect(header).toContain('<ThemeToggle');
     expect(header).not.toContain('<SheetContent');

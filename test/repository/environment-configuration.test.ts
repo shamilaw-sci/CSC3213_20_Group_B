@@ -82,6 +82,7 @@ const workspaceVariables = {
     template: 'apps/projects/.env.example',
     turboConfig: 'apps/projects/turbo.json',
     variables: templated([
+      ['NEXT_PUBLIC_DEPARTMENT_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PEOPLE_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_SITE_URL', 'browser'],
