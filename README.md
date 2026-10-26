@@ -137,6 +137,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [Operations](docs/OPERATIONS.md)                       | deploy, migrate, observe, or recover a service                     |
 | [Security](docs/SECURITY.md)                           | handle authentication, secrets, permissions, or incidents          |
 | [Web design QA](docs/WEB_DESIGN_QA.md)                 | review the department Web implementation against its visual target |
+| [Documentation site design](docs/DOCS_SITE_DESIGN.md)  | review the approved source, structure, and delivery design         |
 
 Documentation is maintained with the code. Run `bun run docs:check` after
 adding, renaming, linking, or removing a Markdown file.
