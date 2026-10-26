@@ -37,7 +37,6 @@ export default function GlobalNotFound() {
           actions={
             <Button asChild>
               {/* A hard navigation remains reliable outside the root app tree. */}
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/">
                 <ArrowLeft className="size-4" />
                 Return to SCS home

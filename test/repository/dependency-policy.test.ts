@@ -103,7 +103,9 @@ describe('workspace dependency policy', () => {
     const bunfig = readFileSync('bunfig.toml', 'utf8');
 
     expect(bunfig).toContain('minimumReleaseAge = 604800');
-    expect(bunfig).toContain('minimumReleaseAgeExcludes = ["@types/bun"]');
+    expect(bunfig).toContain(
+      'minimumReleaseAgeExcludes = ["@types/bun", "bun-types"]'
+    );
   });
 
   test('keeps the Bun runtime pin aligned with the root manifest', () => {
