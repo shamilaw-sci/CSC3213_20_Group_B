@@ -6,7 +6,7 @@ experienced contributors the repository conventions needed for larger work.
 ## Prerequisites
 
 - Git
-- Bun 1.4.3, matching `.bun-version` and root `package.json`
+- Bun 1.4.4, matching `.bun-version` and root `package.json`
 - provider credentials only for integrations you intend to run
 
 Docker is not part of the current setup. Do not install dependencies with npm,

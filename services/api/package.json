@@ -24,7 +24,7 @@
     "@scs/eslint-config": "workspace:*",
     "@scs/tsconfig": "workspace:*",
     "@cloudflare/workers-types": "^5.20260713.1",
-    "@types/bun": "^1.4.3",
+    "@types/bun": "^1.4.4",
     "@types/node": "^25.9.5",
     "eslint": "^9.39.5",
     "jiti": "^2.7.0",
