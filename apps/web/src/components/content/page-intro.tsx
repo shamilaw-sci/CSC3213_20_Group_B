@@ -1,6 +1,7 @@
 import { Button } from '@scs/ui/components/button';
 import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+
+import { AppLink } from '@/components/navigation/app-link';
 
 interface PageIntroProps {
   action?: {
@@ -44,10 +45,15 @@ export function PageIntro({
         </p>
         {action ? (
           <Button asChild size="lg" className="mt-8">
-            <Link href={action.href}>
+            <AppLink
+              href={action.href}
+              destination={
+                action.href.startsWith('http') ? 'external-product' : 'local'
+              }
+            >
               {action.label}
               <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
+            </AppLink>
           </Button>
         ) : null}
       </div>

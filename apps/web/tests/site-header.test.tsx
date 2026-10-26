@@ -62,6 +62,6 @@ describe('SiteHeader', () => {
     );
     expect(
       screen.getByRole('link', { name: /project showcase/i })
-    ).toHaveAttribute('href', '/projects');
+    ).toHaveAttribute('href', 'https://projects.scs-pdn.space');
   });
 });

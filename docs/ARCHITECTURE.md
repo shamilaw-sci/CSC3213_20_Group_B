@@ -238,10 +238,11 @@ remote runtime content dependency.
 Web publishes department-owned pages for About, undergraduate and postgraduate
 study, research overview, resources, services, societies, prizes and
 scholarships, and contact information. It does not reproduce records owned by
-People or Projects. `/people` and `/projects` are permanent product-boundary
-redirects built from the deployment base domain, while `/e-learning` redirects
-to the configured learning platform. Redirect routes are excluded from Web's
-sitemap.
+People or Projects. Navigation uses configured public origins and native links
+for People, Projects, and e-learning so crossing an application boundary is a
+full document request rather than a Next.js RSC prefetch. `/people`, `/projects`,
+and `/e-learning` remain permanent redirect fallbacks for direct inbound URLs
+and are excluded from Web's sitemap.
 
 Home-only compositions stay in `app/_components`. Editorial compositions used
 by several MDX routes stay in `components/content`; they are product-specific

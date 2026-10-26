@@ -18,15 +18,19 @@ describe('Web navigation contract', () => {
     expect(new Set(localDestinations).size).toBe(localDestinations.length);
   });
 
-  test('marks People and e-learning as external products', () => {
+  test('uses direct origins for external products', () => {
     expect(navigationItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          href: '/people',
+          href: 'https://people.scs-pdn.space',
           destination: 'external-product',
         }),
         expect.objectContaining({
-          href: '/e-learning',
+          href: 'https://projects.scs-pdn.space',
+          destination: 'external-product',
+        }),
+        expect.objectContaining({
+          href: 'https://scilms.pdn.ac.lk',
           destination: 'external-product',
         }),
       ])

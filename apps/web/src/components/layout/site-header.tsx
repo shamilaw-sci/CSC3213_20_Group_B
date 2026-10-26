@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { DepartmentMark } from '@/components/layout/department-mark';
+import { AppLink } from '@/components/navigation/app-link';
 import {
   primaryNavigation,
   secondaryNavigation,
@@ -103,9 +104,10 @@ export function SiteHeader() {
                 const active =
                   item.destination === 'local' && isActive(item.href);
                 return (
-                  <Link
+                  <AppLink
                     key={item.href}
                     href={item.href}
+                    destination={item.destination}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       navigationLinkClass,
@@ -122,7 +124,7 @@ export function SiteHeader() {
                         className="ml-auto size-4"
                       />
                     ) : null}
-                  </Link>
+                  </AppLink>
                 );
               })}
             </nav>
@@ -166,8 +168,9 @@ export function SiteHeader() {
                   const active = isActive(item.href);
                   return (
                     <SheetClose key={item.href} asChild>
-                      <Link
+                      <AppLink
                         href={item.href}
+                        destination={item.destination}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           navigationLinkClass,
@@ -178,7 +181,7 @@ export function SiteHeader() {
                         )}
                       >
                         {item.label}
-                      </Link>
+                      </AppLink>
                     </SheetClose>
                   );
                 })}
@@ -196,8 +199,9 @@ export function SiteHeader() {
                     item.destination === 'local' && isActive(item.href);
                   return (
                     <SheetClose key={item.href} asChild>
-                      <Link
+                      <AppLink
                         href={item.href}
+                        destination={item.destination}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           navigationLinkClass,
@@ -214,7 +218,7 @@ export function SiteHeader() {
                             className="ml-auto size-4"
                           />
                         ) : null}
-                      </Link>
+                      </AppLink>
                     </SheetClose>
                   );
                 })}

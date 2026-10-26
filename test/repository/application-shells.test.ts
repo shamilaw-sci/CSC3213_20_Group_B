@@ -83,11 +83,13 @@ describe('application shell contracts', () => {
       '/undergraduate-courses',
       '/postgraduate-courses',
       '/research',
-      '/people',
       '/contact',
     ]) {
       expect(navigation).toContain(`href: '${destination}'`);
     }
+
+    expect(navigation).toContain('NEXT_PUBLIC_PEOPLE_SITE_URL');
+    expect(navigation).toContain('NEXT_PUBLIC_PROJECTS_SITE_URL');
 
     expect(header).toContain('aria-label="Open department navigation"');
     expect(header).toContain('<SheetContent');

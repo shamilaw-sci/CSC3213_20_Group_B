@@ -1,6 +1,7 @@
 import { PageIntro } from '@/components/content/page-intro';
 import { PageSection } from '@/components/content/page-section';
 import { PageShell } from '@/components/content/page-shell';
+import { externalProductUrls } from '@/config/navigation.config';
 import { createPageMetadata } from '@/lib/metadata';
 
 export const metadata = createPageMetadata({
@@ -14,7 +15,7 @@ export const metadata = createPageMetadata({
   eyebrow="Research"
   title="Research at the department"
   description="Advancing theory and practice across Statistics, Computer Science, and their interdisciplinary applications."
-  action={{ href: '/projects', label: 'Explore project work' }}
+  action={{ href: externalProductUrls.projects, label: 'Explore project work' }}
 />
 
 <PageShell className="py-0">

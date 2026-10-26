@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { siteMetadataConfig } from '@/config/metadata.config';
 import publicEnvConfig from '@/config/public.env.config';
 
 interface PageMetadataInput {
@@ -14,7 +15,10 @@ export function createPageMetadata({
   title,
 }: PageMetadataInput): Metadata {
   const url = new URL(path, publicEnvConfig.NEXT_PUBLIC_SITE_URL).toString();
-  const image = `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/images/og.png`;
+  const image = new URL(
+    siteMetadataConfig.socialImage.path,
+    publicEnvConfig.NEXT_PUBLIC_SITE_URL
+  ).toString();
 
   return {
     title,
@@ -31,16 +35,16 @@ export function createPageMetadata({
       images: [
         {
           url: image,
-          width: 1200,
-          height: 630,
-          alt: 'Department of Statistics & Computer Science, University of Peradeniya',
+          width: siteMetadataConfig.socialImage.width,
+          height: siteMetadataConfig.socialImage.height,
+          alt: siteMetadataConfig.socialImage.alt,
         },
       ],
       locale: 'en',
       type: 'website',
     },
     twitter: {
-      card: 'summary_large_image',
+      card: 'summary',
       title,
       description,
       images: [image],

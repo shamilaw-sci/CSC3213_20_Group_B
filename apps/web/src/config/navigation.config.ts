@@ -1,3 +1,5 @@
+import publicEnvConfig from '@/config/public.env.config';
+
 type NavigationDestination = 'local' | 'external-product';
 
 export interface NavigationItem {
@@ -5,6 +7,12 @@ export interface NavigationItem {
   href: string;
   label: string;
 }
+
+export const externalProductUrls = {
+  eLearning: publicEnvConfig.NEXT_PUBLIC_ELEARNING_SITE_URL,
+  people: publicEnvConfig.NEXT_PUBLIC_PEOPLE_SITE_URL,
+  projects: publicEnvConfig.NEXT_PUBLIC_PROJECTS_SITE_URL,
+} as const;
 
 export const primaryNavigation = [
   { href: '/', label: 'Home', destination: 'local' },
@@ -33,14 +41,18 @@ export const secondaryNavigation = [
     destination: 'local',
   },
   {
-    href: '/people',
+    href: externalProductUrls.people,
     label: 'People directory',
     destination: 'external-product',
   },
   {
-    href: '/projects',
+    href: externalProductUrls.projects,
     label: 'Project showcase',
     destination: 'external-product',
   },
-  { href: '/e-learning', label: 'E-learning', destination: 'external-product' },
+  {
+    href: externalProductUrls.eLearning,
+    label: 'E-learning',
+    destination: 'external-product',
+  },
 ] as const satisfies ReadonlyArray<NavigationItem>;

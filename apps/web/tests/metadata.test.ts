@@ -19,8 +19,16 @@ describe('createPageMetadata', () => {
         title: 'About the department',
         description: 'Department history and academic contribution.',
         url: 'https://scs.pdn.ac.lk/about-us',
+        images: [
+          {
+            url: 'https://scs.pdn.ac.lk/favicon/android-chrome-512x512.png',
+            width: 512,
+            height: 512,
+          },
+        ],
       },
       twitter: {
+        card: 'summary',
         title: 'About the department',
         description: 'Department history and academic contribution.',
       },

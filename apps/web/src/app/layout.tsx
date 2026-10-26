@@ -8,6 +8,7 @@ import { Open_Sans, Source_Serif_4 } from 'next/font/google';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { siteMetadataConfig } from '@/config/metadata.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { themeMetadataColors } from '@/config/theme.config';
 import { createPageMetadata } from '@/lib/metadata';
@@ -22,23 +23,18 @@ const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
 });
 
-const siteDescription =
-  'Department of Statistics & Computer Science, University of Peradeniya';
 const homeMetadata = createPageMetadata({
-  title: 'SCS PDN',
-  description: siteDescription,
+  title: siteMetadataConfig.title.default,
+  description: siteMetadataConfig.description,
   path: '/',
 });
 
 export const metadata: Metadata = {
   ...homeMetadata,
-  title: {
-    default: 'SCS PDN',
-    template: '%s | SCS PDN',
-  },
-  description: siteDescription,
-  applicationName: 'SCS PDN',
-  keywords: [],
+  title: siteMetadataConfig.title,
+  description: siteMetadataConfig.description,
+  applicationName: siteMetadataConfig.applicationName,
+  keywords: [...siteMetadataConfig.keywords],
   alternates: {
     ...homeMetadata.alternates,
     types: {
@@ -56,8 +52,8 @@ export const metadata: Metadata = {
 
   appleWebApp: {
     capable: true,
-    title: 'SCS PDN',
-    startupImage: '/favicon/apple-touch-icon.png',
+    title: siteMetadataConfig.applicationName,
+    startupImage: '/favicon/apple-touch-icon-180x180.png',
     statusBarStyle: 'default',
   },
 

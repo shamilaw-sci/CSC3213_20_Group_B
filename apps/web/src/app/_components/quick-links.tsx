@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
 
+import { AppLink } from '@/components/navigation/app-link';
 import { secondaryNavigation } from '@/config/navigation.config';
 
 export function QuickLinks() {
@@ -19,8 +19,9 @@ export function QuickLinks() {
           const Icon = external ? ArrowUpRight : ArrowRight;
           return (
             <li key={item.href}>
-              <Link
+              <AppLink
                 href={item.href}
+                destination={item.destination}
                 aria-label={external ? `${item.label} (external)` : item.label}
                 className="hover:text-primary flex min-h-11 items-center gap-3
                   text-sm transition-colors"
@@ -32,7 +33,7 @@ export function QuickLinks() {
                   </span>
                 ) : null}
                 <Icon aria-hidden="true" className="ml-auto size-4" />
-              </Link>
+              </AppLink>
             </li>
           );
         })}

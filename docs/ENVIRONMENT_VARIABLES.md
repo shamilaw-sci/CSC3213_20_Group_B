@@ -49,13 +49,16 @@ to be unused.
 
 ### Web
 
-| Name                   | Kind      | Supply     | Status    | Purpose                         |
-| ---------------------- | --------- | ---------- | --------- | ------------------------------- |
-| `NEXT_PUBLIC_SITE_URL` | `browser` | `template` | `runtime` | canonical URL and metadata      |
-| `BASE_DOMAIN`          | `server`  | `template` | `runtime` | application domain construction |
-| `MOODLE_URL`           | `server`  | `template` | `runtime` | Moodle destination              |
-| `WORKER_URL`           | `server`  | `template` | `runtime` | proxy Worker requests           |
-| `CF_SECRET`            | `secret`  | `template` | `runtime` | proxy Worker authentication     |
+| Name                             | Kind      | Supply     | Status    | Purpose                         |
+| -------------------------------- | --------- | ---------- | --------- | ------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`           | `browser` | `template` | `runtime` | canonical URL and metadata      |
+| `NEXT_PUBLIC_PEOPLE_SITE_URL`    | `browser` | `template` | `runtime` | People app destinations         |
+| `NEXT_PUBLIC_PROJECTS_SITE_URL`  | `browser` | `template` | `runtime` | Projects app destinations       |
+| `NEXT_PUBLIC_ELEARNING_SITE_URL` | `browser` | `template` | `runtime` | e-learning destinations         |
+| `BASE_DOMAIN`                    | `server`  | `template` | `runtime` | application domain construction |
+| `MOODLE_URL`                     | `server`  | `template` | `runtime` | Moodle redirect fallback        |
+| `WORKER_URL`                     | `server`  | `template` | `runtime` | proxy Worker requests           |
+| `CF_SECRET`                      | `secret`  | `template` | `runtime` | proxy Worker authentication     |
 
 ### People
 
