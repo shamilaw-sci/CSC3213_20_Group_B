@@ -10,13 +10,24 @@ function source(path: string) {
 
 describe('application shell contracts', () => {
   test('all applications use the shared skip-navigation primitive', () => {
-    for (const app of ['web', 'people', 'projects', 'portal']) {
+    for (const app of ['web', 'people', 'projects', 'portal', 'docs']) {
       const layout = source(`apps/${app}/src/app/layout.tsx`);
 
       expect(layout, app).toContain('@scs/ui/components/skip-link');
       expect(layout, app).toContain('<SkipLink');
       expect(layout, app).not.toContain('href="#main-content"');
     }
+  });
+
+  test('Docs provides a searchable themed document shell', () => {
+    const layout = source('apps/docs/src/app/layout.tsx');
+
+    expect(layout).toContain('import { RootProvider }');
+    expect(layout).toContain('<SkipLink');
+    expect(layout).toContain('id="main-content"');
+    expect(layout).toContain("type: 'static'");
+    expect(layout).not.toContain('maximumScale');
+    expect(layout).not.toContain('userScalable');
   });
 
   test('application headers preserve the shared visible focus indicator', () => {

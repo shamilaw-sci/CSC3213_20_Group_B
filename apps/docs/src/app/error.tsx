@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@scs/ui/components/button';
+import { ErrorPageFlag } from '@scs/ui/components/error-page-flag';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { useEffect } from 'react';
 
@@ -15,6 +16,7 @@ export default function ErrorPage({
 
   return (
     <main className="flex min-h-[70vh] items-center">
+      <ErrorPageFlag />
       <FeedbackState
         title="The documentation could not load"
         description="Try this page again. If the problem continues, report it with the page address."

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const repositoryRoot = resolve(import.meta.dir, '../..');
-const appDirectories = ['web', 'people', 'projects', 'portal'] as const;
+const appDirectories = ['web', 'people', 'projects', 'portal', 'docs'] as const;
 
 describe('Next.js route loading states', () => {
   test('gives every page a loading UI in the same route segment', async () => {

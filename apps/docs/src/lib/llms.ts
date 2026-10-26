@@ -2,7 +2,7 @@ import { createGetUrl, llms } from 'fumadocs-core/source';
 
 import { source } from '@/lib/source';
 
-export const docsContentRoute = '/llms.mdx/docs';
+const docsContentRoute = '/llms.mdx/docs';
 
 const getContentUrl = createGetUrl(docsContentRoute);
 

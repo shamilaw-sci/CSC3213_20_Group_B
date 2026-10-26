@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
-const apps = ['web', 'people', 'projects', 'portal'] as const;
+const apps = ['web', 'people', 'projects', 'portal', 'docs'] as const;
 const fallbackFiles = [
   'error.tsx',
   'global-error.tsx',

@@ -1,5 +1,6 @@
 import '@/app/globals.css';
 
+import { SkipLink } from '@scs/ui/components/skip-link';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={openSans.variable} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col font-sans">
         <RootProvider search={{ options: { type: 'static' } }}>
-          {children}
+          <SkipLink />
+          <div id="main-content" className="contents" tabIndex={-1}>
+            {children}
+          </div>
         </RootProvider>
       </body>
     </html>

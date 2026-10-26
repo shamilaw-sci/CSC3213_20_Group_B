@@ -5,6 +5,12 @@ description: Repository checks, affected-workspace validation, merge queue behav
 
 # Continuous Integration
 
+The documentation application is a first-class Next.js workspace. Changes to
+root `docs/**`, `apps/docs`, shared UI, or shared policy must exercise its lint,
+typecheck, tests, Knip analysis, and production build. Its Turbo task includes
+the root documentation corpus as an input and caches the complete `.next/**`
+output, so remote cache replay cannot omit Next.js manifests.
+
 The monorepo uses `.github/workflows/ci.yml` as its required verification
 workflow. It runs for pull requests, merge-queue entries, and pushes to `main`.
 There are no path filters because shared packages and repository policy can

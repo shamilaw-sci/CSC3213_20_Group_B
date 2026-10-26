@@ -57,6 +57,11 @@ function audited(
 }
 
 const workspaceVariables = {
+  docs: {
+    template: 'apps/docs/.env.example',
+    turboConfig: 'apps/docs/turbo.json',
+    variables: templated([['NEXT_PUBLIC_DOCS_SITE_URL', 'browser']]),
+  },
   web: {
     template: 'apps/web/.env.example',
     turboConfig: 'apps/web/turbo.json',
@@ -265,6 +270,7 @@ describe('environment configuration discovery', () => {
 
     const dryRun = JSON.parse(result.stdout.toString()) as TurboDryRun;
     const nextBuildTasks = [
+      '@scs/docs#build',
       '@scs/people#build',
       '@scs/portal#build',
       '@scs/projects#build',
