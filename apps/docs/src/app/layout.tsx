@@ -25,7 +25,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={openSans.variable} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col font-sans">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider search={{ options: { type: 'static' } }}>
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

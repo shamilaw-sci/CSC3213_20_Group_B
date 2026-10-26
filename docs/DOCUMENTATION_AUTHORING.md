@@ -26,6 +26,11 @@ exact mappings, Mermaid for flows or ownership, and prose for details. Do not
 publish credentials, private incident data, provider identifiers that are not
 already public configuration, or copied third-party documentation.
 
+The published site also derives static search, `/llms.txt`, `/llms-full.txt`,
+and per-page Markdown from the same source. Page actions let readers copy or
+open that Markdown and edit the owning file on GitHub. Do not maintain a second
+search index or agent-only copy of the handbook.
+
 Update documentation in the same commit as changed commands, routes,
 environment variables, workflows, deployment steps, or boundaries. Remove
 completed plans once their durable decisions are represented in living pages.
