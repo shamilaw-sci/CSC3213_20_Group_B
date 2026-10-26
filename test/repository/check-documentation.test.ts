@@ -49,7 +49,9 @@ describe('documentation policy checker', () => {
       'README.md':
         '# Example\n\nSee [agents](AGENTS.md) and [architecture](docs/ARCHITECTURE.md).\n',
       'AGENTS.md': '# Agent Instructions\n',
-      'docs/ARCHITECTURE.md': '# Architecture\n',
+      'docs/ARCHITECTURE.md':
+        '---\ntitle: Architecture\ndescription: System design.\n---\n\n# Architecture\n',
+      'docs/meta.json': JSON.stringify({ pages: ['ARCHITECTURE'] }),
     });
 
     const result = runChecker(root);
@@ -133,5 +135,53 @@ describe('documentation policy checker', () => {
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain('docs/OPERATIONS.md');
     expect(result.output).toContain('not linked from README.md');
+  });
+
+  test('rejects documentation without complete frontmatter', async () => {
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [index](docs/INDEX.md).\n',
+      'docs/INDEX.md': '# Handbook\n',
+      'docs/meta.json': JSON.stringify({ pages: ['INDEX'] }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('docs/INDEX.md');
+    expect(result.output).toContain('title and description frontmatter');
+  });
+
+  test('rejects documentation without exactly one visible H1', async () => {
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [index](docs/INDEX.md).\n',
+      'docs/INDEX.md':
+        '---\ntitle: Handbook\ndescription: Example handbook.\n---\n\nText only.\n',
+      'docs/meta.json': JSON.stringify({ pages: ['INDEX'] }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('exactly one visible H1');
+  });
+
+  test('rejects missing and duplicate navigation entries', async () => {
+    const page =
+      '---\ntitle: Handbook\ndescription: Example handbook.\n---\n\n# Handbook\n';
+    const root = await createFixture({
+      'README.md':
+        '# Example\n\nSee [index](docs/INDEX.md) and [other](docs/OTHER.md).\n',
+      'docs/INDEX.md': page,
+      'docs/OTHER.md': page,
+      'docs/meta.json': JSON.stringify({ pages: ['INDEX', 'INDEX'] }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('duplicate navigation entry INDEX');
+    expect(result.output).toContain(
+      'docs/OTHER.md: missing from docs/meta.json'
+    );
   });
 });

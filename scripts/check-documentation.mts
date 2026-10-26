@@ -3,6 +3,9 @@ import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 
 const DOCUMENT_NAME = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*\.md$/;
 const MARKDOWN_LINK = /!?\[[^\]]*\]\(([^)]+)\)/g;
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+const H1 = /^#\s+\S.+$/gm;
+const NAVIGATION_SEPARATOR = /^---.*---$/;
 
 function repositoryRoot(): string {
   const rootArgument = process.argv.indexOf('--root');
@@ -76,6 +79,41 @@ function documentationViolations(root: string, paths: string[]): string[] {
   const violations: string[] = [];
   const readme = resolve(root, 'README.md');
   const documentedPaths = new Set<string>();
+  const documentationPages = paths
+    .map((path) => path.replaceAll('\\', '/'))
+    .filter((path) => path.startsWith('docs/') && path.endsWith('.md'));
+
+  const metadataPath = resolve(root, 'docs/meta.json');
+  let navigationEntries: string[] = [];
+  if (documentationPages.length > 0 && !existsSync(metadataPath)) {
+    violations.push('docs/meta.json: documentation navigation is missing');
+  } else if (existsSync(metadataPath)) {
+    try {
+      const metadata = JSON.parse(readFileSync(metadataPath, 'utf8')) as {
+        pages?: unknown;
+      };
+      if (!Array.isArray(metadata.pages)) {
+        violations.push('docs/meta.json: pages must be an array');
+      } else {
+        navigationEntries = metadata.pages.filter(
+          (entry): entry is string =>
+            typeof entry === 'string' && !NAVIGATION_SEPARATOR.test(entry)
+        );
+      }
+    } catch {
+      violations.push('docs/meta.json: must contain valid JSON');
+    }
+  }
+
+  const navigationCounts = new Map<string, number>();
+  for (const entry of navigationEntries) {
+    navigationCounts.set(entry, (navigationCounts.get(entry) ?? 0) + 1);
+  }
+  for (const [entry, count] of navigationCounts) {
+    if (count > 1) {
+      violations.push(`docs/meta.json: duplicate navigation entry ${entry}`);
+    }
+  }
 
   if (existsSync(readme)) {
     const content = readFileSync(readme, 'utf8');
@@ -114,6 +152,28 @@ function documentationViolations(root: string, paths: string[]): string[] {
 
     const sourcePath = resolve(root, normalized);
     const content = readFileSync(sourcePath, 'utf8');
+    if (normalized.startsWith('docs/')) {
+      const frontmatter = content.match(FRONTMATTER);
+      const title = frontmatter?.[1].match(/^title:\s*(.+)$/m)?.[1].trim();
+      const description = frontmatter?.[1]
+        .match(/^description:\s*(.+)$/m)?.[1]
+        .trim();
+      if (!title || !description) {
+        violations.push(
+          `${normalized}: documentation requires title and description frontmatter`
+        );
+      }
+
+      const body = content
+        .replace(FRONTMATTER, '')
+        .replace(/^```[\s\S]*?^```\s*$/gm, '');
+      const headings = body.match(H1) ?? [];
+      if (headings.length !== 1) {
+        violations.push(
+          `${normalized}: documentation requires exactly one visible H1`
+        );
+      }
+    }
     for (const match of content.matchAll(MARKDOWN_LINK)) {
       const target = localMarkdownTarget(root, normalized, match[1]);
       if (!target) continue;
@@ -128,6 +188,19 @@ function documentationViolations(root: string, paths: string[]): string[] {
           `${normalized}: local Markdown link ${match[1]} does not exist`
         );
       }
+    }
+  }
+
+  for (const page of documentationPages) {
+    const navigationKey = page.slice('docs/'.length, -'.md'.length);
+    if (!navigationCounts.has(navigationKey)) {
+      violations.push(`${page}: missing from docs/meta.json`);
+    }
+  }
+
+  for (const entry of navigationCounts.keys()) {
+    if (!documentationPages.includes(`docs/${entry}.md`)) {
+      violations.push(`docs/meta.json: navigation entry ${entry} has no page`);
     }
   }
 

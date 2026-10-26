@@ -130,15 +130,36 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | Guide                                                            | Read it when you need to…                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [Repository handbook](docs/INDEX.md)                             | choose the right guide for a task                                  |
+| [Repository overview](docs/REPOSITORY_OVERVIEW.md)               | map every workspace and its ownership boundary                     |
 | [Development](docs/DEVELOPMENT.md)                               | set up the repository, make a change, or diagnose local tooling    |
 | [Architecture](docs/ARCHITECTURE.md)                             | understand boundaries, data ownership, and request flows           |
+| [Authentication](docs/AUTHENTICATION.md)                         | change sessions, OAuth, permissions, or service trust              |
+| [Public data](docs/PUBLIC_DATA.md)                               | understand published data reads and Git-backed writes              |
 | [API Contracts](docs/API_CONTRACTS.md)                           | call or change HTTP endpoints and durable operations               |
 | [Schemas](docs/SCHEMAS.md)                                       | add or evolve shared domain contracts                              |
+| [UI system](docs/UI_SYSTEM.md)                                   | build consistent, accessible application interfaces                |
+| [Web application](docs/APPLICATION_WEB.md)                       | change department content, feeds, or redirects                     |
+| [People application](docs/APPLICATION_PEOPLE.md)                 | change directory browsing or profile interpretation                |
+| [Projects application](docs/APPLICATION_PROJECTS.md)             | change showcase discovery or project details                       |
+| [Portal application](docs/APPLICATION_PORTAL.md)                 | change authenticated editing and administration                    |
+| [API service](docs/SERVICE_API.md)                               | change browser API, auth, D1 state, or orchestration               |
+| [GitHub App service](docs/SERVICE_GITHUB_APP.md)                 | change durable Git-backed automation                               |
+| [Mailer service](docs/SERVICE_MAILER.md)                         | change email templates, validation, or SMTP delivery               |
+| [Schemas package](docs/PACKAGE_SCHEMAS.md)                       | maintain shared runtime and transport contracts                    |
+| [UI package](docs/PACKAGE_UI.md)                                 | maintain shared shadcn primitives and theme tokens                 |
+| [TypeScript config](docs/PACKAGE_TSCONFIG.md)                    | change shared compiler policy                                      |
+| [ESLint config](docs/PACKAGE_ESLINT_CONFIG.md)                   | change shared lint and Tailwind policy                             |
+| [Testing](docs/TESTING.md)                                       | select and run the correct verification layers                     |
+| [Dependency management](docs/DEPENDENCY_MANAGEMENT.md)           | add, update, audit, or remove dependencies                         |
+| [Documentation authoring](docs/DOCUMENTATION_AUTHORING.md)       | add or publish a handbook page                                     |
 | [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)           | configure local or deployed runtimes                               |
 | [Continuous Integration](docs/CI.md)                             | understand required checks and merge behavior                      |
 | [Operations](docs/OPERATIONS.md)                                 | deploy, migrate, observe, or recover a service                     |
 | [Security](docs/SECURITY.md)                                     | handle authentication, secrets, permissions, or incidents          |
 | [Web design QA](docs/WEB_DESIGN_QA.md)                           | review the department Web implementation against its visual target |
+| [Troubleshooting](docs/TROUBLESHOOTING.md)                       | diagnose common local, runtime, and provider failures              |
+| [Route reference](docs/ROUTE_REFERENCE.md)                       | find application and service route families                        |
+| [Glossary](docs/GLOSSARY.md)                                     | understand shared repository terminology                           |
 | [Documentation site design](docs/DOCS_SITE_DESIGN.md)            | review the approved source, structure, and delivery design         |
 | [Documentation site plan](docs/DOCS_SITE_IMPLEMENTATION_PLAN.md) | follow the tested, phased implementation and commit sequence       |
 

@@ -19,3 +19,22 @@ Markdown files are readable on GitHub and published by the documentation site.
 - Release and incident work starts in [CI](CI.md),
   [Operations](OPERATIONS.md), and [Security](SECURITY.md).
 - Interface changes should follow [Web design QA](WEB_DESIGN_QA.md).
+
+## Browse the handbook
+
+- System design: [Authentication](AUTHENTICATION.md),
+  [Public data](PUBLIC_DATA.md), [API contracts](API_CONTRACTS.md),
+  [Schemas](SCHEMAS.md), and [UI system](UI_SYSTEM.md).
+- Applications: [Web](APPLICATION_WEB.md), [People](APPLICATION_PEOPLE.md),
+  [Projects](APPLICATION_PROJECTS.md), and [Portal](APPLICATION_PORTAL.md).
+- Services: [API](SERVICE_API.md), [GitHub App](SERVICE_GITHUB_APP.md), and
+  [Mailer](SERVICE_MAILER.md).
+- Shared packages: [Schemas package](PACKAGE_SCHEMAS.md),
+  [UI package](PACKAGE_UI.md), [TypeScript config](PACKAGE_TSCONFIG.md), and
+  [ESLint config](PACKAGE_ESLINT_CONFIG.md).
+- Working practices: [Testing](TESTING.md),
+  [Dependency management](DEPENDENCY_MANAGEMENT.md),
+  [Documentation authoring](DOCUMENTATION_AUTHORING.md), and
+  [Troubleshooting](TROUBLESHOOTING.md).
+- Reference: [Route reference](ROUTE_REFERENCE.md) and
+  [Glossary](GLOSSARY.md).
