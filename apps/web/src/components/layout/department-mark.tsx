@@ -1,14 +1,16 @@
+import Image from 'next/image';
+
 export function DepartmentMark() {
   return (
     <span className="flex min-w-0 items-center gap-3">
-      <span
-        aria-hidden="true"
-        className="border-primary text-primary flex size-10 shrink-0
-          items-center justify-center rounded-full border text-xs font-bold
-          tracking-[0.12em]"
-      >
-        SCS
-      </span>
+      <Image
+        src="/favicon/logo-symbol-icon.svg"
+        alt="University of Peradeniya crest"
+        width={44}
+        height={44}
+        className="size-11 shrink-0 object-contain"
+        priority
+      />
       <span className="min-w-0 leading-none">
         <span
           className="text-muted-foreground block text-[0.65rem] font-medium

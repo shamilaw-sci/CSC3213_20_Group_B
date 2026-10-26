@@ -20,6 +20,9 @@ describe('SiteHeader', () => {
     expect(
       screen.getByRole('link', { name: 'SCS department home' })
     ).toHaveAttribute('href', '/');
+    expect(
+      screen.getByRole('img', { name: 'University of Peradeniya crest' })
+    ).toHaveAttribute('src', expect.stringContaining('logo-symbol-icon.svg'));
   });
 
   test('marks the current department route in desktop and mobile navigation', async () => {
