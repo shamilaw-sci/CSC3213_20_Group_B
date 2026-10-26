@@ -12,6 +12,7 @@ import { Separator } from '@scs/ui/components/separator';
 import { cn } from 'cn';
 import { Fingerprint, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
@@ -92,11 +94,12 @@ export function LoginForm({
       const result = await authenticateWithPasskey();
       localStorage.setItem('lastUsedAuth', 'passkey');
       setLastUsedAuth('passkey');
-      window.location.href = result.redirectTo ?? '/dashboard';
+      router.replace(result.redirectTo ?? '/dashboard');
+      router.refresh();
     } catch (error) {
       if (isPasskeyApiError(error)) {
         if (error.status === 401) {
-          window.location.href = '/logout';
+          router.replace('/logout');
           return;
         }
 

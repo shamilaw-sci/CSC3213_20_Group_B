@@ -3,6 +3,7 @@
 import { Button } from '@scs/ui/components/button';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ interface MagicCodeFormProps {
 }
 
 export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>('idle');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -155,13 +157,14 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
           return;
         }
 
-        window.location.href = '/dashboard';
+        router.replace('/dashboard');
+        router.refresh();
       } catch {
         toast.error('Network error. Please check your connection.');
         setStep('verify');
       }
     },
-    [email]
+    [email, router]
   );
 
   function handleResend() {

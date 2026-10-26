@@ -19,6 +19,7 @@ import {
   TabsTrigger,
 } from '@scs/ui/components/tabs';
 import { Fingerprint, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -107,6 +108,7 @@ export default function ProfileContent({
   isEmailNotificationEnabled,
   isPushNotificationEnabled,
 }: ProfileContentProps) {
+  const router = useRouter();
   const [githubOAuth, setGithubOAuth] = useState(initialGithubOAuth);
   const [oauthActionLoading, setOauthActionLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
@@ -151,7 +153,7 @@ export default function ProfileContent({
         }
       } catch (error) {
         if (isPasskeyApiError(error) && error.status === 401) {
-          window.location.href = '/logout';
+          router.replace('/logout');
           return;
         }
 
@@ -170,7 +172,7 @@ export default function ProfileContent({
     return () => {
       mounted = false;
     };
-  }, [passkeySupported]);
+  }, [passkeySupported, router]);
 
   async function connectGithub() {
     const { error } = await authClient.linkSocial({
@@ -193,7 +195,7 @@ export default function ProfileContent({
     try {
       const accountsResult = await authClient.listAccounts();
       if (accountsResult.error?.status === 401) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
       const githubAccount = accountsResult.data?.find(
@@ -252,7 +254,7 @@ export default function ProfileContent({
       toast.success('Passkey added successfully');
     } catch (error) {
       if (isPasskeyApiError(error) && error.status === 401) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 
@@ -315,7 +317,7 @@ export default function ProfileContent({
       toast.success('Passkey removed successfully');
     } catch (error) {
       if (isPasskeyApiError(error) && error.status === 401) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 
@@ -365,7 +367,7 @@ export default function ProfileContent({
       );
     } catch (error) {
       if (isPasskeyApiError(error) && error.status === 401) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 

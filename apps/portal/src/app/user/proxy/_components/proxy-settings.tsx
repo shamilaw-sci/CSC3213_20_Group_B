@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ProxySettingsPage from '@/app/user/proxy/_components/proxy-settings-form';
@@ -7,6 +8,7 @@ import { SettingsPageLoading } from '@/components/feedback/page-loading';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 
 export default function ProxySettings() {
+  const router = useRouter();
   const [proxy, setProxy] = useState<{
     active: boolean;
     url: string;
@@ -23,7 +25,7 @@ export default function ProxySettings() {
         headers: apiHeaders(),
       });
       if (response.status === 401) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
       if (!response.ok) {
@@ -49,13 +51,13 @@ export default function ProxySettings() {
     }
 
     loadProxy().catch(() => {
-      window.location.href = '/?error=fetch_failed';
+      router.replace('/?error=fetch_failed');
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   if (!proxy) {
     return <SettingsPageLoading />;

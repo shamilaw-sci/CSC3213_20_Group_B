@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { ProfilePageLoading } from '@/components/feedback/page-loading';
@@ -20,6 +21,7 @@ interface ProfileData {
 }
 
 export default function Me() {
+  const router = useRouter();
   const [user, setUser] = useState<ProfileData | null>(null);
 
   useEffect(() => {
@@ -33,13 +35,13 @@ export default function Me() {
       });
 
       if (!res.ok) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 
       const data: ProfileData | null = await res.json().catch(() => null);
       if (!data) {
-        window.location.href = '/?error=fetch_failed';
+        router.replace('/?error=fetch_failed');
         return;
       }
 
@@ -49,13 +51,13 @@ export default function Me() {
     }
 
     loadUser().catch(() => {
-      window.location.href = '/?error=fetch_failed';
+      router.replace('/?error=fetch_failed');
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   if (!user) {
     return <ProfilePageLoading />;

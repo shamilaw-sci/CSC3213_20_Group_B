@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardLoading } from '@/components/feedback/page-loading';
@@ -25,6 +26,7 @@ import {
 } from '@/types/role';
 
 export default function Dashboard() {
+  const router = useRouter();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showCourses, setShowCourses] = useState(false);
   const [showProxySettings, setShowProxySettings] = useState(false);
@@ -41,13 +43,13 @@ export default function Dashboard() {
       });
 
       if (!res.ok) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 
       const user = await res.json().catch(() => null);
       if (!user) {
-        window.location.href = '/?error=fetch_failed';
+        router.replace('/?error=fetch_failed');
         return;
       }
 
@@ -64,13 +66,13 @@ export default function Dashboard() {
     }
 
     loadDashboard().catch(() => {
-      window.location.href = '/?error=fetch_failed';
+      router.replace('/?error=fetch_failed');
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   const items = useMemo(() => {
     const baseItems = [

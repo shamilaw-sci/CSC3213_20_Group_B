@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { SettingsPageLoading } from '@/components/feedback/page-loading';
@@ -23,6 +24,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ from }: SettingsProps) {
+  const router = useRouter();
   const [user, setUser] = useState<ProfileData | null>(null);
   const fallbackHref = from === 'profile' ? '/user/me' : '/dashboard';
   const label = from === 'profile' ? 'Back to Info' : 'Back to Dashboard';
@@ -38,13 +40,13 @@ export default function Settings({ from }: SettingsProps) {
       });
 
       if (!res.ok) {
-        window.location.href = '/logout';
+        router.replace('/logout');
         return;
       }
 
       const data: ProfileData | null = await res.json().catch(() => null);
       if (!data) {
-        window.location.href = '/?error=fetch_failed';
+        router.replace('/?error=fetch_failed');
         return;
       }
 
@@ -54,13 +56,13 @@ export default function Settings({ from }: SettingsProps) {
     }
 
     loadUser().catch(() => {
-      window.location.href = '/?error=fetch_failed';
+      router.replace('/?error=fetch_failed');
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   if (!user) {
     return <SettingsPageLoading />;
