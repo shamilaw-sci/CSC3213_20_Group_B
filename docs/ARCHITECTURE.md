@@ -1,3 +1,8 @@
+---
+title: Architecture
+description: System boundaries, ownership, data flows, and deployment topology across the monorepo.
+---
+
 # Architecture
 
 This guide explains the system boundaries and the reasons behind them. New

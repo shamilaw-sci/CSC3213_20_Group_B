@@ -1,3 +1,8 @@
+---
+title: Development
+description: Local setup, workspace commands, code ownership, testing, and contribution workflow.
+---
+
 # Development
 
 This guide takes a new contributor from clone to verified change and gives

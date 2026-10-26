@@ -1,3 +1,8 @@
+---
+title: Environment variables
+description: Complete configuration inventory, ownership, defaults, secrets, and deployment requirements.
+---
+
 # Environment Variables
 
 This is the canonical configuration catalog. Each deployable owns a safe local
@@ -32,6 +37,7 @@ into `process.env`.
 | Workspace  | Local template                     | Validation source                                   | Deployment source                      |
 | ---------- | ---------------------------------- | --------------------------------------------------- | -------------------------------------- |
 | Web        | `apps/web/.env.example`            | `apps/web/src/config/*.env.config.ts`               | app hosting environment                |
+| Docs       | `apps/docs/.env.example`           | `apps/docs/src/config/public.env.config.ts`         | app hosting environment                |
 | People     | `apps/people/.env.example`         | `apps/people/src/config/public.env.config.ts`       | app hosting environment                |
 | Projects   | `apps/projects/.env.example`       | `apps/projects/src/config/public.env.config.ts`     | app hosting environment                |
 | Portal     | `apps/portal/.env.example`         | `apps/portal/src/config/*.env.config.ts`            | app hosting environment                |
@@ -46,6 +52,12 @@ and owner. `runtime` means application or adapter code reads the value;
 `binding` means Cloudflare injects and consumes the resource; and
 `deployment-only` means the hosting adapter owns it. No listed value is known
 to be unused.
+
+### Docs
+
+| Name                        | Kind      | Supply     | Status    | Purpose                            |
+| --------------------------- | --------- | ---------- | --------- | ---------------------------------- |
+| `NEXT_PUBLIC_DOCS_SITE_URL` | `browser` | `template` | `runtime` | canonical URL and generated routes |
 
 ### Web
 
@@ -143,6 +155,7 @@ use `.env.local`; Wrangler uses `.dev.vars`; Bun services use `.env`.
 
 ```powershell
 Copy-Item apps/web/.env.example apps/web/.env.local
+Copy-Item apps/docs/.env.example apps/docs/.env.local
 Copy-Item apps/people/.env.example apps/people/.env.local
 Copy-Item apps/projects/.env.example apps/projects/.env.local
 Copy-Item apps/portal/.env.example apps/portal/.env.local

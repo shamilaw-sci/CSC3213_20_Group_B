@@ -12,6 +12,7 @@ node_modules/
 # task and framework caches
 .turbo/
 **/.next/
+**/.source/
 **/.cache/
 **/.wrangler/
 

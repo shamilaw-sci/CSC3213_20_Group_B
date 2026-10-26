@@ -1,3 +1,8 @@
+---
+title: Schemas
+description: Shared Zod contracts, ownership rules, validation boundaries, and schema change workflow.
+---
+
 # Schemas
 
 `@scs/schemas` is the shared runtime-contract package. It uses Zod so the same

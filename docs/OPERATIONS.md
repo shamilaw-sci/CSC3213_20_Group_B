@@ -1,3 +1,8 @@
+---
+title: Operations
+description: Deployment, migrations, recovery, provider setup, and production validation procedures.
+---
+
 # Operations
 
 This runbook covers verification, deployment boundaries, migrations,

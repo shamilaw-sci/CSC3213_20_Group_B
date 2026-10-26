@@ -1,3 +1,8 @@
+---
+title: Security
+description: Authentication, authorization, credentials, trust boundaries, and security response guidance.
+---
+
 # Security
 
 Security is a boundary property, not a final review step. This guide documents

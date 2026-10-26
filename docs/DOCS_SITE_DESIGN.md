@@ -1,3 +1,8 @@
+---
+title: Documentation site design
+description: Approved source ownership, information architecture, and publishing design for the handbook.
+---
+
 # Documentation Site Design
 
 ## Intent

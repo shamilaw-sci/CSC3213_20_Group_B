@@ -1,3 +1,8 @@
+---
+title: API contracts
+description: Browser-facing, service-to-service, and automation contracts maintained by the repository.
+---
+
 # API Contracts
 
 This document is the human-readable HTTP reference. The route tables in

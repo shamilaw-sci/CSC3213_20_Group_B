@@ -1,3 +1,8 @@
+---
+title: Continuous integration
+description: Repository checks, affected-workspace validation, merge queue behavior, and CI troubleshooting.
+---
+
 # Continuous Integration
 
 The monorepo uses `.github/workflows/ci.yml` as its required verification

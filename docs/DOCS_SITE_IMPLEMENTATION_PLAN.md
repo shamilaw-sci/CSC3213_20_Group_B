@@ -1,3 +1,8 @@
+---
+title: Documentation site implementation plan
+description: Tested delivery phases for the repository handbook and its Fumadocs application.
+---
+
 # Repository Documentation Site Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use

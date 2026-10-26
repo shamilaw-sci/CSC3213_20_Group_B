@@ -48,6 +48,7 @@ workspaces.
 | Path                     | Package              | Responsibility                                   |
 | ------------------------ | -------------------- | ------------------------------------------------ |
 | `apps/web`               | `@scs/web`           | Department website                               |
+| `apps/docs`              | `@scs/docs`          | Repository handbook and agent-readable reference |
 | `apps/people`            | `@scs/people`        | Public staff, student, alumni, and profile pages |
 | `apps/projects`          | `@scs/projects`      | Public project discovery and project details     |
 | `apps/portal`            | `@scs/portal`        | Authentication and management workflows          |
@@ -128,6 +129,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 | Guide                                                            | Read it when you need to…                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [Repository handbook](docs/INDEX.md)                             | choose the right guide for a task                                  |
 | [Development](docs/DEVELOPMENT.md)                               | set up the repository, make a change, or diagnose local tooling    |
 | [Architecture](docs/ARCHITECTURE.md)                             | understand boundaries, data ownership, and request flows           |
 | [API Contracts](docs/API_CONTRACTS.md)                           | call or change HTTP endpoints and durable operations               |
