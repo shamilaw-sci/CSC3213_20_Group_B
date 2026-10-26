@@ -1,0 +1,41 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Prizes and scholarships',
+  description:
+    'Academic prizes associated with undergraduate study in Statistics and Computer Science.',
+  path: '/prizes-scholarships',
+});
+
+<PageIntro
+  eyebrow="Recognition"
+  title="Prizes and scholarships"
+  description="Recognising exceptional academic performance in Statistics and Computer Science."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Statistics" title="Alumni Prize for Excellence in Statistics">
+    This prize recognises the graduating student with the highest qualifying
+    grade point average in the Statistics honours programme, subject to the
+    award conditions in force for that academic year.
+  </PageSection>
+
+<PageSection
+  eyebrow="Computer Science"
+  title="Alumni Prize for Excellence in Computer Science"
+>
+  This prize recognises the graduating student with the highest qualifying grade
+  point average in the Computer Science honours programme, subject to the award
+  conditions in force for that academic year.
+</PageSection>
+
+  <PageSection eyebrow="Current information" title="Award rules and availability">
+    Eligibility thresholds, award names, and funding may change. Students
+    should confirm current conditions with the Faculty of Science or
+    [contact the department](/contact) before relying on an archived award
+    description.
+  </PageSection>
+</PageShell>

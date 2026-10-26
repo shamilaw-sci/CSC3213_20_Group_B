@@ -126,16 +126,17 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 ## Documentation
 
-| Guide                                                  | Read it when you need to…                                       |
-| ------------------------------------------------------ | --------------------------------------------------------------- |
-| [Development](docs/DEVELOPMENT.md)                     | set up the repository, make a change, or diagnose local tooling |
-| [Architecture](docs/ARCHITECTURE.md)                   | understand boundaries, data ownership, and request flows        |
-| [API Contracts](docs/API_CONTRACTS.md)                 | call or change HTTP endpoints and durable operations            |
-| [Schemas](docs/SCHEMAS.md)                             | add or evolve shared domain contracts                           |
-| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) | configure local or deployed runtimes                            |
-| [Continuous Integration](docs/CI.md)                   | understand required checks and merge behavior                   |
-| [Operations](docs/OPERATIONS.md)                       | deploy, migrate, observe, or recover a service                  |
-| [Security](docs/SECURITY.md)                           | handle authentication, secrets, permissions, or incidents       |
+| Guide                                                  | Read it when you need to…                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------------ |
+| [Development](docs/DEVELOPMENT.md)                     | set up the repository, make a change, or diagnose local tooling    |
+| [Architecture](docs/ARCHITECTURE.md)                   | understand boundaries, data ownership, and request flows           |
+| [API Contracts](docs/API_CONTRACTS.md)                 | call or change HTTP endpoints and durable operations               |
+| [Schemas](docs/SCHEMAS.md)                             | add or evolve shared domain contracts                              |
+| [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) | configure local or deployed runtimes                               |
+| [Continuous Integration](docs/CI.md)                   | understand required checks and merge behavior                      |
+| [Operations](docs/OPERATIONS.md)                       | deploy, migrate, observe, or recover a service                     |
+| [Security](docs/SECURITY.md)                           | handle authentication, secrets, permissions, or incidents          |
+| [Web design QA](docs/WEB_DESIGN_QA.md)                 | review the department Web implementation against its visual target |
 
 Documentation is maintained with the code. Run `bun run docs:check` after
 adding, renaming, linking, or removing a Markdown file.

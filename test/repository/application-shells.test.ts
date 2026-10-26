@@ -75,6 +75,7 @@ describe('application shell contracts', () => {
 
   test('Web navigation remains complete and keyboard accessible', () => {
     const header = source('apps/web/src/components/layout/site-header.tsx');
+    const navigation = source('apps/web/src/config/navigation.config.ts');
 
     for (const destination of [
       '/',
@@ -85,29 +86,38 @@ describe('application shell contracts', () => {
       '/people',
       '/contact',
     ]) {
-      expect(header).toContain(`href: '${destination}'`);
+      expect(navigation).toContain(`href: '${destination}'`);
     }
 
-    expect(header).toContain('aria-label="Open navigation"');
+    expect(header).toContain('aria-label="Open department navigation"');
     expect(header).toContain('<SheetContent');
     expect(header).toContain("aria-current={active ? 'page' : undefined}");
     expect(header).toContain('<ThemeToggle');
   });
 
-  test('Web development feedback has an owned semantic composition', () => {
+  test('Web replaces the development placeholder with owned editorial compositions', () => {
     expect(
       existsSync(
         resolve(root, 'apps/web/src/components/feedback/development-page.tsx')
       )
-    ).toBe(true);
+    ).toBe(false);
     expect(
       existsSync(
         resolve(root, 'apps/web/src/components/custom/dev-page/DevPage.tsx')
       )
     ).toBe(false);
 
-    const home = source('apps/web/src/app/page.tsx');
-    expect(home).toContain('@/components/feedback/development-page');
+    expect(existsSync(resolve(root, 'apps/web/src/app/page.mdx'))).toBe(true);
+    expect(
+      existsSync(
+        resolve(root, 'apps/web/src/components/content/page-intro.tsx')
+      )
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(root, 'apps/web/src/components/feedback/page-loading.tsx')
+      )
+    ).toBe(true);
   });
 
   test('People provides a search-led themed document shell', () => {

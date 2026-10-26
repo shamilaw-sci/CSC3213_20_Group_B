@@ -1,0 +1,53 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'About the department',
+  description:
+    'History, teaching approach, and academic contribution of the Department of Statistics & Computer Science.',
+  path: '/about-us',
+});
+
+<PageIntro
+  eyebrow="About"
+  title="About the department"
+  description="A department shaped by rigorous foundations, practical teaching, research, and service to society."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Our story" title="Growing with the Faculty of Science">
+    The Department of Statistics and Computer Science was established in 1996.
+    Since then, it has expanded its facilities, academic work, and capacity to
+    support students across the Faculty of Science.
+
+    The department teaches Computer Science and Statistics from foundational
+    study through advanced undergraduate and postgraduate work. Teaching
+    combines academic depth with practical experience and supervised work on
+    real problems.
+
+  </PageSection>
+
+  <PageSection eyebrow="Study" title="A broad academic contribution">
+    The department supports the B.Sc. study programme and honours study in
+    Computer Science and Statistics. It also contributes to Statistics and
+    Operations Research, Applied Sciences, and other interdisciplinary study
+    pathways within the University.
+
+    [Explore undergraduate study](/undergraduate-courses) or learn about
+    [postgraduate opportunities](/postgraduate-courses).
+
+  </PageSection>
+
+  <PageSection eyebrow="Beyond teaching" title="Research and community outreach">
+    Academic work spans theoretical and applied questions across both
+    disciplines. The department also shares expertise through consultation,
+    professional services, short courses, workshops, and engagement with
+    public and private organisations.
+
+    [Read the research overview](/research) and
+    [department services](/services).
+
+  </PageSection>
+</PageShell>

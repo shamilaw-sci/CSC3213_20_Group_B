@@ -1,0 +1,52 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Postgraduate study programmes',
+  description:
+    'Postgraduate teaching and research connected to Statistics, Computer Science, Data Science, Artificial Intelligence, and Information Technology.',
+  path: '/postgraduate-courses',
+});
+
+<PageIntro
+  eyebrow="Advanced study"
+  title="Postgraduate study programmes"
+  description="Continue into taught postgraduate study or supervised research through the Postgraduate Institute of Science."
+  action={{ href: '/contact', label: 'Discuss postgraduate study' }}
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Research degrees" title="Supervised postgraduate research">
+    The department supports postgraduate research through the Board of Study in
+    Statistics and Computer Sciences of the Postgraduate Institute of Science
+    (PGIS). Research students work with academic supervisors in areas aligned
+    with department expertise and available supervision.
+
+    Explore the department’s [research areas](/research) before contacting a
+    potential supervisor through the [People directory](/people).
+
+  </PageSection>
+
+  <PageSection eyebrow="Taught study" title="Postgraduate programmes">
+    Department staff contribute to postgraduate programmes including:
+
+    - Applied Statistics
+    - Computer Science
+    - Data Science and Artificial Intelligence
+    - Information Technology
+
+    Programme availability, entry requirements, fees, and schedules can change.
+    Use the [PGIS website](https://www.pgis.pdn.ac.lk/) as the authoritative
+    source for current applications and regulations.
+
+  </PageSection>
+
+  <PageSection eyebrow="Continuing education" title="Short courses and academic events">
+    Training programmes, workshops, seminars, and conferences are organised in
+    areas of Statistics and Computer Science when suitable expertise and demand
+    align. These activities are announced individually rather than represented
+    as permanent degree programmes.
+  </PageSection>
+</PageShell>

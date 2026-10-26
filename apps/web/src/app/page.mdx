@@ -1,0 +1,51 @@
+import { PathwayLinks } from '@/app/_components/pathway-links';
+import { QuickLinks } from '@/app/_components/quick-links';
+import { PageIntro } from '@/components/content/page-intro';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Department of Statistics & Computer Science',
+  description:
+    'Study, research, facilities, and services from the Department of Statistics & Computer Science, University of Peradeniya.',
+  path: '/',
+});
+
+<PageIntro
+  eyebrow="Department of"
+  title="Statistics & Computer Science"
+  description="Dedicated to high standards of education, research, and community outreach since 1996."
+  action={{ href: '/about-us', label: 'About our department' }}
+/>
+
+<PathwayLinks />
+
+<PageShell className="grid gap-10 py-12 lg:grid-cols-[minmax(0,1.6fr)_minmax(16rem,0.6fr)] lg:gap-16 lg:py-16">
+  <section aria-labelledby="department-overview">
+    <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+      {'About us'}
+    </p>
+    <h2
+      id="department-overview"
+      className="font-serif mt-3 max-w-3xl text-3xl/10 font-semibold tracking-tight sm:text-4xl/11"
+    >
+      {'A long-standing commitment to education, research, and society'}
+    </h2>
+
+    <div className="text-muted-foreground mt-6 max-w-3xl space-y-5 text-base/7">
+      <p>
+        {
+          'The Department of Statistics and Computer Science is part of the Faculty of Science, University of Peradeniya. Its teaching combines strong foundations with practical experience and engagement with real-world problems.'
+        }
+      </p>
+      <p>
+        {
+          'The department contributes to undergraduate programmes in Computer Science and Statistics, supports postgraduate teaching and research, and works with the wider community through professional services and outreach.'
+        }
+      </p>
+    </div>
+
+  </section>
+
+  <QuickLinks />
+</PageShell>

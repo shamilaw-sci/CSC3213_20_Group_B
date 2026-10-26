@@ -1,0 +1,66 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Undergraduate study programmes',
+  description:
+    'Undergraduate study pathways in Computer Science, Statistics, Statistics and Operations Research, and Applied Sciences.',
+  path: '/undergraduate-courses',
+});
+
+<PageIntro
+  eyebrow="Study"
+  title="Undergraduate study programmes"
+  description="Build strong foundations in Computer Science or Statistics and apply them through practical and research-led study."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Overview" title="Study pathways">
+    The department conducts courses in Computer Science and Statistics for the
+    B.Sc. study programme and contributes to several four-year study pathways.
+    Programme regulations, combinations, and selection requirements are owned
+    by the Faculty of Science.
+
+    - B.Sc. study programme courses in Computer Science and Statistics
+    - B.Sc. Honours in Computer Science
+    - B.Sc. Honours in Statistics
+    - B.Sc. Honours in Statistics and Operations Research
+    - B.Sc. in Applied Sciences study pathways supported by the department
+
+    Visit the [Faculty of Science study programme](https://sci.pdn.ac.lk/study-programme/)
+    for current regulations and programme information.
+
+  </PageSection>
+
+  <PageSection eyebrow="Four-year study" title="Computer Science honours">
+    Students who follow Computer Science in the first two years may be selected
+    competitively to specialise in years three and four. Advanced study is
+    designed for students who are self-directed, curious, and ready to work at
+    greater depth.
+
+    The honours pathway includes an extended research project and a period of
+    industrial training. Current selection rules and curriculum details are
+    published by the Faculty.
+
+  </PageSection>
+
+  <PageSection eyebrow="Four-year study" title="Statistics honours">
+    Students who follow Statistics in the first two years may be selected
+    competitively for advanced study in years three and four. The programme
+    develops theoretical understanding alongside statistical modelling,
+    analysis, computing, and applied problem-solving.
+
+    The honours pathway includes supervised research and industrial training,
+    subject to the current programme regulations.
+
+  </PageSection>
+
+  <PageSection eyebrow="Interdisciplinary study" title="Operations research and applied sciences">
+    The department contributes specialised course units to Statistics and
+    Operations Research and Applied Sciences pathways. These programmes connect
+    quantitative methods, computation, and industry-facing applications with
+    study offered across the Faculty.
+  </PageSection>
+</PageShell>

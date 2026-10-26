@@ -1,45 +1,53 @@
-import Link from 'next/link';
+import { ArrowUpRight, Mail, Phone } from 'lucide-react';
 
-const academicLinks = [
-  { href: '/undergraduate-courses', label: 'Undergraduate courses' },
-  { href: '/postgraduate-courses', label: 'Postgraduate courses' },
-  { href: '/prizes-scholarships', label: 'Prizes & scholarships' },
-] as const;
-
-const departmentLinks = [
-  { href: '/research', label: 'Research' },
-  { href: '/services', label: 'Services' },
-  { href: '/societies', label: 'Societies' },
-  { href: '/resources', label: 'Resources' },
-] as const;
-
-const relatedLinks = [
-  { href: '/people', label: 'People directory' },
-  { href: '/e-learning', label: 'E-learning' },
-  { href: '/contact', label: 'Contact' },
+const institutionalLinks = [
+  { href: 'https://sci.pdn.ac.lk', label: 'Faculty of Science' },
+  { href: 'https://www.pdn.ac.lk', label: 'University of Peradeniya' },
 ] as const;
 
 const footerLinkClass =
-  'inline-flex min-h-9 items-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:rounded-sm focus-visible:outline-none';
+  'inline-flex min-h-11 items-center gap-1 rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline';
 
 export function SiteFooter() {
   return (
     <footer className="bg-muted/45 border-t">
       <div
-        className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6
-          md:grid-cols-2 lg:grid-cols-4 lg:px-8"
+        className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6
+          md:grid-cols-[minmax(0,1fr)_auto] lg:px-8"
       >
         <div>
-          <p className="font-semibold">
+          <p className="font-serif text-lg font-semibold">
             Department of Statistics &amp; Computer Science
           </p>
-          <p className="text-muted-foreground mt-3 max-w-xs text-sm/6">
-            Faculty of Science, University of Peradeniya, Sri Lanka.
+          <p className="text-muted-foreground mt-2 max-w-md text-sm/6">
+            Faculty of Science, University of Peradeniya, Peradeniya 20400, Sri
+            Lanka.
           </p>
+          <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:gap-5">
+            <a className={footerLinkClass} href="tel:+94812394251">
+              <Phone aria-hidden="true" className="size-4" />
+              +94 81 239 4251
+            </a>
+            <a className={footerLinkClass} href="mailto:headscs@sci.pdn.ac.lk">
+              <Mail aria-hidden="true" className="size-4" />
+              headscs@sci.pdn.ac.lk
+            </a>
+          </div>
         </div>
-        <FooterGroup title="Study" links={academicLinks} />
-        <FooterGroup title="Department" links={departmentLinks} />
-        <FooterGroup title="Connect" links={relatedLinks} />
+        <nav aria-label="Institutional links" className="flex flex-col">
+          {institutionalLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={footerLinkClass}
+            >
+              {link.label}
+              <ArrowUpRight aria-hidden="true" className="size-4" />
+            </a>
+          ))}
+        </nav>
       </div>
       <div className="border-t">
         <p
@@ -50,27 +58,5 @@ export function SiteFooter() {
         </p>
       </div>
     </footer>
-  );
-}
-
-interface FooterGroupProps {
-  links: ReadonlyArray<{ href: string; label: string }>;
-  title: string;
-}
-
-function FooterGroup({ links, title }: FooterGroupProps) {
-  return (
-    <div>
-      <h2 className="text-sm font-semibold">{title}</h2>
-      <ul className="mt-2">
-        {links.map((link) => (
-          <li key={link.href}>
-            <Link className={footerLinkClass} href={link.href}>
-              {link.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

@@ -1,0 +1,58 @@
+import { Mail, MapPin, Phone } from 'lucide-react';
+
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Contact the department',
+  description:
+    'Postal address, email, and telephone details for the Department of Statistics & Computer Science.',
+  path: '/contact',
+});
+
+<PageIntro
+  eyebrow="Contact"
+  title="Contact the department"
+  description="Reach the department office for academic, administrative, research, and service enquiries."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Department office" title="How to reach us">
+    <address className="not-italic">
+      <div className="flex gap-3">
+        <MapPin aria-hidden="true" className="text-primary mt-1 size-5 shrink-0" />
+        <p>
+          {'Department of Statistics and Computer Science'}<br />
+          {'Faculty of Science, University of Peradeniya'}<br />
+          {'Peradeniya 20400, Sri Lanka'}
+        </p>
+      </div>
+
+      <div className="mt-5 flex gap-3">
+        <Mail aria-hidden="true" className="text-primary mt-1 size-5 shrink-0" />
+        <div>
+          <a href="mailto:headscs@sci.pdn.ac.lk">headscs@sci.pdn.ac.lk</a>
+        </div>
+      </div>
+
+      <div className="mt-5 flex gap-3">
+        <Phone aria-hidden="true" className="text-primary mt-1 size-5 shrink-0" />
+        <div>
+          {'Office: '}<a href="tel:+94812394251">+94 81 239 4251</a><br />
+          {'Head of Department: '}<a href="tel:+94812394250">+94 81 239 4250</a>
+        </div>
+      </div>
+    </address>
+
+  </PageSection>
+
+  <PageSection eyebrow="Before contacting" title="Choose the right destination">
+    - For staff and student profiles, use the [People directory](/people).
+    - For published student projects, use the [Project showcase](/projects).
+    - For learning-platform access, continue to [e-learning](/e-learning).
+    - For Faculty regulations and admissions information, visit the
+      [Faculty of Science](https://sci.pdn.ac.lk/).
+  </PageSection>
+</PageShell>

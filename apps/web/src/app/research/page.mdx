@@ -1,0 +1,49 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Research at the department',
+  description:
+    'Research areas and postgraduate research activity across Statistics and Computer Science.',
+  path: '/research',
+});
+
+<PageIntro
+  eyebrow="Research"
+  title="Research at the department"
+  description="Advancing theory and practice across Statistics, Computer Science, and their interdisciplinary applications."
+  action={{ href: '/projects', label: 'Explore project work' }}
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Statistics" title="Quantitative methods and data">
+    Statistical research includes estimation, statistical modelling,
+    multivariate methods, circular and spatial statistics, data mining, and
+    bioinformatics. Work ranges from methodological questions to analysis in
+    scientific and societal domains.
+  </PageSection>
+
+<PageSection
+  eyebrow="Computer Science"
+  title="Computing systems and intelligent methods"
+>
+  Computer Science research includes artificial intelligence, data and database
+  systems, software engineering, distributed and cloud computing, image
+  processing, biomedical applications, semantic technologies, mobile and
+  ubiquitous computing, and information security.
+</PageSection>
+
+  <PageSection eyebrow="Research study" title="Postgraduate and undergraduate work">
+    Research students and final-year undergraduates work on supervised
+    questions within the department’s areas of expertise. Individual people
+    and project records are maintained in the products that own them, keeping
+    this page focused on the department’s research direction.
+
+    - Find potential supervisors in the [People directory](/people).
+    - Browse published work in the [Project showcase](/projects).
+    - Review [postgraduate study routes](/postgraduate-courses).
+
+  </PageSection>
+</PageShell>

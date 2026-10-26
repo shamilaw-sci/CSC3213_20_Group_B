@@ -4,58 +4,43 @@ import '@/app/globals.css';
 import { SkipLink } from '@scs/ui/components/skip-link';
 import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
-import { Open_Sans } from 'next/font/google';
+import { Open_Sans, Source_Serif_4 } from 'next/font/google';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import publicEnvConfig from '@/config/public.env.config';
+import { themeMetadataColors } from '@/config/theme.config';
+import { createPageMetadata } from '@/lib/metadata';
 
 const openSans = Open_Sans({
   variable: '--font-open-sans',
   subsets: ['latin'],
 });
 
+const sourceSerif = Source_Serif_4({
+  variable: '--font-source-serif',
+  subsets: ['latin'],
+});
+
+const siteDescription =
+  'Department of Statistics & Computer Science, University of Peradeniya';
+const homeMetadata = createPageMetadata({
+  title: 'SCS PDN',
+  description: siteDescription,
+  path: '/',
+});
+
 export const metadata: Metadata = {
+  ...homeMetadata,
   title: {
     default: 'SCS PDN',
     template: '%s | SCS PDN',
   },
-  description:
-    'Department of Statistics & Computer Science, University of Peradeniya',
+  description: siteDescription,
   applicationName: 'SCS PDN',
   keywords: [],
-  openGraph: {
-    title: 'SCS PDN',
-    description:
-      'Department of Statistics & Computer Science, University of Peradeniya',
-    url: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}`,
-    siteName: 'SCS PDN',
-    images: [
-      {
-        url: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/images/og.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Department of Statistics & Computer Science, University of Peradeniya',
-      },
-    ],
-    locale: 'en',
-    type: 'website',
-  },
-
-  twitter: {
-    card: 'summary_large_image',
-    title: 'SCS PDN',
-    description:
-      'Department of Statistics & Computer Science, University of Peradeniya',
-    images: [`${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/images/og.png`],
-    creator: 'SCS PDN',
-  },
-
   alternates: {
-    canonical: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}`,
-    languages: {
-      en: `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}`,
-    },
+    ...homeMetadata.alternates,
     types: {
       'application/atom+xml': `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/feed.xml`,
       'application/json': `${publicEnvConfig.NEXT_PUBLIC_SITE_URL}/feed.json`,
@@ -123,7 +108,7 @@ export const metadata: Metadata = {
       {
         rel: 'mask-icon',
         url: '/favicon/logo-symbol-icon.svg',
-        color: '#020617',
+        color: themeMetadataColors.maskIcon,
       },
       { rel: 'manifest', url: '/favicon/site.webmanifest' },
     ],
@@ -134,8 +119,11 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf9f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#151317' },
+    {
+      media: '(prefers-color-scheme: light)',
+      color: themeMetadataColors.light,
+    },
+    { media: '(prefers-color-scheme: dark)', color: themeMetadataColors.dark },
   ],
 };
 
@@ -146,7 +134,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${openSans.variable} min-h-svh antialiased`}>
+      <body
+        className={`${openSans.variable} ${sourceSerif.variable} min-h-svh
+          antialiased`}
+      >
         <ThemeProvider>
           <SkipLink />
           <div className="flex min-h-svh flex-col">

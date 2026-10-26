@@ -1,0 +1,44 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Consultations and services',
+  description:
+    'Professional consultation, data science, training, and outreach services associated with the department.',
+  path: '/services',
+});
+
+<PageIntro
+  eyebrow="Work with us"
+  title="Consultations and services"
+  description="Department expertise shared with researchers, organisations, industry, and the wider community."
+  action={{ href: '/contact', label: 'Contact the department' }}
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Consultation" title="Science–industry interaction">
+    The department provides professional consultation and technical services
+    to public and private sector organisations through the Faculty of Science
+    industry-interaction framework. Enquiries are assessed against available
+    expertise, facilities, and academic commitments.
+  </PageSection>
+
+<PageSection eyebrow="Computing" title="Data Science Unit">
+  The Data Science Unit, established through the Postgraduate Institute of
+  Science in collaboration with the department, supports data-intensive
+  research. Its work includes access to computing facilities and expertise for
+  projects involving large-scale data, parallel computing, and related methods.
+</PageSection>
+
+  <PageSection eyebrow="Knowledge exchange" title="Training and academic events">
+    Staff contribute to short courses, workshops, seminars, conferences, and
+    other training activities in Statistics and Computer Science. Programmes
+    are announced when they are scheduled rather than maintained here as a
+    permanent catalogue.
+
+    [Contact the department](/contact) for current enquiries.
+
+  </PageSection>
+</PageShell>

@@ -1,0 +1,40 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Student societies',
+  description:
+    'Student-led communities connected to Computer Science and Statistics at the University of Peradeniya.',
+  path: '/societies',
+});
+
+<PageIntro
+  eyebrow="Student life"
+  title="Student societies"
+  description="Communities where students share knowledge, organise activities, and connect academic study with practice."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Computer Science" title="Computer Society, University of Peradeniya">
+    The Computer Society brings students together around technology and a
+    changing professional field. Its activities help members extend practical
+    and theoretical knowledge beyond formal coursework through peer learning,
+    technical events, and community engagement.
+  </PageSection>
+
+<PageSection eyebrow="Statistics" title="Statistical Circle">
+  Established by students in 2009, the Statistical Circle supports students who
+  study Statistics and encourages closer contact with professional and research
+  practice. Activities have included lectures, seminars, workshops, and
+  opportunities to exchange knowledge about emerging methods and tools.
+</PageSection>
+
+  <PageSection eyebrow="Get involved" title="Find current society contacts">
+    Society leadership, events, and contact details change with each academic
+    year. Use the [People directory](/people) or [contact the department](/contact)
+    to find the appropriate current contact rather than relying on an archived
+    committee list.
+  </PageSection>
+</PageShell>

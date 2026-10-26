@@ -226,6 +226,27 @@ route-only compositions beside their route, and promote a composition to a
 named responsibility or domain folder only when multiple routes reuse it. Do
 not recreate either ambiguous layer as a second route or component tree.
 
+### Web Editorial Content Ownership
+
+The department Web application keeps durable editorial content in local MDX
+route files. MDX owns prose, section order, page metadata, and links;
+app-owned React components provide the shared institutional shell, accessible
+page introductions, section layout, and responsive presentation. This keeps
+content reviewable without introducing a second publishing framework or a
+remote runtime content dependency.
+
+Web publishes department-owned pages for About, undergraduate and postgraduate
+study, research overview, resources, services, societies, prizes and
+scholarships, and contact information. It does not reproduce records owned by
+People or Projects. `/people` and `/projects` are permanent product-boundary
+redirects built from the deployment base domain, while `/e-learning` redirects
+to the configured learning platform. Redirect routes are excluded from Web's
+sitemap.
+
+Home-only compositions stay in `app/_components`. Editorial compositions used
+by several MDX routes stay in `components/content`; they are product-specific
+and do not belong in `packages/ui`.
+
 ### Projects Discovery Ownership
 
 The Projects application is a public showcase, not a second academic catalog.

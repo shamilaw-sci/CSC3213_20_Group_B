@@ -1,0 +1,52 @@
+import { PageIntro } from '@/components/content/page-intro';
+import { PageSection } from '@/components/content/page-section';
+import { PageShell } from '@/components/content/page-shell';
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Facilities and resources',
+  description:
+    'Teaching laboratories, research facilities, network services, and study resources at the department.',
+  path: '/resources',
+});
+
+<PageIntro
+  eyebrow="Department resources"
+  title="Facilities and resources"
+  description="Spaces and technical facilities that support teaching, practical work, and research."
+/>
+
+<PageShell className="py-0">
+  <PageSection eyebrow="Teaching" title="Computer laboratories">
+    The department operates networked computer laboratories for undergraduate
+    and postgraduate practical classes. Laboratory software is selected to
+    support coursework across introductory and advanced study, while shared
+    accounts and storage help students work consistently across facilities.
+  </PageSection>
+
+<PageSection
+  eyebrow="Research"
+  title="Hardware, IoT, and research laboratories"
+>
+  Dedicated laboratory spaces support hardware work, Internet of Things
+  activities, and research in Computer Science and Statistics. Students use
+  these facilities for supervised practical and research work.
+</PageSection>
+
+  <PageSection eyebrow="Infrastructure" title="Servers and campus connectivity">
+    Department infrastructure supports authentication, file services, web and
+    teaching systems. Wireless access is available to staff and students in
+    department spaces, subject to University access policies and available
+    capacity.
+
+    For learning-platform access, continue to [e-learning](/e-learning).
+
+  </PageSection>
+
+  <PageSection eyebrow="Data-intensive work" title="Data Science Laboratory">
+    Data Science facilities support practical teaching and research that
+    require modern statistical computing, data analysis, and computational
+    methods. Availability and access arrangements are coordinated by the
+    department.
+  </PageSection>
+</PageShell>
