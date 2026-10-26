@@ -31,7 +31,7 @@
     "TESTING",
     "DEPENDENCY_MANAGEMENT",
     "DOCUMENTATION_AUTHORING",
-    "WEB_DESIGN_QA",
+    "UI_QUALITY_ASSURANCE",
     "---Operations---",
     "CI",
     "ENVIRONMENT_VARIABLES",
@@ -40,8 +40,6 @@
     "TROUBLESHOOTING",
     "---Reference---",
     "ROUTE_REFERENCE",
-    "GLOSSARY",
-    "DOCS_SITE_DESIGN",
-    "DOCS_SITE_IMPLEMENTATION_PLAN"
+    "GLOSSARY"
   ]
 }

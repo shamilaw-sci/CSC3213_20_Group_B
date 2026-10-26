@@ -18,6 +18,7 @@ flowchart LR
     People[People]
     Projects[Projects]
     Portal[Portal]
+    Docs[Docs]
   end
 
   subgraph Services
@@ -47,7 +48,7 @@ Docker is not part of the current build or deployment process.
 
 | Unit              | Runtime           | Local production check         | Deployment owner         |
 | ----------------- | ----------------- | ------------------------------ | ------------------------ |
-| four apps         | Next.js           | workspace `build`              | app hosting platform     |
+| five apps         | Next.js           | workspace `build`              | app hosting platform     |
 | `@scs/api`        | Cloudflare Worker | `wrangler build`               | `wrangler deploy`        |
 | `@scs/github-app` | Cloudflare Worker | `wrangler build`               | `wrangler deploy`        |
 | `@scs/mailer`     | Bun/Hono          | `typecheck` and `check`        | service hosting platform |
@@ -80,6 +81,17 @@ bun run test
 bun run build
 git diff --check
 ```
+
+## Documentation Application
+
+Deploy `@scs/docs` independently from `apps/docs`. Configure
+`NEXT_PUBLIC_DOCS_SITE_URL` to its canonical origin and keep the hosting output
+at `.next`. The workspace Turbo task includes root `docs/**` as an input and
+caches the complete build output.
+
+After deployment, verify the handbook, static search, sitemap, robots,
+`llms.txt`, `llms-full.txt`, and one per-page Markdown URL. These are public
+representations of the same root Markdown corpus.
 
 ## API Worker
 

@@ -22,4 +22,5 @@ API when that behavior is genuinely shared.
 
 Run package lint, typecheck, and tests. Then run affected application tests and
 builds because source exports are compiled by each consumer. Follow
-[UI system](UI_SYSTEM.md) and [Web design QA](WEB_DESIGN_QA.md).
+[UI system](UI_SYSTEM.md) and
+[UI quality assurance](UI_QUALITY_ASSURANCE.md).

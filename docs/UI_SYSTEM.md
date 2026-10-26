@@ -33,5 +33,5 @@ Web prioritizes departmental content.
 Run lint to enforce Tailwind canonical classes and class ordering. Test light
 and dark themes, hover/focus/pressed states, narrow layouts, reduced motion,
 keyboard navigation, and readable contrast. The detailed review checklist is in
-[Web design QA](WEB_DESIGN_QA.md); shared package boundaries are in
+[UI quality assurance](UI_QUALITY_ASSURANCE.md); shared package boundaries are in
 [UI package](PACKAGE_UI.md).

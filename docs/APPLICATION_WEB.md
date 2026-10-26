@@ -36,4 +36,4 @@ the app contract.
 Keep content in MDX when it is editorial, app-specific composition in the app,
 and shared primitives in `@scs/ui`. Run the declared `test`, `typecheck`,
 `typecheck:test`, `lint`, `knip`, and `build` scripts. Review the result against
-[Web design QA](WEB_DESIGN_QA.md).
+[UI quality assurance](UI_QUALITY_ASSURANCE.md).

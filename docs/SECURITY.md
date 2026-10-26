@@ -48,6 +48,12 @@ flowchart LR
 | private  | permission records, unpublished profile edits     | least-privilege access; do not log whole records |
 | secret   | OAuth secrets, private keys, cookies, bearer keys | secret stores only; never commit or log          |
 
+The handbook is public. Documentation source, search indexes, sitemap,
+`llms.txt`, full-document output, and per-page Markdown must contain only
+publishable information. Document secret names and ownership, never values;
+exclude personal data, private incident evidence, cookies, tokens, keys, and
+provider exports.
+
 ## Authentication
 
 Better Auth is the sole Portal authentication provider. Its state lives in D1.

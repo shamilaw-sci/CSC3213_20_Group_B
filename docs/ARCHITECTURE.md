@@ -12,7 +12,7 @@ and dependency sections.
 
 ## System Context
 
-The repository contains four Next.js applications, two Cloudflare Workers, one
+The repository contains five Next.js applications, two Cloudflare Workers, one
 Bun mail service, and four shared packages. Public records are published from a
 separate Git repository.
 
@@ -28,6 +28,7 @@ flowchart TB
     People[apps/people]
     Projects[apps/projects]
     Portal[apps/portal]
+    Docs[apps/docs]
   end
 
   subgraph Services
@@ -50,6 +51,7 @@ flowchart TB
   PublicUser --> Web
   PublicUser --> People
   PublicUser --> Projects
+  PublicUser --> Docs
   PortalUser --> Portal
   Web --> Data
   People --> Data
@@ -77,6 +79,7 @@ fallback.
 | `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                  |
 | `apps/projects`          | project collections, search, and public project details                              | project write workflows                       |
 | `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes  |
+| `apps/docs`              | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source        |
 | `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials               |
 | `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state    |
 | `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                       |
@@ -201,11 +204,13 @@ visual resemblance to another file.
 
 ## Application UI Ownership
 
-The four Next.js applications share a visual system, not one universal shell.
+The four product applications share a visual system, not one universal shell.
 Web keeps an institutional navigation model, People and Projects keep
 discovery-oriented navigation, and Portal keeps an authenticated workspace
-shell. Each deployable owns the composition, labels, destinations, and
-permission-aware behavior appropriate to its users.
+shell. Docs uses Fumadocs for its documentation-specific shell while reusing
+repository primitives for skip navigation and failure states. Each deployable
+owns the composition, labels, destinations, and permission-aware behavior
+appropriate to its users.
 
 Reusable shadcn primitives, theme initialization, semantic theme tokens,
 feedback surfaces, and primitive-level hooks belong in `packages/ui`. Product

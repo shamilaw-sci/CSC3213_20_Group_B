@@ -18,7 +18,8 @@ Markdown files are readable on GitHub and published by the documentation site.
   [Environment variables](ENVIRONMENT_VARIABLES.md).
 - Release and incident work starts in [CI](CI.md),
   [Operations](OPERATIONS.md), and [Security](SECURITY.md).
-- Interface changes should follow [Web design QA](WEB_DESIGN_QA.md).
+- Interface changes should follow
+  [UI quality assurance](UI_QUALITY_ASSURANCE.md).
 
 ## Browse the handbook
 

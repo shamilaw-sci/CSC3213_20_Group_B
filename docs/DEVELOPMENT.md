@@ -36,6 +36,7 @@ Use one filtered development task while learning the system:
 
 ```powershell
 bun --filter '@scs/web' dev
+bun --filter '@scs/docs' dev
 bun --filter '@scs/people' dev
 bun --filter '@scs/projects' dev
 bun --filter '@scs/portal' dev
@@ -54,6 +55,7 @@ templates. See [Environment Variables](ENVIRONMENT_VARIABLES.md).
 | Change                                                      | Start in                                        |
 | ----------------------------------------------------------- | ----------------------------------------------- |
 | department content or navigation                            | `apps/web`                                      |
+| repository handbook, search, or docs metadata               | `apps/docs`                                     |
 | public people/profile rendering                             | `apps/people`                                   |
 | public project discovery                                    | `apps/projects`                                 |
 | authenticated page or form                                  | `apps/portal`                                   |
