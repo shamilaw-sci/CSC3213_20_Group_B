@@ -56,3 +56,6 @@ pnpm-debug.log*
 # operating-system files
 .DS_Store
 Thumbs.db
+
+# browser automation artifacts
+.playwright-cli/
