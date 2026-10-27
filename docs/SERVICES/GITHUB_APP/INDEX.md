@@ -11,17 +11,17 @@ credentials. Browser code must never call it directly.
 
 ## Source map
 
-| Area                     | Source             | Responsibility                                                                                     |
-| ------------------------ | ------------------ | -------------------------------------------------------------------------------------------------- |
-| Worker entry             | `src/index.ts`     | validates runtime configuration, serves HTTP, consumes queue batches, and exports Durable Objects  |
-| Local entry              | `src/server.ts`    | runs the same Hono application under Bun with process-local operation state                        |
-| HTTP composition         | `src/app.ts`       | mounts authenticated operation and repository route families                                       |
-| Controllers              | `src/controllers`  | validate transport input and translate domain results to HTTP                                      |
-| Durable runtime          | `src/operations`   | operation identity, persistence, queue dispatch, retries, cancellation, and resource leases        |
-| Domain operations        | `src/domains`      | profile, project, and academic commands, projections, and draft repositories                       |
-| Repository compatibility | `src/repositories` | established profile, project, course, and student-placement PR workflows                           |
-| GitHub adapters          | `src/github`       | App authentication, provider calls, snapshots, atomic commits, PR lookup, and error classification |
-| Contracts                | `@scs/schemas`     | operation envelopes, status/outcome types, and public-data records                                 |
+| Area                   | Source             | Responsibility                                                                                           |
+| ---------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
+| Worker entry           | `src/index.ts`     | validates runtime configuration, serves HTTP, consumes queue batches, and exports Durable Objects        |
+| Local entry            | `src/server.ts`    | runs the same Hono application under Bun with process-local operation state                              |
+| HTTP composition       | `src/app.ts`       | mounts authenticated operation and repository route families                                             |
+| Controllers            | `src/controllers`  | validate transport input and translate domain results to HTTP                                            |
+| Durable runtime        | `src/operations`   | operation identity, persistence, queue dispatch, retries, cancellation, and resource leases              |
+| Domain operations      | `src/domains`      | profile, project, and academic commands, projections, and draft repositories                             |
+| Direct PR repositories | `src/repositories` | synchronous profile, project, course, and student-placement PR workflows, including index reconciliation |
+| GitHub adapters        | `src/github`       | App authentication, provider calls, snapshots, atomic commits, PR lookup, and error classification       |
+| Contracts              | `@scs/schemas`     | operation envelopes, status/outcome types, and public-data records                                       |
 
 ## Trust boundary
 
@@ -38,10 +38,12 @@ request has already passed internal-service authentication.
 
 ## Domain ownership
 
-- Profiles update authoritative person files and reconcile the aggregate
-  lists and search index used by the public People app.
-- Projects update or delete the authoritative project file and reconcile the
-  project aggregate, manifest, and per-person indexes.
+- Durable profile operations commit the authoritative person file and record
+  aggregate targets in PR metadata. The direct PR repository also reconciles
+  aggregate lists and the public People search index.
+- Durable project operations commit or delete the authoritative project file.
+  The direct PR repository also reconciles the project aggregate, manifest,
+  and affected per-person indexes.
 - Courses and offerings update their authoritative academic record through an
   atomic Git commit.
 - Student placement updates the registry metadata that determines programme,

@@ -17,11 +17,11 @@ snapshot. It fetches only requested blobs and returns both decoded content and
 blob SHAs. A truncated recursive tree is rejected because silently treating a
 missing entry as absent could delete or overwrite valid data.
 
-`createAtomicCommit` applies all changed paths through one Git tree and one
+`createAtomicCommit` applies its requested paths through one Git tree and one
 commit, then advances the branch ref with `force: false`. It first verifies the
 branch still equals `expectedParentSha` and translates a failed non-forced ref
-update into `RepositoryConflictError`. Do not replace this with independent
-contents-API writes: a multi-file projection could become partially updated.
+update into `RepositoryConflictError`. The current durable profile, project,
+course, and offering repositories request their authoritative record only.
 
 ```mermaid
 sequenceDiagram
@@ -66,20 +66,28 @@ repository's review and automation policy. This service creates or updates the
 proposal; source control and repository rules decide whether and when it is
 merged.
 
-## Projection invariants
+## Authoritative and derived files
 
-| Domain             | Authoritative change     | Derived changes kept consistent in the same mutation              |
-| ------------------ | ------------------------ | ----------------------------------------------------------------- |
-| profile            | one person record        | kind, department, and batch aggregates plus people search index   |
-| project            | one project record       | projects aggregate, manifest, and affected per-person indexes     |
-| course or offering | one academic record      | current operation path writes the authoritative record atomically |
-| student placement  | placement registry files | coordinated metadata files used to interpret student profiles     |
+The service currently contains two controller paths with different write
+scope. Their distinction is part of the behavior and must be preserved or
+removed deliberately:
+
+| Domain             | Durable operation repository                                                       | Direct PR repository                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| profile            | commits only the authoritative person file; lists target aggregates in PR metadata | writes the person file, reconciles kind, department, and batch aggregates, and regenerates the search index |
+| project            | commits or deletes only the authoritative project file                             | writes or deletes the project and reconciles the aggregate, manifest, and affected per-person indexes       |
+| course or offering | commits or deletes the authoritative academic record                               | manages the corresponding course or offering PR workflow                                                    |
+| student placement  | no durable operation handler                                                       | coordinates the placement registry files                                                                    |
 
 Profile and project projection functions are pure and independently tested.
-They normalize keys, remove stale membership, add current membership, and sort
-output deterministically. When a project changes people, reconciliation covers
-the union of previous and next usernames so removed contributors do not retain
-stale index entries.
+The direct repositories use them to normalize keys, remove stale membership,
+add current membership, and sort output deterministically. Project
+reconciliation covers the union of previous and next usernames so removed
+contributors do not retain stale index entries.
+
+Do not assume an accepted durable operation has already regenerated derived
+indexes. Repository automation or a later service change must own that step
+explicitly, and its verification belongs with that owner.
 
 ## GitHub error classification
 
