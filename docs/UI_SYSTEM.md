@@ -30,9 +30,11 @@ Web prioritizes departmental content.
 
 The Docs application keeps the Fumadocs shell but maps its `fd` color tokens to
 the shared semantic palette, uses the repository's Open Sans and Source Serif
-font configuration, and publishes the same SCS favicon artwork as the public
-applications. Its manifest keeps a Docs-specific name so installed shortcuts
-remain distinguishable.
+font configuration, and uses the University of Peradeniya crest in both its
+navbar and favicon set. Its manifest keeps a Docs-specific name so installed
+shortcuts remain distinguishable. Documentation loading states reserve the same
+desktop content and table-of-contents grid columns as completed pages to avoid
+layout movement during navigation.
 
 ## Review
 
