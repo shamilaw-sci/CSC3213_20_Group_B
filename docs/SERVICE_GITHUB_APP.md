@@ -36,3 +36,15 @@ that service authentication succeeds.
 Run lint, both typechecks, tests, Knip, and build. Provider-credential tests are
 an explicit deployment validation boundary; unit tests use bounded fakes around
 GitHub and Cloudflare adapters.
+
+## Detailed implementation guide
+
+Read [GitHub App internals](SERVICES/GITHUB_APP/INDEX.md) for the source map,
+then use:
+
+- [Durable operations](SERVICES/GITHUB_APP/DURABLE_OPERATIONS.md) for operation
+  identity, persistence, queues, leases, retries, and cancellation;
+- [Repository mutations](SERVICES/GITHUB_APP/REPOSITORY_MUTATIONS.md) for
+  snapshots, revisions, atomic commits, pull requests, and projections; and
+- [Runtime and recovery](SERVICES/GITHUB_APP/RUNTIME_AND_RECOVERY.md) for
+  production and local adapters, failure evidence, and safe recovery.

@@ -1,0 +1,9 @@
+{
+  "title": "GitHub App service",
+  "pages": [
+    "INDEX",
+    "DURABLE_OPERATIONS",
+    "REPOSITORY_MUTATIONS",
+    "RUNTIME_AND_RECOVERY"
+  ]
+}
