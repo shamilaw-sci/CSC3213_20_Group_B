@@ -12,6 +12,7 @@
     "PUBLIC_DATA",
     "API_CONTRACTS",
     "SCHEMAS",
+    "SCHEMA_REFERENCE",
     "UI_SYSTEM",
     "---Applications---",
     "APPLICATION_WEB",

@@ -7,6 +7,8 @@ description: Shared Zod contracts, ownership rules, validation boundaries, and s
 
 `@scs/schemas` is the shared runtime-contract package. It uses Zod so the same
 definition validates external values and provides inferred TypeScript types.
+The [schema reference](SCHEMA_REFERENCE/INDEX.md) catalogs every public runtime
+schema by domain and visualizes the relationships between them.
 
 ## What Belongs Here
 

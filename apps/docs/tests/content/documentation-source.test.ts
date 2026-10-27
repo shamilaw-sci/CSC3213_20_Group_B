@@ -13,6 +13,13 @@ const requiredPages = [
   '/docs/package-schemas',
   '/docs/package-ui',
   '/docs/documentation-authoring',
+  '/docs/schema-reference',
+  '/docs/schema-reference/academics',
+  '/docs/schema-reference/people',
+  '/docs/schema-reference/courses',
+  '/docs/schema-reference/research',
+  '/docs/schema-reference/projects',
+  '/docs/schema-reference/api-transport',
 ] as const;
 
 describe('documentation corpus', () => {

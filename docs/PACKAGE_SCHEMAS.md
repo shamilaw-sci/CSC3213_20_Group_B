@@ -33,4 +33,6 @@ belong here.
    applications and services.
 
 The build uses TypeScript plus `tsc-alias`; source package exports support
-workspace development. See [Schemas](SCHEMAS.md) for deeper modeling rules.
+workspace development. See [Schemas](SCHEMAS.md) for deeper modeling rules and
+the [schema reference](SCHEMA_REFERENCE/INDEX.md) for the complete visual
+catalog.
