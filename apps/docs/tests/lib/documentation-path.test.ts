@@ -24,6 +24,15 @@ describe('documentation paths', () => {
     expect(rewriteDocumentationHref('./SCHEMAS.md')).toBe('/docs/schemas');
   });
 
+  test('resolves links relative to a nested source page', () => {
+    expect(
+      rewriteDocumentationHref(
+        '../SCHEMAS.md#validation-boundaries',
+        'SCHEMA_REFERENCE/ACADEMICS.md'
+      )
+    ).toBe('/docs/schemas#validation-boundaries');
+  });
+
   test('leaves web URLs and same-page anchors unchanged', () => {
     expect(rewriteDocumentationHref('https://example.com/docs.md')).toBe(
       'https://example.com/docs.md'

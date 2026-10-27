@@ -1,5 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 
 const DOCUMENT_NAME = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*\.md$/;
 const MARKDOWN_LINK = /!?\[[^\]]*\]\(([^)]+)\)/g;
@@ -49,6 +56,29 @@ function trackedMarkdown(root: string): string[] {
   ];
 }
 
+function metadataPaths(root: string): string[] {
+  const docsRoot = resolve(root, 'docs');
+  if (!existsSync(docsRoot)) return [];
+
+  const paths: string[] = [];
+  const pending = [docsRoot];
+
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    if (!directory) continue;
+
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) pending.push(path);
+      if (entry.isFile() && entry.name === 'meta.json') {
+        paths.push(relative(root, path).replaceAll('\\', '/'));
+      }
+    }
+  }
+
+  return paths.sort();
+}
+
 function localMarkdownTarget(
   root: string,
   source: string,
@@ -78,49 +108,82 @@ function localMarkdownTarget(
 function documentationViolations(root: string, paths: string[]): string[] {
   const violations: string[] = [];
   const readme = resolve(root, 'README.md');
-  const documentedPaths = new Set<string>();
   const documentationPages = paths
     .map((path) => path.replaceAll('\\', '/'))
     .filter((path) => path.startsWith('docs/') && path.endsWith('.md'));
 
-  const metadataPath = resolve(root, 'docs/meta.json');
-  let navigationEntries: string[] = [];
-  if (documentationPages.length > 0 && !existsSync(metadataPath)) {
-    violations.push('docs/meta.json: documentation navigation is missing');
-  } else if (existsSync(metadataPath)) {
+  const metadataEntries = new Map<string, string[]>();
+  for (const metadataPath of metadataPaths(root)) {
     try {
-      const metadata = JSON.parse(readFileSync(metadataPath, 'utf8')) as {
+      const metadata = JSON.parse(
+        readFileSync(resolve(root, metadataPath), 'utf8')
+      ) as {
         pages?: unknown;
       };
       if (!Array.isArray(metadata.pages)) {
-        violations.push('docs/meta.json: pages must be an array');
+        violations.push(`${metadataPath}: pages must be an array`);
       } else {
-        navigationEntries = metadata.pages.filter(
-          (entry): entry is string =>
-            typeof entry === 'string' && !NAVIGATION_SEPARATOR.test(entry)
+        metadataEntries.set(
+          dirname(metadataPath).replaceAll('\\', '/'),
+          metadata.pages.filter(
+            (entry): entry is string =>
+              typeof entry === 'string' && !NAVIGATION_SEPARATOR.test(entry)
+          )
         );
       }
     } catch {
-      violations.push('docs/meta.json: must contain valid JSON');
+      violations.push(`${metadataPath}: must contain valid JSON`);
     }
   }
 
-  const navigationCounts = new Map<string, number>();
-  for (const entry of navigationEntries) {
-    navigationCounts.set(entry, (navigationCounts.get(entry) ?? 0) + 1);
+  if (documentationPages.length > 0 && !metadataEntries.has('docs')) {
+    violations.push('docs/meta.json: documentation navigation is missing');
   }
-  for (const [entry, count] of navigationCounts) {
-    if (count > 1) {
-      violations.push(`docs/meta.json: duplicate navigation entry ${entry}`);
+
+  for (const [directory, entries] of metadataEntries) {
+    const metadataPath = `${directory}/meta.json`;
+    const navigationCounts = new Map<string, number>();
+    for (const entry of entries) {
+      navigationCounts.set(entry, (navigationCounts.get(entry) ?? 0) + 1);
+    }
+
+    for (const [entry, count] of navigationCounts) {
+      if (count > 1) {
+        violations.push(`${metadataPath}: duplicate navigation entry ${entry}`);
+      }
+
+      const pagePath = resolve(root, directory, `${entry}.md`);
+      const directoryPath = resolve(root, directory, entry);
+      if (
+        !existsSync(pagePath) &&
+        !existsSync(resolve(directoryPath, 'meta.json'))
+      ) {
+        violations.push(
+          `${metadataPath}: navigation entry ${entry} has no page or directory`
+        );
+      }
     }
   }
 
+  const reachablePaths = new Set<string>();
   if (existsSync(readme)) {
-    const content = readFileSync(readme, 'utf8');
-    for (const match of content.matchAll(MARKDOWN_LINK)) {
-      const target = localMarkdownTarget(root, 'README.md', match[1]);
-      if (!target) continue;
-      documentedPaths.add(relative(root, target).replaceAll('\\', '/'));
+    const pending = ['README.md'];
+    while (pending.length > 0) {
+      const source = pending.pop();
+      if (!source || reachablePaths.has(source)) continue;
+      reachablePaths.add(source);
+
+      const sourcePath = resolve(root, source);
+      if (!existsSync(sourcePath)) continue;
+      const content = readFileSync(sourcePath, 'utf8');
+      for (const match of content.matchAll(MARKDOWN_LINK)) {
+        const target = localMarkdownTarget(root, source, match[1]);
+        if (!target || !existsSync(target)) continue;
+        const normalized = relative(root, target).replaceAll('\\', '/');
+        if (paths.includes(normalized) && !reachablePaths.has(normalized)) {
+          pending.push(normalized);
+        }
+      }
     }
   }
 
@@ -144,9 +207,9 @@ function documentationViolations(root: string, paths: string[]): string[] {
       );
     }
 
-    if (normalized !== 'README.md' && !documentedPaths.has(normalized)) {
+    if (normalized !== 'README.md' && !reachablePaths.has(normalized)) {
       violations.push(
-        `${normalized}: Markdown file is not linked from README.md`
+        `${normalized}: Markdown file is not discoverable from README.md`
       );
     }
 
@@ -192,15 +255,12 @@ function documentationViolations(root: string, paths: string[]): string[] {
   }
 
   for (const page of documentationPages) {
-    const navigationKey = page.slice('docs/'.length, -'.md'.length);
-    if (!navigationCounts.has(navigationKey)) {
-      violations.push(`${page}: missing from docs/meta.json`);
-    }
-  }
-
-  for (const entry of navigationCounts.keys()) {
-    if (!documentationPages.includes(`docs/${entry}.md`)) {
-      violations.push(`docs/meta.json: navigation entry ${entry} has no page`);
+    const directory = dirname(page).replaceAll('\\', '/');
+    const metadataPath = `${directory}/meta.json`;
+    const navigationKey = basename(page, '.md');
+    const entries = metadataEntries.get(directory);
+    if (!entries?.includes(navigationKey)) {
+      violations.push(`${page}: missing from ${metadataPath}`);
     }
   }
 

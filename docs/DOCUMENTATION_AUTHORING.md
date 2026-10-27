@@ -14,10 +14,14 @@ published Fumadocs site.
 1. Use an `UPPER_SNAKE_CASE.md` filename under `docs`.
 2. Add bounded YAML frontmatter with non-empty `title` and `description`.
 3. Keep exactly one visible `# H1` matching the page subject.
-4. Add the page exactly once to `docs/meta.json`.
-5. Add a direct Markdown link from the root `README.md` documentation table.
-6. Use relative `.md` links between source pages. The site rewrites them to
-   lowercase kebab-case `/docs/*` routes.
+4. Add the page exactly once to the `meta.json` in its own directory. A parent
+   `meta.json` may reference a child directory that has its own `meta.json`.
+5. Make the page discoverable from the root `README.md`. Section entry pages
+   may link to their nested pages, so every nested page does not need another
+   root-level README entry.
+6. Use relative `.md` links between source pages. Links resolve from the source
+   page's directory, and the site rewrites them to lowercase kebab-case
+   `/docs/*` routes.
 7. Run `bun run docs:check`, `bun run test:docs`, and the `@scs/docs` tests and
    build.
 

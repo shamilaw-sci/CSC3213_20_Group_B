@@ -6,12 +6,18 @@ import { rewriteDocumentationHref } from '@/lib/documentation-path';
 
 const DefaultAnchor = defaultMdxComponents.a;
 
-export function getMDXComponents(components?: MDXComponents) {
+export function getMDXComponents(
+  sourcePath?: string,
+  components?: MDXComponents
+) {
   return {
     ...defaultMdxComponents,
     Mermaid,
     a: ({ href = '', ...props }) => (
-      <DefaultAnchor {...props} href={rewriteDocumentationHref(href)} />
+      <DefaultAnchor
+        {...props}
+        href={rewriteDocumentationHref(href, sourcePath)}
+      />
     ),
     ...components,
   } satisfies MDXComponents;

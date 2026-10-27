@@ -45,7 +45,7 @@ export default async function DocumentationPage({
         />
       </div>
       <DocsBody>
-        <MDX components={getMDXComponents()} />
+        <MDX components={getMDXComponents(page.data.info.path)} />
       </DocsBody>
     </DocsPage>
   );

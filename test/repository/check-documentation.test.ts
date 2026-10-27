@@ -134,7 +134,59 @@ describe('documentation policy checker', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain('docs/OPERATIONS.md');
-    expect(result.output).toContain('not linked from README.md');
+    expect(result.output).toContain('not discoverable from README.md');
+  });
+
+  test('accepts nested sections discovered through a linked section index', async () => {
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [handbook](docs/INDEX.md).\n',
+      'docs/INDEX.md':
+        '---\ntitle: Handbook\ndescription: Example handbook.\n---\n\n# Handbook\n\nSee the [schema reference](SCHEMA_REFERENCE/INDEX.md).\n',
+      'docs/meta.json': JSON.stringify({
+        pages: ['INDEX', 'SCHEMA_REFERENCE'],
+      }),
+      'docs/SCHEMA_REFERENCE/INDEX.md':
+        '---\ntitle: Schema reference\ndescription: Schema catalog.\n---\n\n# Schema reference\n\nSee [academics](ACADEMICS.md).\n',
+      'docs/SCHEMA_REFERENCE/ACADEMICS.md':
+        '---\ntitle: Academic schemas\ndescription: Academic contracts.\n---\n\n# Academic schemas\n',
+      'docs/SCHEMA_REFERENCE/meta.json': JSON.stringify({
+        pages: ['INDEX', 'ACADEMICS'],
+      }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result).toEqual({ exitCode: 0, output: '' });
+  });
+
+  test('rejects invalid entries in nested navigation metadata', async () => {
+    const page =
+      '---\ntitle: Schemas\ndescription: Schema contracts.\n---\n\n# Schemas\n';
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [schemas](docs/SCHEMAS.md).\n',
+      'docs/SCHEMAS.md': `${page}\nSee [reference](SCHEMA_REFERENCE/INDEX.md).\n`,
+      'docs/meta.json': JSON.stringify({
+        pages: ['SCHEMAS', 'SCHEMA_REFERENCE'],
+      }),
+      'docs/SCHEMA_REFERENCE/INDEX.md': `${page}\nSee [academics](ACADEMICS.md).\n`,
+      'docs/SCHEMA_REFERENCE/ACADEMICS.md': page,
+      'docs/SCHEMA_REFERENCE/meta.json': JSON.stringify({
+        pages: ['INDEX', 'INDEX', 'MISSING'],
+      }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain(
+      'docs/SCHEMA_REFERENCE/meta.json: duplicate navigation entry INDEX'
+    );
+    expect(result.output).toContain(
+      'docs/SCHEMA_REFERENCE/ACADEMICS.md: missing from docs/SCHEMA_REFERENCE/meta.json'
+    );
+    expect(result.output).toContain(
+      'docs/SCHEMA_REFERENCE/meta.json: navigation entry MISSING has no page or directory'
+    );
   });
 
   test('rejects documentation without complete frontmatter', async () => {
