@@ -54,7 +54,8 @@ describe('Portal application shell', () => {
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
     expect(layout).toContain('<PortalHeader');
-    expect(layout).toContain('id="main-content"');
+    expect(layout).not.toContain('SkipLink');
+    expect(layout).not.toContain('id="main-content"');
     expect(layout).not.toContain('<ThemeToggle');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');

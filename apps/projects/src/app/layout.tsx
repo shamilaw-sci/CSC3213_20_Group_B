@@ -1,7 +1,6 @@
 import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
-import { SkipLink } from '@scs/ui/components/skip-link';
 import { Toaster } from '@scs/ui/components/sonner';
 import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
@@ -154,16 +153,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${openSans.variable} min-h-svh antialiased`}>
         <ThemeProvider>
-          <SkipLink />
           <div className="flex min-h-svh flex-col">
             <SiteHeader />
-            <main
-              id="main-content"
-              tabIndex={-1}
-              className="flex flex-1 flex-col"
-            >
-              {children}
-            </main>
+            <main className="flex flex-1 flex-col">{children}</main>
             <SiteFooter />
           </div>
           <Toaster position="top-right" richColors closeButton />

@@ -208,9 +208,8 @@ The four product applications share a visual system, not one universal shell.
 Web keeps an institutional navigation model, People and Projects keep
 discovery-oriented navigation, and Portal keeps an authenticated workspace
 shell. Docs uses Fumadocs for its documentation-specific shell while reusing
-repository primitives for skip navigation and failure states. Each deployable
-owns the composition, labels, destinations, and permission-aware behavior
-appropriate to its users.
+repository primitives for failure states. Each deployable owns the composition,
+labels, destinations, and permission-aware behavior appropriate to its users.
 
 Reusable shadcn primitives, theme initialization, semantic theme tokens,
 feedback surfaces, and primitive-level hooks belong in `packages/ui`. Product

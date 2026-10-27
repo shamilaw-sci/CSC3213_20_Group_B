@@ -9,14 +9,18 @@ function source(path: string) {
 }
 
 describe('application shell contracts', () => {
-  test('product applications use the shared skip-navigation primitive', () => {
-    for (const app of ['web', 'people', 'projects', 'portal']) {
+  test('applications do not install a repository skip-navigation feature', () => {
+    for (const app of ['web', 'people', 'projects', 'portal', 'docs']) {
       const layout = source(`apps/${app}/src/app/layout.tsx`);
 
-      expect(layout, app).toContain('@scs/ui/components/skip-link');
-      expect(layout, app).toContain('<SkipLink');
-      expect(layout, app).not.toContain('href="#main-content"');
+      expect(layout, app).not.toContain('@scs/ui/components/skip-link');
+      expect(layout, app).not.toContain('SkipLink');
+      expect(layout, app).not.toContain('id="main-content"');
     }
+
+    expect(
+      existsSync(resolve(root, 'packages/ui/src/components/skip-link.tsx'))
+    ).toBe(false);
   });
 
   test('Docs provides a searchable themed document shell', () => {
@@ -75,9 +79,9 @@ describe('application shell contracts', () => {
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('<ThemeProvider>');
-    expect(layout).toContain('<SkipLink');
+    expect(layout).not.toContain('SkipLink');
     expect(layout).toContain('<SiteHeader');
-    expect(layout).toContain('id="main-content"');
+    expect(layout).not.toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
@@ -137,9 +141,9 @@ describe('application shell contracts', () => {
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
-    expect(layout).toContain('<SkipLink');
+    expect(layout).not.toContain('SkipLink');
     expect(layout).toContain('<SiteHeader');
-    expect(layout).toContain('id="main-content"');
+    expect(layout).not.toContain('id="main-content"');
     expect(layout).toContain('<SiteFooter');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
@@ -179,8 +183,8 @@ describe('application shell contracts', () => {
 
     expect(layout).toContain("import '@scs/ui/styles/theme.css';");
     expect(layout).toContain('@scs/ui/components/theme-provider');
-    expect(layout).toContain('<SkipLink');
-    expect(layout).toMatch(/<main\s+id="main-content"/);
+    expect(layout).not.toContain('SkipLink');
+    expect(layout).not.toContain('id="main-content"');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
     for (const legacyDestination of ['/find-by', '/courses']) {

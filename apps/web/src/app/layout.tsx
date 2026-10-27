@@ -1,7 +1,6 @@
 import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
-import { SkipLink } from '@scs/ui/components/skip-link';
 import { ThemeProvider } from '@scs/ui/components/theme-provider';
 import type { Metadata, Viewport } from 'next';
 import { Open_Sans, Source_Serif_4 } from 'next/font/google';
@@ -135,12 +134,9 @@ export default function RootLayout({
           antialiased`}
       >
         <ThemeProvider>
-          <SkipLink />
           <div className="flex min-h-svh flex-col">
             <SiteHeader />
-            <main id="main-content" tabIndex={-1} className="flex-1">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
             <SiteFooter />
           </div>
         </ThemeProvider>

@@ -94,23 +94,12 @@ function themeTokens(css: string, selector: ':root' | '.dark') {
 }
 
 describe('shared UI component contracts', () => {
-  test('renders one reusable skip link with a stable default target', async () => {
+  test('does not ship the retired skip-navigation primitive', () => {
     const modulePath = resolve(
       import.meta.dir,
       '../src/components/skip-link.tsx'
     );
-    expect(existsSync(modulePath)).toBe(true);
-
-    const { SkipLink } = await import('@scs/ui/components/skip-link');
-    const markup = renderToStaticMarkup(
-      <SkipLink className="custom-skip" data-test="skip" />
-    );
-
-    expect(markup).toContain('href="#main-content"');
-    expect(markup).toContain('>Skip to main content<');
-    expect(markup).toContain('custom-skip');
-    expect(markup).toContain('data-test="skip"');
-    expect(markup).toContain('focus-visible:translate-y-0');
+    expect(existsSync(modulePath)).toBe(false);
   });
 
   test('limits shared control transitions to explicit properties', () => {

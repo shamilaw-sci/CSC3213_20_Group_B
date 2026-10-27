@@ -35,9 +35,9 @@ CI uses affected-workspace checks for pull requests and the complete monorepo on
 the merge queue and `main`.
 
 Repository policy treats Docs as the fifth Next.js application. Tests enforce
-its route-specific loading states, fallback hierarchy, skip navigation, static
-search, environment declaration, and cached build output alongside the four
-product applications.
+its route-specific loading states, fallback hierarchy, static search,
+environment declaration, and cached build output alongside the four product
+applications.
 
 Tests should assert public behavior and contract boundaries. Mock external
 providers at their clients, not internal implementation details. For mutation
