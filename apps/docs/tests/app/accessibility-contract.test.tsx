@@ -28,6 +28,25 @@ describe('documentation accessibility contracts', () => {
     expect(styles).toContain('--color-primary: var(--primary);');
   });
 
+  test('keeps scrolling stable without forcing fitting pages to scroll', () => {
+    const styles = source('app/globals.css');
+
+    expect(styles).toContain('scrollbar-gutter: stable;');
+    expect(styles).toContain('scrollbar-color:');
+    expect(styles).toContain('var(--muted-foreground)');
+    expect(styles).toContain('::-webkit-scrollbar-thumb');
+    expect(styles).not.toContain('overflow-y: scroll;');
+  });
+
+  test('moves search focus from the raw input to its rounded container', () => {
+    const styles = source('app/globals.css');
+
+    expect(styles).toContain("input[role='combobox']:focus-visible");
+    expect(styles).toContain(':focus-within');
+    expect(styles).toContain('border-radius:');
+    expect(styles).toContain('var(--ring)');
+  });
+
   test('uses semantic theme utilities instead of literal palette colors', () => {
     const files = [
       'components/layout/docs-home.tsx',

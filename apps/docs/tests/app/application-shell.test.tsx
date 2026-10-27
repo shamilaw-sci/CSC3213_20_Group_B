@@ -7,10 +7,11 @@ import { DocsHome } from '@/components/layout/docs-home';
 import { baseOptions } from '@/lib/layout.shared';
 
 describe('documentation home shell', () => {
-  test('has one main landmark and a semantic heading hierarchy', () => {
-    render(<DocsHome />);
+  test('leaves the main landmark to HomeLayout and keeps semantic headings', () => {
+    const { container } = render(<DocsHome />);
 
-    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(screen.queryByRole('main')).not.toBeInTheDocument();
+    expect(container.firstElementChild?.tagName).toBe('DIV');
     expect(
       screen.getByRole('heading', {
         level: 1,

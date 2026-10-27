@@ -37,7 +37,7 @@ const destinations = [
 
 export function DocsHome() {
   return (
-    <main
+    <div
       className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-16
         sm:py-24"
     >
@@ -87,6 +87,6 @@ export function DocsHome() {
           </Link>
         ))}
       </section>
-    </main>
+    </div>
   );
 }
