@@ -24,7 +24,7 @@ flowchart LR
 | --------------------------------- | -------------------------------------- | --------------------------------------------- | -------------------------- |
 | [API](API/INDEX.md)               | authenticated Portal requests          | Better Auth, permissions, proxy settings      | GitHub App and Mailer      |
 | [GitHub App](GITHUB_APP/INDEX.md) | internal API requests only             | durable operation records and resource leases | GitHub repositories        |
-| Mailer                            | internal bearer-authenticated requests | no application database                       | SMTP provider              |
+| [Mailer](MAILER/INDEX.md)         | internal bearer-authenticated requests | no application database                       | SMTP provider              |
 
 The [API contracts](../API_CONTRACTS.md) page is the canonical transport
 reference, [Environment variables](../ENVIRONMENT_VARIABLES.md) is the

@@ -1,0 +1,4 @@
+{
+  "title": "Mailer service",
+  "pages": ["INDEX", "DELIVERY_PIPELINE", "TEMPLATES_AND_OPERATIONS"]
+}

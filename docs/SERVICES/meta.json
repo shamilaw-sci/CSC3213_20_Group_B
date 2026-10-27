@@ -1,4 +1,4 @@
 {
   "title": "Service internals",
-  "pages": ["INDEX", "API", "GITHUB_APP"]
+  "pages": ["INDEX", "API", "GITHUB_APP", "MAILER"]
 }

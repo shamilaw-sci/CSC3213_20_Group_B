@@ -30,3 +30,12 @@ avoid logging codes or recipient-sensitive content. Validate the request before
 rendering or opening SMTP. Run the declared `check` command or its component
 lint, production/test typechecks, tests, and Knip scripts. A real SMTP send is a
 credential-dependent deployment check, not part of the local unit suite.
+
+## Detailed implementation guide
+
+Read [Mailer internals](SERVICES/MAILER/INDEX.md) for the source map, then use:
+
+- [Delivery pipeline](SERVICES/MAILER/DELIVERY_PIPELINE.md) for bearer
+  authentication, validation, rendering, SMTP reuse, and error mapping; and
+- [Templates and operations](SERVICES/MAILER/TEMPLATES_AND_OPERATIONS.md) for
+  React Email, safe extension, configuration, and production verification.
