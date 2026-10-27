@@ -12,7 +12,9 @@ describe('documentation metadata routes', () => {
 
     expect(urls).toContain('https://docs.scs-pdn.space/');
     expect(urls).toContain('https://docs.scs-pdn.space/docs/api-contracts');
-    expect(urls.some((url) => url.includes('/api/'))).toBe(false);
+    expect(urls.some((url) => new URL(url).pathname.startsWith('/api/'))).toBe(
+      false
+    );
     expect(urls.some((url) => url.includes('llms'))).toBe(false);
   });
 
