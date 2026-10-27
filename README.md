@@ -152,6 +152,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [UI package](docs/PACKAGE_UI.md)                           | maintain shared shadcn primitives and theme tokens                    |
 | [TypeScript config](docs/PACKAGE_TSCONFIG.md)              | change shared compiler policy                                         |
 | [ESLint config](docs/PACKAGE_ESLINT_CONFIG.md)             | change shared lint and Tailwind policy                                |
+| [Shared package internals](docs/PACKAGES/INDEX.md)         | maintain schema, UI, TypeScript, and ESLint package contracts         |
 | [Testing](docs/TESTING.md)                                 | select and run the correct verification layers                        |
 | [Dependency management](docs/DEPENDENCY_MANAGEMENT.md)     | add, update, audit, or remove dependencies                            |
 | [Documentation authoring](docs/DOCUMENTATION_AUTHORING.md) | add or publish a handbook page                                        |

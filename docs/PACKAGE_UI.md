@@ -24,3 +24,7 @@ Run package lint, typecheck, and tests. Then run affected application tests and
 builds because source exports are compiled by each consumer. Follow
 [UI system](UI_SYSTEM.md) and
 [UI quality assurance](UI_QUALITY_ASSURANCE.md).
+
+The [UI package internals](PACKAGES/UI/INDEX.md) guide explains
+[primitive ownership and exports](PACKAGES/UI/PRIMITIVES_AND_EXPORTS.md) and the
+[theme and accessibility contract](PACKAGES/UI/THEME_AND_ACCESSIBILITY.md).

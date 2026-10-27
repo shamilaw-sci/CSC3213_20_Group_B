@@ -30,6 +30,7 @@
     "PACKAGE_UI",
     "PACKAGE_TSCONFIG",
     "PACKAGE_ESLINT_CONFIG",
+    "PACKAGES",
     "---Development workflow---",
     "TESTING",
     "DEPENDENCY_MANAGEMENT",

@@ -1,0 +1,4 @@
+{
+  "title": "Tooling package internals",
+  "pages": ["INDEX", "TYPESCRIPT_PRESETS", "ESLINT_PRESETS"]
+}

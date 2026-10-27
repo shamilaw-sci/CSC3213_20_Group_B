@@ -19,3 +19,6 @@ When changing a preset, enumerate all consumers and run their typechecks. A
 compiler option can change emitted code, module resolution, editor behavior, or
 test discovery across the repository even when this configuration-only package
 has no script of its own.
+
+See [TypeScript presets](PACKAGES/TOOLING/TYPESCRIPT_PRESETS.md) for the preset
+hierarchy, runtime choices, consumer responsibilities, and verification matrix.

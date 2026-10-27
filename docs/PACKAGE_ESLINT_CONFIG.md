@@ -19,3 +19,7 @@ Update the config's tests when behavior changes. Run its `test` and `typecheck`
 scripts, then lint representative Next.js, Worker, Bun-service, library, and
 test files. Rule/plugin dependency versions belong to this package when the
 shared preset loads them.
+
+See [ESLint presets](PACKAGES/TOOLING/ESLINT_PRESETS.md) for flat-config
+composition, Tailwind project roots, typed Worker rules, and the allowed scope
+of local overrides.

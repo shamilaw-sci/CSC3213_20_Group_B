@@ -36,3 +36,7 @@ The build uses TypeScript plus `tsc-alias`; source package exports support
 workspace development. See [Schemas](SCHEMAS.md) for deeper modeling rules and
 the [schema reference](SCHEMA_REFERENCE/INDEX.md) for the complete visual
 catalog.
+
+The [Schemas package internals](PACKAGES/SCHEMAS/INDEX.md) guide adds maintainer
+detail on [ownership and exports](PACKAGES/SCHEMAS/OWNERSHIP_AND_EXPORTS.md) and
+[contract evolution and verification](PACKAGES/SCHEMAS/EVOLUTION_AND_VERIFICATION.md).
