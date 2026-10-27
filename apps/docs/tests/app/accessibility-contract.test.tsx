@@ -35,6 +35,8 @@ describe('documentation accessibility contracts', () => {
     expect(styles).toContain('scrollbar-color:');
     expect(styles).toContain('var(--muted-foreground)');
     expect(styles).toContain('::-webkit-scrollbar-thumb');
+    expect(styles).toContain('html body[data-scroll-locked]');
+    expect(styles).toContain('overflow-y: auto !important;');
     expect(styles).not.toContain('overflow-y: scroll;');
   });
 
