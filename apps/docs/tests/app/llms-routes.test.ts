@@ -35,4 +35,18 @@ describe('agent-readable documentation', () => {
       })
     ).rejects.toThrow();
   });
+
+  test('rejects paths without the canonical content.md suffix', async () => {
+    await expect(
+      getPage(new Request('https://docs.test'), {
+        params: Promise.resolve({ slug: ['architecture', 'anything'] }),
+      })
+    ).rejects.toThrow();
+
+    await expect(
+      getPage(new Request('https://docs.test'), {
+        params: Promise.resolve({ slug: ['missing'] }),
+      })
+    ).rejects.toThrow();
+  });
 });

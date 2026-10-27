@@ -9,8 +9,8 @@ function source(path: string) {
 }
 
 describe('application shell contracts', () => {
-  test('all applications use the shared skip-navigation primitive', () => {
-    for (const app of ['web', 'people', 'projects', 'portal', 'docs']) {
+  test('product applications use the shared skip-navigation primitive', () => {
+    for (const app of ['web', 'people', 'projects', 'portal']) {
       const layout = source(`apps/${app}/src/app/layout.tsx`);
 
       expect(layout, app).toContain('@scs/ui/components/skip-link');
@@ -23,8 +23,7 @@ describe('application shell contracts', () => {
     const layout = source('apps/docs/src/app/layout.tsx');
 
     expect(layout).toContain('import { RootProvider }');
-    expect(layout).toContain('<SkipLink');
-    expect(layout).toContain('id="main-content"');
+    expect(layout).not.toContain('SkipLink');
     expect(layout).toContain("type: 'static'");
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');

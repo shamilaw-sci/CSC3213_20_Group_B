@@ -28,6 +28,12 @@ information architecture. People prioritizes identity and directory browsing;
 Projects prioritizes showcase discovery; Portal prioritizes editing workflows;
 Web prioritizes departmental content.
 
+The Docs application keeps the Fumadocs shell but maps its `fd` color tokens to
+the shared semantic palette, uses the repository's Open Sans and Source Serif
+font configuration, and publishes the same SCS favicon artwork as the public
+applications. Its manifest keeps a Docs-specific name so installed shortcuts
+remain distinguishable.
+
 ## Review
 
 Run lint to enforce Tailwind canonical classes and class ordering. Test light

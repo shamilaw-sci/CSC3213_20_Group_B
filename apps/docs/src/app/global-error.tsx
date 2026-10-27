@@ -1,5 +1,6 @@
 'use client';
 
+import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
 import { Button } from '@scs/ui/components/button';

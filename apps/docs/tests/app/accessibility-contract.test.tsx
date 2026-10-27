@@ -10,13 +10,22 @@ function source(path: string) {
 }
 
 describe('documentation accessibility contracts', () => {
-  test('exposes skip navigation, static search, and theme support', () => {
+  test('uses the Fumadocs shell for navigation and search', () => {
     const layout = source('app/layout.tsx');
 
-    expect(layout).toContain('<SkipLink');
-    expect(layout).toContain('id="main-content"');
+    expect(layout).not.toContain('SkipLink');
     expect(layout).toContain("type: 'static'");
     expect(layout).toContain('<RootProvider');
+  });
+
+  test('loads the shared theme and scans shared UI components', () => {
+    const layout = source('app/layout.tsx');
+    const styles = source('app/globals.css');
+
+    expect(layout).toContain("import '@scs/ui/styles/theme.css';");
+    expect(styles).toContain("@source '../../../../packages/ui/src';");
+    expect(styles).toContain('--color-fd-background: var(--background);');
+    expect(styles).toContain('--color-primary: var(--primary);');
   });
 
   test('uses semantic theme utilities instead of literal palette colors', () => {

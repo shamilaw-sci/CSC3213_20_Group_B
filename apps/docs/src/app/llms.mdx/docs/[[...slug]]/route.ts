@@ -11,7 +11,9 @@ export const revalidate = false;
 
 export async function GET(_request: Request, { params }: MarkdownRouteContext) {
   const { slug } = await params;
-  const slugs = slug?.slice(0, -1) ?? [];
+  if (!slug || slug.at(-1) !== 'content.md') notFound();
+
+  const slugs = slug.slice(0, -1);
   if (slugs.at(-1) === 'index') slugs.pop();
 
   const page = source.getPage(slugs);
