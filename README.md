@@ -146,6 +146,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [API service](docs/SERVICE_API.md)                         | change browser API, auth, D1 state, or orchestration                  |
 | [GitHub App service](docs/SERVICE_GITHUB_APP.md)           | change durable Git-backed automation                                  |
 | [Mailer service](docs/SERVICE_MAILER.md)                   | change email templates, validation, or SMTP delivery                  |
+| [Service internals](docs/SERVICES/INDEX.md)                | trace backend request lifecycles, state, integrations, and failures   |
 | [Schemas package](docs/PACKAGE_SCHEMAS.md)                 | maintain shared runtime and transport contracts                       |
 | [UI package](docs/PACKAGE_UI.md)                           | maintain shared shadcn primitives and theme tokens                    |
 | [TypeScript config](docs/PACKAGE_TSCONFIG.md)              | change shared compiler policy                                         |

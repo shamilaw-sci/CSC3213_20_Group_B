@@ -37,3 +37,14 @@ errors to stable HTTP responses, and make externally retried mutations
 idempotent. Run all declared lint, typecheck, test, Knip, and build scripts; add
 route/service tests for success, validation, forbidden, conflict, and provider
 failure paths.
+
+## Detailed implementation guide
+
+Read [API internals](SERVICES/API/INDEX.md) for the source map, then use:
+
+- [Request lifecycle](SERVICES/API/REQUEST_LIFECYCLE.md) for edge dispatch,
+  CORS, pagination, and downstream failure mapping;
+- [Identity and state](SERVICES/API/IDENTITY_AND_STATE.md) for Better Auth,
+  permissions, D1 migrations, and proxy state; and
+- [Public-data mutations](SERVICES/API/PUBLIC_DATA_MUTATIONS.md) for profile,
+  project, academic, idempotency, revision, and operation workflows.

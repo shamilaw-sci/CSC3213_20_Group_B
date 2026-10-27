@@ -1,0 +1,9 @@
+{
+  "title": "API service",
+  "pages": [
+    "INDEX",
+    "REQUEST_LIFECYCLE",
+    "IDENTITY_AND_STATE",
+    "PUBLIC_DATA_MUTATIONS"
+  ]
+}

@@ -23,6 +23,7 @@
     "SERVICE_API",
     "SERVICE_GITHUB_APP",
     "SERVICE_MAILER",
+    "SERVICES",
     "---Shared packages---",
     "PACKAGE_SCHEMAS",
     "PACKAGE_UI",

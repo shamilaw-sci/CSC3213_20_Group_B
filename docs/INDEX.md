@@ -28,8 +28,9 @@ Markdown files are readable on GitHub and published by the documentation site.
   [Schemas](SCHEMAS.md), and [UI system](UI_SYSTEM.md).
 - Applications: [Web](APPLICATION_WEB.md), [People](APPLICATION_PEOPLE.md),
   [Projects](APPLICATION_PROJECTS.md), and [Portal](APPLICATION_PORTAL.md).
-- Services: [API](SERVICE_API.md), [GitHub App](SERVICE_GITHUB_APP.md), and
-  [Mailer](SERVICE_MAILER.md).
+- Services: start with [Service internals](SERVICES/INDEX.md), then use the
+  concise [API](SERVICE_API.md), [GitHub App](SERVICE_GITHUB_APP.md), and
+  [Mailer](SERVICE_MAILER.md) entry points.
 - Shared packages: [Schemas package](PACKAGE_SCHEMAS.md),
   [UI package](PACKAGE_UI.md), [TypeScript config](PACKAGE_TSCONFIG.md), and
   [ESLint config](PACKAGE_ESLINT_CONFIG.md).
