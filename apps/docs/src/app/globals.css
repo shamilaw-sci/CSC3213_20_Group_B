@@ -58,7 +58,7 @@
 html {
   scrollbar-color: color-mix(in oklab, var(--muted-foreground) 55%, transparent)
     transparent;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
 }
 
@@ -90,9 +90,9 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Fumadocs locks wheel input separately; keep the existing scrollbar painted. */
-html body[data-scroll-locked] {
-  overflow-y: auto !important;
+/* The document element owns scrolling, so lock it with the modalized body. */
+html:has(body[data-scroll-locked]) {
+  overflow: hidden;
 }
 
 [role='dialog']:has(input[role='combobox'])

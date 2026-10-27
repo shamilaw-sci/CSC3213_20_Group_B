@@ -28,15 +28,17 @@ describe('documentation accessibility contracts', () => {
     expect(styles).toContain('--color-primary: var(--primary);');
   });
 
-  test('keeps scrolling stable without forcing fitting pages to scroll', () => {
+  test('reserves one scrollbar gutter and locks the page behind search', () => {
     const styles = source('app/globals.css');
 
-    expect(styles).toContain('scrollbar-gutter: stable both-edges;');
+    expect(styles).toContain('scrollbar-gutter: stable;');
     expect(styles).toContain('scrollbar-color:');
     expect(styles).toContain('var(--muted-foreground)');
     expect(styles).toContain('::-webkit-scrollbar-thumb');
-    expect(styles).toContain('html body[data-scroll-locked]');
-    expect(styles).toContain('overflow-y: auto !important;');
+    expect(styles).toContain('html:has(body[data-scroll-locked])');
+    expect(styles).toContain('overflow: hidden;');
+    expect(styles).not.toContain('scrollbar-gutter: stable both-edges;');
+    expect(styles).not.toContain('overflow-y: auto !important;');
     expect(styles).not.toContain('overflow-y: scroll;');
   });
 
