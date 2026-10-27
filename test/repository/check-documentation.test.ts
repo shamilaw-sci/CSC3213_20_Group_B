@@ -189,6 +189,48 @@ describe('documentation policy checker', () => {
     );
   });
 
+  test('rejects a nested section omitted from its parent navigation', async () => {
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [handbook](docs/INDEX.md).\n',
+      'docs/INDEX.md':
+        '---\ntitle: Handbook\ndescription: Example handbook.\n---\n\n# Handbook\n\nSee [schemas](SCHEMA_REFERENCE/INDEX.md).\n',
+      'docs/meta.json': JSON.stringify({ pages: ['INDEX'] }),
+      'docs/SCHEMA_REFERENCE/INDEX.md':
+        '---\ntitle: Schemas\ndescription: Schema reference.\n---\n\n# Schemas\n',
+      'docs/SCHEMA_REFERENCE/meta.json': JSON.stringify({ pages: ['INDEX'] }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain(
+      'docs/SCHEMA_REFERENCE/meta.json: directory is missing from docs/meta.json'
+    );
+  });
+
+  test('rejects navigation entries that escape their owning directory', async () => {
+    const page =
+      '---\ntitle: Schemas\ndescription: Schema contracts.\n---\n\n# Schemas\n';
+    const root = await createFixture({
+      'README.md': '# Example\n\nSee [schemas](docs/SCHEMAS.md).\n',
+      'docs/SCHEMAS.md': `${page}\nSee [reference](SCHEMA_REFERENCE/INDEX.md).\n`,
+      'docs/meta.json': JSON.stringify({
+        pages: ['SCHEMAS', 'SCHEMA_REFERENCE'],
+      }),
+      'docs/SCHEMA_REFERENCE/INDEX.md': page,
+      'docs/SCHEMA_REFERENCE/meta.json': JSON.stringify({
+        pages: ['INDEX', '../SCHEMAS'],
+      }),
+    });
+
+    const result = runChecker(root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain(
+      'docs/SCHEMA_REFERENCE/meta.json: invalid navigation entry ../SCHEMAS'
+    );
+  });
+
   test('rejects documentation without complete frontmatter', async () => {
     const root = await createFixture({
       'README.md': '# Example\n\nSee [index](docs/INDEX.md).\n',

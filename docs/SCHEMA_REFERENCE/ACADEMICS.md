@@ -16,7 +16,9 @@ flowchart TD
   Department --> Subject
   Subject --> Programme
   AcademicYear --> AcademicPeriod
-  AcademicPeriod --> CourseOffering
+  AcademicYear --> CourseOffering
+  Semester --> AcademicPeriod
+  Semester --> CourseOffering
 ```
 
 | Schema                           | Responsibility                                                                           |

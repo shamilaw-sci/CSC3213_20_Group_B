@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@scs/eslint-config": "workspace:*",
+    "@scs/schemas": "workspace:*",
     "@scs/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.1",

@@ -13,6 +13,7 @@ const MARKDOWN_LINK = /!?\[[^\]]*\]\(([^)]+)\)/g;
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 const H1 = /^#\s+\S.+$/gm;
 const NAVIGATION_SEPARATOR = /^---.*---$/;
+const NAVIGATION_ENTRY = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/;
 
 function repositoryRoot(): string {
   const rootArgument = process.argv.indexOf('--root');
@@ -152,6 +153,11 @@ function documentationViolations(root: string, paths: string[]): string[] {
         violations.push(`${metadataPath}: duplicate navigation entry ${entry}`);
       }
 
+      if (!NAVIGATION_ENTRY.test(entry)) {
+        violations.push(`${metadataPath}: invalid navigation entry ${entry}`);
+        continue;
+      }
+
       const pagePath = resolve(root, directory, `${entry}.md`);
       const directoryPath = resolve(root, directory, entry);
       if (
@@ -160,6 +166,17 @@ function documentationViolations(root: string, paths: string[]): string[] {
       ) {
         violations.push(
           `${metadataPath}: navigation entry ${entry} has no page or directory`
+        );
+      }
+    }
+
+    if (directory !== 'docs') {
+      const parentDirectory = dirname(directory).replaceAll('\\', '/');
+      const parentMetadataPath = `${parentDirectory}/meta.json`;
+      const directoryName = basename(directory);
+      if (!metadataEntries.get(parentDirectory)?.includes(directoryName)) {
+        violations.push(
+          `${metadataPath}: directory is missing from ${parentMetadataPath}`
         );
       }
     }

@@ -1,10 +1,10 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+import * as schemaExports from '@scs/schemas';
 import { describe, expect, test } from 'vitest';
 
 const repositoryRoot = resolve(process.cwd(), '../..');
-const schemasRoot = join(repositoryRoot, 'packages/schemas/src/schemas');
 const referenceRoot = join(repositoryRoot, 'docs/SCHEMA_REFERENCE');
 const referencePages = [
   'ACADEMICS.md',
@@ -15,22 +15,10 @@ const referencePages = [
   'RESEARCH.md',
 ] as const;
 
-function sourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    return entry.isDirectory() ? sourceFiles(path) : [path];
-  });
-}
-
 function publicSchemaExports(): string[] {
-  const exports = sourceFiles(schemasRoot).flatMap((path) => {
-    const source = readFileSync(path, 'utf8');
-    return [...source.matchAll(/^export const (\w+Schema)\b/gm)].map(
-      ([, name]) => name
-    );
-  });
-
-  return [...exports, 'createPageSchema'].sort();
+  return Object.keys(schemaExports)
+    .filter((name) => name.endsWith('Schema') || name === 'createPageSchema')
+    .sort();
 }
 
 describe('schema reference', () => {
