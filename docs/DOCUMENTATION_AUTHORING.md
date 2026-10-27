@@ -9,6 +9,10 @@ Root `docs/**/*.md` files are the only authored handbook source. They remain
 readable in an editor and on GitHub; `apps/docs` compiles the same files into the
 published Fumadocs site.
 
+The [Docs application internals](APPLICATIONS/DOCS/INDEX.md) guide explains the
+source loader, route mapping, navigation ownership, search, metadata,
+agent-readable outputs, and MDX rendering boundary.
+
 ## Add or change a page
 
 1. Use an `UPPER_SNAKE_CASE.md` filename under `docs`.

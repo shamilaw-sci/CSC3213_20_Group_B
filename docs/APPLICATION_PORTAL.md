@@ -9,6 +9,17 @@ description: Authenticated workflows, route areas, API boundary, form modes, per
 calls `services/api`; it never receives GitHub App credentials or calls private
 automation routes directly.
 
+For implementation-level behavior, use the
+[Portal internals](APPLICATIONS/PORTAL/INDEX.md) guide:
+
+- [Routing and access](APPLICATIONS/PORTAL/ROUTING_AND_ACCESS.md) separates
+  cookie routing hints from API-backed authorization;
+- [Editor state and mutations](APPLICATIONS/PORTAL/EDITOR_STATE_AND_MUTATIONS.md)
+  explains form, review, JSON, validation, and operation polling;
+- [Data loading and failures](APPLICATIONS/PORTAL/DATA_LOADING_AND_FAILURES.md)
+  covers server fetch aggregation, nullable records, redirects, and loading
+  boundaries.
+
 ## Route areas
 
 - `/login`, `/signup`, `/privacy`, and `/tos` cover entry and policy.

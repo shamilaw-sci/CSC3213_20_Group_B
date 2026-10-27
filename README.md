@@ -143,6 +143,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [People application](docs/APPLICATION_PEOPLE.md)           | change directory browsing or profile interpretation                   |
 | [Projects application](docs/APPLICATION_PROJECTS.md)       | change showcase discovery or project details                          |
 | [Portal application](docs/APPLICATION_PORTAL.md)           | change authenticated editing and administration                       |
+| [Application internals](docs/APPLICATIONS/INDEX.md)        | trace application routing, state, rendering, and failure behavior     |
 | [API service](docs/SERVICE_API.md)                         | change browser API, auth, D1 state, or orchestration                  |
 | [GitHub App service](docs/SERVICE_GITHUB_APP.md)           | change durable Git-backed automation                                  |
 | [Mailer service](docs/SERVICE_MAILER.md)                   | change email templates, validation, or SMTP delivery                  |

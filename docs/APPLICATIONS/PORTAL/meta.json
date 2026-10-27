@@ -1,0 +1,9 @@
+{
+  "title": "Portal internals",
+  "pages": [
+    "INDEX",
+    "ROUTING_AND_ACCESS",
+    "EDITOR_STATE_AND_MUTATIONS",
+    "DATA_LOADING_AND_FAILURES"
+  ]
+}
