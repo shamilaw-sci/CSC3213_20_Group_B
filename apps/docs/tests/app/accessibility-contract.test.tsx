@@ -31,20 +31,21 @@ describe('documentation accessibility contracts', () => {
   test('keeps scrolling stable without forcing fitting pages to scroll', () => {
     const styles = source('app/globals.css');
 
-    expect(styles).toContain('scrollbar-gutter: stable;');
+    expect(styles).toContain('scrollbar-gutter: stable both-edges;');
     expect(styles).toContain('scrollbar-color:');
     expect(styles).toContain('var(--muted-foreground)');
     expect(styles).toContain('::-webkit-scrollbar-thumb');
     expect(styles).not.toContain('overflow-y: scroll;');
   });
 
-  test('moves search focus from the raw input to its rounded container', () => {
+  test('uses a neutral divider focus treatment inside the search dialog', () => {
     const styles = source('app/globals.css');
 
     expect(styles).toContain("input[role='combobox']:focus-visible");
     expect(styles).toContain(':focus-within');
-    expect(styles).toContain('border-radius:');
-    expect(styles).toContain('var(--ring)');
+    expect(styles).toContain('box-shadow: inset 0 -2px 0');
+    expect(styles).toContain('var(--foreground)');
+    expect(styles).not.toContain('box-shadow: inset 0 0 0 2px var(--ring);');
   });
 
   test('uses semantic theme utilities instead of literal palette colors', () => {
