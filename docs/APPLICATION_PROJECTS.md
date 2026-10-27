@@ -8,6 +8,15 @@ description: Showcase browsing, path filters, project details, public data, conf
 `apps/projects` (`@scs/projects`) is the public project showcase. Its interface
 is organized for direct discovery rather than administrative editing.
 
+For the implementation contract, read the
+[Projects internals](APPLICATIONS/PROJECTS/INDEX.md) guide:
+
+- [Collection routes and search](APPLICATIONS/PROJECTS/COLLECTION_ROUTES_AND_SEARCH.md)
+  defines canonical paths, filter semantics, pagination, and metadata;
+- [Data and details](APPLICATIONS/PROJECTS/DATA_AND_DETAILS.md) explains the
+  data clients, validation, failure states, short links, and related-project
+  ranking.
+
 ## Routes
 
 `/browse/{segments}` is the general catalogue. Categories, topics, and project

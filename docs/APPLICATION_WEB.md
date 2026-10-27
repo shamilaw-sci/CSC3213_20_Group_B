@@ -9,6 +9,14 @@ description: Ownership, content routes, redirects, configuration, tests, and cha
 department-owned institutional content and intentionally does not duplicate the
 People directory, Projects showcase, or Portal workflows.
 
+The [Department Web internals](APPLICATIONS/WEB/INDEX.md) guide documents the
+implementation in depth:
+
+- [Content and navigation](APPLICATIONS/WEB/CONTENT_AND_NAVIGATION.md) covers
+  MDX ownership, cross-product links, metadata, and discovery files;
+- [Routing and proxying](APPLICATIONS/WEB/ROUTING_AND_PROXYING.md) covers
+  redirects, `.php` normalization, `~username` resolution, and trust boundaries.
+
 ## Structure and routes
 
 Content pages are MDX under `src/app`: home, about, resources, undergraduate

@@ -10,6 +10,16 @@ reads published people and related project records, validates them with
 `@scs/schemas`, and renders browse and detail pages without privileged server
 credentials.
 
+For code-derived behavior, read the
+[People internals](APPLICATIONS/PEOPLE/INDEX.md) guide:
+
+- [Published data and directories](APPLICATIONS/PEOPLE/PUBLISHED_DATA_AND_DIRECTORIES.md)
+  explains manifests, validation, caching, search, student placement, and
+  prefetch bounds;
+- [Profile interpretation](APPLICATIONS/PEOPLE/PROFILE_INTERPRETATION.md)
+  defines academic labels, directory context, project roles, and project-only
+  profiles.
+
 ## Routes and composition
 
 The root introduces directory choices. Staff routes cover academic,
