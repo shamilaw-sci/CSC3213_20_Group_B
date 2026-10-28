@@ -59,3 +59,4 @@ Thumbs.db
 
 # browser automation artifacts
 .playwright-cli/
+output/
