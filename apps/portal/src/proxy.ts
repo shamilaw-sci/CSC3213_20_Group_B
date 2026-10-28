@@ -41,7 +41,7 @@ export const config = {
     '/user/:path*',
     '/admin/:path*',
     '/academic/:path*',
-    '/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
-    '/\\.[wW][eE][lL][lL]-[kK][nN][oO][wW][nN]/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
+    '/([sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT])',
+    '/(\\.[wW][eE][lL][lL]-[kK][nN][oO][wW][nN]/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT])',
   ],
 };

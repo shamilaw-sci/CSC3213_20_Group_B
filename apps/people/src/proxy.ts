@@ -22,8 +22,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
-    '/\\.[wW][eE][lL][lL]-[kK][nN][oO][wW][nN]/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
-    '/((?!api(?:/|$)|_next(?:/|$)|favicon.ico$|robots.txt$|sitemap.xml$|.*\\.[^/]+$).*)',
+    '/([sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT])',
+    '/(\\.[wW][eE][lL][lL]-[kK][nN][oO][wW][nN]/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT])',
+    '/:username',
+    '/([pP][eE][oO][pP][lL][eE]|[sS][tT][aA][fF][fF]|[sS][tT][uU][dD][eE][nN][tT][sS])/:path*',
   ],
 };
