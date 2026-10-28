@@ -3,18 +3,15 @@ import {
   DocsDescription,
   DocsPage,
   MarkdownCopyButton,
-  ViewOptionsPopover,
 } from 'fumadocs-ui/layouts/docs/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { getMDXComponents } from '@/components/mdx/mdx-components';
+import { RepositoryViewOptions } from '@/components/repository/repository-view-options';
 import { siteConfig } from '@/config/site.config';
 import { getPageMarkdownUrl } from '@/lib/llms';
-import {
-  createDocumentationMetadata,
-  getDocumentationSourceUrl,
-} from '@/lib/metadata';
+import { createDocumentationMetadata } from '@/lib/metadata';
 import { source } from '@/lib/source';
 
 type DocumentationPageProps = {
@@ -38,10 +35,10 @@ export default async function DocumentationPage({
         className="border-fd-border flex items-center gap-2 border-b pt-2 pb-6"
       >
         <MarkdownCopyButton markdownUrl={markdownUrl} />
-        <ViewOptionsPopover
+        <RepositoryViewOptions
           markdownUrl={markdownUrl}
           pageUrl={new URL(page.url, siteConfig.origin).toString()}
-          githubUrl={getDocumentationSourceUrl(page.data.info.path)}
+          sourcePath={page.data.info.path}
         />
       </div>
       <DocsBody>

@@ -32,13 +32,3 @@ export function createDocumentationMetadata({
     },
   };
 }
-
-export function getDocumentationSourceUrl(path: string): string {
-  const encodedPath = path
-    .replaceAll('\\', '/')
-    .split('/')
-    .map(encodeURIComponent)
-    .join('/');
-
-  return `${siteConfig.repositoryUrl}/blob/main/docs/${encodedPath}`;
-}

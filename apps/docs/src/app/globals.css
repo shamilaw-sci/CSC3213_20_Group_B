@@ -95,6 +95,11 @@ html:has(body[data-scroll-locked]) {
   overflow: hidden;
 }
 
+/* The stable root gutter already reserves the removed scrollbar width. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+}
+
 [role='dialog']:has(input[role='combobox'])
   > div:focus-within:has(> input[role='combobox']:focus-visible) {
   box-shadow: inset 0 -2px 0

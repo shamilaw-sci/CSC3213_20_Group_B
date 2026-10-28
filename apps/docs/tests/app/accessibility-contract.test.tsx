@@ -37,6 +37,11 @@ describe('documentation accessibility contracts', () => {
     expect(styles).toContain('::-webkit-scrollbar-thumb');
     expect(styles).toContain('html:has(body[data-scroll-locked])');
     expect(styles).toContain('overflow: hidden;');
+    expect(styles).not.toContain('scrollbar-gutter: auto;');
+    expect(styles).toMatch(
+      /html body\[data-scroll-locked\]\s*\{[^}]*margin-right:\s*0\s*!important;/su
+    );
+    expect(styles).not.toContain('position: static !important;');
     expect(styles).not.toContain('scrollbar-gutter: stable both-edges;');
     expect(styles).not.toContain('overflow-y: auto !important;');
     expect(styles).not.toContain('overflow-y: scroll;');

@@ -7,9 +7,13 @@ const docsContentRoute = '/llms.mdx/docs';
 const getContentUrl = createGetUrl(docsContentRoute);
 
 export const docsLlms = llms(source, {
-  renderPage: async (page) => `# ${page.data.title} (${page.url})
+  renderPage: async (page) => {
+    const markdown = await page.data.getText('processed');
 
-${await page.data.getText('processed')}`,
+    return `# ${page.data.title} (${page.url})
+
+${markdown}`;
+  },
 });
 
 export function getPageMarkdownUrl(page: { slugs: string[] }) {

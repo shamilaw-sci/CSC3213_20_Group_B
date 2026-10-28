@@ -28,6 +28,20 @@ describe('agent-readable documentation', () => {
     );
   });
 
+  test('publishes the deterministic repository variant without placeholders', async () => {
+    const response = await getPage(new Request('https://docs.test'), {
+      params: Promise.resolve({ slug: ['development', 'content.md'] }),
+    });
+    const markdown = await response.text();
+
+    expect(markdown).toContain(
+      'git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git'
+    );
+    expect(markdown).toContain('Set-Location scs-pdn-monorepo');
+    expect(markdown).not.toContain('{{repo.');
+    expect(markdown).not.toContain(' repo title=');
+  });
+
   test('rejects an unknown Markdown page', async () => {
     await expect(
       getPage(new Request('https://docs.test'), {
