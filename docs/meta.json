@@ -26,6 +26,7 @@
     "SERVICE_MAILER",
     "SERVICES",
     "---Shared packages---",
+    "PACKAGE_SECURITY",
     "PACKAGE_SCHEMAS",
     "PACKAGE_UI",
     "PACKAGE_TSCONFIG",

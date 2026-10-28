@@ -32,7 +32,8 @@ Markdown files are readable on GitHub and published by the documentation site.
   concise [API](SERVICE_API.md), [GitHub App](SERVICE_GITHUB_APP.md), and
   [Mailer](SERVICE_MAILER.md) entry points.
 - Shared packages: [Schemas package](PACKAGE_SCHEMAS.md),
-  [UI package](PACKAGE_UI.md), [TypeScript config](PACKAGE_TSCONFIG.md), and
+  [Security package](PACKAGE_SECURITY.md), [UI package](PACKAGE_UI.md),
+  [TypeScript config](PACKAGE_TSCONFIG.md), and
   [ESLint config](PACKAGE_ESLINT_CONFIG.md).
 - Working practices: [Testing](TESTING.md),
   [Dependency management](DEPENDENCY_MANAGEMENT.md),

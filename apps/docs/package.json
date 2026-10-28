@@ -18,6 +18,7 @@
     "knip:fix": "knip --fix"
   },
   "dependencies": {
+    "@scs/security": "workspace:*",
     "@scs/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "fumadocs-core": "^16.17.7",

@@ -20,6 +20,7 @@
   "dependencies": {
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.1",
+    "@scs/security": "workspace:*",
     "@scs/schemas": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "hono": "^4.12.30",

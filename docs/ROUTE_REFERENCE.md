@@ -18,6 +18,12 @@ This page is an index, not a replacement for route source or
 | Portal   | `/login`, `/signup`, `/dashboard`, `/account/*`, `/user/*`, `/academic/courses/*`, and `/admin/*`                                                                                                               |
 | Docs     | `/`, `/docs/{page}`, `/api/search`, `/llms.txt`, `/llms-full.txt`, per-page Markdown, `/sitemap.xml`, and `/robots.txt`                                                                                         |
 
+The Portal serves the authoritative document at
+`https://portal.scs-pdn.space/.well-known/security.txt`. Every public app and
+service permanently redirects case-insensitive GET and HEAD requests for
+`/security.txt` or `/.well-known/security.txt` to that URL. Other methods keep
+their existing routing behavior.
+
 ## Service route families
 
 The API exposes Better Auth routes plus `/api/me`, `/api/me/proxy`,

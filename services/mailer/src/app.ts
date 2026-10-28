@@ -3,11 +3,18 @@ import { serveStatic } from 'hono/bun';
 import { bearerAuth } from 'hono/bearer-auth';
 import { HTTPException } from 'hono/http-exception';
 import type { MailerSendResponse } from '@scs/schemas';
+import { getSecurityTxtRedirectTarget } from '@scs/security';
 
 import { env } from '@/config/env';
 import sendRoute from '@/routes/send.route';
 
 const app = new Hono();
+
+app.use('*', async (c, next) => {
+  const securityTxtRedirect = getSecurityTxtRedirectTarget(c.req.raw);
+  if (securityTxtRedirect) return c.redirect(securityTxtRedirect, 308);
+  await next();
+});
 
 app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
 

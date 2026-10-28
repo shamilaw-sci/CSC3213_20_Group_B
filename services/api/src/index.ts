@@ -1,3 +1,5 @@
+import { getSecurityTxtRedirectTarget } from '@scs/security';
+
 import type { Env } from '@/types/env';
 import { createAuth, isBetterAuthRequest } from '@/auth/auth';
 import { handleWorkerRequest } from '@/middleware/request-guards';
@@ -10,6 +12,14 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
+    const securityTxtRedirect = getSecurityTxtRedirectTarget(req);
+    if (securityTxtRedirect) {
+      return new Response(null, {
+        status: 308,
+        headers: { Location: securityTxtRedirect },
+      });
+    }
+
     bindExecutionContext(req, ctx);
     return handleWorkerRequest(req, env, async (request, workerEnv) => {
       if (isBetterAuthRequest(request)) {

@@ -31,6 +31,18 @@ with a protocol pass through unchanged. Authors therefore write links that work
 in the checkout and on GitHub; the published page receives the correct nested
 route automatically.
 
+## Code processing
+
+Fumadocs sends fenced code through Shiki at build time with paired GitHub light
+and dark themes. The default Fumadocs transformers own titles, icons, copy
+controls, line numbers, line and word highlighting, diff notation, and native
+code tabs. Shell tabs use `tab` metadata; a `tab-group` on the first adjacent
+fence synchronizes and persists matching groups.
+
+Repository URLs in documentation are explicit and point to the main project
+repository. The Docs application does not maintain a repository selector or
+alternate code variants.
+
 ## Navigation ownership
 
 Every content directory has a `meta.json` that declares its title and page

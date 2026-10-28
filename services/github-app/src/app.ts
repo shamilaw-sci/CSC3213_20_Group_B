@@ -1,3 +1,4 @@
+import { getSecurityTxtRedirectTarget } from '@scs/security';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
@@ -42,6 +43,12 @@ import { auth } from '@/middleware/auth';
 import type { GithubAppEnv } from '@/types/env';
 
 const app = new Hono<{ Bindings: GithubAppEnv }>();
+
+app.use('*', async (c, next) => {
+  const securityTxtRedirect = getSecurityTxtRedirectTarget(c.req.raw);
+  if (securityTxtRedirect) return c.redirect(securityTxtRedirect, 308);
+  await next();
+});
 
 app.use(logger());
 app.use(auth);

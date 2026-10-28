@@ -1,4 +1,4 @@
 {
   "title": "Shared package internals",
-  "pages": ["INDEX", "SCHEMAS", "UI", "TOOLING"]
+  "pages": ["INDEX", "SECURITY", "SCHEMAS", "UI", "TOOLING"]
 }

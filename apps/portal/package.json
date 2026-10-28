@@ -19,6 +19,7 @@
   "dependencies": {
     "@better-auth/passkey": "^1.7.7",
     "@codemirror/lang-json": "^6.0.2",
+    "@scs/security": "workspace:*",
     "@scs/schemas": "workspace:*",
     "@scs/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",

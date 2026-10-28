@@ -8,6 +8,21 @@ const ALLOWED_METHODS = 'PATCH, POST, GET, OPTIONS, PUT, DELETE';
 const ALLOWED_HEADERS = 'Content-Type, Authorization, X-Client-Id';
 
 describe('edge routing and CORS characterization', () => {
+  test('redirects security.txt discovery before API guards', async () => {
+    for (const [method, path] of [
+      ['GET', '/security.txt'],
+      ['HEAD', '/SECURITY.TXT'],
+      ['GET', '/.Well-Known/Security.Txt'],
+    ]) {
+      const response = await invokeWorker(`${path}?from=api`, { method });
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get('location')).toBe(
+        'https://portal.scs-pdn.space/.well-known/security.txt'
+      );
+    }
+  });
+
   test('mounts Better Auth before the application route fallback', async () => {
     const response = await invokeWorker('/api/auth/ok', {
       method: 'GET',

@@ -19,16 +19,34 @@ pnpm, or Yarn inside a workspace.
 
 ## First Setup
 
-```powershell
-git clone <repository-url>
+```powershell title="Monorepo root" tab="PowerShell" tab-group="terminal"
+git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
 Set-Location scs-pdn-monorepo
 bun --version
 bun install --frozen-lockfile
 bun run docs:check
 ```
 
+```bash title="Monorepo root" tab="Bash"
+git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+cd scs-pdn-monorepo
+bun --version
+bun install --frozen-lockfile
+bun run docs:check
+```
+
+```cmd title="Monorepo root" tab="Command Prompt"
+git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+cd /d scs-pdn-monorepo
+bun --version
+bun install --frozen-lockfile
+bun run docs:check
+```
+
 If `bun --version` does not match `.bun-version`, switch Bun before installing.
-The root `bun.lock` is authoritative for every workspace.
+The root `bun.lock` is authoritative for every workspace. Repository links and
+source actions point to the
+[main repository](https://github.com/csc3213-2026-group-b/scs-pdn-monorepo).
 
 ## Run a Workspace
 

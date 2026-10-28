@@ -1,3 +1,5 @@
+import { getSecurityTxtRedirectTarget } from '@scs/security';
+
 import app from '@/app';
 import {
   parseRuntimeConfig,
@@ -38,6 +40,14 @@ const worker = {
     env: GithubAppEnv,
     executionContext: AppExecutionContext
   ): Promise<Response> {
+    const securityTxtRedirect = getSecurityTxtRedirectTarget(request);
+    if (securityTxtRedirect) {
+      return new Response(null, {
+        status: 308,
+        headers: { Location: securityTxtRedirect },
+      });
+    }
+
     try {
       const config = parseRuntimeConfig(env);
       return await runWithRuntimeConfig(config, () =>

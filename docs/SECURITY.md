@@ -179,8 +179,16 @@ For authentication, authorization, API, or automation changes, verify:
 
 ## Vulnerability Reporting and Incident Response
 
-Report suspected vulnerabilities privately to repository maintainers. Do not
-open a public issue containing exploit details, secrets, or personal data.
+Report a suspected vulnerability privately to
+`s21513@sci.pdn.ac.lk`. The canonical reporting policy is
+<https://portal.scs-pdn.space/privacy#security-reporting>. Do not open a public
+issue containing exploit details, secrets, or personal data.
+
+The authoritative RFC 9116 document is
+<https://portal.scs-pdn.space/.well-known/security.txt>. All other SCS PDN apps
+and HTTP services redirect both discovery paths to it with HTTP 308 for GET and
+HEAD. Matching is case-insensitive, query strings are discarded, and other
+methods are not enabled by this redirect layer.
 
 For a suspected exposure:
 

@@ -42,3 +42,94 @@ search index or agent-only copy of the handbook.
 Update documentation in the same commit as changed commands, routes,
 environment variables, workflows, deployment steps, or boundaries. Remove
 completed plans once their durable decisions are represented in living pages.
+
+## Code examples
+
+Fumadocs highlights fenced code at build time with Shiki. Use a specific
+language identifier so examples receive the correct grammar and icon. Titles,
+copy controls, horizontal overflow, and light/dark token colors are provided by
+Fumadocs; authors should not reproduce them with HTML or JSX.
+
+An ordinary highlighted block needs only a language:
+
+````md
+```typescript
+export const enabled = true;
+```
+````
+
+Add `title` when a file name, relative path, workspace, or execution context
+helps the reader:
+
+````md
+```typescript title="apps/portal/src/config.ts"
+export const enabled = true;
+```
+
+```json title="package.json"
+{
+  "private": true
+}
+```
+
+```bash title="Monorepo root"
+bun run docs:check
+```
+````
+
+Use `lineNumbers` only when prose refers to line numbers. It accepts an
+optional starting value, such as `lineNumbers=4`.
+
+````md
+```typescript title="src/config.ts" lineNumbers
+const mode = 'production';
+export { mode };
+```
+````
+
+Fumadocs enables Shiki's comment-notation transformers. The annotation is
+removed from the rendered code:
+
+````md
+```typescript
+const stable = true; // [!code highlight]
+const repository = 'main'; // [!code word:main]
+const removed = false; // [!code --]
+const added = true; // [!code ++]
+```
+````
+
+Use highlights to direct attention, and diffs only when the example is
+actually explaining a change.
+
+## Platform tabs
+
+Adjacent code fences with `tab` metadata become native Fumadocs code tabs. Put
+`tab-group` on the first fence to synchronize and persist the selected shell
+across matching groups. Do not create tabs when every command is identical.
+
+````md
+```powershell title="Monorepo root" tab="PowerShell" tab-group="terminal"
+Set-Location scs-pdn-monorepo
+bun install --frozen-lockfile
+```
+
+```bash title="Monorepo root" tab="Bash"
+cd scs-pdn-monorepo
+bun install --frozen-lockfile
+```
+
+```cmd title="Monorepo root" tab="Command Prompt"
+cd /d scs-pdn-monorepo
+bun install --frozen-lockfile
+```
+````
+
+`tab` and `tab-group` are native Fumadocs metadata. Tabs retain each fence's
+language, title, highlighting, and copy action. The copy action belongs to the
+visible fence, so it copies only the selected shell's command.
+
+Keep custom processing narrow. Use ordinary fences for static code, native
+Fumadocs metadata for titles and tabs, Shiki annotations for highlights and
+diffs, and Mermaid fences for diagrams. Write main-repository URLs explicitly;
+the documentation does not switch repositories in the browser.

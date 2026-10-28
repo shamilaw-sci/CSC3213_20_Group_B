@@ -38,6 +38,9 @@ const googleScopes = [
   },
 ];
 
+const securityPolicyUrl =
+  'https://portal.scs-pdn.space/privacy#security-reporting';
+
 export default function PrivacyPage() {
   return (
     <main
@@ -145,6 +148,46 @@ export default function PrivacyPage() {
               To request access, correction, or deletion of portal account data,
               contact the Department of Statistics and Computer Science,
               University of Peradeniya.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card id="security-reporting" className="scroll-mt-20 overflow-hidden">
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="text-lg/snug sm:text-xl">
+              Report a bug or security issue
+            </CardTitle>
+          </CardHeader>
+          <CardContent
+            className="text-muted-foreground min-w-0 space-y-4 px-4 text-sm/7
+              sm:px-6"
+          >
+            <p>
+              Email{' '}
+              <a
+                className="text-foreground font-medium underline-offset-4
+                  hover:underline"
+                href="mailto:s21513@sci.pdn.ac.lk"
+              >
+                s21513@sci.pdn.ac.lk
+              </a>{' '}
+              to report a security vulnerability or a general software bug.
+              Include the affected page or service, what happened, and clear
+              reproduction steps when possible.
+            </p>
+            <p>
+              Do not publish credentials, personal data, or exploitable details
+              in a public issue. Security reports are reviewed privately before
+              any public disclosure.
+            </p>
+            <p>
+              <a
+                className="text-foreground font-medium underline-offset-4
+                  hover:underline"
+                href={securityPolicyUrl}
+              >
+                Permanent security reporting policy
+              </a>
             </p>
           </CardContent>
         </Card>

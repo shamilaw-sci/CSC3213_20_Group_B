@@ -1,9 +1,15 @@
+import { getSecurityTxtRedirectTarget } from '@scs/security';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { routingConfig } from '@/config/routing.config';
 import serverEnvConfig from '@/config/server.env.config';
 
 export default async function proxy(req: NextRequest) {
+  const securityTxtRedirect = getSecurityTxtRedirectTarget(req);
+  if (securityTxtRedirect) {
+    return NextResponse.redirect(securityTxtRedirect, 308);
+  }
+
   // eslint-disable-next-line no-console
   console.log('[scs.pdn.ac.lk]:PROXY HIT:', req.nextUrl.pathname);
   const pathname = req.nextUrl.pathname.replace(/\/$/, '').toLowerCase();

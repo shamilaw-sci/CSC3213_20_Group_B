@@ -29,7 +29,9 @@ manually maintained search catalog or agent-only documentation tree.
 
 The default Fumadocs MDX components are retained. The application overrides
 links to rewrite repository Markdown paths and adds a `Mermaid` component for
-diagrams.
+diagrams. The shell links directly to the main GitHub repository; there is no
+repository selector, persisted repository preference, or alternate rendered
+variant.
 
 Mermaid rendering is intentionally client-only because it depends on browser
 state and the resolved color theme. Render results are cached by chart text and

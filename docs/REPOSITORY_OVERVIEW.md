@@ -12,14 +12,14 @@ verification but is not a combined runtime.
 
 ## Workspace map
 
-| Area                   | Workspaces                                                                       | Purpose                                                              |
-| ---------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Public applications    | `apps/web`, `apps/people`, `apps/projects`                                       | Department content and public data discovery                         |
-| Management application | `apps/portal`                                                                    | Authenticated profile, project, course, and administration workflows |
-| Documentation          | `apps/docs`                                                                      | This handbook, search, and machine-readable documentation            |
-| Edge services          | `services/api`, `services/github-app`                                            | Browser API, auth/state, and durable GitHub-backed mutations         |
-| Bun service            | `services/mailer`                                                                | Authenticated React Email rendering and SMTP delivery                |
-| Shared policy          | `packages/schemas`, `packages/ui`, `packages/eslint-config`, `packages/tsconfig` | Contracts, primitives, and tool configuration                        |
+| Area                   | Workspaces                                                                                            | Purpose                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Public applications    | `apps/web`, `apps/people`, `apps/projects`                                                            | Department content and public data discovery                         |
+| Management application | `apps/portal`                                                                                         | Authenticated profile, project, course, and administration workflows |
+| Documentation          | `apps/docs`                                                                                           | This handbook, search, and machine-readable documentation            |
+| Edge services          | `services/api`, `services/github-app`                                                                 | Browser API, auth/state, and durable GitHub-backed mutations         |
+| Bun service            | `services/mailer`                                                                                     | Authenticated React Email rendering and SMTP delivery                |
+| Shared policy          | `packages/security`, `packages/schemas`, `packages/ui`, `packages/eslint-config`, `packages/tsconfig` | Security discovery, contracts, primitives, and tool configuration    |
 
 The separately deployed public-data repository is not a workspace. Public apps
 read its published JSON. Mutations travel from Portal to API to GitHub App and

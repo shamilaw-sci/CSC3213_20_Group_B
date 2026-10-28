@@ -56,6 +56,7 @@ workspaces.
 | `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and D1 state    |
 | `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
 | `services/mailer`        | `@scs/mailer`        | Authenticated templated email and SMTP delivery  |
+| `packages/security`      | `@scs/security`      | Shared security.txt validation and generation    |
 | `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
 | `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
@@ -149,6 +150,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [Mailer service](docs/SERVICE_MAILER.md)                   | change email templates, validation, or SMTP delivery                  |
 | [Service internals](docs/SERVICES/INDEX.md)                | trace backend request lifecycles, state, integrations, and failures   |
 | [Schemas package](docs/PACKAGE_SCHEMAS.md)                 | maintain shared runtime and transport contracts                       |
+| [Security package](docs/PACKAGE_SECURITY.md)               | maintain security.txt generation and discovery redirects              |
 | [UI package](docs/PACKAGE_UI.md)                           | maintain shared shadcn primitives and theme tokens                    |
 | [TypeScript config](docs/PACKAGE_TSCONFIG.md)              | change shared compiler policy                                         |
 | [ESLint config](docs/PACKAGE_ESLINT_CONFIG.md)             | change shared lint and Tailwind policy                                |

@@ -23,6 +23,8 @@ For implementation-level behavior, use the
 ## Route areas
 
 - `/login`, `/signup`, `/privacy`, and `/tos` cover entry and policy.
+- `/.well-known/security.txt` serves the authoritative RFC 9116 document;
+  `/privacy#security-reporting` is its reporting policy.
 - `/dashboard` and `/account/*` cover the current account.
 - `/user/me/*`, `/user/projects/*`, and `/user/proxy` cover member workflows.
 - `/academic/courses/*` manages academic records.

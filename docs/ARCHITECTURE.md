@@ -13,7 +13,7 @@ and dependency sections.
 ## System Context
 
 The repository contains five Next.js applications, two Cloudflare Workers, one
-Bun mail service, and four shared packages. Public records are published from a
+Bun mail service, and five shared packages. Public records are published from a
 separate Git repository.
 
 ```mermaid
@@ -73,20 +73,21 @@ fallback.
 
 ## Workspace Responsibilities
 
-| Workspace                | Owns                                                                                 | Must not own                                  |
-| ------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------- |
-| `apps/web`               | department content, public navigation, external learning links                       | authenticated administration                  |
-| `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                  |
-| `apps/projects`          | project collections, search, and public project details                              | project write workflows                       |
-| `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes  |
-| `apps/docs`              | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source        |
-| `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials               |
-| `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state    |
-| `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                       |
-| `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration       |
-| `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions        |
-| `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points |
-| `packages/eslint-config` | shared lint policy                                                                   | product-specific exceptions without evidence  |
+| Workspace                | Owns                                                                                 | Must not own                                    |
+| ------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| `apps/web`               | department content, public navigation, external learning links                       | authenticated administration                    |
+| `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                    |
+| `apps/projects`          | project collections, search, and public project details                              | project write workflows                         |
+| `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes    |
+| `apps/docs`              | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source          |
+| `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials                 |
+| `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state      |
+| `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                         |
+| `packages/security`      | RFC 9116 document validation, generation, and discovery redirect policy              | authentication, authorization, or incident data |
+| `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration         |
+| `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions          |
+| `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points   |
+| `packages/eslint-config` | shared lint policy                                                                   | product-specific exceptions without evidence    |
 
 ## Read and Write Paths
 

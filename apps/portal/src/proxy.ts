@@ -1,6 +1,12 @@
+import { getSecurityTxtRedirectTarget } from '@scs/security';
 import { NextRequest, NextResponse } from 'next/server';
 
 export function proxy(request: NextRequest) {
+  const securityTxtRedirect = getSecurityTxtRedirectTarget(request);
+  if (securityTxtRedirect) {
+    return NextResponse.redirect(securityTxtRedirect, 308);
+  }
+
   const session =
     request.cookies.get('scs-auth.session_token') ??
     request.cookies.get('__Secure-scs-auth.session_token');
@@ -35,5 +41,7 @@ export const config = {
     '/user/:path*',
     '/admin/:path*',
     '/academic/:path*',
+    '/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
+    '/\\.[wW][eE][lL][lL]-[kK][nN][oO][wW][nN]/[sS][eE][cC][uU][rR][iI][tT][yY]\\.[tT][xX][tT]',
   ],
 };
