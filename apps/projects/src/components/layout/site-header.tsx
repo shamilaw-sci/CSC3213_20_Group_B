@@ -31,8 +31,8 @@ export function SiteHeader() {
           <Image
             src="/favicon/logo-symbol-icon.svg"
             alt=""
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="size-9 object-contain"
           />
           <span className="hidden sm:inline">SCS Projects</span>

@@ -36,6 +36,14 @@ shortcuts remain distinguishable. Documentation loading states reserve the same
 desktop content and table-of-contents grid columns as completed pages to avoid
 layout movement during navigation.
 
+Every application ships the same optimized, pure-vector university crest. The
+asset keeps the official paths, colors, proportions, and transparent background
+while removing editor IDs, style indirection, nested groups, and fractional
+transforms. Header render sizes use matching integer intrinsic dimensions. At
+16–24 px, the seal's lettering and ornamental detail are physically smaller
+than a device pixel on common displays; do not use `crispEdges`, recolor the
+crest, or remove official details to manufacture artificial sharpness.
+
 ## Review
 
 Run lint to enforce Tailwind canonical classes and class ordering. Test light
