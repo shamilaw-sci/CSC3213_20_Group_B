@@ -62,13 +62,20 @@ Schemas. Add it when another workspace gains test-only compiler requirements.
 
 CI caches Bun downloads and `.turbo` output. Cache keys include the lockfile
 hash and commit SHA; restore keys allow reuse without making stale output
-authoritative. Installation still uses the frozen lockfile.
+authoritative. Installation still uses the frozen lockfile. Turborepo bounds
+its local filesystem cache to 2 GB and evicts entries older than 7 days at the
+start of each `turbo run`. Eviction runs in the background and applies to the
+local cache only; remote-cache retention remains provider-owned.
 
 The root `turbo.json` owns shared build dependencies and artifact outputs.
 Each Next.js app extends that configuration from its local `turbo.json` and
 declares only its build-time environment inputs. Keep this inheritance intact:
 a root `package#build` override replaces the shared task instead of composing
 with it, which prevents `.next` artifacts from being restored on a cache hit.
+Production `.next` output remains cacheable, but `.next/cache` and `.next/dev`
+are excluded because they are framework regeneration caches rather than
+deployable build artifacts. This keeps route manifests available on cache hits
+without archiving stale development bundles or compiler caches.
 
 Superseded pull-request runs are cancelled. Merge-group and `main` runs are not
 cancelled because they prove a specific integration state. The workflow uses
