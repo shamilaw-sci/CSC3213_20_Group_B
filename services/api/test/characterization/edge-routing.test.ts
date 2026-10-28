@@ -5,7 +5,7 @@ import { invokeWorker } from 'test/helpers/invoke-worker';
 const ALLOWED_ORIGIN = 'https://portal.scs-pdn.space';
 const DISALLOWED_ORIGIN = 'https://untrusted.example';
 const ALLOWED_METHODS = 'PATCH, POST, GET, OPTIONS, PUT, DELETE';
-const ALLOWED_HEADERS = 'Content-Type, Authorization, X-Client-Id';
+const ALLOWED_HEADERS = 'Content-Type, Authorization, X-Client-Id, Prefer';
 
 describe('edge routing and CORS characterization', () => {
   test('redirects security.txt discovery before API guards', async () => {
