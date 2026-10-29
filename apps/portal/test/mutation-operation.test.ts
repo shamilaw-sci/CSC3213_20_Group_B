@@ -35,6 +35,22 @@ function terminalResponse(status: 'succeeded' | 'failed' | 'conflicted') {
 }
 
 describe('mutation operation polling', () => {
+  test('polls relative operation paths on the API origin', async () => {
+    let requestedUrl: RequestInfo | URL | undefined;
+
+    await waitForMutationOperation(accepted, 'pending', {
+      fetcher: async (input) => {
+        requestedUrl = input;
+        return terminalResponse('succeeded');
+      },
+      wait: async () => undefined,
+    });
+
+    expect(String(requestedUrl)).toBe(
+      'https://api.scs-pdn.space/api/operations/operation-123456789'
+    );
+  });
+
   for (const status of ['succeeded', 'failed', 'conflicted'] as const) {
     test(`stops when an operation is ${status}`, async () => {
       let requests = 0;

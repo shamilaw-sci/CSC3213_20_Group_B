@@ -1,6 +1,6 @@
 import type { MutationAccepted, OperationStatusResponse } from '@scs/schemas';
 
-import { apiHeaders, readApiError } from '@/lib/api';
+import { apiHeaders, apiUrl, readApiError } from '@/lib/api';
 
 export type TerminalOperationStatus = Exclude<
   OperationStatusResponse,
@@ -49,7 +49,7 @@ export async function waitForMutationOperation(
     await wait(delayMs, options.signal);
     options.signal?.throwIfAborted();
 
-    const response = await fetcher(accepted.statusUrl, {
+    const response = await fetcher(apiUrl(accepted.statusUrl), {
       credentials: 'include',
       cache: 'no-store',
       headers: apiHeaders(),

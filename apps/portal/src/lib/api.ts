@@ -1,6 +1,6 @@
 import publicEnvConfig from '@/config/public.env.config';
 
-function apiUrl(path: string) {
+export function apiUrl(path: string) {
   return new URL(path, publicEnvConfig.NEXT_PUBLIC_BASE_API_URL);
 }
 
