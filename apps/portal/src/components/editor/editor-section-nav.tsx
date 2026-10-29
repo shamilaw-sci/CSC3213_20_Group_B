@@ -17,7 +17,7 @@ export function EditorSectionNav({ sections }: EditorSectionNavProps) {
   };
 
   return (
-    <nav aria-label="Editor sections" className="sticky top-20">
+    <nav aria-label="Editor sections" className="lg:sticky lg:top-20">
       <p
         className="text-muted-foreground mb-2 text-xs font-semibold
           tracking-wide uppercase"
