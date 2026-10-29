@@ -25,6 +25,7 @@ node_modules/
 **/build/
 **/out/
 **/coverage/
+packages/schemas/package/
 
 # TypeScript generated files
 *.tsbuildinfo

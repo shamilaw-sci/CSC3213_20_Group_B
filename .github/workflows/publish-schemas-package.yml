@@ -1,0 +1,62 @@
+name: Publish Schemas Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/schemas/**'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-schemas-package
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify schemas package
+        run: |
+          bun --filter '@scs/schemas' lint
+          bun --filter '@scs/schemas' typecheck
+          bun --filter '@scs/schemas' typecheck:test
+          bun --filter '@scs/schemas' test
+          bun --filter '@scs/schemas' build
+
+      - name: Prepare private package
+        shell: bash
+        env:
+          SCHEMAS_VERSION: 0.${{ github.run_number }}.${{ github.run_attempt }}
+        run: |
+          bun packages/schemas/scripts/prepare-github-package.ts
+
+      - name: Publish private package
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/schemas-package.npmrc
+        shell: bash
+        run: |
+          printf '%s\n' \
+            '@csc3213-2026-group-b:registry=https://npm.pkg.github.com' \
+            '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' \
+            'always-auth=true' \
+            > "$NPM_CONFIG_USERCONFIG"
+          npm publish packages/schemas/package \
+            --registry https://npm.pkg.github.com
