@@ -62,10 +62,28 @@ submodule, so they cannot inspect or depend on unrelated monorepo workspaces.
 
 For local development, authenticate with a token that can read the package:
 
+PowerShell:
+
 ```powershell
 $env:NODE_AUTH_TOKEN = gh auth token
 bun install
 Remove-Item Env:NODE_AUTH_TOKEN
+```
+
+Bash, Zsh, or Git Bash:
+
+```bash
+export NODE_AUTH_TOKEN="$(gh auth token)"
+bun install
+unset NODE_AUTH_TOKEN
+```
+
+Windows Command Prompt (interactive):
+
+```batch
+for /f "delims=" %i in ('gh auth token') do set "NODE_AUTH_TOKEN=%i"
+bun install
+set "NODE_AUTH_TOKEN="
 ```
 
 If installation returns `401` or `404`, confirm that the token has
