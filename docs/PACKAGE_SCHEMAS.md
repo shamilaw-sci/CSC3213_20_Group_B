@@ -37,6 +37,36 @@ workspace development. See [Schemas](SCHEMAS.md) for deeper modeling rules and
 the [schema reference](SCHEMA_REFERENCE/INDEX.md) for the complete visual
 catalog.
 
+## Distribution outside the monorepo
+
+Monorepo workspaces import the private workspace package as `@scs/schemas`.
+External repositories consume the compiled private GitHub Package
+`@csc3213-2026-group-b/scs-schemas`; they do not need repository or submodule
+access to this monorepo. The retired
+`@csc3213-2026-group-b/academic-domain-schemas` package must not be used.
+
+Every verified push to `main` that changes `packages/schemas/**` publishes a
+new immutable version. The version is generated as
+`0.<workflow run number>.<run attempt>`, and the artifact contains only the
+prepared package metadata, compiled JavaScript, declarations, and license.
+Consumers should pin an exact version and upgrade deliberately after a
+successful publish rather than use a moving range.
+
+The consuming repository must be granted **Manage Actions access** on the
+package. Its workflow can then install with its short-lived `GITHUB_TOKEN` and
+`packages: read`; no personal access token is stored in Actions. For a local
+install, expose a GitHub token with `read:packages` only for the install:
+
+```powershell
+$env:NODE_AUTH_TOKEN = gh auth token
+bun install
+Remove-Item Env:NODE_AUTH_TOKEN
+```
+
+The publishing and consumer security model, release checks, and troubleshooting
+steps are maintained in the
+[Schemas package internals](PACKAGES/SCHEMAS/INDEX.md) guide.
+
 The [Schemas package internals](PACKAGES/SCHEMAS/INDEX.md) guide adds maintainer
 detail on [ownership and exports](PACKAGES/SCHEMAS/OWNERSHIP_AND_EXPORTS.md) and
 [contract evolution and verification](PACKAGES/SCHEMAS/EVOLUTION_AND_VERIFICATION.md).
