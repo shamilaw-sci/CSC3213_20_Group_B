@@ -14,22 +14,59 @@ export interface ApiErrorBody {
   error?: string;
   code?: string;
   message?: string;
+  field?: string;
+  reason?: string;
+}
+
+const MAX_ERROR_MESSAGE_LENGTH = 500;
+
+function boundedString(value: unknown, maxLength: number): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim();
+  return normalized && normalized.length <= maxLength ? normalized : undefined;
+}
+
+function fallbackApiError(response: Response): ApiErrorBody {
+  const message = `Request failed with status ${response.status}`;
+  return { error: message, message };
 }
 
 export async function readApiError(response: Response): Promise<ApiErrorBody> {
-  const contentType = response.headers.get('content-type') ?? '';
+  const contentType = (
+    response.headers.get('content-type') ?? ''
+  ).toLowerCase();
 
   if (contentType.includes('application/json')) {
-    const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+    const body = (await response.json().catch(() => null)) as Record<
+      string,
+      unknown
+    > | null;
+    if (!body || Array.isArray(body)) return fallbackApiError(response);
+
+    const error = boundedString(body.error, MAX_ERROR_MESSAGE_LENGTH);
+    const message =
+      boundedString(body.message, MAX_ERROR_MESSAGE_LENGTH) ?? error;
+    if (!message) return fallbackApiError(response);
+    const code = boundedString(body.code, 128);
+    const field = boundedString(body.field, 200);
+    const reason = boundedString(body.reason, MAX_ERROR_MESSAGE_LENGTH);
+
     return {
-      ...body,
-      message: body.message ?? body.error ?? response.statusText,
+      ...(error ? { error } : {}),
+      ...(code ? { code } : {}),
+      message,
+      ...(field ? { field } : {}),
+      ...(reason ? { reason } : {}),
     };
   }
 
-  const text = await response.text().catch(() => '');
-  const message = text.trim() || response.statusText || 'Request failed';
-  return { error: message, message };
+  if (contentType.startsWith('text/plain')) {
+    const text = await response.text().catch(() => '');
+    const message = boundedString(text, MAX_ERROR_MESSAGE_LENGTH);
+    if (message) return { error: message, message };
+  }
+
+  return fallbackApiError(response);
 }
 
 export function meApiUrl() {

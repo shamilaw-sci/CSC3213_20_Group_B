@@ -22,7 +22,7 @@ import ProfilePictureEditor, {
   profilePictureDraftPayload,
   validateProfilePictureDraft,
 } from '@/components/profiles/profile-picture-editor';
-import { apiHeaders, meApiUrl } from '@/lib/api';
+import { apiHeaders, meApiUrl, readApiError } from '@/lib/api';
 import type { ProfilePictureMode } from '@/types/user';
 
 interface ProfileEditPageProps {
@@ -34,21 +34,6 @@ interface ProfileEditPageProps {
   googleOAuth?: boolean;
   githubOAuth?: boolean;
   githubUserID?: number | null;
-}
-
-async function getErrorMessage(response: Response) {
-  const contentType = response.headers.get('content-type') ?? '';
-
-  if (contentType.includes('application/json')) {
-    const body = (await response.json().catch(() => ({}))) as {
-      error?: string;
-      message?: string;
-    };
-    return body.message ?? body.error ?? response.statusText;
-  }
-
-  const text = await response.text().catch(() => '');
-  return text.trim() || response.statusText || 'Failed to update profile';
 }
 
 export default function ProfileEditPage({
@@ -102,7 +87,7 @@ export default function ProfileEditPage({
       }
 
       if (!res.ok) {
-        toast.error(await getErrorMessage(res));
+        toast.error((await readApiError(res)).message);
         return;
       }
 

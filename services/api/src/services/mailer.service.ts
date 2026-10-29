@@ -3,6 +3,7 @@ import type {
   MailerSendResponse,
   PortalSignInOtpRequest,
 } from '@scs/schemas';
+import { MailerSendResponseSchema } from '@scs/schemas';
 
 async function sendEmail(
   payload: MailerSendRequest,
@@ -18,12 +19,21 @@ async function sendEmail(
     body: JSON.stringify(payload),
   });
 
+  const result = MailerSendResponseSchema.safeParse(
+    await res.json().catch(() => null)
+  );
+
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Mailer API error ${res.status}: ${body}`);
+    const detail =
+      result.success && !result.data.ok ? `: ${result.data.error}` : '';
+    throw new Error(`Mailer API error ${res.status}${detail}`);
   }
 
-  return res.json();
+  if (!result.success || !result.data.ok) {
+    throw new Error('Mailer API returned an invalid response');
+  }
+
+  return result.data;
 }
 
 export async function sendPortalSignInOtpEmail(
