@@ -28,7 +28,21 @@ export const PostgraduateProgrammeSchema = z.enum([
   'PHD_UPGRADE_FROM_MPHIL',
 ]);
 export const SlqfLevelSchema = z.enum(['L7', 'L8', 'L9', 'L10', 'L11', 'L12']);
-export const StudentStreamSchema = z.enum(['cs', 'ds', 'stat', 'sor']);
+export const StudentStreamSchema = z.enum([
+  'biomedical-science',
+  'botany',
+  'computer-science',
+  'data-science',
+  'geology',
+  'mathematics',
+  'microbiology',
+  'molecular-biology',
+  'physics',
+  'statistics',
+  'zoology',
+  'applied-science',
+  'statistics-and-operations-research',
+]);
 
 export const StudentPlacementSchema = z
   .object({

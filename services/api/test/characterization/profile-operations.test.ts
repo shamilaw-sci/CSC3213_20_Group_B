@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+
+import { submitPublicProfileOperationRequestSchema } from '@scs/schemas';
 
 import { APP_ROLE, setUserPermission } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
@@ -10,6 +12,10 @@ import { invokeWorker } from 'test/helpers/invoke-worker';
 const EMAIL = 'academic@pdn.ac.lk';
 const OPERATION_ID = 'op_12345678901234567890';
 type ServiceRequest = Parameters<NonNullable<Env['GITHUB_APP']>['fetch']>[0];
+
+afterEach(() => {
+  (globalThis.fetch as unknown as { mockRestore?: () => void }).mockRestore?.();
+});
 
 describe('profile operation compatibility', () => {
   test('opts the Portal into async profile submission and proxies status', async () => {
@@ -120,5 +126,121 @@ describe('profile operation compatibility', () => {
       outcome: { revision: 'new-user-blob' },
     });
     expect(upstream[1]!.headers.get('X-Actor-Subject-Id')).toMatch(/^usr_/);
+  });
+
+  test('submits the canonical honours directory path accepted by the GitHub App schema', async () => {
+    const studentEmail = 's21513@sci.pdn.ac.lk';
+    const upstreamBodies: unknown[] = [];
+    const publicDataFetch = async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/student-placement.json')) {
+        return Response.json([
+          { batch: 's21', studentTrack: 'HONOURS', level: '3000' },
+        ]);
+      }
+      if (
+        url.includes('/alumni.json') ||
+        url.includes('/postgraduate-programmes.json')
+      ) {
+        return Response.json([]);
+      }
+      if (url.includes('/student-streams.json')) {
+        return Response.json([
+          {
+            stream: 'computer-science',
+            label: 'Computer Science',
+            directory: 'computer-science',
+            publicDirectory: true,
+          },
+        ]);
+      }
+      return new Response(null, { status: 404 });
+    };
+    spyOn(globalThis, 'fetch').mockImplementation(
+      publicDataFetch as typeof fetch
+    );
+    const env = createTestEnv({
+      GITHUB_APP: {
+        fetch: async (request: ServiceRequest) => {
+          const received =
+            request instanceof Request ? request : new Request(request);
+          const body = await received.json();
+          upstreamBodies.push(body);
+          const parsed =
+            submitPublicProfileOperationRequestSchema.safeParse(body);
+          if (!parsed.success) {
+            const issue = parsed.error.issues[0];
+            return Response.json(
+              {
+                success: false,
+                message: 'Invalid request',
+                field: issue?.path.join('.'),
+                reason: issue?.message,
+              },
+              { status: 400 }
+            );
+          }
+          return Response.json(
+            {
+              version: 1,
+              operationId: OPERATION_ID,
+              status: 'queued',
+              statusUrl: `/api/operations/${OPERATION_ID}`,
+              retryAfterMs: 500,
+            },
+            { status: 202 }
+          );
+        },
+      } as NonNullable<Env['GITHUB_APP']>,
+    });
+    await setUserPermission(
+      studentEmail,
+      { role: APP_ROLE.STUDENT, createdAt: 1 },
+      env
+    );
+    const sessionCookie = await createTestSessionCookie(env, studentEmail);
+
+    const response = await invokeWorker(
+      '/api/people/v2/me/pr',
+      {
+        method: 'PUT',
+        headers: {
+          Origin: 'https://portal.scs-pdn.space',
+          'X-Client-Id': 'portal',
+          Cookie: sessionCookie,
+          'Content-Type': 'application/json',
+          Prefer: 'respond-async',
+        },
+        body: JSON.stringify({
+          profileKind: 'student',
+          profile: {
+            title: 'Mr',
+            fullName: 'Student User',
+            email: studentEmail,
+            registrationNo: 'S21513',
+            studentType: 'UNDERGRADUATE',
+            studentTrack: 'HONOURS',
+            level: '3000',
+            honoursProgramme: 'COMPUTER_SCIENCE',
+            status: 'CURRENT',
+          },
+          control: {
+            idempotencyKey: 'request-key-00000002',
+            expectedRevision: 'old-user-blob',
+          },
+        }),
+      },
+      env
+    );
+
+    expect(response.status).toBe(202);
+    expect(upstreamBodies[0]).toMatchObject({
+      request: {
+        aggregatePaths: [
+          'public/people/v2/students/s21.json',
+          'public/people/v2/special/computer-science/s21.json',
+        ],
+      },
+    });
   });
 });

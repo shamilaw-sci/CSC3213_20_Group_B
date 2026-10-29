@@ -10,7 +10,10 @@ import { CourseOfferingSchema } from '#schemas/courses/course-offering.schema';
 import { AcademicSupportStaffSchema } from '#schemas/people/staff/academic-support/academic-support-staff.schema';
 import { AcademicTeachingStaffSchema } from '#schemas/people/staff/academic-teaching/academic-teaching-staff.schema';
 import { NonAcademicStaffSchema } from '#schemas/people/staff/non-academic/non-academic-staff.schema';
-import { StudentSchema } from '#schemas/people/students/student.schema';
+import {
+  StudentSchema,
+  StudentStreamSchema,
+} from '#schemas/people/students/student.schema';
 import { ProjectSchema } from '#schemas/projects/project.schema';
 
 const usernameSchema = z
@@ -62,21 +65,6 @@ export const getPublicAcademicRecordQuerySchema = z.object({
   id: academicRegistryIdSchema,
 });
 
-const specialStreams = [
-  'biomedical-science',
-  'botany',
-  'computer-science',
-  'data-science',
-  'geology',
-  'mathematics',
-  'microbiology',
-  'molecular-biology',
-  'physics',
-  'statistics',
-  'zoology',
-  'applied-science',
-  'statistics-and-operations-research',
-] as const;
 const PublicProfileStudentSchema = StudentSchema.passthrough();
 const studentTrackSchema = z.enum(['GENERAL', 'HONOURS']);
 const studentLevelSchema = z.enum(['1000', '2000', '3000', '4000']);
@@ -116,7 +104,7 @@ const postgraduateProgrammeDefinitionSchema = z.object({
   slqfLevel: slqfLevelSchema,
 });
 const studentStreamDefinitionSchema = z.object({
-  stream: z.enum(specialStreams),
+  stream: StudentStreamSchema,
   label: z.string().trim().min(1),
   directory: z.string().trim().min(1).optional(),
   publicDirectory: z.boolean(),

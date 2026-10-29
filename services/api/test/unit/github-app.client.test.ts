@@ -71,6 +71,41 @@ describe('GitHub App client', () => {
     expect(fallback).not.toHaveBeenCalled();
   });
 
+  test('preserves safe validation details from the GitHub App', async () => {
+    const env = createTestEnv({
+      GITHUB_APP: {
+        fetch: () =>
+          Promise.resolve(
+            Response.json(
+              {
+                success: false,
+                message: 'Invalid request',
+                field: 'request.aggregatePaths',
+                reason: 'Aggregate paths must match profile kind and identity',
+              },
+              { status: 400 }
+            )
+          ),
+      } as unknown as Fetcher,
+    });
+
+    const result = await callGithubApp(
+      env,
+      'https://portal.scs-pdn.space',
+      '/people/public-profile/operations'
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(await result.response.json()).toEqual({
+        error: 'Invalid request',
+        message: 'Aggregate paths must match profile kind and identity',
+        field: 'request.aggregatePaths',
+        reason: 'Aggregate paths must match profile kind and identity',
+      });
+    }
+  });
+
   test('maps a timed-out request to a stable gateway error', async () => {
     const timedOutFetch = async (
       _input: RequestInfo | URL,

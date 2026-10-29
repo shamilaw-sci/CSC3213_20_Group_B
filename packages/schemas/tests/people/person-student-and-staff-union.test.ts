@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
+import { HonoursProgrammeStudentStreamMap } from '#schemas/academics/academic-organization.schema';
 import { PersonSchema } from '#schemas/people/person.schema';
 import { StaffSchema } from '#schemas/people/staff/staff.schema';
 import {
@@ -8,6 +9,7 @@ import {
   StudentPlacementListSchema,
   StudentSchema,
   StudentStreamDefinitionListSchema,
+  StudentStreamSchema,
 } from '#schemas/people/students/student.schema';
 
 describe('PersonSchema', () => {
@@ -322,18 +324,33 @@ describe('StudentSchema', () => {
     expect(() =>
       StudentStreamDefinitionListSchema.parse([
         {
-          stream: 'cs',
+          stream: 'computer-science',
           label: 'Computer Science',
-          directory: 'cs',
+          directory: 'computer-science',
           publicDirectory: true,
         },
         {
-          stream: 'sor',
+          stream: 'statistics-and-operations-research',
           label: 'Statistics and Operations Research',
           publicDirectory: false,
         },
       ])
     ).not.toThrow();
+    expect(() =>
+      StudentStreamDefinitionListSchema.parse([
+        {
+          stream: 'cs',
+          label: 'Legacy abbreviation',
+          publicDirectory: true,
+        },
+      ])
+    ).toThrow();
+  });
+
+  it('keeps honours programme directory mappings inside the stream schema', () => {
+    for (const stream of Object.values(HonoursProgrammeStudentStreamMap)) {
+      if (stream) expect(StudentStreamSchema.parse(stream)).toBe(stream);
+    }
   });
 
   it('rejects an invalid registration number', () => {

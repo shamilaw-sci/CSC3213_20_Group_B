@@ -54,7 +54,7 @@ flowchart TD
 | `StudentStatusSchema`                       | Current-student or alumni status.                                            |
 | `PostgraduateProgrammeSchema`               | Supported postgraduate qualification route.                                  |
 | `SlqfLevelSchema`                           | Supported Sri Lanka Qualifications Framework level.                          |
-| `StudentStreamSchema`                       | Public directory stream code.                                                |
+| `StudentStreamSchema`                       | Canonical public directory slug, such as `computer-science`.                 |
 | `StudentPlacementSchema`                    | Batch, track, and level placement rule.                                      |
 | `StudentPlacementListSchema`                | Placement rule collection.                                                   |
 | `AlumniBatchSchema`                         | Alumni batch and its included tracks.                                        |
