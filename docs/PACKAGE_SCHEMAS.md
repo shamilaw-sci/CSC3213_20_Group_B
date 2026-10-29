@@ -57,25 +57,19 @@ package. Its workflow can then install with its short-lived `GITHUB_TOKEN` and
 `packages: read`; no personal access token is stored in Actions. For a local
 install, expose a GitHub token with `read:packages` only for the install:
 
-PowerShell:
-
-```powershell
+```powershell tab="PowerShell" tab-group="terminal"
 $env:NODE_AUTH_TOKEN = gh auth token
 bun install
 Remove-Item Env:NODE_AUTH_TOKEN
 ```
 
-Bash, Zsh, or Git Bash:
-
-```bash
+```bash tab="Bash" tab-group="terminal"
 export NODE_AUTH_TOKEN="$(gh auth token)"
 bun install
 unset NODE_AUTH_TOKEN
 ```
 
-Windows Command Prompt (interactive):
-
-```batch
+```cmd tab="CMD" tab-group="terminal"
 for /f "delims=" %i in ('gh auth token') do set "NODE_AUTH_TOKEN=%i"
 bun install
 set "NODE_AUTH_TOKEN="

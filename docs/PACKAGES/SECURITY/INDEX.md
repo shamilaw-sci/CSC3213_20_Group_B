@@ -28,7 +28,7 @@ portable platform validation boundary, not exhaustive RFC 5646 validation.
 
 ```mermaid
 flowchart LR
-  Request[GET or HEAD security.txt] --> Matcher[@scs/security matcher]
+  Request[GET or HEAD security.txt] --> Matcher["@scs/security" matcher]
   Matcher -->|Portal exact canonical path| Document[200 text/plain document]
   Matcher -->|Any other SCS PDN origin or case variant| Redirect[308 Portal canonical URL]
   Matcher -->|Other path or method| Existing[Existing application routing]

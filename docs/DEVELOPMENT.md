@@ -19,7 +19,7 @@ pnpm, or Yarn inside a workspace.
 
 ## First Setup
 
-```powershell title="Monorepo root" tab="PowerShell" tab-group="terminal"
+```powershell tab="PowerShell" tab-group="terminal"
 git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
 Set-Location scs-pdn-monorepo
 bun --version
@@ -27,7 +27,7 @@ bun install --frozen-lockfile
 bun run docs:check
 ```
 
-```bash title="Monorepo root" tab="Bash"
+```bash tab="Bash" tab-group="terminal"
 git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
 cd scs-pdn-monorepo
 bun --version
@@ -35,7 +35,7 @@ bun install --frozen-lockfile
 bun run docs:check
 ```
 
-```cmd title="Monorepo root" tab="Command Prompt"
+```cmd tab="Command Prompt" tab-group="terminal"
 git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
 cd /d scs-pdn-monorepo
 bun --version
