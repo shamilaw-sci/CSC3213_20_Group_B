@@ -38,22 +38,22 @@ const destinations = [
 export function DocsHome() {
   return (
     <div
-      className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-16
-        sm:py-24"
+      className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center
+        px-6 py-8 sm:py-12"
     >
       <div className="max-w-3xl">
         <p
           className="text-fd-muted-foreground text-sm font-medium tracking-wide
             uppercase"
         >
-          SCS PDN engineering
+          DEVELOPER HANDBOOK
         </p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-          One handbook for the whole system.
+          SCS PDN Cookbook
         </h1>
         <p className="text-fd-muted-foreground mt-6 text-lg/8">
-          Architecture, contracts, development, deployment, and maintenance for
-          every application, service, and shared package in the monorepo.
+          Your guide to building, understanding, deploying, and maintaining the
+          SCS PDN platform.
         </p>
       </div>
 
