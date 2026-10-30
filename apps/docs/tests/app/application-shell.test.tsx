@@ -15,7 +15,7 @@ describe('documentation home shell', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: 'One handbook for the whole system.',
+        name: 'SCS PDN Cookbook',
       })
     ).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
