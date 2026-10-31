@@ -16,6 +16,9 @@ node_modules/
 **/.cache/
 **/.wrangler/
 
+# generated migration reports
+.migration/
+
 # locally restored agent skills
 .agents/
 .superpowers/
