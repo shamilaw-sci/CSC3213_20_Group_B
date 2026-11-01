@@ -17,4 +17,5 @@ export interface Env {
   GITHUB_APP?: Fetcher;
 
   DATA_PUBLIC_BASE_URL: string;
+  WEB_PROXY_INTERNAL_SECRET: string;
 }

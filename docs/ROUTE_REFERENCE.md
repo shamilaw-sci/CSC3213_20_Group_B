@@ -10,13 +10,13 @@ This page is an index, not a replacement for route source or
 
 ## Public applications
 
-| App      | Important paths                                                                                                                                                                                                 |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web      | `/`, `/about-us`, `/resources`, `/undergraduate-courses`, `/postgraduate-courses`, `/research`, `/services`, `/societies`, `/contact`, feed routes, and external redirects for People, Projects, and e-learning |
-| People   | `/staff/*`, `/students/{stream}/{batch}`, `/people/{identity}`                                                                                                                                                  |
-| Projects | `/browse/{segments}`, `/categories/{category}/{segments}`, `/topics/{topic}/{segments}`, `/types/{type}/{segments}`, `/search/{query}/{segments}`, `/projects/{slug}`, and short redirect `/p/{slug}`           |
-| Portal   | `/login`, `/signup`, `/dashboard`, `/account/*`, `/user/*`, `/academic/courses/*`, and `/admin/*`                                                                                                               |
-| Docs     | `/`, `/docs/{page}`, `/api/search`, `/llms.txt`, `/llms-full.txt`, per-page Markdown, `/sitemap.xml`, and `/robots.txt`                                                                                         |
+| App      | Important paths                                                                                                                                                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web      | `/`, `/about-us`, `/resources`, `/undergraduate-courses`, `/postgraduate-courses`, `/research`, `/services`, `/societies`, `/contact`, feed routes, `/~{username}/{path}` temporary redirects, and external redirects for People, Projects, and e-learning |
+| People   | `/staff/*`, `/students/{stream}/{batch}`, `/people/{identity}`                                                                                                                                                                                             |
+| Projects | `/browse/{segments}`, `/categories/{category}/{segments}`, `/topics/{topic}/{segments}`, `/types/{type}/{segments}`, `/search/{query}/{segments}`, `/projects/{slug}`, and short redirect `/p/{slug}`                                                      |
+| Portal   | `/login`, `/signup`, `/dashboard`, `/account/*`, `/user/*`, `/academic/courses/*`, and `/admin/*`                                                                                                                                                          |
+| Docs     | `/`, `/docs/{page}`, `/api/search`, `/llms.txt`, `/llms-full.txt`, per-page Markdown, `/sitemap.xml`, and `/robots.txt`                                                                                                                                    |
 
 The Portal serves the authoritative document at
 `https://portal.scs-pdn.space/.well-known/security.txt`. Every public app and
@@ -27,6 +27,7 @@ their existing routing behavior.
 ## Service route families
 
 The API exposes Better Auth routes plus `/api/me`, `/api/me/proxy`,
+the authenticated Web resolver `/api/internal/proxies/{username}`,
 `/api/people/v2/*`, `/api/projects/v2/*`, `/api/academic/v2/*`,
 `/api/admin/*`, and `/api/operations/{id}`. The GitHub App exposes internal
 operation, profile, project, course, and course-offering routes. The mailer

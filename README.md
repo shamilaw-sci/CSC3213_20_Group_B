@@ -30,6 +30,7 @@ flowchart LR
   Maintainer[Maintainer or agent] --> Docs[Repository handbook]
   Member[Authenticated browser] --> Portal[Management portal]
   Portal --> API[API Worker]
+  Web -->|personal-site lookup| API
   API --> State[(API D1: auth, proxy, and permission state)]
   API --> Mailer[Mailer]
   API --> Automation[GitHub App Worker]

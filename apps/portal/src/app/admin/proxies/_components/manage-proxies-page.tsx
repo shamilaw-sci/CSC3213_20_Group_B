@@ -150,7 +150,7 @@ export default function ManageProxiesPage({
         return;
       }
       if (!res.ok) {
-        await toastApiError(res, 'Failed to update proxy settings');
+        await toastApiError(res, 'Failed to update redirect settings');
         return;
       }
       const result = (await res.json()) as { proxy: AdminProxyEntry };
@@ -159,10 +159,10 @@ export default function ManageProxiesPage({
           proxy.email === editing.email ? result.proxy : proxy
         )
       );
-      toast.success('Proxy settings updated');
+      toast.success('Redirect settings updated');
       setEditing(null);
     } catch {
-      toast.error('Failed to update proxy settings');
+      toast.error('Failed to update redirect settings');
     } finally {
       setSaving(false);
     }
@@ -198,8 +198,8 @@ export default function ManageProxiesPage({
       <BackButton fallbackHref="/admin" label="Back to Admin" preferFallback />
 
       <PageHeader
-        title="Manage Proxies"
-        description={`View and manage all users' proxy configurations. Total: ${total}`}
+        title="Manage Personal-Site Redirects"
+        description={`View and manage users' redirect destinations. Total: ${total}`}
         icon={<Globe className="text-muted-foreground size-6" />}
       />
 
@@ -229,8 +229,8 @@ export default function ManageProxiesPage({
               <AlertCircle className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {search.trim()
-                  ? 'No proxy configurations match your search.'
-                  : 'No proxy configurations found.'}
+                  ? 'No redirect settings match your search.'
+                  : 'No redirect settings found.'}
               </p>
             </CardContent>
           </Card>
@@ -282,7 +282,7 @@ export default function ManageProxiesPage({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <Label className="text-sm">Enable Proxy</Label>
+                        <Label className="text-sm">Enable Redirect</Label>
                       </div>
                       <Switch
                         checked={editing.active}
@@ -299,7 +299,7 @@ export default function ManageProxiesPage({
                         htmlFor={`proxyUrl-${entry.email}`}
                         className="text-sm"
                       >
-                        Proxy URL
+                        Destination URL
                       </Label>
                       <Input
                         id={`proxyUrl-${entry.email}`}

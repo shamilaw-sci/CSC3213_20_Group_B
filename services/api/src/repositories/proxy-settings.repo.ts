@@ -37,6 +37,10 @@ export interface ProxySettingsPage {
   total: number;
 }
 
+export interface ActiveProxyResolution {
+  url: string;
+}
+
 function emailToUsername(email: string): string {
   return email.split('@')[0]?.toLowerCase() ?? email.toLowerCase();
 }
@@ -113,6 +117,18 @@ export async function getProxySettings(
   }
 
   return toProxySettings(row);
+}
+
+export async function getActiveProxyByUsername(
+  env: Env,
+  username: string
+): Promise<ActiveProxyResolution | null> {
+  const result = await env.AUTH_DB.prepare(
+    'SELECT url FROM proxySettings WHERE username = ? AND active = 1 ORDER BY email LIMIT 2'
+  )
+    .bind(username)
+    .all<ActiveProxyResolution>();
+  return result.results.length === 1 ? result.results[0] : null;
 }
 
 /**

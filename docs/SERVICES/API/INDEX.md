@@ -19,7 +19,7 @@ public-data repositories or send SMTP messages itself.
 | Edge policy      | `src/middleware` and `src/http` | CORS, session resolution, stable errors, and unexpected-error containment                         |
 | Routing          | `src/routes/index.ts`           | method and exact/prefix path dispatch                                                             |
 | Use cases        | `src/services`                  | authorization, validation, public-data interpretation, and downstream orchestration               |
-| D1 access        | `src/repositories`              | permissions, auth-account lookup, and proxy settings                                              |
+| D1 access        | `src/repositories`              | permissions, auth-account lookup, and personal-site redirect settings                             |
 | Internal clients | `src/clients`                   | bounded calls to GitHub App; mail delivery is wrapped in `src/services/mailer.service.ts`         |
 | Contracts        | `@scs/schemas`                  | shared request, response, operation, person, project, and academic schemas                        |
 | D1 schema        | `migrations`                    | append-only Better Auth and application-state migrations                                          |

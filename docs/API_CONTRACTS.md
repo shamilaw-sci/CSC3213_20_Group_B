@@ -206,19 +206,24 @@ The unbounded project collection route is intentionally unavailable. Course
 and offering arrays remain because Portal editors currently use them as
 reference data; new collection UIs should use page routes.
 
-## Administration and Proxy Settings
+## Administration and Personal-Site Redirect Settings
 
-| Method                   | Route                               | Purpose                                        |
-| ------------------------ | ----------------------------------- | ---------------------------------------------- |
-| `GET`                    | `/api/admin/users/page`             | list a bounded page of users                   |
-| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           | manage one permission record                   |
-| `GET`                    | `/api/admin/proxies/page`           | list proxy settings from D1                    |
-| `POST`                   | `/api/admin/proxies/reset-attempts` | reset one user's edit attempts                 |
-| `GET`, `POST`            | `/api/me/proxy`                     | read or edit the current user's proxy settings |
+| Method                   | Route                               | Purpose                                      |
+| ------------------------ | ----------------------------------- | -------------------------------------------- |
+| `GET`                    | `/api/admin/users/page`             | list a bounded page of users                 |
+| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`           | manage one permission record                 |
+| `GET`                    | `/api/admin/proxies/page`           | list personal-site redirect settings from D1 |
+| `POST`                   | `/api/admin/proxies/reset-attempts` | reset one user's edit attempts               |
+| `GET`, `POST`            | `/api/me/proxy`                     | read or edit the current user's redirect     |
+| `GET`                    | `/api/internal/proxies/:username`   | resolve one active mapping for Web           |
 
 These routes require a non-blacklisted super-admin except `/api/me/proxy`.
-Users cannot reset their own attempt counter. Proxy edits use one atomic D1
+Users cannot reset their own attempt counter. Redirect edits use one atomic D1
 statement to enforce the attempt limit.
+
+The internal resolver requires `X-Internal-Secret`, returns only a validated
+HTTPS destination URL, and makes missing and inactive usernames indistinguishable.
+It is a server-to-server route and is not a browser API.
 
 ## Internal GitHub App API
 

@@ -5,13 +5,13 @@
     "build": {
       "env": [
         "BASE_DOMAIN",
-        "CF_SECRET",
         "MOODLE_URL",
         "NEXT_PUBLIC_ELEARNING_SITE_URL",
         "NEXT_PUBLIC_PEOPLE_SITE_URL",
         "NEXT_PUBLIC_PROJECTS_SITE_URL",
         "NEXT_PUBLIC_SITE_URL",
-        "WORKER_URL"
+        "PROXY_API_URL",
+        "WEB_PROXY_INTERNAL_SECRET"
       ]
     }
   }

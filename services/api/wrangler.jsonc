@@ -27,7 +27,8 @@
       "GOOGLE_CLIENT_SECRET",
       "GITHUB_CLIENT_SECRET",
       "MAILER_API_KEY",
-      "GITHUB_APP_INTERNAL_SECRET"
+      "GITHUB_APP_INTERNAL_SECRET",
+      "WEB_PROXY_INTERNAL_SECRET"
     ]
   },
   "d1_databases": [

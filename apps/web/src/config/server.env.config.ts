@@ -5,8 +5,11 @@ const serverEnvConfig = createEnv({
   server: {
     BASE_DOMAIN: z.string().min(1).default('scs.pdn.ac.lk'),
     MOODLE_URL: z.url().default('https://scilms.pdn.ac.lk'),
-    WORKER_URL: z.url().default('https://scs-proxy-worker.scs-pdn.workers.dev'),
-    CF_SECRET: z.string().min(1).default('default_secret_value'),
+    PROXY_API_URL: z.url().default('https://api.scs-pdn.space'),
+    WEB_PROXY_INTERNAL_SECRET: z
+      .string()
+      .min(1)
+      .default('development-only-proxy-secret'),
   },
   experimental__runtimeEnv: process.env,
   emptyStringAsUndefined: true,

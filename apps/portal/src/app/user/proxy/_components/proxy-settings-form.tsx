@@ -99,7 +99,7 @@ export default function ProxySettingsPage({
         const body = await readApiError(res);
         setActive(savedActive);
         setProxyUrl(savedProxyUrl);
-        toast.error(body.message ?? 'Failed to update proxy settings');
+        toast.error(body.message ?? 'Failed to update redirect settings');
         return;
       }
       const result = (await res.json()) as {
@@ -109,13 +109,13 @@ export default function ProxySettingsPage({
       setProxyUrl(parsedProxyUrl.data);
       setSavedProxyUrl(parsedProxyUrl.data);
       setAttemptsRemaining(result.proxy.availableAttempts);
-      toast.success('Proxy settings updated successfully');
+      toast.success('Redirect settings updated successfully');
       setIsEditing(false);
       router.refresh();
     } catch {
       setActive(savedActive);
       setProxyUrl(savedProxyUrl);
-      toast.error('Failed to update proxy settings');
+      toast.error('Failed to update redirect settings');
     } finally {
       setSaving(false);
     }
@@ -145,8 +145,8 @@ export default function ProxySettingsPage({
       />
 
       <PageHeader
-        title="Proxy Settings"
-        description="Configure your proxy connection and track today's edit allowance."
+        title="Personal Site Redirect"
+        description="Choose where your /~username address redirects and track today's edit allowance."
       />
 
       <div
@@ -199,9 +199,9 @@ export default function ProxySettingsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Connection</CardTitle>
+          <CardTitle>Redirect destination</CardTitle>
           <CardDescription>
-            Configure your proxy connection settings.
+            Configure the HTTPS destination for your personal site.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -212,9 +212,9 @@ export default function ProxySettingsPage({
                   sm:justify-between"
               >
                 <div className="space-y-1">
-                  <Label className="text-base">Enable Proxy</Label>
+                  <Label className="text-base">Enable Redirect</Label>
                   <p className="text-muted-foreground text-sm">
-                    Toggle your proxy connection on or off
+                    Toggle your personal-site redirect on or off
                   </p>
                 </div>
                 <Switch
@@ -228,13 +228,13 @@ export default function ProxySettingsPage({
 
               <div className="space-y-2">
                 <Label htmlFor="proxyUrl" className="text-base">
-                  Proxy URL
+                  Destination URL
                 </Label>
                 <p
                   id="proxyUrl-description"
                   className="text-muted-foreground text-sm"
                 >
-                  Enter the URL of your proxy server
+                  Enter the HTTPS URL visitors should be redirected to
                 </p>
                 <Input
                   id="proxyUrl"
@@ -268,11 +268,11 @@ export default function ProxySettingsPage({
                   sm:justify-between"
               >
                 <div className="space-y-1">
-                  <Label className="text-base">Enable Proxy</Label>
+                  <Label className="text-base">Enable Redirect</Label>
                   <p className="text-muted-foreground text-sm">
                     {savedActive
-                      ? 'Proxy connection is enabled'
-                      : 'Proxy connection is disabled'}
+                      ? 'Personal-site redirect is enabled'
+                      : 'Personal-site redirect is disabled'}
                   </p>
                 </div>
                 <div className="text-sm font-medium">
@@ -283,9 +283,9 @@ export default function ProxySettingsPage({
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-base">Proxy URL</Label>
+                <Label className="text-base">Destination URL</Label>
                 <p className="text-muted-foreground text-sm break-all">
-                  {savedProxyUrl || 'No proxy URL configured'}
+                  {savedProxyUrl || 'No destination URL configured'}
                 </p>
               </div>
 
@@ -295,7 +295,7 @@ export default function ProxySettingsPage({
                 className="w-full sm:w-auto"
               >
                 <Edit className="mr-2 size-4" />
-                Edit Proxy Settings
+                Edit Redirect Settings
               </Button>
             </div>
           )}

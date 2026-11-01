@@ -17,7 +17,8 @@ GitHub App; `src/auth` configures Better Auth; middleware handles CORS and
 security boundaries. Request and response contracts come directly from
 `@scs/schemas`.
 
-Route families include `/api/me`, proxy and admin-user management,
+Route families include `/api/me`, proxy and admin-user management, the
+server-only `/api/internal/proxies/:username` Web resolver,
 `/api/people/v2`, `/api/projects/v2`, `/api/academic/v2`, and durable operation
 status. Better Auth routes are mounted by the Worker entry point. List routes
 are bounded and page-based.

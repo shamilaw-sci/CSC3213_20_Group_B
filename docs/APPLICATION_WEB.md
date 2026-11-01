@@ -14,7 +14,7 @@ implementation in depth:
 
 - [Content and navigation](APPLICATIONS/WEB/CONTENT_AND_NAVIGATION.md) covers
   MDX ownership, cross-product links, metadata, and discovery files;
-- [Routing and proxying](APPLICATIONS/WEB/ROUTING_AND_PROXYING.md) covers
+- [Routing and redirects](APPLICATIONS/WEB/ROUTING_AND_PROXYING.md) covers
   redirects, `.php` normalization, `~username` resolution, and trust boundaries.
 
 ## Structure and routes

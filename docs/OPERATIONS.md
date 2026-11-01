@@ -34,6 +34,7 @@ flowchart LR
   end
 
   Portal --> API
+  Web -->|personal-site lookup| API
   API --> D1
   API --> GH
   API --> Mailer
@@ -117,6 +118,14 @@ Both Worker configurations declare required secret names. A deployment fails
 instead of silently publishing an unusable Worker when one is missing. Set
 values with `bunx wrangler secret put`; never add secret values to
 `wrangler.jsonc`.
+
+Personal-site redirect deployment spans two units. Apply pending API D1
+migrations, set the same randomly generated `WEB_PROXY_INTERNAL_SECRET` on the
+API Worker and Web hosting project, deploy the API, then deploy Web with
+`PROXY_API_URL` pointing to that API origin. Verify one inactive username and
+one active `/~username/nested/path` without printing the configured target or
+secret. The active request must return `307` with `Cache-Control: no-store`;
+the inactive request must return `404`.
 
 ### D1 Migrations
 

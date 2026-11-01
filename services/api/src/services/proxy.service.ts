@@ -1,5 +1,7 @@
 import {
+  ProxyResolutionResponseSchema,
   ProxyUpdateRequestSchema,
+  ProxyUsernameSchema,
   type ProxyUpdateRequest,
 } from '@scs/schemas';
 
@@ -7,6 +9,7 @@ import {
   createCorsHeaders,
   createJsonErrorResponse,
   createJsonResponse,
+  createNotFoundResponse,
   createTextErrorResponse,
   getRequestOrigin,
 } from '@/http/responses';
@@ -24,6 +27,7 @@ import {
   type Permission,
 } from '@/repositories/permissions.repo';
 import {
+  getActiveProxyByUsername,
   getProxySettings,
   listProxySettingsPage,
   resetProxyAttempts,
@@ -34,6 +38,69 @@ import type { Env } from '@/types/env';
 interface ProxySession {
   email: string;
   permission: Permission;
+}
+
+const INTERNAL_PROXY_PATH_PREFIX = '/api/internal/proxies/';
+
+async function secureSecretEqual(
+  actual: string,
+  expected: string
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const [actualDigest, expectedDigest] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(actual)),
+    crypto.subtle.digest('SHA-256', encoder.encode(expected)),
+  ]);
+  const actualBytes = new Uint8Array(actualDigest);
+  const expectedBytes = new Uint8Array(expectedDigest);
+  let difference = 0;
+  for (let index = 0; index < actualBytes.length; index += 1) {
+    difference |= (actualBytes[index] ?? 0) ^ (expectedBytes[index] ?? 0);
+  }
+  return difference === 0;
+}
+
+export async function resolveInternalProxy(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const suppliedSecret = req.headers.get('X-Internal-Secret') ?? '';
+  if (
+    !(await secureSecretEqual(suppliedSecret, env.WEB_PROXY_INTERNAL_SECRET))
+  ) {
+    return createJsonErrorResponse('Unauthorized', 401, origin);
+  }
+
+  const encodedUsername = new URL(req.url).pathname.slice(
+    INTERNAL_PROXY_PATH_PREFIX.length
+  );
+  let decodedUsername: string;
+  try {
+    decodedUsername = decodeURIComponent(encodedUsername);
+  } catch {
+    return createJsonErrorResponse('Invalid proxy username', 400, origin);
+  }
+
+  const username = ProxyUsernameSchema.safeParse(decodedUsername);
+  if (!username.success) {
+    return createJsonErrorResponse('Invalid proxy username', 400, origin);
+  }
+
+  const resolution = await getActiveProxyByUsername(env, username.data);
+  if (!resolution) return createNotFoundResponse(origin);
+
+  const validated = ProxyResolutionResponseSchema.safeParse(resolution);
+  if (!validated.success) {
+    console.error('Stored proxy destination failed validation', {
+      username: username.data,
+    });
+    return createNotFoundResponse(origin);
+  }
+
+  const response = createJsonResponse(validated.data, 200, origin);
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }
 
 async function requireProxySession(
@@ -109,7 +176,7 @@ function parseProxyBodyError(
     field === 'url'
       ? {
           code: 'invalid_proxy_url',
-          message: 'Enter a valid HTTP or HTTPS proxy URL.',
+          message: 'Enter a valid HTTPS proxy URL.',
           field,
         }
       : {

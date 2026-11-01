@@ -100,15 +100,17 @@ stateDiagram-v2
 
 ## Pagination and proxy configuration
 
-| Schema                     | Responsibility                                                          |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `OpaqueCursorSchema`       | Bounded opaque pagination cursor.                                       |
-| `PageLimitSchema`          | Coerced list limit from 1 through 100.                                  |
-| `PaginationRequestSchema`  | Optional cursor and defaulted page limit.                               |
-| `PageInfoSchema`           | Next cursor, `hasMore`, and optional total with consistency validation. |
-| `createPageSchema`         | Factory for versioned item arrays and page metadata.                    |
-| `ProxyUrlSchema`           | Valid HTTP(S) proxy URL without embedded credentials.                   |
-| `ProxyUpdateRequestSchema` | Strict proxy activation and target configuration request.               |
+| Schema                          | Responsibility                                                          |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `OpaqueCursorSchema`            | Bounded opaque pagination cursor.                                       |
+| `PageLimitSchema`               | Coerced list limit from 1 through 100.                                  |
+| `PaginationRequestSchema`       | Optional cursor and defaulted page limit.                               |
+| `PageInfoSchema`                | Next cursor, `hasMore`, and optional total with consistency validation. |
+| `createPageSchema`              | Factory for versioned item arrays and page metadata.                    |
+| `ProxyUrlSchema`                | Public-host HTTP(S) URL without embedded credentials.                   |
+| `ProxyUsernameSchema`           | Normalized username accepted by personal-site routes.                   |
+| `ProxyResolutionResponseSchema` | Minimal validated internal resolver response.                           |
+| `ProxyUpdateRequestSchema`      | Strict proxy activation and target configuration request.               |
 
 Provider SDK objects, Worker bindings, and Durable Object storage records are
 service-private and are not part of this shared transport surface.

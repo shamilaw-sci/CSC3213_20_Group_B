@@ -69,8 +69,8 @@ to be unused.
 | `NEXT_PUBLIC_ELEARNING_SITE_URL` | `browser` | `template` | `runtime` | e-learning destinations         |
 | `BASE_DOMAIN`                    | `server`  | `template` | `runtime` | application domain construction |
 | `MOODLE_URL`                     | `server`  | `template` | `runtime` | Moodle redirect fallback        |
-| `WORKER_URL`                     | `server`  | `template` | `runtime` | proxy Worker requests           |
-| `CF_SECRET`                      | `secret`  | `template` | `runtime` | proxy Worker authentication     |
+| `PROXY_API_URL`                  | `server`  | `template` | `runtime` | API proxy-resolution requests   |
+| `WEB_PROXY_INTERNAL_SECRET`      | `secret`  | `template` | `runtime` | API proxy-resolution trust      |
 
 ### People
 
@@ -115,6 +115,7 @@ to be unused.
 | `MAILER_API_KEY`             | `secret`  | `template` | `runtime` | Mailer service authentication        |
 | `GITHUB_APP_API_URL`         | `server`  | `wrangler` | `runtime` | GitHub App HTTP fallback             |
 | `GITHUB_APP_INTERNAL_SECRET` | `secret`  | `template` | `runtime` | GitHub App HTTP authentication       |
+| `WEB_PROXY_INTERNAL_SECRET`  | `secret`  | `template` | `runtime` | Web proxy-resolution authentication  |
 | `DATA_PUBLIC_BASE_URL`       | `server`  | `wrangler` | `runtime` | public data URL construction         |
 | `AUTH_DB`                    | `binding` | `wrangler` | `binding` | D1 auth and settings store           |
 | `GITHUB_APP`                 | `binding` | `wrangler` | `binding` | private GitHub App service transport |
@@ -171,7 +172,8 @@ duplicating them in another guide.
 
 The Portal and API origins must agree with Better Auth trusted origins, CORS,
 passkey relying-party settings, and cookie-domain behavior. The API and GitHub
-App internal secrets must also match.
+App internal secrets must match, as must `WEB_PROXY_INTERNAL_SECRET` in the Web
+and API deployments.
 
 ## Production Configuration
 
@@ -186,6 +188,7 @@ bunx wrangler secret put GOOGLE_CLIENT_SECRET
 bunx wrangler secret put GITHUB_CLIENT_SECRET
 bunx wrangler secret put MAILER_API_KEY
 bunx wrangler secret put GITHUB_APP_INTERNAL_SECRET
+bunx wrangler secret put WEB_PROXY_INTERNAL_SECRET
 
 Set-Location ../github-app
 bunx wrangler secret put GITHUB_PRIVATE_KEY

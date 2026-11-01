@@ -45,7 +45,7 @@ session.
 
 ## D1 ownership
 
-Migrations are append-only and currently create four state groups:
+Migrations are append-only and currently create five state groups:
 
 | Migration                           | Owned state                                                                         |
 | ----------------------------------- | ----------------------------------------------------------------------------------- |
@@ -53,6 +53,7 @@ Migrations are append-only and currently create four state groups:
 | `0002_auth_identity_uniqueness.sql` | unique provider-account and passkey credential identities                           |
 | `0003_proxy_settings.sql`           | per-user proxy destination, attempt budget/window, audit fields, and revision       |
 | `0004_permissions.sql`              | normalized role/access fields plus the complete JSON permission record              |
+| `0005_proxy_username_lookup.sql`    | indexed username lookup for internal Web resolution                                 |
 
 The relational role and access columns support filtering and constraints; the
 JSON column preserves the complete application permission shape. Repository
@@ -71,13 +72,15 @@ functions normalize stored values before exposing them.
 - Notification preferences are stored through the permissions repository;
   they are not auth-provider settings.
 
-## Proxy settings
+## Personal-site redirect settings
 
-Proxy settings are D1 application state, not public-data records. Each email
+Personal-site redirect settings are D1 application state, not public-data records. Each email
 has a stable username, active flag, URL, bounded remaining attempts, reset
 window, audit identity, and monotonically updated revision. The service checks
 the current session, target eligibility, administrator requirements, and
 attempt budget before saving. Admin list routes use bounded cursor pagination.
+The internal Web resolver accepts a shared server credential, returns only one
+active validated HTTPS destination, and treats ambiguous usernames as not found.
 
 ## Safe schema changes
 

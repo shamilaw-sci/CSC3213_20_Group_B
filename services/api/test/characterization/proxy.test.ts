@@ -64,13 +64,16 @@ function proxyRequest(
   path: string,
   method: string,
   env: Env,
-  options: { token?: string; body?: unknown } = {}
+  options: { token?: string; body?: unknown; internalSecret?: string } = {}
 ): Promise<Response> {
   const headers: Record<string, string> = {
     Origin: ALLOWED_ORIGIN,
     'X-Client-Id': ALLOWED_CLIENT_ID,
   };
   if (options.token) headers.Cookie = options.token;
+  if (options.internalSecret) {
+    headers['X-Internal-Secret'] = options.internalSecret;
+  }
   let body: string | undefined;
   if (options.body !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -88,6 +91,83 @@ afterEach(() => {
 });
 
 describe('D1-backed proxy settings', () => {
+  test('resolves an active proxy by username for the Web server', async () => {
+    const env = createTestEnv();
+    await seedProxy(env, {
+      email: USER_EMAIL,
+      active: true,
+      url: 'https://portfolio.example/student/',
+    });
+
+    const response = await proxyRequest(
+      '/api/internal/proxies/student',
+      'GET',
+      env,
+      { internalSecret: env.WEB_PROXY_INTERNAL_SECRET }
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      url: 'https://portfolio.example/student/',
+    });
+  });
+
+  test('does not expose proxy resolution without the internal secret', async () => {
+    const env = createTestEnv();
+    await seedProxy(env, {
+      email: USER_EMAIL,
+      active: true,
+      url: 'https://portfolio.example/student/',
+    });
+
+    const response = await proxyRequest(
+      '/api/internal/proxies/student',
+      'GET',
+      env
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  test('hides missing, inactive, and malformed proxy usernames', async () => {
+    const env = createTestEnv();
+    await seedProxy(env, { email: USER_EMAIL, active: false });
+
+    for (const [path, status] of [
+      ['/api/internal/proxies/student', 404],
+      ['/api/internal/proxies/missing', 404],
+      ['/api/internal/proxies/student%2Fadmin', 400],
+    ] as const) {
+      const response = await proxyRequest(path, 'GET', env, {
+        internalSecret: env.WEB_PROXY_INTERNAL_SECRET,
+      });
+      expect(response.status, path).toBe(status);
+    }
+  });
+
+  test('does not resolve an ambiguous active username', async () => {
+    const env = createTestEnv();
+    await seedProxy(env, {
+      email: USER_EMAIL,
+      active: true,
+      url: 'https://first.example/student/',
+    });
+    await seedProxy(env, {
+      email: 'student@sci.pdn.ac.lk',
+      active: true,
+      url: 'https://second.example/student/',
+    });
+
+    const response = await proxyRequest(
+      '/api/internal/proxies/student',
+      'GET',
+      env,
+      { internalSecret: env.WEB_PROXY_INTERNAL_SECRET }
+    );
+
+    expect(response.status).toBe(404);
+  });
+
   test('requires authentication', async () => {
     const response = await proxyRequest(
       '/api/me/proxy',

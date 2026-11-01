@@ -22,7 +22,7 @@ flowchart LR
 
 | Service                           | Public trust boundary                  | State it owns                                 | Main downstream dependency |
 | --------------------------------- | -------------------------------------- | --------------------------------------------- | -------------------------- |
-| [API](API/INDEX.md)               | authenticated Portal requests          | Better Auth, permissions, proxy settings      | GitHub App and Mailer      |
+| [API](API/INDEX.md)               | authenticated Portal requests          | Better Auth, permissions, redirect settings   | GitHub App and Mailer      |
 | [GitHub App](GITHUB_APP/INDEX.md) | internal API requests only             | durable operation records and resource leases | GitHub repositories        |
 | [Mailer](MAILER/INDEX.md)         | internal bearer-authenticated requests | no application database                       | SMTP provider              |
 

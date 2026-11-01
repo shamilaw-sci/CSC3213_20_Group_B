@@ -4,3 +4,4 @@ GOOGLE_CLIENT_SECRET=replace-with-a-local-secret
 GITHUB_CLIENT_SECRET=replace-with-a-local-secret
 MAILER_API_KEY=replace-with-a-local-secret
 GITHUB_APP_INTERNAL_SECRET=replace-with-a-local-secret
+WEB_PROXY_INTERNAL_SECRET=replace-with-the-same-secret-as-apps-web

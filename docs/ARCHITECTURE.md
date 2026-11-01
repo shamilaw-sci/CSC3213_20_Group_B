@@ -57,6 +57,7 @@ flowchart TB
   People --> Data
   Projects --> Data
   Portal --> API
+  Web -->|authenticated personal-site lookup| API
   API --> D1
   API --> Mailer
   API --> GitHubApp
@@ -138,7 +139,7 @@ sequenceDiagram
 | State                                                                 | Authoritative owner        | Notes                                           |
 | --------------------------------------------------------------------- | -------------------------- | ----------------------------------------------- |
 | users, accounts, sessions, verification, passkeys                     | API D1 database            | managed through Better Auth and API migrations  |
-| proxy settings and edit-attempt state                                 | API D1 database            | updates consume attempts atomically             |
+| personal-site redirect settings and edit-attempt state                | API D1 database            | updates consume attempts atomically             |
 | application roles, access levels, blacklist, notification preferences | API D1 database            | checked on protected requests                   |
 | person, project, course, and offering entity records                  | data repository            | individual entity files are authoritative       |
 | aggregate arrays, manifests, search indexes, `by-person` files        | generated projections      | reproducible from authoritative records         |
@@ -154,7 +155,7 @@ projections must be disposable and reproducible.
 The API D1 database and GitHub App Durable Object storage are independent
 resources:
 
-- `AUTH_DB` D1 stores Better Auth tables, rate limits, proxy settings, and one
+- `AUTH_DB` D1 stores Better Auth tables, rate limits, personal-site redirect settings, and one
   permission record per user. Permission records include role, access level,
   blacklist state, repository include/exclude rules, notification preferences,
   and display metadata.

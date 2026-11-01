@@ -1,12 +1,12 @@
 ---
-title: Web routing and proxying
-description: Cross-product redirects, historical PHP-path normalization, personal-site lookups, timeout behavior, and trust boundaries.
+title: Web routing and redirects
+description: Cross-product redirects, historical PHP-path normalization, personal-site destination lookups, and trust boundaries.
 ---
 
-# Web routing and proxying
+# Web routing and redirects
 
 Web owns two kinds of routing that are not ordinary editorial pages: stable
-cross-product entry routes and `~username` personal-site proxying.
+cross-product entry routes and `~username` personal-site redirects.
 
 ## Cross-product entry routes
 
@@ -24,37 +24,48 @@ Requests ending in `.php` are normalized by removing that suffix before normal
 route handling. This is a URL normalization rule only; the application does not
 execute PHP or keep a second PHP content implementation.
 
-## Personal-site proxy sequence
+## Personal-site redirect sequence
 
 ```mermaid
 sequenceDiagram
   participant B as Browser
-  participant W as Web proxy
-  participant R as Proxy registry Worker
+  participant W as Department Web
+  participant A as API Worker
   participant P as Personal site
 
-  B->>W: GET /~username/rest/of/path
+  B->>W: Request /~username/rest/of/path
   W->>W: normalize and validate username
-  W->>R: GET username with X-Internal-Secret
+  W->>A: GET /api/internal/proxies/username with X-Internal-Secret
   alt active mapping
-    R-->>W: active and proxyUrl
-    W->>P: rewrite remaining path
-    P-->>B: proxied response
+    A->>A: Read active mapping from D1
+    A-->>W: validated HTTPS destination
+    W-->>B: 307 Location: destination/rest/of/path
+    B->>P: Follow redirect when supported
   else missing or inactive
-    W-->>B: rewrite /404
+    W-->>B: 404 with Cache-Control: no-store
   else timeout or registry failure
-    W-->>B: rewrite /500
+    W-->>B: 502
   end
 ```
 
 Usernames accept lowercase letters, digits, underscores, and hyphens after the
-path is normalized. The registry lookup has a three-second abort timeout and
-uses the server-only `CF_SECRET`. Browser code must never receive that secret
-or call the registry directly.
+path is normalized. The API lookup has a three-second abort timeout and uses
+the server-only `WEB_PROXY_INTERNAL_SECRET`. Browser code must never receive
+that secret or call the internal resolver directly. Web and API must receive
+the same secret from their deployment providers.
 
-The registry response controls only whether an active proxy target exists and
-where the Web proxy rewrites the request. The remaining path after the username
-is resolved against the returned base URL. Changes to this boundary require
-tests for invalid usernames, inactive mappings, registry failures, timeouts,
-and nested paths, plus a security review of the target validation performed by
-the registry service.
+The API response contains only the validated HTTPS URL for an active mapping.
+Missing and inactive mappings are indistinguishable `404` responses. The
+remaining encoded path after the username is appended to the returned base
+path without lowercasing it, and the original query string is preserved. Every
+successful response is a `307 Temporary Redirect` with `Cache-Control:
+no-store`; GET, HEAD, POST, PUT, PATCH, DELETE, and OPTIONS therefore retain
+their method and body at the HTTP redirect level.
+
+Web does not fetch the destination, forward bodies or headers, rewrite HTML,
+proxy assets, or support WebSocket tunneling. A client can refuse to follow a
+307, and the destination remains subject to its own CORS, authentication, and
+credential rules. This redirect is therefore not a transparent reverse proxy.
+Changes to this boundary require tests for supported methods, invalid
+usernames, inactive mappings, API failures, destination changes, encoded
+nested paths, and unsafe target URLs.

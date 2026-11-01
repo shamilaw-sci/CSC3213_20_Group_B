@@ -9,6 +9,7 @@ import {
 import {
   getOrCreateUserProxy,
   listAdminProxiesPage,
+  resolveInternalProxy,
   resetAdminProxyAttempts,
 } from '@/services/proxy.service';
 import {
@@ -70,6 +71,11 @@ type RegisteredRoute = {
 };
 
 const routes: RegisteredRoute[] = [
+  {
+    method: 'GET',
+    match: { kind: 'prefix', path: '/api/internal/proxies/' },
+    handler: resolveInternalProxy,
+  },
   {
     method: 'GET',
     match: { kind: 'prefix', path: '/api/operations/' },

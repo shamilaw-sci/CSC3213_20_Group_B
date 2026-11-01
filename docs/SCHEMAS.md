@@ -135,7 +135,7 @@ Shared API contracts include:
 - `PaginationRequestSchema` and page metadata for bounded lists;
 - `MutationControlSchema` for idempotency and expected revisions;
 - `MailerSendRequestSchema` for raw messages and named transactional templates;
-- `ProxyUrlSchema` and `ProxyUpdateRequestSchema` for the Portal/API proxy boundary;
+- HTTPS redirect destination, username, update, and internal resolution schemas for the Web/API boundary;
 - profile, project, and course editor response and pull-request schemas;
 - GitHub automation request schemas used by both the API producer and Worker;
 - accepted/status/outcome schemas for durable operations.

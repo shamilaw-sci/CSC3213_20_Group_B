@@ -1,6 +1,23 @@
 import { z } from 'zod';
 
-const INVALID_PROXY_URL_MESSAGE = 'Enter a valid HTTP or HTTPS proxy URL.';
+const INVALID_PROXY_URL_MESSAGE = 'Enter a valid HTTPS proxy URL.';
+const PROXY_USERNAME_PATTERN = /^[a-z0-9_-]{1,64}$/;
+
+function isPublicHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+
+  if (
+    normalized.startsWith('[') ||
+    /^\d+(?:\.\d+){3}$/.test(normalized) ||
+    !normalized.includes('.')
+  ) {
+    return false;
+  }
+
+  return !['.home.arpa', '.internal', '.local', '.localhost'].some(
+    (suffix) => normalized === suffix.slice(1) || normalized.endsWith(suffix)
+  );
+}
 
 function isValidProxyUrl(value: string): boolean {
   let url: URL;
@@ -10,11 +27,7 @@ function isValidProxyUrl(value: string): boolean {
     return false;
   }
 
-  if (
-    (url.protocol !== 'http:' && url.protocol !== 'https:') ||
-    url.username !== '' ||
-    url.password !== ''
-  ) {
+  if (url.protocol !== 'https:' || url.username !== '' || url.password !== '') {
     return false;
   }
 
@@ -24,9 +37,7 @@ function isValidProxyUrl(value: string): boolean {
   }
 
   const hostname = url.hostname;
-  if (hostname.startsWith('[') && hostname.endsWith(']')) return true;
-  if (/^\d+(?:\.\d+){3}$/.test(hostname)) return true;
-  if (hostname.length > 253) return false;
+  if (hostname.length > 253 || !isPublicHostname(hostname)) return false;
 
   return hostname
     .split('.')
@@ -45,6 +56,16 @@ export const ProxyUrlSchema = z
   .max(2048, INVALID_PROXY_URL_MESSAGE)
   .refine(isValidProxyUrl, INVALID_PROXY_URL_MESSAGE);
 
+export const ProxyUsernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(PROXY_USERNAME_PATTERN, 'Invalid proxy username.');
+
+export const ProxyResolutionResponseSchema = z
+  .object({ url: ProxyUrlSchema })
+  .strict();
+
 export const ProxyUpdateRequestSchema = z
   .object({
     email: z
@@ -57,3 +78,6 @@ export const ProxyUpdateRequestSchema = z
   .strict();
 
 export type ProxyUpdateRequest = z.infer<typeof ProxyUpdateRequestSchema>;
+export type ProxyResolutionResponse = z.infer<
+  typeof ProxyResolutionResponseSchema
+>;

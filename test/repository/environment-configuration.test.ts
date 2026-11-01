@@ -67,13 +67,13 @@ const workspaceVariables = {
     turboConfig: 'apps/web/turbo.json',
     variables: templated([
       ['BASE_DOMAIN', 'server'],
-      ['CF_SECRET', 'secret'],
       ['MOODLE_URL', 'server'],
       ['NEXT_PUBLIC_ELEARNING_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PEOPLE_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_SITE_URL', 'browser'],
-      ['WORKER_URL', 'server'],
+      ['PROXY_API_URL', 'server'],
+      ['WEB_PROXY_INTERNAL_SECRET', 'secret'],
     ]),
   },
   people: {
@@ -125,6 +125,7 @@ const workspaceVariables = {
       ['MAILER_API_KEY', 'secret', 'template', 'runtime'],
       ['MAILER_API_URL', 'server', 'wrangler', 'runtime'],
       ['AUTH_DB', 'binding', 'wrangler', 'binding'],
+      ['WEB_PROXY_INTERNAL_SECRET', 'secret', 'template', 'runtime'],
     ]),
   },
   githubApp: {

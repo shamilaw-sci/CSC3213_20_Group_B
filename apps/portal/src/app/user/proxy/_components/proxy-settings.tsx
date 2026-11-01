@@ -30,7 +30,7 @@ export default function ProxySettings() {
       }
       if (!response.ok) {
         const error = await readApiError(response);
-        throw new Error(error.message ?? 'Failed to fetch proxy settings');
+        throw new Error(error.message ?? 'Failed to fetch redirect settings');
       }
       const data = (await response.json()) as {
         proxy: {

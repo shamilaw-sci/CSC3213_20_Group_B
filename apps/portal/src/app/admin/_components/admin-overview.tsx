@@ -12,10 +12,10 @@ const sections = [
     icon: Users,
   },
   {
-    title: 'Proxies',
+    title: 'Personal-Site Redirects',
     href: '/admin/proxies',
     description:
-      'Review proxy records, reset attempts, and generate the manifest.',
+      'Review redirect destinations, reset attempts, and generate the manifest.',
     icon: Network,
   },
   {

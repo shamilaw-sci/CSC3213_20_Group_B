@@ -116,16 +116,16 @@ export default function Dashboard() {
       baseItems.unshift({
         title: 'Admin',
         href: '/admin',
-        description: 'Open admin tools for users and proxy configurations.',
+        description: 'Open admin tools for users and personal-site redirects.',
         icon: ShieldCheck,
       });
     }
 
     if (showProxySettings) {
       baseItems.push({
-        title: 'Proxy Settings',
+        title: 'Personal Site Redirect',
         href: '/user/proxy',
-        description: 'Configure your proxy connection settings.',
+        description: 'Configure where your /~username address redirects.',
         icon: Network,
       });
     }
