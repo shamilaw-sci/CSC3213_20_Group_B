@@ -3,7 +3,6 @@
 import { Button } from '@scs/ui/components/button';
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -17,6 +16,7 @@ import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { PeopleSearch } from '@/components/search/people-search';
 
@@ -30,6 +30,7 @@ const navigationLinkClass =
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
@@ -88,17 +89,22 @@ export function SiteHeader() {
         </nav>
 
         <ThemeToggle className="hidden md:inline-flex" />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="md:hidden"
-              aria-label="Open navigation"
-            >
-              <Menu aria-hidden="true" />
-            </Button>
+        <Sheet
+          open={mobileNavigationOpen}
+          onOpenChange={setMobileNavigationOpen}
+        >
+          <SheetTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open navigation"
+              />
+            }
+          >
+            <Menu aria-hidden="true" />
           </SheetTrigger>
           <SheetContent
             className="w-[min(22rem,calc(100vw-1rem))] p-0 md:hidden"
@@ -119,21 +125,21 @@ export function SiteHeader() {
               {navigation.map((item) => {
                 const active = isActive(item.href);
                 return (
-                  <SheetClose key={item.href} asChild>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        navigationLinkClass,
-                        active
-                          ? 'bg-accent text-accent-foreground'
-                          : `text-muted-foreground hover:bg-accent
-                            hover:text-accent-foreground active:bg-accent`
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  </SheetClose>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileNavigationOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      navigationLinkClass,
+                      active
+                        ? 'bg-accent text-accent-foreground'
+                        : `text-muted-foreground hover:bg-accent
+                          hover:text-accent-foreground active:bg-accent`
+                    )}
+                  >
+                    {item.label}
+                  </Link>
                 );
               })}
             </nav>

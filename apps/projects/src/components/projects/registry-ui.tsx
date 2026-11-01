@@ -7,7 +7,7 @@ import {
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -261,11 +261,15 @@ export function ProjectDetail({ project }: Readonly<{ project: Project }>) {
             </span>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={project.status} />
-              <Badge asChild variant="secondary" className="rounded-md">
-                <Link href={buildCollectionPath(typeCollection)}>
-                  {projectTypeLabels[project.projectType]}
-                </Link>
-              </Badge>
+              <Badge
+                variant="secondary"
+                className="rounded-md"
+                render={
+                  <Link href={buildCollectionPath(typeCollection)}>
+                    {projectTypeLabels[project.projectType]}
+                  </Link>
+                }
+              />
               {project.course ? (
                 <Badge variant="outline" className="rounded-md">
                   {project.course.code}
@@ -482,12 +486,16 @@ function ProjectLinkButtons({ links }: Readonly<{ links: ProjectLinks }>) {
     <div className="flex flex-wrap gap-3">
       {entries.map(([label, href, Icon]) =>
         href ? (
-          <Button key={label} asChild variant="outline">
-            <a href={href} target="_blank" rel="noreferrer">
-              <Icon className="size-4" />
-              {label}
-            </a>
-          </Button>
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            <Icon className="size-4" />
+            {label}
+          </a>
         ) : null
       )}
     </div>

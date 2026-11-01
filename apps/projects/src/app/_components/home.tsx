@@ -2,7 +2,7 @@
 
 import type { Project } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { Card, CardContent } from '@scs/ui/components/card';
 import { ArrowRight, FolderKanban } from 'lucide-react';
 import Link from 'next/link';
@@ -185,12 +185,13 @@ export default function Home() {
                     title="Recently updated"
                     description="The latest published changes across the project registry."
                   />
-                  <Button asChild variant="outline">
-                    <Link href="/browse">
-                      Browse all projects
-                      <ArrowRight aria-hidden="true" className="size-4" />
-                    </Link>
-                  </Button>
+                  <Link
+                    href="/browse"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    Browse all projects
+                    <ArrowRight aria-hidden="true" className="size-4" />
+                  </Link>
                 </div>
                 <div className="mt-6">
                   <ProjectGrid projects={recent} />
@@ -263,18 +264,18 @@ function CollectionLinks({
         {summaries.slice(0, 12).map((summary) => (
           <Badge
             key={buildCollectionPath(summary.collection)}
-            asChild
             variant="secondary"
             className="hover:bg-accent hover:text-accent-foreground rounded-md
               px-3 py-1.5 transition-colors"
-          >
-            <Link href={buildCollectionPath(summary.collection)}>
-              {summary.label}
-              <span className="text-muted-foreground ml-1.5 tabular-nums">
-                {summary.count}
-              </span>
-            </Link>
-          </Badge>
+            render={
+              <Link href={buildCollectionPath(summary.collection)}>
+                {summary.label}
+                <span className="text-muted-foreground ml-1.5 tabular-nums">
+                  {summary.count}
+                </span>
+              </Link>
+            }
+          />
         ))}
       </div>
     </section>

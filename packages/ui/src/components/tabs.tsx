@@ -1,15 +1,14 @@
 'use client';
 
+import { Tabs as TabsPrimitive } from '@base-ui/react/tabs';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
-import { Tabs as TabsPrimitive } from 'radix-ui';
-import * as React from 'react';
 
 function Tabs({
   className,
   orientation = 'horizontal',
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: TabsPrimitive.Root.Props) {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -44,8 +43,7 @@ function TabsList({
   className,
   variant = 'default',
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.List> &
-  VariantProps<typeof tabsListVariants>) {
+}: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
@@ -56,12 +54,9 @@ function TabsList({
   );
 }
 
-function TabsTrigger({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   return (
-    <TabsPrimitive.Trigger
+    <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
         `focus-visible:border-ring focus-visible:ring-ring/50
@@ -88,31 +83,32 @@ function TabsTrigger({
         group-data-[orientation=vertical]/tabs:justify-start
         focus-visible:ring-[3px] focus-visible:outline-1
         disabled:pointer-events-none disabled:opacity-50
-        group-data-[variant=brand]/tabs-list:data-[state=active]:shadow-sm
-        group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm
-        group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none
+        aria-disabled:pointer-events-none aria-disabled:opacity-50
+        group-data-[variant=brand]/tabs-list:data-active:shadow-sm
+        group-data-[variant=default]/tabs-list:data-active:shadow-sm
+        group-data-[variant=line]/tabs-list:data-active:shadow-none
         [&_svg]:pointer-events-none [&_svg]:shrink-0
         [&_svg:not([class*='size-'])]:size-4`,
         `group-data-[variant=line]/tabs-list:bg-transparent
-        group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent
-        dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-transparent
-        dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent`,
-        `group-data-[variant=default]/tabs-list:data-[state=active]:bg-background
-        group-data-[variant=default]/tabs-list:data-[state=active]:text-foreground
-        group-data-[variant=line]/tabs-list:data-[state=active]:bg-background
-        group-data-[variant=line]/tabs-list:data-[state=active]:text-foreground
-        dark:group-data-[variant=default]/tabs-list:data-[state=active]:border-input
-        dark:group-data-[variant=default]/tabs-list:data-[state=active]:bg-input/30
-        dark:group-data-[variant=default]/tabs-list:data-[state=active]:text-foreground
-        dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-input
-        dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-input/30
-        dark:group-data-[variant=line]/tabs-list:data-[state=active]:text-foreground`,
-        `group-data-[variant=brand]/tabs-list:data-[state=active]:bg-primary
-        group-data-[variant=brand]/tabs-list:data-[state=active]:text-primary-foreground
-        dark:group-data-[variant=brand]/tabs-list:data-[state=active]:border-primary/30
-        dark:group-data-[variant=brand]/tabs-list:data-[state=active]:bg-primary/15
-        dark:group-data-[variant=brand]/tabs-list:data-[state=active]:text-primary
-        dark:group-data-[variant=brand]/tabs-list:data-[state=active]:shadow-none`,
+        group-data-[variant=line]/tabs-list:data-active:bg-transparent
+        dark:group-data-[variant=line]/tabs-list:data-active:border-transparent
+        dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent`,
+        `group-data-[variant=default]/tabs-list:data-active:bg-background
+        group-data-[variant=default]/tabs-list:data-active:text-foreground
+        group-data-[variant=line]/tabs-list:data-active:bg-background
+        group-data-[variant=line]/tabs-list:data-active:text-foreground
+        dark:group-data-[variant=default]/tabs-list:data-active:border-input
+        dark:group-data-[variant=default]/tabs-list:data-active:bg-input/30
+        dark:group-data-[variant=default]/tabs-list:data-active:text-foreground
+        dark:group-data-[variant=line]/tabs-list:data-active:border-input
+        dark:group-data-[variant=line]/tabs-list:data-active:bg-input/30
+        dark:group-data-[variant=line]/tabs-list:data-active:text-foreground`,
+        `group-data-[variant=brand]/tabs-list:data-active:bg-primary
+        group-data-[variant=brand]/tabs-list:data-active:text-primary-foreground
+        dark:group-data-[variant=brand]/tabs-list:data-active:border-primary/30
+        dark:group-data-[variant=brand]/tabs-list:data-active:bg-primary/15
+        dark:group-data-[variant=brand]/tabs-list:data-active:text-primary
+        dark:group-data-[variant=brand]/tabs-list:data-active:shadow-none`,
         `after:bg-foreground after:absolute after:opacity-0
         after:transition-opacity
         group-data-[orientation=horizontal]/tabs:after:inset-x-0
@@ -121,7 +117,7 @@ function TabsTrigger({
         group-data-[orientation=vertical]/tabs:after:inset-y-0
         group-data-[orientation=vertical]/tabs:after:-right-1
         group-data-[orientation=vertical]/tabs:after:w-0.5
-        group-data-[variant=line]/tabs-list:data-[state=active]:after:opacity-100`,
+        group-data-[variant=line]/tabs-list:data-active:after:opacity-100`,
         className
       )}
       {...props}
@@ -129,12 +125,9 @@ function TabsTrigger({
   );
 }
 
-function TabsContent({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
-    <TabsPrimitive.Content
+    <TabsPrimitive.Panel
       data-slot="tabs-content"
       className={cn('flex-1 outline-none', className)}
       {...props}

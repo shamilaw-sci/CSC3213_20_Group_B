@@ -3,7 +3,6 @@
 import { Button } from '@scs/ui/components/button';
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -16,6 +15,7 @@ import { cn } from '@scs/ui/lib/utils';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { LogoutButton } from '@/components/auth/logout-button';
 import { UopLogoIcon } from '@/components/icons/uop-logo';
@@ -39,6 +39,7 @@ const navigationLinkClass =
 
 export function PortalHeader() {
   const pathname = usePathname();
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const authenticated = Boolean(session?.user);
   const navigation = isPending
@@ -85,17 +86,22 @@ export function PortalHeader() {
 
         <ThemeToggle className="hidden md:inline-flex" />
         {!isPending ? (
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="md:hidden"
-                aria-label="Open navigation"
-              >
-                <Menu aria-hidden="true" />
-              </Button>
+          <Sheet
+            open={mobileNavigationOpen}
+            onOpenChange={setMobileNavigationOpen}
+          >
+            <SheetTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="md:hidden"
+                  aria-label="Open navigation"
+                />
+              }
+            >
+              <Menu aria-hidden="true" />
             </SheetTrigger>
             <SheetContent
               className="w-[min(22rem,calc(100vw-1rem))] p-0 md:hidden"
@@ -113,12 +119,12 @@ export function PortalHeader() {
                 className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
               >
                 {navigation.map((item) => (
-                  <SheetClose key={item.href} asChild>
-                    <PortalNavigationLink
-                      item={item}
-                      active={isNavigationItemActive(item.href)}
-                    />
-                  </SheetClose>
+                  <PortalNavigationLink
+                    key={item.href}
+                    item={item}
+                    active={isNavigationItemActive(item.href)}
+                    onClick={() => setMobileNavigationOpen(false)}
+                  />
                 ))}
               </nav>
               <SheetFooter className="border-t">
@@ -136,12 +142,18 @@ export function PortalHeader() {
 interface PortalNavigationLinkProps {
   active: boolean;
   item: PortalNavigationItem;
+  onClick?: () => void;
 }
 
-function PortalNavigationLink({ active, item }: PortalNavigationLinkProps) {
+function PortalNavigationLink({
+  active,
+  item,
+  onClick,
+}: PortalNavigationLinkProps) {
   return (
     <Link
       href={item.href}
+      onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={cn(
         navigationLinkClass,

@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -109,21 +109,19 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" asChild>
-                <Link
-                  href={`/admin/users/${emailPathSegment(user.email)}/public-profile`}
-                >
-                  <IdCard className="size-4" />
-                  Public Profile
-                </Link>
-              </Button>
-              <Button variant="default" asChild>
-                <Link
-                  href={`/admin/users/${emailPathSegment(user.email)}/edit`}
-                >
-                  Edit User
-                </Link>
-              </Button>
+              <Link
+                href={`/admin/users/${emailPathSegment(user.email)}/public-profile`}
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                <IdCard className="size-4" />
+                Public Profile
+              </Link>
+              <Link
+                href={`/admin/users/${emailPathSegment(user.email)}/edit`}
+                className={buttonVariants({ variant: 'default' })}
+              >
+                Edit User
+              </Link>
             </div>
           </div>
         </CardContent>

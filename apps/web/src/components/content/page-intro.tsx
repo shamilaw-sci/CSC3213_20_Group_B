@@ -1,4 +1,4 @@
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { ArrowRight } from 'lucide-react';
 
 import { AppLink } from '@/components/navigation/app-link';
@@ -44,17 +44,16 @@ export function PageIntro({
           {description}
         </p>
         {action ? (
-          <Button asChild size="lg" className="mt-8">
-            <AppLink
-              href={action.href}
-              destination={
-                action.href.startsWith('http') ? 'external-product' : 'local'
-              }
-            >
-              {action.label}
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </AppLink>
-          </Button>
+          <AppLink
+            href={action.href}
+            destination={
+              action.href.startsWith('http') ? 'external-product' : 'local'
+            }
+            className={buttonVariants({ size: 'lg', className: 'mt-8' })}
+          >
+            {action.label}
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </AppLink>
         ) : null}
       </div>
       <div

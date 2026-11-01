@@ -1,4 +1,4 @@
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,12 +16,14 @@ export function Pagination({ previousHref, nextHref }: PaginationProps) {
       className="flex items-center justify-center gap-2"
     >
       {previousHref ? (
-        <Button variant="outline" size="sm" asChild>
-          <Link href={previousHref} aria-label="Go to previous page">
-            <ChevronLeft data-icon="inline-start" />
-            Previous
-          </Link>
-        </Button>
+        <Link
+          href={previousHref}
+          aria-label="Go to previous page"
+          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+        >
+          <ChevronLeft data-icon="inline-start" />
+          Previous
+        </Link>
       ) : (
         <Button variant="outline" size="sm" disabled>
           <ChevronLeft data-icon="inline-start" />
@@ -29,12 +31,14 @@ export function Pagination({ previousHref, nextHref }: PaginationProps) {
         </Button>
       )}
       {nextHref ? (
-        <Button variant="outline" size="sm" asChild>
-          <Link href={nextHref} aria-label="Go to next page">
-            Next
-            <ChevronRight data-icon="inline-end" />
-          </Link>
-        </Button>
+        <Link
+          href={nextHref}
+          aria-label="Go to next page"
+          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+        >
+          Next
+          <ChevronRight data-icon="inline-end" />
+        </Link>
       ) : (
         <Button variant="outline" size="sm" disabled>
           Next

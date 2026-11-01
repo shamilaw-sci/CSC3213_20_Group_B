@@ -1,7 +1,7 @@
 import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import Link from 'next/link';
@@ -21,9 +21,9 @@ export default function GlobalNotFound() {
           title="Page not found"
           description="This address does not match a page on the documentation site."
           actions={
-            <Button asChild>
-              <Link href="/docs">Open the handbook</Link>
-            </Button>
+            <Link href="/docs" className={buttonVariants()}>
+              Open the handbook
+            </Link>
           }
         />
       </body>

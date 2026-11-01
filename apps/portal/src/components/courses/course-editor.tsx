@@ -9,7 +9,7 @@ import {
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -753,12 +753,10 @@ export default function CourseEditor({
           icon={<BookOpen className="text-muted-foreground size-6" />}
           action={
             canEdit ? (
-              <Button asChild>
-                <Link href="/academic/courses/new">
-                  <Plus data-icon="inline-start" />
-                  New Course
-                </Link>
-              </Button>
+              <Link href="/academic/courses/new" className={buttonVariants()}>
+                <Plus data-icon="inline-start" />
+                New Course
+              </Link>
             ) : null
           }
         />
@@ -805,11 +803,14 @@ export default function CourseEditor({
             {enumLabel(pr.status)}
           </Badge>
           {pr.url ? (
-            <Button asChild variant="outline" size="sm">
-              <a href={pr.url} target="_blank" rel="noreferrer">
-                PR #{pr.number}
-              </a>
-            </Button>
+            <a
+              href={pr.url}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              PR #{pr.number}
+            </a>
           ) : null}
         </div>
       ) : null}
@@ -1072,9 +1073,11 @@ function CourseForm({
             <Select
               value={String(course.credits)}
               disabled={readOnly}
-              onValueChange={(value) =>
-                setField('credits', Number(value) as 1 | 2 | 3 | 6)
-              }
+              onValueChange={(value) => {
+                if (value !== null) {
+                  setField('credits', Number(value) as 1 | 2 | 3 | 6);
+                }
+              }}
             >
               <SelectTrigger id="course-credits" className="w-full">
                 <SelectValue placeholder="Select credits" />
@@ -1098,9 +1101,11 @@ function CourseForm({
             <Select
               value={course.primaryCode}
               disabled={readOnly || course.codes.length === 0}
-              onValueChange={(primaryCode) =>
-                setField('primaryCode', primaryCode)
-              }
+              onValueChange={(primaryCode) => {
+                if (primaryCode !== null) {
+                  setField('primaryCode', primaryCode);
+                }
+              }}
             >
               <SelectTrigger id="course-primary-code" className="w-full">
                 <SelectValue placeholder="Add a course code first" />
@@ -1234,9 +1239,15 @@ function OfferingForm({
           <Select
             value={draft.semester}
             disabled={readOnly}
-            onValueChange={(value) =>
-              setField('semester', value as 'SEM1' | 'SEM2')
-            }
+            items={[
+              { value: 'SEM1', label: 'Semester 1' },
+              { value: 'SEM2', label: 'Semester 2' },
+            ]}
+            onValueChange={(value) => {
+              if (value !== null) {
+                setField('semester', value as 'SEM1' | 'SEM2');
+              }
+            }}
           >
             <SelectTrigger id={`${formId}-semester`} className="w-full">
               <SelectValue placeholder="Select semester" />
@@ -1305,7 +1316,12 @@ function OfferingForm({
                     <Select
                       value={member.role}
                       disabled={readOnly}
+                      items={STAFF_ROLES.map((role) => ({
+                        value: role,
+                        label: enumLabel(role),
+                      }))}
                       onValueChange={(role) => {
+                        if (role === null) return;
                         const staff = draft.staff.map((entry, entryIndex) =>
                           entryIndex === index
                             ? {

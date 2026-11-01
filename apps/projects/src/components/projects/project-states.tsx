@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import { Skeleton } from '@scs/ui/components/skeleton';
 import { cn } from 'cn';
 import { AlertTriangle, ArrowRight, FolderSearch, Search } from 'lucide-react';
@@ -71,19 +71,18 @@ export function StatePanel({
                 </Button>
               ) : null}
               {action ? (
-                <Button asChild>
-                  <Link href={action.href}>
-                    {action.label}
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
+                <Link href={action.href} className={buttonVariants()}>
+                  {action.label}
+                  <ArrowRight className="size-4" />
+                </Link>
               ) : null}
               {secondaryAction ? (
-                <Button asChild variant="outline">
-                  <Link href={secondaryAction.href}>
-                    {secondaryAction.label}
-                  </Link>
-                </Button>
+                <Link
+                  href={secondaryAction.href}
+                  className={buttonVariants({ variant: 'outline' })}
+                >
+                  {secondaryAction.label}
+                </Link>
               ) : null}
             </div>
           ) : null}

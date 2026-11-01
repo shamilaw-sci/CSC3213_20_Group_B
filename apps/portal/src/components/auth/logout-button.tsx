@@ -44,11 +44,11 @@ export function LogoutButton() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="ghost" size="sm">
-          <LogOut data-icon="inline-start" aria-hidden="true" />
-          Log out
-        </Button>
+      <DialogTrigger
+        render={<Button type="button" variant="ghost" size="sm" />}
+      >
+        <LogOut data-icon="inline-start" aria-hidden="true" />
+        Log out
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -58,10 +58,12 @@ export function LogoutButton() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline" disabled={isLoggingOut}>
-              Stay signed in
-            </Button>
+          <DialogClose
+            render={
+              <Button type="button" variant="outline" disabled={isLoggingOut} />
+            }
+          >
+            Stay signed in
           </DialogClose>
           <Button
             type="button"

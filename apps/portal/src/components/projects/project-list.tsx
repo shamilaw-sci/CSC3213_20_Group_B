@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -127,16 +127,20 @@ export function ProjectList({
                           : slug}
                       </p>
                       <div className="mt-3">
-                        <Button asChild size="sm" className="w-full sm:w-auto">
-                          <Link href={`${projectsHref}/${slug}`}>
-                            {canEdit ? (
-                              <Pencil className="size-4" />
-                            ) : (
-                              <Eye className="size-4" />
-                            )}
-                            {canEdit ? 'Edit project' : 'View project'}
-                          </Link>
-                        </Button>
+                        <Link
+                          href={`${projectsHref}/${slug}`}
+                          className={buttonVariants({
+                            size: 'sm',
+                            className: 'w-full sm:w-auto',
+                          })}
+                        >
+                          {canEdit ? (
+                            <Pencil className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                          {canEdit ? 'Edit project' : 'View project'}
+                        </Link>
                       </div>
                     </article>
                   </li>

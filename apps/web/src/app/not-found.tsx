@@ -1,4 +1,4 @@
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { ErrorPageFlag } from '@scs/ui/components/error-page-flag';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ArrowLeft } from 'lucide-react';
@@ -13,12 +13,10 @@ export default function NotFound() {
         title="Page not found"
         description="The address may be incorrect, or the page may have moved."
         actions={
-          <Button asChild>
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-              Return to SCS home
-            </Link>
-          </Button>
+          <Link href="/" className={buttonVariants()}>
+            <ArrowLeft className="size-4" />
+            Return to SCS home
+          </Link>
         }
       />
     </main>

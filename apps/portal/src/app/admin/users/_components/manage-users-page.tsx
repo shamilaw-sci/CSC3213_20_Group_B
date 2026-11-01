@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -309,20 +309,24 @@ export default function ManageUsersPage({
                   </div>
 
                   <div className="flex shrink-0 gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link
-                        href={`/admin/users/${emailPathSegment(user.email)}`}
-                      >
-                        View
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link
-                        href={`/admin/users/${emailPathSegment(user.email)}/edit`}
-                      >
-                        Edit
-                      </Link>
-                    </Button>
+                    <Link
+                      href={`/admin/users/${emailPathSegment(user.email)}`}
+                      className={buttonVariants({
+                        variant: 'outline',
+                        size: 'sm',
+                      })}
+                    >
+                      View
+                    </Link>
+                    <Link
+                      href={`/admin/users/${emailPathSegment(user.email)}/edit`}
+                      className={buttonVariants({
+                        variant: 'outline',
+                        size: 'sm',
+                      })}
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </li>
               ))}

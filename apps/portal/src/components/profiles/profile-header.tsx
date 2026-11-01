@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { Card, CardContent } from '@scs/ui/components/card';
 import { IdCard, Mail, Pencil, Settings } from 'lucide-react';
 import Link from 'next/link';
@@ -57,24 +57,27 @@ export default function ProfileHeader({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild>
-              <Link href={publicProfileHref}>
-                <IdCard className="size-4" />
-                Public Profile
-              </Link>
-            </Button>
-            <Button variant="default" asChild>
-              <Link href={settingsHref}>
-                <Settings className="size-4" />
-                Open Settings
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={editHref}>
-                <Pencil className="size-4" />
-                Edit Profile
-              </Link>
-            </Button>
+            <Link
+              href={publicProfileHref}
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              <IdCard className="size-4" />
+              Public Profile
+            </Link>
+            <Link
+              href={settingsHref}
+              className={buttonVariants({ variant: 'default' })}
+            >
+              <Settings className="size-4" />
+              Open Settings
+            </Link>
+            <Link
+              href={editHref}
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              <Pencil className="size-4" />
+              Edit Profile
+            </Link>
           </div>
         </div>
       </CardContent>

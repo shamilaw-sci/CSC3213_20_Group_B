@@ -17,7 +17,7 @@ import {
   ScienceAcademicDepartments,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -611,7 +611,17 @@ function SelectField({
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Select value={value} disabled={disabled} onValueChange={onChange}>
+      <Select
+        value={value}
+        disabled={disabled}
+        items={options.map((option) => ({
+          value: option,
+          label: enumLabel(option),
+        }))}
+        onValueChange={(nextValue) => {
+          if (nextValue !== null) onChange(nextValue);
+        }}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select" />
         </SelectTrigger>
@@ -1101,7 +1111,13 @@ function ProjectForm({
                 <Select
                   value={selectedOfferingId}
                   disabled={readOnly}
-                  onValueChange={selectCourseOffering}
+                  items={courseOfferingOptions.map((option) => ({
+                    value: option.offering.id,
+                    label: option.label,
+                  }))}
+                  onValueChange={(nextValue) => {
+                    if (nextValue !== null) selectCourseOffering(nextValue);
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a course offering" />
@@ -2279,17 +2295,19 @@ export default function ProjectEditor({
                           </Button>
                         ) : null}
                         {pr?.url ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="w-full sm:w-auto"
+                          <a
+                            href={pr.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={buttonVariants({
+                              variant: 'outline',
+                              size: 'sm',
+                              className: 'w-full sm:w-auto',
+                            })}
                           >
-                            <a href={pr.url} target="_blank" rel="noreferrer">
-                              <ExternalLink className="size-4" />
-                              Open PR
-                            </a>
-                          </Button>
+                            <ExternalLink className="size-4" />
+                            Open PR
+                          </a>
                         ) : null}
                       </div>
                     </div>

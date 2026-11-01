@@ -1,6 +1,6 @@
 import '@/app/globals.css';
 
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import { ArrowLeft } from 'lucide-react';
@@ -44,14 +44,14 @@ export default function GlobalNotFound() {
           title="Portal page not found"
           description="The address may be incorrect, or the page may have moved."
           actions={
-            <Button asChild>
+            <>
               {/* A hard navigation remains reliable outside the root app tree. */}
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-              <a href="/">
+              <a href="/" className={buttonVariants()}>
                 <ArrowLeft className="size-4" />
                 Return to Portal home
               </a>
-            </Button>
+            </>
           }
         />
       </body>

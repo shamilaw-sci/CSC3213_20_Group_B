@@ -8,7 +8,6 @@ import {
 } from '@scs/ui/components/popover';
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -21,6 +20,7 @@ import { cn } from '@scs/ui/lib/utils';
 import { ArrowUpRight, ChevronDown, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { DepartmentMark } from '@/components/layout/department-mark';
 import { AppLink } from '@/components/navigation/app-link';
@@ -34,6 +34,7 @@ const navigationLinkClass =
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const isActive = (href: string) =>
     href === '/' ? pathname === href : pathname.startsWith(href);
   const secondaryActive = secondaryNavigation.some(
@@ -84,19 +85,21 @@ export function SiteHeader() {
         </nav>
 
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className={cn(
-                'hidden xl:inline-flex',
-                secondaryActive && 'bg-accent text-accent-foreground'
-              )}
-              aria-label="More"
-            >
-              More
-              <ChevronDown aria-hidden="true" className="size-4" />
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                className={cn(
+                  'hidden xl:inline-flex',
+                  secondaryActive && 'bg-accent text-accent-foreground'
+                )}
+                aria-label="More"
+              />
+            }
+          >
+            More
+            <ChevronDown aria-hidden="true" className="size-4" />
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64 p-2">
             <nav aria-label="More department navigation">
@@ -132,17 +135,22 @@ export function SiteHeader() {
         </Popover>
 
         <ThemeToggle className="hidden xl:inline-flex" />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-lg"
-              className="xl:hidden"
-              aria-label="Open department navigation"
-            >
-              <Menu aria-hidden="true" />
-            </Button>
+        <Sheet
+          open={mobileNavigationOpen}
+          onOpenChange={setMobileNavigationOpen}
+        >
+          <SheetTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-lg"
+                className="xl:hidden"
+                aria-label="Open department navigation"
+              />
+            }
+          >
+            <Menu aria-hidden="true" />
           </SheetTrigger>
           <SheetContent
             className="w-[min(23rem,calc(100vw-1rem))] p-0 xl:hidden"
@@ -167,22 +175,22 @@ export function SiteHeader() {
                 {primaryNavigation.map((item) => {
                   const active = isActive(item.href);
                   return (
-                    <SheetClose key={item.href} asChild>
-                      <AppLink
-                        href={item.href}
-                        destination={item.destination}
-                        aria-current={active ? 'page' : undefined}
-                        className={cn(
-                          navigationLinkClass,
-                          active
-                            ? 'bg-accent text-accent-foreground'
-                            : `text-muted-foreground hover:bg-accent
-                              hover:text-accent-foreground active:bg-accent`
-                        )}
-                      >
-                        {item.label}
-                      </AppLink>
-                    </SheetClose>
+                    <AppLink
+                      key={item.href}
+                      href={item.href}
+                      destination={item.destination}
+                      onClick={() => setMobileNavigationOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        navigationLinkClass,
+                        active
+                          ? 'bg-accent text-accent-foreground'
+                          : `text-muted-foreground hover:bg-accent
+                            hover:text-accent-foreground active:bg-accent`
+                      )}
+                    >
+                      {item.label}
+                    </AppLink>
                   );
                 })}
               </div>
@@ -198,28 +206,28 @@ export function SiteHeader() {
                   const active =
                     item.destination === 'local' && isActive(item.href);
                   return (
-                    <SheetClose key={item.href} asChild>
-                      <AppLink
-                        href={item.href}
-                        destination={item.destination}
-                        aria-current={active ? 'page' : undefined}
-                        className={cn(
-                          navigationLinkClass,
-                          active
-                            ? 'bg-accent text-accent-foreground'
-                            : `text-muted-foreground hover:bg-accent
-                              hover:text-accent-foreground active:bg-accent`
-                        )}
-                      >
-                        <span>{item.label}</span>
-                        {item.destination === 'external-product' ? (
-                          <ArrowUpRight
-                            aria-hidden="true"
-                            className="ml-auto size-4"
-                          />
-                        ) : null}
-                      </AppLink>
-                    </SheetClose>
+                    <AppLink
+                      key={item.href}
+                      href={item.href}
+                      destination={item.destination}
+                      onClick={() => setMobileNavigationOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        navigationLinkClass,
+                        active
+                          ? 'bg-accent text-accent-foreground'
+                          : `text-muted-foreground hover:bg-accent
+                            hover:text-accent-foreground active:bg-accent`
+                      )}
+                    >
+                      <span>{item.label}</span>
+                      {item.destination === 'external-product' ? (
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          className="ml-auto size-4"
+                        />
+                      ) : null}
+                    </AppLink>
                   );
                 })}
               </div>

@@ -1,4 +1,4 @@
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { ErrorPageFlag } from '@scs/ui/components/error-page-flag';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ArrowLeft } from 'lucide-react';
@@ -22,12 +22,10 @@ export default function NotFound() {
         title="Portal page not found"
         description="The page may have moved, or your account may not have access to that destination."
         actions={
-          <Button asChild>
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-              Return to Portal home
-            </Link>
-          </Button>
+          <Link href="/" className={buttonVariants()}>
+            <ArrowLeft className="size-4" />
+            Return to Portal home
+          </Link>
         }
       />
     </main>

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Project } from '@scs/schemas';
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -279,24 +279,22 @@ export function ProjectDirectory({
             className="mt-8 flex items-center justify-between gap-3"
           >
             {projectPage.page > 1 ? (
-              <Button asChild variant="outline">
-                <Link
-                  href={buildCollectionPath(collection, projectPage.page - 1)}
-                >
-                  Previous
-                </Link>
-              </Button>
+              <Link
+                href={buildCollectionPath(collection, projectPage.page - 1)}
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                Previous
+              </Link>
             ) : (
               <span />
             )}
             {projectPage.page < projectPage.totalPages ? (
-              <Button asChild variant="outline">
-                <Link
-                  href={buildCollectionPath(collection, projectPage.page + 1)}
-                >
-                  Next
-                </Link>
-              </Button>
+              <Link
+                href={buildCollectionPath(collection, projectPage.page + 1)}
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                Next
+              </Link>
             ) : null}
           </nav>
         ) : null}

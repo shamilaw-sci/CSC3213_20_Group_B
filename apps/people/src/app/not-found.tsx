@@ -1,4 +1,4 @@
-import { Button } from '@scs/ui/components/button';
+import { buttonVariants } from '@scs/ui/components/button';
 import { ErrorPageFlag } from '@scs/ui/components/error-page-flag';
 import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ArrowLeft } from 'lucide-react';
@@ -22,12 +22,10 @@ export default function NotFound() {
         title="Person or page not found"
         description="Check the address, or return to the directory to find staff and students."
         actions={
-          <Button asChild>
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-              Browse people
-            </Link>
-          </Button>
+          <Link href="/" className={buttonVariants()}>
+            <ArrowLeft className="size-4" />
+            Browse people
+          </Link>
         }
       />
     </main>

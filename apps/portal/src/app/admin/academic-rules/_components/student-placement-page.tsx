@@ -1052,7 +1052,17 @@ function SelectControl({
       >
         {label}
       </FieldLabel>
-      <Select value={value} disabled={disabled} onValueChange={onChange}>
+      <Select
+        value={value}
+        disabled={disabled}
+        items={options.map((option) => ({
+          value: option,
+          label: labels?.[option] ?? option,
+        }))}
+        onValueChange={(nextValue) => {
+          if (nextValue !== null) onChange(nextValue);
+        }}
+      >
         <SelectTrigger className="w-full min-w-0">
           <SelectValue />
         </SelectTrigger>

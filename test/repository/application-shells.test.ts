@@ -56,8 +56,9 @@ describe('application shell contracts', () => {
       expect(header, app).toContain('@scs/ui/components/sheet');
       expect(header, app).toContain('<SheetContent');
       expect(header, app).toContain('<SheetTitle');
-      expect(header, app).toMatch(
-        /<SheetClose(?:\s+key=\{item\.href\})?\s+asChild>/u
+      expect(header, app).toContain('open={mobileNavigationOpen}');
+      expect(header, app).toContain(
+        'onClick={() => setMobileNavigationOpen(false)}'
       );
       expect(header, app).toContain('<ThemeToggle showLabel');
     }
@@ -68,8 +69,9 @@ describe('application shell contracts', () => {
     expect(portalHeader).toContain('@scs/ui/components/sheet');
     expect(portalHeader).toContain('<SheetContent');
     expect(portalHeader).toContain('<SheetTitle');
-    expect(portalHeader).toMatch(
-      /<SheetClose(?:\s+key=\{item\.href\})?\s+asChild>/u
+    expect(portalHeader).toContain('open={mobileNavigationOpen}');
+    expect(portalHeader).toContain(
+      'onClick={() => setMobileNavigationOpen(false)}'
     );
     expect(portalHeader).toContain('<ThemeToggle showLabel');
   });

@@ -34,7 +34,7 @@ import {
   StudentTypeSchema,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -623,7 +623,13 @@ function SelectField({
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value}
+        items={options}
+        onValueChange={(nextValue) => {
+          if (nextValue !== null) onChange(nextValue);
+        }}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select" />
         </SelectTrigger>
@@ -852,7 +858,13 @@ function StringArrayEditor({
               {options ? (
                 <Select
                   value={item}
-                  onValueChange={(nextValue) => updateItem(index, nextValue)}
+                  items={options.map((option) => ({
+                    value: option,
+                    label: labels?.[option] ?? option,
+                  }))}
+                  onValueChange={(nextValue) => {
+                    if (nextValue !== null) updateItem(index, nextValue);
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select" />
@@ -2483,16 +2495,18 @@ export default function PublicProfileEditor({
           </div>
           <div className="flex flex-wrap gap-2">
             {pr?.url ? (
-              <Button
-                asChild
-                variant="outline"
-                className={statusButtonClass(pr.status)}
+              <a
+                href={pr.url}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({
+                  variant: 'outline',
+                  className: statusButtonClass(pr.status),
+                })}
               >
-                <a href={pr.url} target="_blank" rel="noreferrer">
-                  <ExternalLink className="mr-2 size-4" />
-                  Open PR #{pr.number}
-                </a>
-              </Button>
+                <ExternalLink className="mr-2 size-4" />
+                Open PR #{pr.number}
+              </a>
             ) : null}
             {targetEmail && pr?.status === 'open' && pr.number && pr.headSha ? (
               <Button
