@@ -4,8 +4,23 @@ import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { cn } from 'cn';
 import * as React from 'react';
 
+interface PopoverAnchorContextValue {
+  anchor: HTMLDivElement | null;
+  setAnchor: React.Dispatch<React.SetStateAction<HTMLDivElement | null>>;
+}
+
+const PopoverAnchorContext =
+  React.createContext<PopoverAnchorContextValue | null>(null);
+
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+  const [anchor, setAnchor] = React.useState<HTMLDivElement | null>(null);
+  const context = React.useMemo(() => ({ anchor, setAnchor }), [anchor]);
+
+  return (
+    <PopoverAnchorContext value={context}>
+      <PopoverPrimitive.Root data-slot="popover" {...props} />
+    </PopoverAnchorContext>
+  );
 }
 
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
@@ -24,9 +39,12 @@ function PopoverContent({
     PopoverPrimitive.Positioner.Props,
     'align' | 'alignOffset' | 'side' | 'sideOffset'
   >) {
+  const anchorContext = React.useContext(PopoverAnchorContext);
+
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
+        anchor={anchorContext?.anchor ?? undefined}
         align={align}
         alignOffset={alignOffset}
         side={side}
@@ -54,12 +72,31 @@ function PopoverContent({
   );
 }
 
-/**
- * Base UI has no standalone anchor part. The positioner anchors to the
- * trigger by default, so this remains an inert passthrough for API parity.
- */
-function PopoverAnchor({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="popover-anchor" className={className} {...props} />;
+function PopoverAnchor({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<'div'>) {
+  const anchorContext = React.useContext(PopoverAnchorContext);
+  const setAnchor = anchorContext?.setAnchor;
+  const mergedRef = React.useCallback(
+    (element: HTMLDivElement | null) => {
+      setAnchor?.(element);
+
+      if (typeof ref === 'function') ref(element);
+      else if (ref) ref.current = element;
+    },
+    [ref, setAnchor]
+  );
+
+  return (
+    <div
+      ref={mergedRef}
+      data-slot="popover-anchor"
+      className={className}
+      {...props}
+    />
+  );
 }
 
 function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {

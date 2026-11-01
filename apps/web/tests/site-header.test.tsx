@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { SiteHeader } from '@/components/layout/site-header';
@@ -66,5 +66,45 @@ describe('SiteHeader', () => {
     expect(
       screen.getByRole('link', { name: /project showcase/i })
     ).toHaveAttribute('href', 'https://projects.scs-pdn.space');
+  });
+
+  test('dismisses the More popover with Escape and restores trigger focus', async () => {
+    const user = userEvent.setup();
+    render(<SiteHeader />);
+    const trigger = screen.getByRole('button', { name: 'More' });
+
+    await user.click(trigger);
+    expect(
+      screen.getByRole('link', { name: /project showcase/i })
+    ).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('link', { name: /project showcase/i })
+      ).toBeNull();
+    });
+    expect(trigger).toHaveFocus();
+  });
+
+  test('keeps mobile navigation as links and closes after navigation', async () => {
+    const user = userEvent.setup();
+    render(<SiteHeader />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Open department navigation' })
+    );
+    const sheet = screen.getByRole('dialog', { name: 'Department menu' });
+    const mobileResearchLink = within(sheet).getByRole('link', {
+      name: 'Research',
+    });
+
+    expect(mobileResearchLink).not.toHaveAttribute('role', 'button');
+    mobileResearchLink.addEventListener('click', (event) =>
+      event.preventDefault()
+    );
+    await user.click(mobileResearchLink);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
