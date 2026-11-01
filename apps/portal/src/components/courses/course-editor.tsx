@@ -960,6 +960,7 @@ function DepartmentCheckboxes({
   readOnly: boolean;
   onChange: (value: string[]) => void;
 }) {
+  const fieldId = useId();
   const selected = new Set(value);
 
   function toggleDepartment(department: string, checked: boolean) {
@@ -986,6 +987,7 @@ function DepartmentCheckboxes({
             )}
           >
             <input
+              id={`${fieldId}-${department}`}
               type="checkbox"
               className="mt-0.5 size-4 accent-current"
               checked={selected.has(department)}

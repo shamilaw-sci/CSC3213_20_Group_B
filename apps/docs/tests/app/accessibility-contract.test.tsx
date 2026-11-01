@@ -12,9 +12,11 @@ function source(path: string) {
 describe('documentation accessibility contracts', () => {
   test('uses the Fumadocs shell for navigation and search', () => {
     const layout = source('app/layout.tsx');
+    const searchDialog = source('components/search/docs-search-dialog.tsx');
 
     expect(layout).not.toContain('SkipLink');
-    expect(layout).toContain("type: 'static'");
+    expect(layout).toContain('SearchDialog: DocsSearchDialog');
+    expect(searchDialog).toContain('useStaticSearch()');
     expect(layout).toContain('<RootProvider');
   });
 

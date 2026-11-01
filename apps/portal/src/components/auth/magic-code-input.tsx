@@ -4,6 +4,7 @@ import { cn } from 'cn';
 import {
   type ClipboardEvent,
   type KeyboardEvent,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -23,6 +24,7 @@ export function MagicCodeInput({
   onComplete,
   className,
 }: MagicCodeInputProps) {
+  const inputGroupId = useId();
   const [digits, setDigits] = useState<string[]>(Array(length).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -109,6 +111,7 @@ export function MagicCodeInput({
       {digits.map((digit, i) => (
         <input
           key={i}
+          id={`${inputGroupId}-${i + 1}`}
           ref={(el) => {
             inputRefs.current[i] = el;
           }}

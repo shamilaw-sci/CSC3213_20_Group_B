@@ -25,10 +25,14 @@ describe('application shell contracts', () => {
 
   test('Docs provides a searchable themed document shell', () => {
     const layout = source('apps/docs/src/app/layout.tsx');
+    const searchDialog = source(
+      'apps/docs/src/components/search/docs-search-dialog.tsx'
+    );
 
     expect(layout).toContain('import { RootProvider }');
     expect(layout).not.toContain('SkipLink');
-    expect(layout).toContain("type: 'static'");
+    expect(layout).toContain('SearchDialog: DocsSearchDialog');
+    expect(searchDialog).toContain('useStaticSearch()');
     expect(layout).not.toContain('maximumScale');
     expect(layout).not.toContain('userScalable');
   });

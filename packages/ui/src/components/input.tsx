@@ -1,9 +1,17 @@
 import { cn } from 'cn';
 import * as React from 'react';
 
-function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
+function Input({
+  className,
+  type,
+  id,
+  ...props
+}: React.ComponentProps<'input'>) {
+  const generatedId = React.useId();
+
   return (
     <input
+      id={id ?? generatedId}
       type={type}
       data-slot="input"
       className={cn(

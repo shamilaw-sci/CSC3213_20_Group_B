@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from 'next';
 import { Open_Sans, Source_Serif_4 } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { DocsSearchDialog } from '@/components/search/docs-search-dialog';
 import { siteConfig } from '@/config/site.config';
 import { themeMetadataColors } from '@/config/theme.config';
 
@@ -135,7 +136,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <RootProvider search={{ options: { type: 'static' } }}>
+        <RootProvider search={{ SearchDialog: DocsSearchDialog }}>
           {children}
         </RootProvider>
       </body>

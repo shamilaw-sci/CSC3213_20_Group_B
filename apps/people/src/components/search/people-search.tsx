@@ -2,7 +2,7 @@
 
 import { Loader2, Search, X } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 
 import {
   getPeopleSearchIndex,
@@ -20,6 +20,7 @@ function matchesEntry(entry: PeopleSearchEntry, query: string) {
 }
 
 export function PeopleSearch() {
+  const searchId = useId();
   const [query, setQuery] = useState('');
   const [entries, setEntries] = useState<PeopleSearchEntry[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -57,6 +58,7 @@ export function PeopleSearch() {
           aria-hidden="true"
         />
         <input
+          id={searchId}
           type="search"
           role="searchbox"
           value={query}

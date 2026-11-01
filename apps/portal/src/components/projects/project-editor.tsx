@@ -56,7 +56,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -578,10 +578,13 @@ function TextAreaField({
   placeholder?: string;
   readOnly?: boolean;
 }) {
+  const fieldId = useId();
+
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <Label htmlFor={fieldId}>{label}</Label>
       <textarea
+        id={fieldId}
         className="border-input bg-background focus-visible:border-ring
           focus-visible:ring-ring/50 min-h-28 w-full rounded-md border px-3 py-2
           text-sm shadow-xs transition-[color,box-shadow] outline-none
@@ -744,6 +747,7 @@ function DepartmentCheckboxes({
   readOnly: boolean;
   onChange: (value: string[]) => void;
 }) {
+  const fieldId = useId();
   const selected = new Set(value);
 
   function toggleDepartment(department: string, checked: boolean) {
@@ -770,6 +774,7 @@ function DepartmentCheckboxes({
             )}
           >
             <input
+              id={`${fieldId}-${department}`}
               type="checkbox"
               className="mt-0.5 size-4 accent-current"
               checked={selected.has(department)}

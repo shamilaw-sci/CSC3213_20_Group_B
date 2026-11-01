@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import { Badge, badgeVariants } from '@scs/ui/components/badge';
 import { buttonVariants } from '@scs/ui/components/button';
 import { Card } from '@scs/ui/components/card';
+import { Command, CommandInput } from '@scs/ui/components/command';
+import { Input } from '@scs/ui/components/input';
 import { Toaster } from '@scs/ui/components/sonner';
 import { Tabs, TabsList, TabsTrigger } from '@scs/ui/components/tabs';
 import { describe, expect, test } from 'bun:test';
@@ -94,6 +96,24 @@ function themeTokens(css: string, selector: ':root' | '.dark') {
 }
 
 describe('shared UI component contracts', () => {
+  test('gives inputs an autofill identifier while preserving explicit ids', () => {
+    const generated = renderToStaticMarkup(<Input />);
+    const explicit = renderToStaticMarkup(<Input id="profile-name" />);
+
+    expect(generated).toMatch(/\sid="[^"]+"/u);
+    expect(explicit).toContain('id="profile-name"');
+  });
+
+  test('gives command inputs an autofill identifier', () => {
+    const markup = renderToStaticMarkup(
+      <Command>
+        <CommandInput />
+      </Command>
+    );
+
+    expect(markup).toMatch(/<input[^>]+\sid="[^"]+"/u);
+  });
+
   test('does not ship the retired skip-navigation primitive', () => {
     const modulePath = resolve(
       import.meta.dir,
