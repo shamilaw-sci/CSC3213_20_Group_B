@@ -22,11 +22,13 @@ The shared `ThemeProvider` configures `next-themes` to use a class, follow the
 system by default, and disable transitions during a mode change. The normal
 application layout owns that provider.
 
-Standalone global error pages cannot rely on the hydrated provider. The
-`ThemeInitScript` reads an explicit `light` or `dark` preference when storage is
-available, otherwise follows the system preference, applies `.dark` before
-hydration, and listens for system and cross-tab storage changes. It intentionally
-falls back safely when storage or media-query APIs fail.
+Standalone global error pages cannot rely on the hydrated provider. They must
+import `@scs/ui/styles/theme.css` themselves because they replace the root
+layout that normally loads the semantic tokens. The `ThemeInitScript` reads an
+explicit `light` or `dark` preference when storage is available, otherwise
+follows the system preference, applies `.dark` before hydration, and listens for
+system and cross-tab storage changes. It intentionally falls back safely when
+storage or media-query APIs fail.
 
 The theme toggle exposes one labelled button contract, uses the resolved theme,
 and hides itself when the root marks a standalone error page. Apps may choose

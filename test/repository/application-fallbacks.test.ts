@@ -36,6 +36,7 @@ describe('Next.js application fallback contracts', () => {
       for (const file of ['global-error.tsx', 'global-not-found.tsx']) {
         const source = readFileSync(fallbackPath(app, file), 'utf8');
 
+        expect(source).toContain("import '@scs/ui/styles/theme.css';");
         expect(source).toContain("import '@/app/globals.css';");
         expect(source).toContain('<html');
         expect(source).toContain('<body');

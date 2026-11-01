@@ -1,3 +1,4 @@
+import '@scs/ui/styles/theme.css';
 import '@/app/globals.css';
 
 import { buttonVariants } from '@scs/ui/components/button';
