@@ -1,0 +1,40 @@
+{
+  "name": "@scs/performance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint src k6 test",
+    "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "test": "bun test test",
+    "build": "bun build src/cli.ts --target=bun --packages=external --outdir=dist && bun dist/cli.js check",
+    "knip": "knip",
+    "perf:check": "bun run lint && bun run typecheck && bun run typecheck:test && bun run test && bun src/cli.ts check",
+    "perf:run": "bun src/cli.ts run",
+    "perf:smoke": "bun src/cli.ts run --profile smoke",
+    "perf:baseline": "bun src/cli.ts run --profile baseline",
+    "perf:browser": "bun src/cli.ts browser",
+    "perf:report": "bun src/cli.ts report",
+    "perf:compare": "bun src/cli.ts compare",
+    "perf:compare-ci": "bun src/compare-ci.ts",
+    "perf:fixture": "bun src/fixture-server.ts",
+    "perf:verify-local": "bun src/verify-local.ts",
+    "perf:verify-guards": "bun src/verify-guards.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.64.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@scs/eslint-config": "workspace:*",
+    "@scs/tsconfig": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/k6": "^2.3.0",
+    "@types/node": "^25.9.9",
+    "eslint": "^9.39.5",
+    "globals": "^17.7.0",
+    "knip": "^6.41.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "identities": ["perf-student-001", "perf-student-002"],
+  "projectSlugs": ["perf-project-001", "perf-project-002"],
+  "searchQueries": ["Synthetic", "Perf", "computer science"]
+}

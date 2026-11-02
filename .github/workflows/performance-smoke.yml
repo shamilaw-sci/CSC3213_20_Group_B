@@ -1,0 +1,50 @@
+name: Staging performance smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-staging
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/main' && github.repository == 'csc3213-2026-group-b/scs-pdn-monorepo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: performance-staging
+    steps:
+      - name: Require operator enablement
+        env:
+          PERF_ENABLED: ${{ vars.PERF_ENABLED }}
+        run: test "$PERF_ENABLED" = 'true'
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '2.3.0'
+      - name: Read-only smoke within staging caps
+        env:
+          PERF_APPROVAL_ID: ${{ vars.PERF_SMOKE_APPROVAL_ID }}
+          PERF_AUTHORIZATION_JSON: ${{ vars.PERF_AUTHORIZATION_JSON }}
+          PERF_DEPLOYMENT_REVISION: ${{ vars.PERF_DEPLOYMENT_REVISION }}
+        run: bun run perf:smoke --environment staging --settings config/public-closed.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: staging-smoke-${{ github.run_id }}
+          path: |
+            packages/performance/results/**/report.json
+            packages/performance/results/**/metrics.csv
+            packages/performance/results/**/summary.md
+            packages/performance/results/**/report.html
+          retention-days: 14
+          if-no-files-found: warn

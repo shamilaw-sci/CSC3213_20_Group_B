@@ -30,6 +30,9 @@ const relativeImportExceptions = new Set([
   'apps/docs/src/lib/remark-repository-variants.ts',
   // This package test intentionally loads non-exported workspace ESLint configs.
   'packages/eslint-config/test/config-exports.test.ts',
+  // Native k6 resolves filesystem modules and cannot resolve TypeScript path aliases.
+  'packages/performance/k6/load.ts',
+  'packages/performance/k6/journeys.ts',
 ]);
 const relativeImportPattern =
   /(?:from\s+|import\s*\(\s*|^\s*import\s+)['"]\.\.?\//mu;

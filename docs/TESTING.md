@@ -5,6 +5,11 @@ description: Test layers, workspace gates, repository-wide checks, CI parity, an
 
 # Testing and verification
 
+For guarded HTTP load tests, browser diagnostics, synthetic fixtures and
+capacity reports, see [Performance testing](PERFORMANCE_TESTING.md).
+`bun run perf:check` verifies the framework without load traffic;
+`bun run perf:verify-local` performs only a tiny loopback fixture check.
+
 Tests live in the owning workspace's `test` or `tests` directory. Production
 TypeScript and test TypeScript are checked separately where a workspace defines
 `typecheck:test`.

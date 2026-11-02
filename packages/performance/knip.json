@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip/schema.json",
+  "entry": ["k6/load.ts", "test/**/*.test.ts"],
+  "project": ["src/**/*.ts", "k6/**/*.ts", "test/**/*.ts"],
+  "ignoreDependencies": ["k6"]
+}

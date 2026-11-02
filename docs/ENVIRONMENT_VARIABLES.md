@@ -5,6 +5,32 @@ description: Complete configuration inventory, ownership, defaults, secrets, and
 
 # Environment Variables
 
+## Performance tooling
+
+The local-first `@scs/performance` workspace parses its settings in
+`packages/performance/src/config`. These values are never application build
+inputs or browser-public configuration. See
+[Performance testing](PERFORMANCE_TESTING.md) for authorization and examples.
+
+| Variable                   | Purpose and supply                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| `PERF_K6_BINARY`           | Optional absolute k6 2.3.0 executable; defaults to `k6` on PATH                             |
+| `PERF_BROWSER_EXECUTABLE`  | Optional compatible Chromium executable for the browser probe                               |
+| `PERF_ENVIRONMENTS_FILE`   | Local-only reviewed allowlist override; forbidden in CI                                     |
+| `PERF_DEPLOYMENT_REVISION` | Required full deployed commit SHA for hosted targets                                        |
+| `PERF_AUTHORIZATION_JSON`  | Bounded operator/provider approval record; protected environment variable in CI             |
+| `PERF_APPROVAL_ID`         | Identifier matching that authorization record                                               |
+| `PERF_SESSIONS_JSON`       | Synthetic session array; secret for authenticated workloads; never real student credentials |
+| `PERF_SESSIONS_FILE`       | Alternative local secret file for larger account pools; mutually exclusive with JSON input  |
+| `PERF_ENABLED`             | GitHub protected-environment enablement variable, checked by hosted workflows               |
+| `PERF_SMOKE_APPROVAL_ID`   | Protected-environment identifier used by the dedicated staging smoke workflow               |
+
+Workflow inputs are passed through `PERF_ENVIRONMENT`, `PERF_PROFILE` and
+`PERF_CONFIGURATION` into validated CLI arguments. They cannot supply arbitrary
+target URLs. `CI` disables local allowlist overrides. The supervisor supplies
+`PERF_PLAN_FILE` and a minimal environment to k6; unrelated secrets and `K6_*`
+overrides are not inherited. Generated evidence and local JSON files are ignored.
+
 This is the canonical configuration catalog. Each deployable owns a safe local
 template and runtime validator so applications and services remain
 independently deployable.

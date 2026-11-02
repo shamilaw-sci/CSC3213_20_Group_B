@@ -3,6 +3,7 @@
   "cacheMaxAge": "7d",
   "cacheMaxSize": "2GB",
   "tasks": {
+    "perf:check": { "cache": false },
     "dev": { "cache": false, "persistent": true },
     "build": {
       "dependsOn": ["^build"],

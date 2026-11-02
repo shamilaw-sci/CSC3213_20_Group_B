@@ -1,0 +1,11 @@
+{
+  "model": "open",
+  "weights": {
+    "people": 40,
+    "search": 35,
+    "projects": 23,
+    "portal": 0,
+    "updates": 0,
+    "safe": 2
+  }
+}

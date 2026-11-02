@@ -10,3 +10,5 @@
 **/node_modules/**
 .superpowers/**
 bun.lock
+packages/performance/results/**
+packages/performance/**/*.local.json

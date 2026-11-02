@@ -1,0 +1,145 @@
+name: Performance tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Reviewed target allowlist (hosted targets are disabled until configured)
+        type: choice
+        required: true
+        default: local
+        options: [local, staging, isolated]
+      profile:
+        description: Planning profile; high loads also require a matching authorization record
+        type: choice
+        required: true
+        default: smoke
+        options:
+          [
+            smoke,
+            baseline,
+            moderate,
+            high,
+            heavy,
+            extreme,
+            spike,
+            soak,
+            recovery,
+          ]
+      configuration:
+        description: Checked-in workload mix and executor model
+        type: choice
+        required: true
+        default: public-closed
+        options: [public-closed, public-open, mixed-closed, mixed-open]
+      approval_id:
+        description: Approved change identifier (required for hosted targets)
+        type: string
+        required: false
+      baseline_run_id:
+        description: Optional previous successful Performance tests run to compare
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: performance-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  fixture:
+    if: inputs.environment == 'local'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '2.3.0'
+      - run: bun run perf:check
+      - name: Verify framework on loopback only (always one VU for three seconds)
+        run: bun run perf:verify-local
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-fixture-${{ github.run_id }}
+          path: |
+            packages/performance/results/**/report.json
+            packages/performance/results/**/metrics.csv
+            packages/performance/results/**/summary.md
+            packages/performance/results/**/report.html
+          retention-days: 14
+          if-no-files-found: warn
+
+  hosted:
+    if: inputs.environment != 'local' && github.ref == 'refs/heads/main' && github.repository == 'csc3213-2026-group-b/scs-pdn-monorepo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 270
+    environment: performance-${{ inputs.environment }}
+    steps:
+      - name: Require operator enablement in the protected environment
+        env:
+          PERF_ENABLED: ${{ vars.PERF_ENABLED }}
+        run: test "$PERF_ENABLED" = 'true'
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '2.3.0'
+      - run: bun run perf:check
+      - name: Run authorized workload
+        env:
+          PERF_ENVIRONMENT: ${{ inputs.environment }}
+          PERF_PROFILE: ${{ inputs.profile }}
+          PERF_CONFIGURATION: ${{ inputs.configuration }}
+          PERF_APPROVAL_ID: ${{ inputs.approval_id }}
+          PERF_AUTHORIZATION_JSON: ${{ vars.PERF_AUTHORIZATION_JSON }}
+          PERF_DEPLOYMENT_REVISION: ${{ vars.PERF_DEPLOYMENT_REVISION }}
+          PERF_SESSIONS_JSON: ${{ secrets.PERF_SESSIONS_JSON }}
+        run: |
+          case "$PERF_CONFIGURATION" in public-closed|public-open|mixed-closed|mixed-open) ;; *) exit 1;; esac
+          bun run perf:run --environment "$PERF_ENVIRONMENT" --profile "$PERF_PROFILE" --settings "config/$PERF_CONFIGURATION.json"
+      - name: Validate optional baseline run
+        if: inputs.baseline_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_RUN_ID: ${{ inputs.baseline_run_id }}
+        run: |
+          [[ "$BASELINE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BASELINE_RUN_ID" --jq '{event,head_branch,conclusion,path}' > packages/performance/.cache/baseline-run.json
+          bun -e 'const r=await Bun.file("packages/performance/.cache/baseline-run.json").json(); if(r.event!=="workflow_dispatch"||r.head_branch!=="main"||r.conclusion!=="success"||r.path!==".github/workflows/performance.yml")process.exit(1)'
+      - uses: actions/download-artifact@v8
+        if: inputs.baseline_run_id != ''
+        with:
+          name: performance-${{ inputs.baseline_run_id }}
+          path: packages/performance/.cache/baseline
+          run-id: ${{ inputs.baseline_run_id }}
+          github-token: ${{ github.token }}
+      - name: Compare matched baseline
+        if: inputs.baseline_run_id != ''
+        run: bun run --cwd packages/performance perf:compare-ci
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-${{ github.run_id }}
+          path: |
+            packages/performance/results/**/report.json
+            packages/performance/results/**/metrics.csv
+            packages/performance/results/**/summary.md
+            packages/performance/results/**/report.html
+          retention-days: 30
+          if-no-files-found: warn

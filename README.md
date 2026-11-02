@@ -61,6 +61,7 @@ workspaces.
 | `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
 | `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
+| `packages/performance`   | `@scs/performance`   | Guarded load tests and local performance reports |
 | `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets                        |
 
 The public data repository is a separate system. It is not a Bun workspace in
@@ -157,6 +158,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [ESLint config](docs/PACKAGE_ESLINT_CONFIG.md)             | change shared lint and Tailwind policy                                |
 | [Shared package internals](docs/PACKAGES/INDEX.md)         | maintain schema, UI, TypeScript, and ESLint package contracts         |
 | [Testing](docs/TESTING.md)                                 | select and run the correct verification layers                        |
+| [Performance testing](docs/PERFORMANCE_TESTING.md)         | configure safe k6/browser workloads and interpret capacity evidence   |
 | [Dependency management](docs/DEPENDENCY_MANAGEMENT.md)     | add, update, audit, or remove dependencies                            |
 | [Documentation authoring](docs/DOCUMENTATION_AUTHORING.md) | add or publish a handbook page                                        |
 | [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)     | configure local or deployed runtimes                                  |

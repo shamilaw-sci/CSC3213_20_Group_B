@@ -36,6 +36,7 @@ Markdown files are readable on GitHub and published by the documentation site.
   [TypeScript config](PACKAGE_TSCONFIG.md), and
   [ESLint config](PACKAGE_ESLINT_CONFIG.md).
 - Working practices: [Testing](TESTING.md),
+  [Performance testing](PERFORMANCE_TESTING.md),
   [Dependency management](DEPENDENCY_MANAGEMENT.md),
   [Documentation authoring](DOCUMENTATION_AUTHORING.md), and
   [Troubleshooting](TROUBLESHOOTING.md).

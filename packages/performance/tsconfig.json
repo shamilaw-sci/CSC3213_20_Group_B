@@ -1,0 +1,16 @@
+{
+  "extends": "@scs/tsconfig/bun.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@k6/*": ["./k6/*"],
+      "@fixtures/*": ["./fixtures/*"],
+      "@config/*": ["./config/*"],
+      "test/*": ["./test/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "k6/**/*.ts"],
+  "exclude": ["node_modules", "dist", "results"]
+}

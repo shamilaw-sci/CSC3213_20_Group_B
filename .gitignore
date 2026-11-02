@@ -64,3 +64,7 @@ Thumbs.db
 # browser automation artifacts
 .playwright-cli/
 output/
+
+# performance evidence and local authorization/session material
+packages/performance/results/
+packages/performance/**/*.local.json

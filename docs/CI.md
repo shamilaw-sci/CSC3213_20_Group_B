@@ -148,6 +148,14 @@ Cloudflare credentials. See [Operations](OPERATIONS.md).
 
 ## Changing CI
 
+The manually dispatched performance workflows are separate from required CI.
+They provide a tiny loopback verification, protected staging smoke, authorized
+load profiles, downloadable reports and optional matched-baseline comparisons.
+Hosted execution is restricted to the canonical repository's `main` and is
+disabled until target allowlists, environment protections and provider approvals
+are configured. See [Performance testing](PERFORMANCE_TESTING.md) for the
+complete setup and the distinction between `PASS`, `FAIL` and `INVALID` reports.
+
 When changing a workflow:
 
 1. keep permissions least-privileged;

@@ -1,0 +1,42 @@
+{
+  "local": {
+    "enabled": true,
+    "kind": "fixture",
+    "provider": "local",
+    "origins": {
+      "web": "http://127.0.0.1:47831",
+      "people": "http://127.0.0.1:47831",
+      "projects": "http://127.0.0.1:47831",
+      "portal": "http://127.0.0.1:47831",
+      "docs": "http://127.0.0.1:47831",
+      "api": "http://127.0.0.1:47831",
+      "data": "http://127.0.0.1:47831"
+    },
+    "isolatedDependencies": true,
+    "allowWrites": true,
+    "caps": { "vus": 25, "rps": 100, "seconds": 600, "requests": 60000 }
+  },
+  "staging": {
+    "enabled": false,
+    "kind": "staging",
+    "provider": "vercel",
+    "origins": {},
+    "isolatedDependencies": false,
+    "allowWrites": false,
+    "caps": { "vus": 5, "rps": 10, "seconds": 120, "requests": 1200 }
+  },
+  "isolated": {
+    "enabled": false,
+    "kind": "isolated",
+    "provider": "other",
+    "origins": {},
+    "isolatedDependencies": false,
+    "allowWrites": false,
+    "caps": {
+      "vus": 10000,
+      "rps": 20000,
+      "seconds": 14400,
+      "requests": 10000000
+    }
+  }
+}
