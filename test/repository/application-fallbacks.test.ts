@@ -15,6 +15,10 @@ function fallbackPath(app: (typeof apps)[number], file: string) {
   return resolve(root, `apps/${app}/src/app/${file}`);
 }
 
+function applicationSource(path: string) {
+  return readFileSync(resolve(root, path), 'utf8');
+}
+
 describe('Next.js application fallback contracts', () => {
   for (const app of apps) {
     test(`${app} owns the complete fallback hierarchy`, () => {
@@ -59,6 +63,86 @@ describe('Next.js application fallback contracts', () => {
         const source = readFileSync(fallbackPath(app, file), 'utf8');
         expect(source).not.toContain('@/components/custom/theme/');
       }
+    }
+  });
+
+  test('public entity routes terminate confirmed missing records with notFound', () => {
+    const guardedSources = [
+      'apps/projects/src/app/projects/[project_slug]/page.tsx',
+      'apps/people/src/app/people/[identity]/page.tsx',
+      'apps/people/src/app/students/computer-science/[batch]/page.tsx',
+      'apps/people/src/app/students/data-science/[batch]/page.tsx',
+      'apps/people/src/app/students/statistics/[batch]/page.tsx',
+      'apps/portal/src/lib/server/course-editor.ts',
+      'apps/portal/src/lib/server/project-editor.ts',
+      'apps/portal/src/lib/server/user.ts',
+    ];
+
+    for (const path of guardedSources) {
+      expect(applicationSource(path), path).toContain('notFound()');
+    }
+  });
+
+  test('project collection routes validate published collections and page bounds', () => {
+    const collectionRoutes = [
+      'apps/projects/src/app/browse/[[...segments]]/page.tsx',
+      'apps/projects/src/app/categories/[category]/[[...segments]]/page.tsx',
+      'apps/projects/src/app/search/[query]/[[...segments]]/page.tsx',
+      'apps/projects/src/app/topics/[topic]/[[...segments]]/page.tsx',
+      'apps/projects/src/app/types/[type]/[[...segments]]/page.tsx',
+    ];
+
+    for (const path of collectionRoutes) {
+      const source = applicationSource(path);
+      expect(source, path).toContain('requireProjectCollectionPage(');
+      expect(source, path).toContain('projects={projects}');
+    }
+  });
+
+  test('admin user subpages validate the dynamic user before rendering', () => {
+    for (const path of [
+      'apps/portal/src/app/admin/users/[email]/public-profile/page.tsx',
+      'apps/portal/src/app/admin/users/[email]/settings/page.tsx',
+    ]) {
+      expect(applicationSource(path), path).toContain(
+        'await loadAdminUser(targetEmail)'
+      );
+    }
+  });
+
+  test('entity notFound calls retain their nearest route-specific fallback', () => {
+    const routeFallbacks = [
+      'apps/projects/src/app/projects/[project_slug]/not-found.tsx',
+      'apps/projects/src/app/browse/not-found.tsx',
+      'apps/projects/src/app/categories/[category]/not-found.tsx',
+      'apps/projects/src/app/search/[query]/not-found.tsx',
+      'apps/projects/src/app/topics/[topic]/not-found.tsx',
+      'apps/projects/src/app/types/[type]/not-found.tsx',
+      'apps/people/src/app/people/[identity]/not-found.tsx',
+      'apps/people/src/app/students/computer-science/[batch]/not-found.tsx',
+      'apps/people/src/app/students/data-science/[batch]/not-found.tsx',
+      'apps/people/src/app/students/statistics/[batch]/not-found.tsx',
+      'apps/portal/src/app/academic/courses/[course]/not-found.tsx',
+      'apps/portal/src/app/user/projects/[project]/not-found.tsx',
+      'apps/portal/src/app/admin/projects/[project]/not-found.tsx',
+      'apps/portal/src/app/admin/users/[email]/not-found.tsx',
+    ];
+
+    for (const path of routeFallbacks) {
+      expect(existsSync(resolve(root, path)), path).toBe(true);
+    }
+  });
+
+  test('People routes that validate remote records remain dynamic', () => {
+    for (const path of [
+      'apps/people/src/app/people/[identity]/page.tsx',
+      'apps/people/src/app/students/computer-science/[batch]/page.tsx',
+      'apps/people/src/app/students/data-science/[batch]/page.tsx',
+      'apps/people/src/app/students/statistics/[batch]/page.tsx',
+    ]) {
+      const source = applicationSource(path);
+      expect(source, path).toContain("export const dynamic = 'force-dynamic';");
+      expect(source, path).not.toContain('generateStaticParams');
     }
   });
 });

@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 
 import {
   getStudentDirectoryCandidates,
+  isPublishedStudentBatch,
   type PeopleManifest,
 } from '@/lib/data/people-data';
 
@@ -45,4 +46,19 @@ test('limits profile directory lookups to the registration batch', () => {
       batch: manifest.batches[1],
     },
   ]);
+});
+
+test('recognizes only batches published for the requested programme', async () => {
+  const originalFetch = globalThis.fetch;
+  const fetchMock = Object.assign(async () => Response.json(manifest), {
+    preconnect: () => undefined,
+  }) as typeof fetch;
+  globalThis.fetch = fetchMock;
+
+  try {
+    expect(await isPublishedStudentBatch('computer-science', '21')).toBe(true);
+    expect(await isPublishedStudentBatch('statistics', '21')).toBe(false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

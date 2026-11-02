@@ -81,6 +81,13 @@ interface CacheEntry<T> {
 
 const peopleDataCache = new Map<string, CacheEntry<unknown>>();
 
+export class PeopleDataNotFoundError extends Error {
+  constructor(path: string) {
+    super(`People data not found for ${path}`);
+    this.name = 'PeopleDataNotFoundError';
+  }
+}
+
 const AcademicStaffListSchema = AcademicTeachingStaffSchema.array();
 const AcademicSupportStaffListSchema = AcademicSupportStaffSchema.array();
 const NonAcademicStaffListSchema = NonAcademicStaffSchema.array();
@@ -294,6 +301,8 @@ async function fetchPeopleDataUncached<T>(
     return schema.parse(notFoundValue);
   }
 
+  if (response.status === 404) throw new PeopleDataNotFoundError(path);
+
   if (!response.ok) {
     throw new Error(
       `Failed to fetch people data from ${path}: ${response.status} ${response.statusText}`
@@ -316,6 +325,26 @@ export function getPeopleManifest(): Promise<PeopleManifest> {
     'manifest.json',
     PeopleManifestSchema,
     EMPTY_PEOPLE_MANIFEST
+  );
+}
+
+export async function isPublishedStudentBatch(
+  subject: StudentSubject,
+  batchSlug: string
+): Promise<boolean> {
+  const manifest = await getPeopleManifest();
+  const programme = manifest.programmes.find(
+    (candidate) => candidate.slug === subject
+  );
+  if (!programme) return false;
+
+  const batchId = `s${batchSlug.replace(/^s/iu, '')}`.toLowerCase();
+  return manifest.batches.some(
+    (batch) =>
+      batch.id.toLowerCase() === batchId &&
+      programme.batches.some(
+        (programmeBatch) => programmeBatch.toLowerCase() === batchId
+      )
   );
 }
 

@@ -8,6 +8,8 @@ import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import { useEffect } from 'react';
 
+import { DocsFallbackIcon } from '@/components/layout/docs-fallback-icon';
+
 export default function GlobalError({
   error,
   reset,
@@ -27,6 +29,7 @@ export default function GlobalError({
           items-center"
       >
         <FeedbackState
+          icon={<DocsFallbackIcon />}
           title="The documentation site needs to recover"
           description="Reload the site. If the problem continues, report it to the repository maintainers."
           actions={

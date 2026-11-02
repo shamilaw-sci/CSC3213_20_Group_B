@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { adminUserApiUrl, meApiUrl } from '@/lib/api';
 import { serverApiJson, serverApiJsonOrNull } from '@/lib/server/api-client';
@@ -12,7 +12,7 @@ export async function loadAdminUser(email: string): Promise<AdminUserData> {
   const data = await serverApiJsonOrNull<AdminUserResponse>(
     adminUserApiUrl(email)
   );
-  if (!data) redirect('/admin/users');
+  if (!data) notFound();
 
   return {
     ...data,

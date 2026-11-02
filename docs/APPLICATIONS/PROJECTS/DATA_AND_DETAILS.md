@@ -6,17 +6,17 @@ description: Published-data clients, validation, cache behavior, loading and fai
 # Projects data and details
 
 All project records are validated with `ProjectSchema` imported directly from
-`@scs/schemas`. The app has separate server-oriented and browser-oriented data
-helpers because sitemaps and home metadata need published data during server
-execution while interactive directories own retryable browser states.
+`@scs/schemas`. The app has separate aggregate and route-oriented data helpers.
+Sitemaps and home metadata tolerate an unavailable empty registry, while public
+detail and collection routes preserve missing-record semantics.
 
 ## Data paths
 
-| Consumer                   | Published input                | Missing behavior         |
-| -------------------------- | ------------------------------ | ------------------------ |
-| server queries and sitemap | `projects.json`                | validated empty list     |
-| browser directory          | `projects.json`                | explicit not-found error |
-| browser project detail     | `projects/{encoded-slug}.json` | explicit not-found error |
+| Consumer                   | Published input                | Missing behavior                 |
+| -------------------------- | ------------------------------ | -------------------------------- |
+| server queries and sitemap | `projects.json`                | validated empty list             |
+| collection route           | `projects.json`                | `notFound()` for invalid route   |
+| project detail route       | `projects/{encoded-slug}.json` | `notFound()` for missing project |
 
 Both helpers keep an in-memory promise cache for five minutes and remove a
 failed promise before rethrowing, allowing later retries. The server helper
@@ -24,12 +24,17 @@ uses `cache: no-store` and supports the configured `local` data mode as an
 empty registry. The browser helper distinguishes `404` with
 `ProjectDataNotFoundError` from other request failures.
 
-Directories show a page-shaped skeleton while loading, a retry action for
-transport or validation failures, a collection-not-found state for absent
-categories and topics, and an empty state for valid collections without
-projects. Detail routes load the target project and full project list together;
-they distinguish a missing record from a failed request and avoid state updates
-after their effect is cleaned up.
+Collection routes load and validate their published result set before
+rendering. Absent categories or topics and pages beyond the available result
+set call `notFound()`; a valid first page may still show an empty result state.
+The directory renders from that server-provided list, while its search form is
+the interactive client island; there is no second browser data request. Detail
+routes load the target project and full project list on the server, call
+`notFound()` only for the typed missing-project error, and let transport or
+validation failures reach the route error boundary. Each collection family and
+the project detail segment owns a nested `not-found.tsx`, so the not-found
+response keeps its category-, topic-, search-, type-, page-, or project-specific
+explanation.
 
 ## Detail interpretation
 

@@ -97,7 +97,7 @@ describe('personal-site redirects', () => {
     );
   });
 
-  test('returns a non-cacheable 404 for a missing or inactive mapping', async () => {
+  test('rewrites a missing GET mapping through the themed not-found page', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(null, { status: 404 }))
@@ -110,8 +110,30 @@ describe('personal-site redirects', () => {
     expect(response.status).toBe(404);
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.has('location')).toBe(false);
-    expect(response.headers.has('x-middleware-rewrite')).toBe(false);
+    expect(response.headers.get('x-middleware-rewrite')).toBe(
+      'https://scs.pdn.space/personal-site-not-found'
+    );
   });
+
+  test.each(SUPPORTED_METHODS.filter((method) => method !== 'GET'))(
+    'returns a plain non-cacheable 404 for a missing %s mapping',
+    async (method) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(null, { status: 404 }))
+      );
+
+      const response = await proxy(
+        new NextRequest('https://scs.pdn.space/~missing/path', { method })
+      );
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(response.headers.has('location')).toBe(false);
+      expect(response.headers.has('x-middleware-rewrite')).toBe(false);
+      expect(await response.text()).toBe('');
+    }
+  );
 
   test('rejects an unsafe destination instead of redirecting', async () => {
     const consoleError = vi

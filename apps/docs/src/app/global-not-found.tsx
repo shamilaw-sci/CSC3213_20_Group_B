@@ -6,6 +6,8 @@ import { FeedbackState } from '@scs/ui/components/feedback-state';
 import { ThemeInitScript } from '@scs/ui/components/theme-init-script';
 import Link from 'next/link';
 
+import { DocsFallbackIcon } from '@/components/layout/docs-fallback-icon';
+
 export default function GlobalNotFound() {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -18,6 +20,7 @@ export default function GlobalNotFound() {
       >
         <FeedbackState
           code="404"
+          icon={<DocsFallbackIcon />}
           title="Page not found"
           description="This address does not match a page on the documentation site."
           actions={

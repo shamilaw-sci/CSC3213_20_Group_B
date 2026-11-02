@@ -1,18 +1,8 @@
 import type { Project } from '@scs/schemas';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 
 import ProjectDetailPage from '@/app/projects/[project_slug]/_components/project-detail-page';
 import { ProjectDetail, ProjectGrid } from '@/components/projects/registry-ui';
-import { fetchProject, fetchProjects } from '@/lib/projects/api-client';
-
-vi.mock('@/lib/projects/api-client', () => ({
-  fetchProject: vi.fn(),
-  fetchProjects: vi.fn(),
-  ProjectDataNotFoundError: class ProjectDataNotFoundError extends Error {},
-}));
-
-const fetchProjectMock = vi.mocked(fetchProject);
-const fetchProjectsMock = vi.mocked(fetchProjects);
 
 function project(overrides: Partial<Project> = {}): Project {
   return {
@@ -50,11 +40,6 @@ function project(overrides: Partial<Project> = {}): Project {
 }
 
 describe('Project presentation', () => {
-  beforeEach(() => {
-    fetchProjectMock.mockReset();
-    fetchProjectsMock.mockReset();
-  });
-
   test('makes each compact project card one clear, contained link', () => {
     const { container } = render(<ProjectGrid projects={[project()]} />);
     const cardLink = screen.getByRole('link', {
@@ -152,24 +137,25 @@ describe('Project presentation', () => {
     ).toBeInTheDocument();
   });
 
-  test('does not render an empty related-project section', async () => {
+  test('does not render an empty related-project section', () => {
     const selectedProject = project();
-    fetchProjectMock.mockResolvedValue(selectedProject);
-    fetchProjectsMock.mockResolvedValue([selectedProject]);
 
-    render(<ProjectDetailPage projectSlug={selectedProject.slug} />);
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole('heading', { name: selectedProject.title })
-      ).toBeInTheDocument()
+    render(
+      <ProjectDetailPage
+        project={selectedProject}
+        projects={[selectedProject]}
+      />
     );
+
+    expect(
+      screen.getByRole('heading', { name: selectedProject.title })
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: /Related Projects/iu })
     ).toBeNull();
   });
 
-  test('finds related work through a shared schema type without inventing roles', async () => {
+  test('finds related work through a shared schema type without inventing roles', () => {
     const selectedProject = project({ categories: ['Unique category'] });
     const relatedProject = project({
       id: 'related-project',
@@ -178,13 +164,15 @@ describe('Project presentation', () => {
       categories: ['Different category'],
       tags: ['Different topic'],
     });
-    fetchProjectMock.mockResolvedValue(selectedProject);
-    fetchProjectsMock.mockResolvedValue([selectedProject, relatedProject]);
-
-    render(<ProjectDetailPage projectSlug={selectedProject.slug} />);
+    render(
+      <ProjectDetailPage
+        project={selectedProject}
+        projects={[selectedProject, relatedProject]}
+      />
+    );
 
     expect(
-      await screen.findByRole('heading', { name: 'Related Projects' })
+      screen.getByRole('heading', { name: 'Related Projects' })
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Related by Type' })

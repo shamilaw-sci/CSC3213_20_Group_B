@@ -1,22 +1,12 @@
-'use client';
-
 import type { Project } from '@scs/schemas';
 import { buttonVariants } from '@scs/ui/components/button';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
 
 import { ProjectSearchForm } from '@/components/projects/project-search-form';
-import {
-  EmptyProjectsPanel,
-  ProjectDirectoryLoading,
-  ProjectErrorPanel,
-  StatePanel,
-} from '@/components/projects/project-states';
+import { EmptyProjectsPanel } from '@/components/projects/project-states';
 import { ProjectGrid } from '@/components/projects/registry-ui';
-import { fetchProjects } from '@/lib/projects/api-client';
 import {
   buildCollectionPath,
-  canonicalizeCollectionSegment,
   PROJECT_TYPE_SEGMENTS,
   type ProjectCollection,
 } from '@/lib/projects/collection-navigation';
@@ -104,65 +94,15 @@ function collectionDescription(collection: ProjectCollection) {
 export function ProjectDirectory({
   collection,
   page,
-}: Readonly<{ collection: ProjectCollection; page: number }>) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadProjects() {
-      setLoading(true);
-      setLoadFailed(false);
-
-      try {
-        setProjects(await fetchProjects(controller.signal));
-      } catch {
-        if (!controller.signal.aborted) {
-          setProjects([]);
-          setLoadFailed(true);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }
-
-    void loadProjects();
-    return () => controller.abort();
-  }, [reloadKey]);
-
-  const summaries = useMemo(
-    () => deriveCollectionSummaries(projects),
-    [projects]
-  );
-  const filteredProjects = useMemo(
-    () => filterProjectsByCollection(projects, collection),
-    [collection, projects]
-  );
-  const projectPage = useMemo(
-    () => paginateProjects(filteredProjects, page),
-    [filteredProjects, page]
-  );
-  const missingTitle = useMemo(() => {
-    if (collection.kind !== 'category' && collection.kind !== 'topic') {
-      return null;
-    }
-
-    const summariesForKind =
-      collection.kind === 'category' ? summaries.categories : summaries.topics;
-    const segment = canonicalizeCollectionSegment(collection.value);
-    return summariesForKind.some(
-      (summary) => summary.collection.value === segment
-    )
-      ? null
-      : collection.kind === 'category'
-        ? 'Category not found'
-        : 'Topic not found';
-  }, [collection, summaries]);
-
-  if (loading) return <ProjectDirectoryLoading />;
+  projects,
+}: Readonly<{
+  collection: ProjectCollection;
+  page: number;
+  projects: Project[];
+}>) {
+  const summaries = deriveCollectionSummaries(projects);
+  const filteredProjects = filterProjectsByCollection(projects, collection);
+  const projectPage = paginateProjects(filteredProjects, page);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:py-12">
@@ -235,15 +175,13 @@ export function ProjectDirectory({
             >
               Projects
             </h2>
-            {!loadFailed && !missingTitle ? (
-              <p
-                className="text-muted-foreground mt-1 text-sm"
-                aria-live="polite"
-              >
-                {projectPage.totalItems}{' '}
-                {projectPage.totalItems === 1 ? 'project' : 'projects'}
-              </p>
-            ) : null}
+            <p
+              className="text-muted-foreground mt-1 text-sm"
+              aria-live="polite"
+            >
+              {projectPage.totalItems}{' '}
+              {projectPage.totalItems === 1 ? 'project' : 'projects'}
+            </p>
           </div>
           {projectPage.totalPages > 1 ? (
             <p className="text-muted-foreground text-sm tabular-nums">
@@ -252,15 +190,7 @@ export function ProjectDirectory({
           ) : null}
         </div>
 
-        {loadFailed ? (
-          <ProjectErrorPanel onRetry={() => setReloadKey((key) => key + 1)} />
-        ) : missingTitle ? (
-          <StatePanel
-            title={missingTitle}
-            description="This collection is not present in the published project data."
-            action={{ href: '/browse', label: 'Browse all projects' }}
-          />
-        ) : projectPage.projects.length === 0 ? (
+        {projectPage.projects.length === 0 ? (
           <EmptyProjectsPanel
             title={
               collection.kind === 'type'
@@ -273,7 +203,7 @@ export function ProjectDirectory({
           <ProjectGrid projects={projectPage.projects} />
         )}
 
-        {!loadFailed && !missingTitle && projectPage.totalPages > 1 ? (
+        {projectPage.totalPages > 1 ? (
           <nav
             aria-label="Project directory pages"
             className="mt-8 flex items-center justify-between gap-3"

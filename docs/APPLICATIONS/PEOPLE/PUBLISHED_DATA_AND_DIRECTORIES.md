@@ -20,7 +20,7 @@ owns the visible error state.
 | `search.json`                        | validates searchable entries; missing becomes empty list         |
 | `staff/*.json`                       | shared staff schemas; missing becomes empty list                 |
 | `special/{programme}/{batch}.json`   | shared student schema; missing becomes empty list                |
-| `users/{identity}.json`              | must parse as staff or student; missing is an error              |
+| `users/{identity}.json`              | must parse as staff or student; missing has a typed error        |
 | Projects `by-person/{username}.json` | validates usable project summaries; missing becomes empty list   |
 
 Staff records use the owning schemas from `@scs/schemas`. Person profiles try
@@ -33,10 +33,12 @@ according to that contract.
 
 The manifest is authoritative for which programmes contain which batches.
 Programme pages divide batches into current and alumni groups using each
-batch's `defaultCategory`. A batch route validates that the requested batch
-belongs to the requested programme before loading its students, then filters
-published students so an alumni directory contains alumni and a current
-directory excludes them.
+batch's `defaultCategory`. A batch route validates on the server that the
+requested batch belongs to the requested programme and calls `notFound()` when
+it does not. It then filters published students so an alumni directory contains
+alumni and a current directory excludes them. Profile routes similarly require
+either a published People record or at least one Projects by-person record;
+confirmed absence uses the shared People not-found page.
 
 A registration number supplies the batch candidate, but not the final
 programme. Profile breadcrumbs test the matching student lists for every

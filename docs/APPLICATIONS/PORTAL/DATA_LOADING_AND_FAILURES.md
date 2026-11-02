@@ -39,9 +39,15 @@ Editor loaders request independent prerequisites concurrently:
 - course loading combines the current user, field permissions, optional
   course, optional pull request, and offerings.
 
-This avoids request waterfalls. Preserve that shape when adding independent
-inputs, and do not introduce one API read per list item. Lists use cursor-based
-page endpoints with explicit limits rather than loading an unbounded collection.
+After parallel loading, dynamic course and project detail loaders call
+`notFound()` when their primary record is absent. Admin user detail, edit,
+profile, and settings routes all validate the selected user through the shared
+user loader, which also calls `notFound()` for confirmed absence instead of
+redirecting to the list. Nested course, project, and admin-user not-found files
+preserve entity-specific recovery links. Other API failures still throw. This
+avoids request waterfalls while preserving a real HTML `404`. Lists use
+cursor-based page endpoints with explicit limits rather than loading an
+unbounded collection.
 
 ## User-visible pending and failure states
 

@@ -33,6 +33,15 @@ function noStoreResponse(status: 404 | 502): Response {
   });
 }
 
+function notFoundRewrite(request: NextRequest): NextResponse {
+  const response = NextResponse.rewrite(
+    new URL('/personal-site-not-found', request.url),
+    { status: 404 }
+  );
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+}
+
 function temporaryRedirect(destination: URL): NextResponse {
   const response = NextResponse.redirect(destination, 307);
   response.headers.set('Cache-Control', 'no-store');
@@ -80,7 +89,9 @@ export default async function proxy(req: NextRequest) {
         signal: controller.signal,
       });
       if (response.status === 404) {
-        return noStoreResponse(404);
+        return req.method === 'GET'
+          ? notFoundRewrite(req)
+          : noStoreResponse(404);
       }
       if (!response.ok) {
         throw new Error(`Proxy resolver returned ${response.status}`);

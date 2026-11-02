@@ -24,6 +24,11 @@ service permanently redirects case-insensitive GET and HEAD requests for
 `/security.txt` or `/.well-known/security.txt` to that URL. Other methods keep
 their existing routing behavior.
 
+Dynamic HTML routes use the owning application's `not-found.tsx` boundary for
+confirmed missing entities. Projects also reject absent category and topic
+collections and out-of-range collection pages. Upstream transport or validation
+failures remain errors and are not converted into `404` responses.
+
 ## Service route families
 
 The API exposes Better Auth routes plus `/api/me`, `/api/me/proxy`,

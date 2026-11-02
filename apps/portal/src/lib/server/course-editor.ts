@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { notFound } from 'next/navigation';
+
 import {
   meApiUrl,
   publicCourseApiUrl,
@@ -36,6 +38,8 @@ export async function loadCourseEditorData(
     ),
     serverApiJson<unknown[]>(publicOfferingsApiUrl()),
   ]);
+
+  if (!course) notFound();
 
   return { user, schema, course, pullRequest, offerings };
 }

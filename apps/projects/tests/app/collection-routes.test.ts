@@ -13,15 +13,23 @@ const { notFound } = vi.hoisted(() => ({
     throw new Error('NEXT_NOT_FOUND');
   }),
 }));
+const { requireProjectCollectionPage } = vi.hoisted(() => ({
+  requireProjectCollectionPage: vi.fn(async () => []),
+}));
 
 vi.mock('next/navigation', () => ({
   notFound,
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock('@/lib/projects/route-data', () => ({
+  requireProjectCollectionPage,
+}));
+
 describe('project collection route adapters', () => {
   beforeEach(() => {
     notFound.mockClear();
+    requireProjectCollectionPage.mockClear();
   });
 
   test('resolves browse base and paginated paths', async () => {
@@ -31,8 +39,16 @@ describe('project collection route adapters', () => {
     });
 
     expect(base.type).toBe(ProjectDirectory);
-    expect(base.props).toEqual({ collection: { kind: 'browse' }, page: 1 });
-    expect(second.props).toEqual({ collection: { kind: 'browse' }, page: 2 });
+    expect(base.props).toEqual({
+      collection: { kind: 'browse' },
+      page: 1,
+      projects: [],
+    });
+    expect(second.props).toEqual({
+      collection: { kind: 'browse' },
+      page: 2,
+      projects: [],
+    });
   });
 
   test('resolves every controlled project type segment', async () => {
@@ -47,6 +63,7 @@ describe('project collection route adapters', () => {
       expect(element.props).toEqual({
         collection: { kind: 'type', projectType },
         page: 2,
+        projects: [],
       });
     }
   });
@@ -65,14 +82,17 @@ describe('project collection route adapters', () => {
     expect(category.props).toEqual({
       collection: { kind: 'category', value: 'research' },
       page: 1,
+      projects: [],
     });
     expect(topic.props).toEqual({
       collection: { kind: 'topic', value: 'c++' },
       page: 3,
+      projects: [],
     });
     expect(search.props).toEqual({
       collection: { kind: 'search', query: 'c#' },
       page: 1,
+      projects: [],
     });
   });
 

@@ -42,7 +42,8 @@ sequenceDiagram
     W-->>B: 307 Location: destination/rest/of/path
     B->>P: Follow redirect when supported
   else missing or inactive
-    W-->>B: 404 with Cache-Control: no-store
+    W->>W: Rewrite to route that calls notFound()
+    W-->>B: Themed 404 with Cache-Control: no-store
   else timeout or registry failure
     W-->>B: 502
   end
@@ -55,8 +56,11 @@ that secret or call the internal resolver directly. Web and API must receive
 the same secret from their deployment providers.
 
 The API response contains only the validated HTTPS URL for an active mapping.
-Missing and inactive mappings are indistinguishable `404` responses. The
-remaining encoded path after the username is appended to the returned base
+Missing and inactive mappings are indistinguishable. For `GET`, Web rewrites
+them to an internal page that calls Next.js `notFound()`, so visitors receive
+the themed HTML fallback instead of an empty `404`. `HEAD` and mutation methods
+retain a plain empty `404` response. Both forms remain non-cacheable.
+The remaining encoded path after the username is appended to the returned base
 path without lowercasing it, and the original query string is preserved. Every
 successful response is a `307 Temporary Redirect` with `Cache-Control:
 no-store`; GET, HEAD, POST, PUT, PATCH, DELETE, and OPTIONS therefore retain

@@ -21,7 +21,12 @@ flowchart LR
 ```
 
 Directory pages and profile details use client loaders behind route-specific
-skeletons. Empty published collections, a missing profile, and a failed data
-request are separate states. See
+skeletons. Dynamic profile and batch routes first verify their published route
+identity on the server; confirmed absence calls Next.js `notFound()`, while
+transport and validation failures remain errors. Nested profile and programme
+batch `not-found.tsx` files retain the specific recovery message for the route.
+These remote-data guards are explicitly dynamic rather than advertising empty
+static parameter sets. Empty published collections, a missing route, and a
+failed data request are separate states. See
 [Published data and directories](PUBLISHED_DATA_AND_DIRECTORIES.md) and
 [Profile interpretation](PROFILE_INTERPRETATION.md).

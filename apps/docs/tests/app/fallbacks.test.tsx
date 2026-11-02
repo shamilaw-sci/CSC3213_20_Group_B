@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test, vi } from 'vitest';
 
 import ErrorPage from '@/app/error';
+import GlobalError from '@/app/global-error';
+import GlobalNotFound from '@/app/global-not-found';
 import NotFound from '@/app/not-found';
 
 describe('documentation fallbacks', () => {
@@ -29,5 +32,23 @@ describe('documentation fallbacks', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(reset).toHaveBeenCalledOnce();
     consoleError.mockRestore();
+  });
+
+  test('shows the university crest on every missing or failed page', () => {
+    const fallbacks = [
+      <NotFound key="not-found" />,
+      <GlobalNotFound key="global-not-found" />,
+      <GlobalError
+        key="global-error"
+        error={new Error('test')}
+        reset={() => undefined}
+      />,
+    ];
+
+    for (const fallback of fallbacks) {
+      expect(renderToStaticMarkup(fallback)).toContain(
+        'src="/favicon/logo-symbol-icon.svg"'
+      );
+    }
   });
 });

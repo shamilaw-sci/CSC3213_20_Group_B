@@ -1,8 +1,9 @@
-import StudentSubjectBatchPage from '@/components/students/student-subject-batch-page';
+import { notFound } from 'next/navigation';
 
-export function generateStaticParams(): Array<{ batch: string }> {
-  return [];
-}
+import StudentSubjectBatchPage from '@/components/students/student-subject-batch-page';
+import { isPublishedStudentBatch } from '@/lib/data/people-data';
+
+export const dynamic = 'force-dynamic';
 
 export default async function Page({
   params,
@@ -10,5 +11,7 @@ export default async function Page({
   params: Promise<{ batch: string }>;
 }) {
   const { batch } = await params;
+  if (!(await isPublishedStudentBatch('statistics', batch))) notFound();
+
   return <StudentSubjectBatchPage subject="statistics" batch={batch} />;
 }
