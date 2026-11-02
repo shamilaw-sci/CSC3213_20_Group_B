@@ -17,6 +17,7 @@ const excludedSegments = [
 const generatedFiles = new Set([
   'apps/docs/next-env.d.ts',
   'apps/people/next-env.d.ts',
+  'apps/performance-report/next-env.d.ts',
   'apps/portal/next-env.d.ts',
   'apps/projects/next-env.d.ts',
   'apps/web/next-env.d.ts',

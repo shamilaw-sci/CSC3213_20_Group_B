@@ -188,7 +188,7 @@ test('expected throttling does not count as unexpected failure or successful jou
   expect(r.metrics.classes.rate_limit_expected).toBe(1);
   expect(r.metrics.journeySuccessRate).toBeLessThan(1);
 });
-test('reports render JSON, CSV, Markdown and escaped standalone HTML', async () => {
+test('reports render JSON, CSV and formatted Markdown artifacts', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'scs-performance-'));
   try {
     const { p, c, state } = measured();
@@ -201,12 +201,28 @@ test('reports render JSON, CSV, Markdown and escaped standalone HTML', async () 
     expect(await readFile(join(directory, 'metrics.csv'), 'utf8')).toContain(
       'completedRps'
     );
-    expect(await readFile(join(directory, 'summary.md'), 'utf8')).toContain(
-      'not established'
+    const markdown = await readFile(join(directory, 'report.md'), 'utf8');
+    expect(markdown).toContain('# Performance Report');
+    expect(markdown).toContain('## Run Metadata');
+    expect(markdown).toContain('| Metric | Observed |');
+    expect(markdown).toContain('## Assessment');
+    expect(markdown).toContain('not established');
+    expect(markdown.endsWith('\n')).toBe(true);
+    expect(await readFile(join(directory, 'summary.md'), 'utf8')).toBe(
+      markdown
     );
-    const html = await readFile(join(directory, 'report.html'), 'utf8');
-    expect(html).not.toContain('<script>');
-    expect(html).toContain('&lt;script&gt;');
+  } finally {
+    await rm(directory, { recursive: true });
+  }
+});
+test('formatted Markdown explains an empty assessment', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'scs-performance-'));
+  try {
+    const { p, c, state } = measured();
+    await writeReport(directory, createReport(p, c, state));
+    expect(await readFile(join(directory, 'report.md'), 'utf8')).toContain(
+      'No validity, threshold, or observation findings were recorded.'
+    );
   } finally {
     await rm(directory, { recursive: true });
   }

@@ -249,59 +249,42 @@ export function createReport(
 }
 
 export type Report = ReturnType<typeof createReport>;
-const escape = (value: unknown) =>
-  String(value).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
-        c
-      ]!
-  );
 const number = (value: number | null) =>
   value === null ? 'unavailable' : value.toFixed(2);
-
-function chart(title: string, values: (number | null)[], label: string) {
-  const known = values.filter((v): v is number => v !== null);
-  if (!known.length)
-    return `<section><h3>${escape(title)}</h3><p>Unavailable</p></section>`;
-  const max = Math.max(...known, 1);
-  const points = values.map((value, i) =>
-    value === null
-      ? null
-      : {
-          x: 55 + (i * 600) / Math.max(1, values.length - 1),
-          y: 160 - (value / max) * 125,
-          value,
-        }
-  );
-  // Mark single-window smoke runs and break the line at missing measurements.
-  const path = points
-    .map((point, i) =>
-      point
-        ? `${i === 0 || !points[i - 1] ? 'M' : 'L'}${point.x} ${point.y}`
-        : ''
-    )
-    .join(' ');
-  const markers = points
-    .map((point, i) =>
-      point
-        ? `<circle cx="${point.x}" cy="${point.y}" r="4" fill="#167d9a"><title>Window ${i + 1}: ${number(point.value)}</title></circle>`
-        : ''
-    )
-    .join('');
-  return `<section><h3>${escape(title)}</h3><p>Observed range: ${number(Math.min(...known))} – ${number(Math.max(...known))}</p><svg viewBox="0 0 700 195" role="img" aria-label="${escape(label)}"><text x="5" y="23">${max.toFixed(1)}</text><text x="15" y="166">0</text><path d="M55 30V160H680" fill="none" stroke="#899"/><path d="${path}" fill="none" stroke="#167d9a" stroke-width="2"/>${markers}</svg><p>${escape(label)}; ${known.length} measured window(s).</p></section>`;
-}
+const markdownCell = (value: unknown) =>
+  String(value ?? 'unavailable')
+    .replaceAll('|', '\\|')
+    .replace(/\r?\n/g, ' ');
 
 export async function writeReport(directory: string, report: Report) {
   const m = report.metrics;
+  const assessment = [
+    ...report.invalidReasons,
+    ...report.thresholds.failures,
+    ...report.observations,
+  ];
   const lines = [
-    `# Performance report: ${report.verdict}`,
+    '# Performance Report',
     '',
-    `Run: ${report.plan.runId}. Environment: ${report.plan.environment} (${report.plan.target.kind}). Engine: ${report.state.engine}.`,
-    `Deployment: ${report.plan.deploymentRevision}. Source: ${report.plan.sourceRevision}.`,
-    `Started: ${report.state.startedAt}. Measurement duration: ${number(report.durationSeconds)} seconds.`,
+    `**Verdict:** ${report.verdict}`,
     '',
-    `Workload: ${report.plan.profile}, ${report.plan.settings.model}, ${report.plan.settings.journey}; peak target ${report.plan.settings.model === 'open' ? `${report.plan.rate} journeys/s` : `${report.plan.vus} VUs`}; RPS safety ceiling ${report.plan.maxRps}.`,
+    '## Run Metadata',
+    '',
+    '| Field | Value |',
+    '| --- | --- |',
+    `| Run | ${markdownCell(report.plan.runId)} |`,
+    `| Environment | ${markdownCell(report.plan.environment)} (${markdownCell(report.plan.target.kind)}) |`,
+    `| Engine | ${markdownCell(report.state.engine)} |`,
+    `| Started | ${markdownCell(report.state.startedAt)} |`,
+    `| Duration | ${number(report.durationSeconds)} seconds |`,
+    `| Profile | ${markdownCell(report.plan.profile)} |`,
+    `| Workload | ${markdownCell(report.plan.settings.model)} / ${markdownCell(report.plan.settings.journey)} |`,
+    `| Peak target | ${report.plan.settings.model === 'open' ? `${report.plan.rate} journeys/s` : `${report.plan.vus} VUs`} |`,
+    `| RPS safety ceiling | ${report.plan.maxRps} |`,
+    `| Deployment revision | \`${markdownCell(report.plan.deploymentRevision)}\` |`,
+    `| Source revision | \`${markdownCell(report.plan.sourceRevision)}\` |`,
+    '',
+    '## Summary',
     '',
     '| Metric | Observed |',
     '| --- | --- |',
@@ -318,15 +301,15 @@ export async function writeReport(directory: string, report: Report) {
     '',
     '## Assessment',
     '',
-    ...[
-      ...report.invalidReasons,
-      ...report.thresholds.failures,
-      ...report.observations,
-    ].map((s) => `- ${s}`),
+    ...(assessment.length
+      ? assessment.map((s) => `- ${s}`)
+      : ['No validity, threshold, or observation findings were recorded.']),
     '',
     '## Reliability classes',
     '',
-    ...Object.entries(m.classes).map(([key, value]) => `- ${key}: ${value}`),
+    ...Object.entries(m.classes).map(
+      ([key, value]) => `- **${markdownCell(key)}:** ${value}`
+    ),
     '',
     '## Infrastructure telemetry',
     '',
@@ -335,7 +318,8 @@ export async function writeReport(directory: string, report: Report) {
       : 'Unavailable: import a matching provider export with perf:report --telemetry.',
     '',
     ...Object.entries(report.infrastructure).map(
-      ([key, value]) => `- ${key}: ${value === null ? 'unavailable' : value}`
+      ([key, value]) =>
+        `- **${markdownCell(key)}:** ${value === null ? 'unavailable' : markdownCell(value)}`
     ),
     '',
     `Estimated marginal request cost: ${report.estimatedRequestCost === null ? 'unavailable' : report.estimatedRequestCost}. This estimate excludes CPU, storage, database operations and egress.`,
@@ -349,7 +333,7 @@ export async function writeReport(directory: string, report: Report) {
     ...report.recommendations.map((s) => `- ${s}`),
     '',
   ];
-  const markdown = lines.join('\n');
+  const markdown = `${lines.join('\n')}\n`;
   const columns = [
     'second',
     'seconds',
@@ -382,40 +366,6 @@ export async function writeReport(directory: string, report: Report) {
           .join(',')
       ),
     ].join('\n') + '\n';
-  const charts = [
-    chart(
-      'Completed RPS over time',
-      report.buckets.map((b) => b.completedRps),
-      '10-second windows in chronological order'
-    ),
-    chart(
-      'P95 latency over time (ms)',
-      report.buckets.map((b) => b.latency.p95),
-      '10-second windows'
-    ),
-    chart(
-      'P99 latency over time (ms)',
-      report.buckets.map((b) => b.latency.p99),
-      '10-second windows'
-    ),
-    chart(
-      'Unexpected failure rate',
-      report.buckets.map((b) => b.failureRate),
-      'Fraction of finished requests'
-    ),
-    chart(
-      'Active VUs over time',
-      report.buckets.map((b) => b.maxVus),
-      'Maximum sampled VUs per window'
-    ),
-  ].join('');
-  const phaseTable = report.phases
-    .map(
-      (p) =>
-        `<tr><td>${escape(p.name)}</td><td>${p.seconds}</td><td>${number(p.metrics.completedRps)}</td><td>${number(p.metrics.latency.p95)}</td><td>${number(p.metrics.latency.p99)}</td><td>${p.thresholds.pass ? 'PASS' : 'FAIL'}</td></tr>`
-    )
-    .join('');
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Performance ${escape(report.verdict)}</title><style>body{font:16px system-ui;margin:2rem auto;padding:0 1rem;max-width:1100px;color:#172b36;background:#f6f8fa}h1{font-size:2rem}section{background:white;padding:1rem;border:1px solid #dde;border-radius:8px}article{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:1rem}svg{width:100%;font:22px system-ui}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;background:white}td,th{padding:.5rem;text-align:left;border:1px solid #dde}</style></head><body><h1>${escape(report.verdict)} · ${escape(report.plan.environment)}</h1><p>${escape(report.plan.target.kind)} · ${escape(report.plan.settings.model)} · ${escape(report.plan.profile)} · ${escape(report.plan.createdAt)}</p><article>${charts}</article><h2>Latency versus achieved throughput and SLOs</h2><p>Configured p95 &lt; ${report.plan.settings.slo.p95Ms} ms; p99 &lt; ${report.plan.settings.slo.p99Ms} ms. Ramps are excluded from capacity.</p><table><tr><th>Phase</th><th>Seconds</th><th>Completed RPS</th><th>P95 ms</th><th>P99 ms</th><th>SLO</th></tr>${phaseTable}</table><h2>Full assessment</h2><pre>${escape(markdown)}</pre><h2>Recovery</h2><pre>${escape(JSON.stringify(report.recovery, null, 2))}</pre></body></html>`;
   await Promise.all([
     writeFile(
       resolve(directory, 'report.json'),
@@ -423,6 +373,6 @@ export async function writeReport(directory: string, report: Report) {
     ),
     writeFile(resolve(directory, 'metrics.csv'), csv),
     writeFile(resolve(directory, 'summary.md'), markdown),
-    writeFile(resolve(directory, 'report.html'), html),
+    writeFile(resolve(directory, 'report.md'), markdown),
   ]);
 }

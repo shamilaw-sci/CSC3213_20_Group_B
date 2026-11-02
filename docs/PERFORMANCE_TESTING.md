@@ -371,11 +371,19 @@ A local `.cache/run.lock` prevents simultaneous runners in one checkout. After
 a crash, verify the recorded PID is stopped before removing that lock. GitHub
 concurrency groups serialize hosted runs per environment across the two workflows.
 
-Each run writes `report.json`, `metrics.csv`, `summary.md` and `report.html`.
-The HTML uses inline SVG and CSS with no scripts, remote libraries or network
-requests. It includes throughput, latency, errors, VUs, phase SLO comparisons,
-recovery observations and explicit limitations. k6 runs also retain `plan.json`,
-`state.json` and the raw JSON metric stream locally for regeneration:
+Each run writes `report.json`, `metrics.csv`, `report.md` and `summary.md`.
+`report.md` is the complete, formatted text report; `summary.md` remains an
+identical compatibility copy for existing consumers. The local Next.js report
+application reads `report.json` on the server and renders interactive Recharts
+views, structured assessment sections, and endpoint/phase tables with Tailwind:
+
+```powershell
+bun --filter '@scs/performance-report' dev
+```
+
+Open `http://localhost:3000` and select a run. The viewer makes no provider or
+application API calls; it reads only local report artifacts. k6 runs also retain
+`plan.json`, `state.json` and the raw JSON metric stream locally for regeneration:
 
 ```powershell
 bun run perf:report --run perf-YYYYMMDDHHMMSSmmm-xxxxxxxx
