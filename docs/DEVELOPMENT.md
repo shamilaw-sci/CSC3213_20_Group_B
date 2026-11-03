@@ -10,9 +10,53 @@ experienced contributors the repository conventions needed for larger work.
 
 ## Prerequisites
 
-- Git
-- Bun 1.4.4, matching `.bun-version` and root `package.json`
-- provider credentials only for integrations you intend to run
+Before setting up the project, make sure the following tools are installed.
+
+### Git
+
+Git is required to clone the repository and manage source code.
+
+Download and install Git for your operating system:
+
+- [Windows](https://git-scm.com/install/windows)
+- [macOS](https://git-scm.com/install/mac)
+- [Linux](https://git-scm.com/install/linux)
+
+Verify your installation:
+
+```bash
+git --version
+```
+
+### Bun
+
+This project requires **Bun 1.4.4**, as specified in `.bun-version` and the root `package.json`.
+
+```powershell tab="PowerShell" tab-group="terminal"
+powershell -c "irm bun.sh/install.ps1|iex"
+```
+
+```bash tab="Bash" tab-group="terminal"
+curl -fsSL https://bun.com/install | bash
+```
+
+```cmd tab="Command Prompt" tab-group="terminal"
+powershell -c "irm bun.sh/install.ps1|iex"
+```
+
+Verify your installation:
+
+```bash
+bun --version
+```
+
+The output should be `1.4.4`.
+
+### Integration credentials (optional)
+
+Some features require credentials from external services. You only need to configure credentials for the integrations you intend to use.
+
+Refer to the [Environment Variables](ENVIRONMENT_VARIABLES.md) instructions for the relevant application or service.
 
 Docker is not part of the current setup. Do not install dependencies with npm,
 pnpm, or Yarn inside a workspace.
