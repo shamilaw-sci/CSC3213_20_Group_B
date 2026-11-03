@@ -25,6 +25,7 @@
       "dependencies": {
         "@scs/security": "workspace:*",
         "@scs/ui": "workspace:*",
+        "@scs/webmcp": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "fumadocs-core": "^16.17.7",
         "fumadocs-mdx": "^15.4.8",
@@ -67,6 +68,7 @@
         "@scs/schemas": "workspace:*",
         "@scs/security": "workspace:*",
         "@scs/ui": "workspace:*",
+        "@scs/webmcp": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "cn": "^0.4.0",
         "lucide-react": "^1.55.0",
@@ -124,6 +126,7 @@
         "@scs/schemas": "workspace:*",
         "@scs/security": "workspace:*",
         "@scs/ui": "workspace:*",
+        "@scs/webmcp": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "@uiw/react-codemirror": "^4.25.11",
         "@uiw/react-json-view": "^2.0.0-alpha.43",
@@ -162,6 +165,7 @@
         "@scs/schemas": "workspace:*",
         "@scs/security": "workspace:*",
         "@scs/ui": "workspace:*",
+        "@scs/webmcp": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "cn": "^0.4.0",
         "lucide-react": "^1.55.0",
@@ -203,6 +207,7 @@
         "@scs/schemas": "workspace:*",
         "@scs/security": "workspace:*",
         "@scs/ui": "workspace:*",
+        "@scs/webmcp": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "lucide-react": "^1.55.0",
         "next": "^16.4.2",
@@ -340,6 +345,32 @@
       "peerDependencies": {
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
+      },
+    },
+    "packages/webmcp": {
+      "name": "@scs/webmcp",
+      "dependencies": {
+        "webmcp-types": "^0.1.10",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@scs/eslint-config": "workspace:*",
+        "@scs/tsconfig": "workspace:*",
+        "@testing-library/react": "^16.3.2",
+        "@types/bun": "^1.4.4",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.4",
+        "eslint": "^9.39.5",
+        "eslint-plugin-simple-import-sort": "^14.0.0",
+        "jsdom": "^22.1.0",
+        "react": "^19.2.6",
+        "react-dom": "^19.2.6",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.64.0",
+        "vitest": "^4.1.8",
+      },
+      "peerDependencies": {
+        "react": "^19.2.6",
       },
     },
     "services/api": {
@@ -1129,6 +1160,8 @@
     "@scs/ui": ["@scs/ui@workspace:packages/ui"],
 
     "@scs/web": ["@scs/web@workspace:apps/web"],
+
+    "@scs/webmcp": ["@scs/webmcp@workspace:packages/webmcp"],
 
     "@selderee/plugin-htmlparser2": ["@selderee/plugin-htmlparser2@0.11.0", "", { "dependencies": { "domhandler": "^5.0.3", "selderee": "^0.11.0" } }, "sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ=="],
 
@@ -2825,6 +2858,8 @@
     "web-namespaces": ["web-namespaces@2.0.1", "", {}, "sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ=="],
 
     "webidl-conversions": ["webidl-conversions@7.0.0", "", {}, "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g=="],
+
+    "webmcp-types": ["webmcp-types@0.1.10", "", {}, "sha512-U4GQ1RpJ0tqCUt2ALMV9Pnhi+hsy8L31f/Q1v4mLVhW64r5sYhh+2+SjP/Lq4/9jP33vZgNkuRZARJl65A/ZIg=="],
 
     "whatwg-encoding": ["whatwg-encoding@2.0.0", "", { "dependencies": { "iconv-lite": "0.6.3" } }, "sha512-p41ogyeMUrw3jWclHWTQg1k05DSVXPLcVxRTYsXUk+ZooOCZLcoYgPZ/HL/D/N+uQPOtcp1me1WhBEaX02mhWg=="],
 

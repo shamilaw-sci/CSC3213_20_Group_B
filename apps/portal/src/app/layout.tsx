@@ -7,6 +7,7 @@ import { Open_Sans } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import { PortalHeader } from '@/components/layout/portal-header';
+import { WebMcpTools } from '@/components/webmcp-tools';
 import publicEnvConfig from '@/config/public.env.config';
 
 const openSans = Open_Sans({
@@ -142,6 +143,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${openSans.variable} min-h-svh antialiased`}>
         <ThemeProvider>
+          <WebMcpTools />
           <div className="flex min-h-svh flex-col">
             <PortalHeader />
             <div className="flex-1">{children}</div>

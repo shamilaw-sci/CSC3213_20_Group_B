@@ -20,6 +20,7 @@ Markdown files are readable on GitHub and published by the documentation site.
   [Operations](OPERATIONS.md), and [Security](SECURITY.md).
 - Interface changes should follow
   [UI quality assurance](UI_QUALITY_ASSURANCE.md).
+- Browser agent tools are documented in [Browser WebMCP](WEBMCP.md).
 
 ## Browse the handbook
 

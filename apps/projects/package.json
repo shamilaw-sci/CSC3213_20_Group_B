@@ -22,6 +22,7 @@
     "@scs/security": "workspace:*",
     "@scs/schemas": "workspace:*",
     "@scs/ui": "workspace:*",
+    "@scs/webmcp": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "cn": "^0.4.0",
     "lucide-react": "^1.55.0",

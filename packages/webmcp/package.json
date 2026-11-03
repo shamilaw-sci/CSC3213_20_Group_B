@@ -1,0 +1,41 @@
+{
+  "name": "@scs/webmcp",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "imports": {
+    "#core": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "webmcp-types": "^0.1.10",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "react": "^19.2.6"
+  },
+  "devDependencies": {
+    "@scs/eslint-config": "workspace:*",
+    "@scs/tsconfig": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@testing-library/react": "^16.3.2",
+    "eslint": "^9.39.5",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "jsdom": "^22.1.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0",
+    "vitest": "^4.1.8"
+  }
+}

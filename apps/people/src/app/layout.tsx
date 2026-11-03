@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from 'next';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { WebMcpTools } from '@/components/webmcp-tools';
 import { openSans } from '@/config/font.config';
 import publicEnvConfig from '@/config/public.env.config';
 
@@ -142,6 +143,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${openSans.variable} min-h-svh antialiased`}>
         <ThemeProvider>
+          <WebMcpTools />
           <div className="flex min-h-svh flex-col">
             <SiteHeader />
             <main className="flex flex-1 flex-col">{children}</main>

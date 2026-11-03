@@ -7,8 +7,10 @@ import { Open_Sans, Source_Serif_4 } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { DocsSearchDialog } from '@/components/search/docs-search-dialog';
+import { WebMcpTools } from '@/components/webmcp-tools';
 import { siteConfig } from '@/config/site.config';
 import { themeMetadataColors } from '@/config/theme.config';
+import { source } from '@/lib/source';
 
 const openSans = Open_Sans({
   variable: '--font-open-sans',
@@ -137,6 +139,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <RootProvider search={{ SearchDialog: DocsSearchDialog }}>
+          <WebMcpTools
+            guides={source.getPages().map((page) => ({
+              title: page.data.title,
+              url: page.url,
+              description: page.data.description,
+            }))}
+          />
           {children}
         </RootProvider>
       </body>

@@ -62,6 +62,7 @@ workspaces.
 | `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
 | `packages/performance`   | `@scs/performance`   | Guarded load tests and local performance reports |
+| `packages/webmcp`        | `@scs/webmcp`        | Validated browser tool registration for WebMCP   |
 | `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets                        |
 
 The public data repository is a separate system. It is not a Bun workspace in
@@ -166,6 +167,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [Operations](docs/OPERATIONS.md)                           | deploy, migrate, observe, or recover a service                        |
 | [Security](docs/SECURITY.md)                               | handle authentication, secrets, permissions, or incidents             |
 | [UI quality assurance](docs/UI_QUALITY_ASSURANCE.md)       | review accessibility, responsiveness, themes, and interaction quality |
+| [Browser WebMCP](docs/WEBMCP.md)                           | maintain browser tool registration and support limits                 |
 | [Troubleshooting](docs/TROUBLESHOOTING.md)                 | diagnose common local, runtime, and provider failures                 |
 | [Route reference](docs/ROUTE_REFERENCE.md)                 | find application and service route families                           |
 | [Glossary](docs/GLOSSARY.md)                               | understand shared repository terminology                              |
