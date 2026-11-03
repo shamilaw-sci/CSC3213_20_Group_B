@@ -591,13 +591,15 @@ function TextField({
   type?: string;
   readOnly?: boolean;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <Label>
+      <Label htmlFor={fieldId}>
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
       <Input
+        id={fieldId}
         type={type}
         value={value}
         placeholder={placeholder}
@@ -654,9 +656,10 @@ function SelectField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <Label htmlFor={fieldId}>{label}</Label>
       <Select
         value={value}
         disabled={disabled}
@@ -668,7 +671,7 @@ function SelectField({
           if (nextValue !== null) onChange(nextValue);
         }}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger id={fieldId} className="w-full">
           <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
@@ -696,6 +699,7 @@ function StringListEditor({
   placeholder: string;
   readOnly?: boolean;
 }) {
+  const groupId = useId();
   const items = Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
     : [];
@@ -736,9 +740,11 @@ function StringListEditor({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="group" aria-labelledby={groupId}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>{label}</Label>
+        <span id={groupId} className="text-sm font-medium">
+          {label}
+        </span>
         {!readOnly ? (
           <Button type="button" variant="outline" size="sm" onClick={addItem}>
             <Plus className="size-4" />
@@ -754,6 +760,7 @@ function StringListEditor({
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
             >
               <Input
+                aria-label={`${label} ${index + 1}`}
                 value={item}
                 placeholder={placeholder}
                 readOnly={readOnly}
@@ -804,8 +811,12 @@ function DepartmentCheckboxes({
   }
 
   return (
-    <div className="space-y-2 md:col-span-2">
-      <Label>Departments</Label>
+    <div
+      className="space-y-2 md:col-span-2"
+      role="group"
+      aria-label="Departments"
+    >
+      <span className="text-sm font-medium">Departments</span>
       <div className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
         {ACADEMIC_DEPARTMENTS.map((department) => (
           <label
@@ -853,6 +864,7 @@ function ProjectForm({
   offerings: CourseOfferingRecord[];
   readOnly?: boolean;
 }) {
+  const formId = useId();
   function setField(key: string, value: unknown) {
     onChange({ ...project, [key]: value });
   }
@@ -1234,7 +1246,7 @@ function ProjectForm({
             <h3 className="text-base font-semibold">Course Project</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label>Course</Label>
+                <Label htmlFor={`${formId}-course`}>Course</Label>
                 <Select
                   value={selectedCourseId}
                   disabled={readOnly}
@@ -1244,7 +1256,7 @@ function ProjectForm({
                   }))}
                   onValueChange={(value) => selectCourse(value ?? '')}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${formId}-course`} className="w-full">
                     <SelectValue placeholder="Select a course" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1264,7 +1276,7 @@ function ProjectForm({
                 </p>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Course Offering</Label>
+                <Label htmlFor={`${formId}-offering`}>Course Offering</Label>
                 <Select
                   value={selectedOfferingId}
                   disabled={readOnly || !selectedCourseId}
@@ -1276,7 +1288,7 @@ function ProjectForm({
                     if (nextValue !== null) selectCourseOffering(nextValue);
                   }}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${formId}-offering`} className="w-full">
                     <SelectValue placeholder="Select a course offering" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1362,8 +1374,11 @@ function ProjectForm({
                 className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem_auto]"
               >
                 <div className="space-y-1.5">
-                  <Label>Username</Label>
+                  <Label htmlFor={`${formId}-username-${index}`}>
+                    Username
+                  </Label>
                   <Input
+                    id={`${formId}-username-${index}`}
                     value={person.username ?? ''}
                     placeholder="s21513"
                     readOnly={readOnly}

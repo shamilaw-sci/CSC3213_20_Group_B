@@ -974,8 +974,8 @@ function DepartmentCheckboxes({
   }
 
   return (
-    <Field className="md:col-span-2">
-      <FieldLabel>Departments</FieldLabel>
+    <Field className="md:col-span-2" role="group" aria-label="Departments">
+      <span className="text-sm font-medium">Departments</span>
       <div className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
         {ACADEMIC_DEPARTMENTS.map((department) => (
           <label
@@ -1264,7 +1264,7 @@ function OfferingForm({
         </Field>
         <Field className="md:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <FieldLabel>Teaching staff</FieldLabel>
+            <span className="text-sm font-medium">Teaching staff</span>
             {!readOnly ? (
               <Button
                 type="button"
