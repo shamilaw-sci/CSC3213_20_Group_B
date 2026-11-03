@@ -166,6 +166,12 @@ export function publicProjectPrApiUrl(slug: string) {
   return apiUrl(`/api/projects/v2/projects/${encodeURIComponent(slug)}/pr`);
 }
 
+export function publicProjectSourcePreviewApiUrl(slug: string) {
+  return apiUrl(
+    `/api/projects/v2/projects/${encodeURIComponent(slug)}/source-preview`
+  );
+}
+
 export function publicCoursesApiUrl() {
   return apiUrl('/api/academic/v2/courses');
 }

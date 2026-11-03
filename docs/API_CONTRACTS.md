@@ -185,22 +185,24 @@ stream.
 
 ## Projects and Academics
 
-| Methods                        | Route                                    | Purpose                           |
-| ------------------------------ | ---------------------------------------- | --------------------------------- |
-| `GET`                          | `/api/projects/v2/projects/page`         | list a bounded project page       |
-| `GET`                          | `/api/projects/v2/projects/:slug`        | read one project                  |
-| `GET`                          | `/api/projects/v2/projects/:slug/schema` | read project schema metadata      |
-| `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/pr`     | manage a project mutation         |
-| `GET`                          | `/api/academic/v2/courses`               | read the course reference array   |
-| `GET`                          | `/api/academic/v2/courses/page`          | list a bounded course page        |
-| `GET`                          | `/api/academic/v2/courses/:id`           | read one course                   |
-| `GET`                          | `/api/academic/v2/courses/:id/schema`    | read course schema metadata       |
-| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/courses/:id/pr`        | manage a course mutation          |
-| `GET`                          | `/api/academic/v2/offerings`             | read the offering reference array |
-| `GET`                          | `/api/academic/v2/offerings/page`        | list a bounded offering page      |
-| `GET`                          | `/api/academic/v2/offerings/:id`         | read one offering                 |
-| `GET`                          | `/api/academic/v2/offerings/:id/schema`  | read offering schema metadata     |
-| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/pr`      | manage an offering mutation       |
+| Methods                        | Route                                            | Purpose                               |
+| ------------------------------ | ------------------------------------------------ | ------------------------------------- |
+| `GET`                          | `/api/projects/v2/projects/page`                 | list a bounded project page           |
+| `GET`                          | `/api/projects/v2/schemas/index.json`            | public schema for `.docs/index.json`  |
+| `GET`                          | `/api/projects/v2/projects/:slug`                | read one project                      |
+| `GET`                          | `/api/projects/v2/projects/:slug/schema`         | read project schema metadata          |
+| `POST`                         | `/api/projects/v2/projects/:slug/source-preview` | compare a draft with its GitHub index |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/projects/v2/projects/:slug/pr`             | manage a project mutation             |
+| `GET`                          | `/api/academic/v2/courses`                       | read the course reference array       |
+| `GET`                          | `/api/academic/v2/courses/page`                  | list a bounded course page            |
+| `GET`                          | `/api/academic/v2/courses/:id`                   | read one course                       |
+| `GET`                          | `/api/academic/v2/courses/:id/schema`            | read course schema metadata           |
+| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/courses/:id/pr`                | manage a course mutation              |
+| `GET`                          | `/api/academic/v2/offerings`                     | read the offering reference array     |
+| `GET`                          | `/api/academic/v2/offerings/page`                | list a bounded offering page          |
+| `GET`                          | `/api/academic/v2/offerings/:id`                 | read one offering                     |
+| `GET`                          | `/api/academic/v2/offerings/:id/schema`          | read offering schema metadata         |
+| `GET`, `PUT`, `DELETE`         | `/api/academic/v2/offerings/:id/pr`              | manage an offering mutation           |
 
 The unbounded project collection route is intentionally unavailable. Course
 and offering arrays remain because Portal editors currently use them as

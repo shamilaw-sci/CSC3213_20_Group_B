@@ -6,6 +6,7 @@ import {
   fetchProjects,
   ProjectDataNotFoundError,
 } from '@/lib/projects/api-client';
+import { resolveProjectRepositoryMetadata } from '@/lib/projects/repository-metadata';
 
 type PageProps = {
   params: Promise<{
@@ -17,7 +18,10 @@ async function loadProjectRouteData(projectSlug: string) {
   try {
     const project = await fetchProject(projectSlug);
     const projects = await fetchProjects();
-    return { project, projects };
+    return {
+      project: await resolveProjectRepositoryMetadata(project),
+      projects,
+    };
   } catch (error) {
     if (error instanceof ProjectDataNotFoundError) notFound();
     throw error;

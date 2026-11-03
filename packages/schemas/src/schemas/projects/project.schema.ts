@@ -71,6 +71,7 @@ export const ProjectSourceSchema = z.discriminatedUnion('kind', [
     repositoryName: z.string().trim().min(1),
     repositoryOwner: z.string().trim().min(1),
     metadataPath: z.string().trim().min(1),
+    indexUrl: z.url().optional(),
   }),
   z.object({
     kind: z.literal('MANUAL'),
@@ -86,7 +87,7 @@ export const ProjectSourceSchema = z.discriminatedUnion('kind', [
 export type ProjectSource = z.infer<typeof ProjectSourceSchema>;
 
 export const ProjectMediaSchema = z.object({
-  icon: z.string().trim().min(1),
+  icon: z.string().trim().min(1).default('FolderKanban'),
   coverImage: z.string().trim().min(1).optional(),
 });
 
@@ -137,43 +138,92 @@ export const ProjectCourseOfferingSchema = z.object({
 
 export type ProjectCourseOffering = z.infer<typeof ProjectCourseOfferingSchema>;
 
-export const ProjectSchema = z
-  .object({
-    id: z.string().trim().min(1),
-    slug: z
-      .string()
-      .trim()
-      .min(1)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid project slug'),
-    title: z.string().trim().min(1),
-    shortDescription: z.string().trim().min(1),
-    description: z.string().trim().min(1),
-    projectType: ProjectTypeSchema,
-    status: ProjectStatusSchema,
-    categories: z.array(z.string().trim().min(1)).min(1),
-    tags: z.array(z.string().trim().min(1)).default([]),
-    departments: z
-      .array(AcademicDepartmentCodeSchema)
-      .default([])
-      .refine(
-        (departments) => new Set(departments).size === departments.length,
-        'departments must not contain duplicates'
-      ),
-    academicYear: AcademicYearSchema.optional(),
-    course: ProjectCourseSchema.optional(),
-    courseOffering: ProjectCourseOfferingSchema.optional(),
-    batch: z.string().trim().min(1).optional(),
-    groupNumber: z.string().trim().min(1).optional(),
-    people: z.array(ProjectPersonSchema).min(1),
-    links: ProjectLinksSchema.default({}),
-    source: ProjectSourceSchema,
-    media: ProjectMediaSchema,
-    dates: ProjectDatesSchema,
+const ProjectFieldsSchema = z.object({
+  id: z.string().trim().min(1),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid project slug'),
+  title: z.string().trim().min(1),
+  shortDescription: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  projectType: ProjectTypeSchema,
+  status: ProjectStatusSchema,
+  categories: z.array(z.string().trim().min(1)).min(1),
+  tags: z.array(z.string().trim().min(1)).default([]),
+  departments: z
+    .array(AcademicDepartmentCodeSchema)
+    .default([])
+    .refine(
+      (departments) => new Set(departments).size === departments.length,
+      'departments must not contain duplicates'
+    ),
+  academicYear: AcademicYearSchema.optional(),
+  course: ProjectCourseSchema.optional(),
+  courseOffering: ProjectCourseOfferingSchema.optional(),
+  batch: z.string().trim().min(1).optional(),
+  groupNumber: z.string().trim().min(1).optional(),
+  people: z.array(ProjectPersonSchema).min(1),
+  links: ProjectLinksSchema.default({}),
+  source: ProjectSourceSchema,
+  media: ProjectMediaSchema,
+  dates: ProjectDatesSchema,
+});
+
+export const ProjectIndexSchemaUrl =
+  'https://api.scs-pdn.space/api/projects/v2/schemas/index.json';
+
+/** A repository index is a partial project; the registry alone owns ID and slug. */
+export const ProjectIndexSchema = ProjectFieldsSchema.omit({
+  id: true,
+  slug: true,
+})
+  .partial()
+  .extend({
+    $schema: z.literal(ProjectIndexSchemaUrl).optional(),
+    course: ProjectCourseSchema.partial().optional(),
+    courseOffering: ProjectCourseOfferingSchema.partial().optional(),
+    dates: z
+      .object({
+        startedAt: z.iso.date().optional(),
+        completedAt: z.iso.date().optional(),
+        lastUpdatedAt: z.iso.date().optional(),
+      })
+      .strict()
+      .optional(),
+    media: ProjectMediaSchema.partial().optional(),
   })
-  .refine(
-    (project) =>
-      project.projectType !== 'COURSE_PROJECT' || !!project.courseOffering,
-    'courseOffering is required for COURSE_PROJECT'
-  );
+  .strict();
+
+export type ProjectIndex = z.infer<typeof ProjectIndexSchema>;
+
+export const ProjectIndexJsonSchema = {
+  ...z.toJSONSchema(ProjectIndexSchema, { target: 'draft-2020-12' }),
+  $id: ProjectIndexSchemaUrl,
+  title: 'SCS PDN project repository index',
+  description:
+    'Optional project fields supplied by .docs/index.json. ID and slug are registry-owned.',
+};
+
+export const ProjectSchema = ProjectFieldsSchema.refine(
+  (project) =>
+    project.projectType !== 'COURSE_PROJECT' || !!project.courseOffering,
+  'courseOffering is required for COURSE_PROJECT'
+);
 
 export type Project = z.infer<typeof ProjectSchema>;
+
+export function projectSlugBaseFromTitle(title: string): string {
+  return (
+    title
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '')
+      .slice(0, 90)
+      .replace(/-+$/g, '') || 'project'
+  );
+}

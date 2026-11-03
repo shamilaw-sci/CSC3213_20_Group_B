@@ -155,4 +155,46 @@ describe('project repository', () => {
     );
     expect(calls.some((call) => call.name === 'git.createBlob')).toBeFalse();
   });
+
+  test('moves an admin-renamed project without leaving the old file', async () => {
+    const { calls, client, octokit } = dependencies();
+    const repository = new GithubProjectDraftRepository(client, octokit, {
+      owner: 'scs',
+      repo: 'projects',
+    });
+    const result = await repository.saveDraft(
+      {
+        ...request,
+        project: {
+          ...request.project,
+          slug: 'renamed-project',
+          id: 'renamed-project',
+        },
+      },
+      { operationId: 'op_12345678901234567890' }
+    );
+
+    expect(result.revision).toBe('new-project-blob');
+    const tree = calls.find((call) => call.name === 'git.createTree')!
+      .input as {
+      tree: Array<{
+        path: string;
+        mode: string;
+        type: string;
+        sha: string | null;
+      }>;
+    };
+    expect(tree.tree).toContainEqual({
+      path: request.projectPath,
+      mode: '100644',
+      type: 'blob',
+      sha: null,
+    });
+    expect(
+      tree.tree.some(
+        (entry) =>
+          entry.path === 'public/projects/v2/projects/renamed-project.json'
+      )
+    ).toBeTrue();
+  });
 });

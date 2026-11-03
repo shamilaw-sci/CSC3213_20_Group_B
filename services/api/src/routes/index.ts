@@ -1,3 +1,5 @@
+import { ProjectIndexJsonSchema } from '@scs/schemas';
+
 import { updateMyNotificationsPreference } from '@/services/permissions.service';
 import { me, updateMe } from '@/services/profile.service';
 import {
@@ -35,6 +37,7 @@ import {
   getPublicProject,
   getPublicProjectPr,
   getPublicProjectSchema,
+  previewPublicProjectSource,
   listPublicProjectsPage,
   upsertPublicProjectPr,
 } from '@/services/public-project.service';
@@ -71,6 +74,21 @@ type RegisteredRoute = {
 };
 
 const routes: RegisteredRoute[] = [
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/projects/v2/schemas/index.json' },
+    handler: () =>
+      Promise.resolve(
+        new Response(JSON.stringify(ProjectIndexJsonSchema), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/schema+json; charset=utf-8',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        })
+      ),
+  },
   {
     method: 'GET',
     match: { kind: 'prefix', path: '/api/internal/proxies/' },
@@ -226,6 +244,9 @@ const routes: RegisteredRoute[] = [
     match: { kind: 'prefix', path: '/api/projects/v2/projects/' },
     handler: async (req, env) => {
       const pathname = new URL(req.url).pathname;
+      if (pathname.endsWith('/source-preview')) {
+        return previewPublicProjectSource(req, env);
+      }
       if (!pathname.endsWith('/pr')) {
         return createNotFoundResponse(req.headers.get('origin') || '');
       }

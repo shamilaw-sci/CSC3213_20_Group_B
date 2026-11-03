@@ -53,6 +53,16 @@ function requestedContent(request: ProjectOperationRequest): string | null {
   return request.action === 'delete' ? null : stringifyJson(request.project);
 }
 
+function destinationPath(request: ProjectOperationRequest): string {
+  if (
+    request.action === 'upsert' &&
+    typeof request.project?.slug === 'string'
+  ) {
+    return `public/projects/v2/projects/${request.project.slug}.json`;
+  }
+  return request.projectPath;
+}
+
 function hasRequestedContent(
   current: string | null | undefined,
   request: ProjectOperationRequest
@@ -79,7 +89,7 @@ function operationBody(input: {
     'resourceType: project',
     `resourceId: ${input.request.slug}`,
     `entityRevision: ${input.revision}`,
-    `authoritativeFile: ${input.request.projectPath}`,
+    `authoritativeFile: ${destinationPath(input.request)}`,
     `action: ${input.request.action}`,
     '-->',
     '',
@@ -107,10 +117,8 @@ export class GithubProjectDraftRepository implements ProjectDraftRepository {
     const openPull = await this.pullRequestGateway.findOpen((pullRequest) => {
       const metadata = parsePullRequestOperationMetadata(pullRequest.body);
       return (
-        (metadata?.resourceType === 'project' &&
-          metadata.resourceId === request.slug) ||
-        pullRequest.head.ref.startsWith(`project/${request.slug}-`) ||
-        pullRequest.head.ref.startsWith(`project-delete/${request.slug}-`)
+        metadata?.resourceType === 'project' &&
+        metadata.resourceId === request.slug
       );
     });
     const defaultBranch = await this.repositoryGateway.getDefaultBranch();
@@ -120,8 +128,26 @@ export class GithubProjectDraftRepository implements ProjectDraftRepository {
     const parentSha = openPull
       ? await this.repositoryGateway.getRefSha(`heads/${branch}`)
       : defaultBranch.sha;
+    const nextPath = destinationPath(request);
+    const isRename = nextPath !== request.projectPath;
+    const previousPath = (openPull?.body ?? '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.startsWith('authoritativeFile: '))
+      ?.slice('authoritativeFile: '.length);
+    const stalePath =
+      previousPath &&
+      /^public\/projects\/v2\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(
+        previousPath
+      ) &&
+      previousPath !== request.projectPath &&
+      previousPath !== nextPath
+        ? previousPath
+        : null;
     const snapshot = await this.repositoryGateway.readSnapshot(parentSha, [
       request.projectPath,
+      ...(isRename ? [nextPath] : []),
+      ...(stalePath ? [stalePath] : []),
     ]);
     const currentRevision = normalizedRevision(
       snapshot.revisions.get(request.projectPath) ?? null
@@ -129,7 +155,9 @@ export class GithubProjectDraftRepository implements ProjectDraftRepository {
 
     if (
       openPull &&
-      hasRequestedContent(snapshot.files.get(request.projectPath), request)
+      hasRequestedContent(snapshot.files.get(nextPath), request) &&
+      (!isRename || snapshot.files.get(request.projectPath) === null) &&
+      (!stalePath || snapshot.files.get(stalePath) === null)
     ) {
       await this.pullRequestGateway.updateBody(
         openPull.number,
@@ -154,6 +182,18 @@ export class GithubProjectDraftRepository implements ProjectDraftRepository {
         currentRevision
       );
     }
+    if (isRename) {
+      const destination = await this.repositoryGateway.readSnapshot(
+        defaultBranch.sha,
+        [nextPath]
+      );
+      if (destination.files.get(nextPath) !== null) {
+        throw new ProjectRevisionConflictError(
+          'missing',
+          normalizedRevision(destination.revisions.get(nextPath) ?? null)
+        );
+      }
+    }
     if (request.action === 'delete' && currentRevision === 'missing') {
       return { revision: currentRevision };
     }
@@ -167,11 +207,17 @@ export class GithubProjectDraftRepository implements ProjectDraftRepository {
       expectedParentSha: parentSha,
       message: `${request.action === 'delete' ? 'Delete' : 'Update'} public project for ${request.slug}`,
       changes: [
-        { path: request.projectPath, content: requestedContent(request) },
+        ...(isRename && snapshot.files.get(request.projectPath) !== null
+          ? [{ path: request.projectPath, content: null }]
+          : []),
+        ...(stalePath && snapshot.files.get(stalePath) !== null
+          ? [{ path: stalePath, content: null }]
+          : []),
+        { path: nextPath, content: requestedContent(request) },
       ],
     });
     const revision = normalizedRevision(
-      commit.changedFileShas.get(request.projectPath) ?? null
+      commit.changedFileShas.get(nextPath) ?? null
     );
     const body = operationBody({
       operationId: context.operationId,

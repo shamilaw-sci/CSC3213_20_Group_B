@@ -152,7 +152,7 @@ function parseProjectPullRequestBody(body: string): {
     const value = valueParts.join(':').trim();
     if (!value) continue;
 
-    if (key === 'targetProjectFile') {
+    if (key === 'targetProjectFile' || key === 'authoritativeFile') {
       metadata.targetProjectFile = value;
     } else if (key === 'targetAggregateFile') {
       metadata.targetAggregateFile = value;
@@ -472,7 +472,13 @@ async function findProjectPullRequest(
       return (
         pull.head.ref === `project/${normalized}` ||
         pull.head.ref === `project-delete/${normalized}` ||
-        body.includes(`slug: ${normalized}`)
+        body
+          .split(/\r?\n/)
+          .some((line) => line.trim() === `slug: ${normalized}`) ||
+        (body.includes('resourceType: project') &&
+          body
+            .split(/\r?\n/)
+            .some((line) => line.trim() === `resourceId: ${normalized}`))
       );
     }) ?? null
   );
@@ -548,7 +554,10 @@ export async function getPublicProjectPrStatus(
       url: openPull.html_url,
       branch: openPull.head.ref,
       headSha: openPull.head.sha,
-      revision: draftEntry?.sha,
+      revision:
+        targetProjectFile === projectPathForSlug(normalizedSlug)
+          ? draftEntry?.sha
+          : 'missing',
       canEdit: true,
       updatedAt: openPull.updated_at,
       targetProjectFile,

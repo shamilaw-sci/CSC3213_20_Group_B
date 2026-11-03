@@ -45,6 +45,23 @@ the department's course information. People links point to the configured
 People origin. Each participant keeps the role attached to that project; the
 showcase does not infer a universal role for the person.
 
+When a record has a GitHub repository source, its project detail page fetches
+the repository root `.docs/index.json` through the GitHub contents API. The
+published record stores the exact `source.indexUrl` for new submissions; older
+records can derive it from repository owner and name. The index may override
+any project field except `id` and `slug`. `ProjectIndexSchema` rejects those
+identifiers and unsupported fields; the merged object must pass
+`ProjectSchema`. An unavailable or invalid index leaves the published record
+visible. The fetch is cached for five minutes. Portal permissions use the
+published record, so new index people gain edit access only after a data sync
+is merged.
+
+Dynamic reads do not update listing or person projections. The data repository's
+manual **Sync Project Repository Indexes** action materializes available indexes
+into authoritative project files, preserves ID and slug, and regenerates
+projections. Missing indexes are skipped; other fetch or validation errors stop
+the action before it writes project files.
+
 `/projects/{project_slug}` is canonical. `/p/{project_slug}` permanently
 redirects to the encoded canonical path and carries no separate rendering
 logic.

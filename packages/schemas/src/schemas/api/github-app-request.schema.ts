@@ -318,11 +318,11 @@ export const updatePublicProjectRequestSchema = z
   .superRefine((value, ctx) => {
     const expectedProjectPath = `public/projects/v2/projects/${value.slug}.json`;
 
-    if (value.project.slug !== value.slug) {
+    if (value.project.slug !== value.slug && value.updatedByType !== 'admin') {
       ctx.addIssue({
         code: 'custom',
         path: ['slug'],
-        message: 'Slug must match project slug',
+        message: 'Only admins may change a project slug',
       });
     }
 

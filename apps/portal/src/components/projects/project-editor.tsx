@@ -3,11 +3,13 @@
 import {
   AcademicDepartmentCodeSchema,
   type MutationAccepted,
+  ProjectIndexSchemaUrl,
   type ProjectLinks,
   type ProjectPerson,
   type ProjectPersonRole,
   ProjectPersonRoleSchema,
   ProjectSchema,
+  projectSlugBaseFromTitle,
   type ProjectSource,
   ProjectStatusSchema,
   ProjectTypeSchema,
@@ -92,6 +94,7 @@ import {
   publicProjectApiUrl,
   publicProjectPrApiUrl,
   publicProjectSchemaApiUrl,
+  publicProjectSourcePreviewApiUrl,
   publicProjectsPageApiUrl,
   readApiError,
 } from '@/lib/api';
@@ -252,10 +255,51 @@ function today() {
 function slugify(value: string) {
   return value
     .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
+}
+
+function generatedProjectKey(title: string, previousKey?: string) {
+  const base = projectSlugBaseFromTitle(title);
+  const previousSuffix = previousKey?.match(/-([a-f0-9]{6})$/)?.[1];
+  if (previousSuffix) return `${base}-${previousSuffix}`;
+  const bytes = crypto.getRandomValues(new Uint8Array(3));
+  return `${base}-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function githubRepositorySource(value: string): ProjectSource | null {
+  try {
+    const url = new URL(value);
+    const parts = url.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+    if (
+      url.protocol !== 'https:' ||
+      url.hostname !== 'github.com' ||
+      parts.length !== 2
+    )
+      return null;
+    const [repositoryOwner, rawName] = parts;
+    const repositoryName = rawName?.replace(/\.git$/i, '');
+    if (
+      !repositoryOwner ||
+      !repositoryName ||
+      !/^[a-z\d](?:[a-z\d-]{0,38})$/i.test(repositoryOwner) ||
+      !/^[a-z\d._-]+$/i.test(repositoryName)
+    )
+      return null;
+    return {
+      kind: 'TEMPLATE_INDEX_JSON',
+      repositoryOwner,
+      repositoryName,
+      metadataPath: '.docs/index.json',
+      indexUrl: `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/contents/.docs/index.json`,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function isRecord(value: unknown): value is ProjectRecord {
@@ -444,7 +488,7 @@ function emptyProject(
 ): ProjectRecord {
   const slug = 'new-project';
   return {
-    id: `prj-${slug}`,
+    id: slug,
     slug,
     title: '',
     shortDescription: '',
@@ -477,9 +521,7 @@ function emptyProject(
       kind: 'MANUAL',
       curator: identity?.email ?? 'SCS Projects Team',
     },
-    media: {
-      icon: 'FolderKanban',
-    },
+    media: {},
     dates: {
       lastUpdatedAt: today(),
     },
@@ -795,7 +837,8 @@ function ProjectForm({
   project,
   onChange,
   canSubmitAnyProject,
-  slugLocked,
+  canEditIdentity,
+  isNew,
   courses,
   offerings,
   readOnly = false,
@@ -803,7 +846,8 @@ function ProjectForm({
   project: ProjectRecord;
   onChange: (project: ProjectRecord) => void;
   canSubmitAnyProject: boolean;
-  slugLocked: boolean;
+  canEditIdentity: boolean;
+  isNew: boolean;
   courses: CourseCatalogRecord[];
   offerings: CourseOfferingRecord[];
   readOnly?: boolean;
@@ -818,7 +862,17 @@ function ProjectForm({
 
   const media = isRecord(project.media) ? project.media : {};
   const links = isRecord(project.links) ? project.links : {};
-  const source = isRecord(project.source) ? project.source : { kind: 'MANUAL' };
+  const source = isRecord(project.source) ? project.source : {};
+  const [sourcePreview, setSourcePreview] = useState<{
+    draft: ProjectRecord;
+    project: ProjectRecord;
+    changedFields: string[];
+    indexUrl: string;
+  } | null>(null);
+  const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false);
+  const [sourcePreviewError, setSourcePreviewError] = useState<string | null>(
+    null
+  );
   const dates = isRecord(project.dates) ? project.dates : {};
   const people = Array.isArray(project.people)
     ? (project.people.filter(isRecord) as ProjectPerson[])
@@ -828,7 +882,6 @@ function ProjectForm({
     : USER_PROJECT_TYPES;
   const projectType =
     typeof project.projectType === 'string' ? project.projectType : 'OTHER';
-  const sourceKind = typeof source.kind === 'string' ? source.kind : 'MANUAL';
   const courseOffering = isRecord(project.courseOffering)
     ? project.courseOffering
     : {};
@@ -844,6 +897,46 @@ function ProjectForm({
       } (${offering.academicYear} ${offering.semester})`,
     };
   });
+
+  async function checkRepositoryIndex() {
+    const slug = typeof project.slug === 'string' ? project.slug : '';
+    if (!slug) return;
+    setSourcePreviewLoading(true);
+    setSourcePreviewError(null);
+    try {
+      const response = await fetch(publicProjectSourcePreviewApiUrl(slug), {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ project }),
+      });
+      if (!response.ok) throw new Error((await readApiError(response)).message);
+      const result = (await response.json()) as {
+        project: ProjectRecord;
+        changedFields: string[];
+        indexUrl: string;
+      };
+      setSourcePreview({ ...result, draft: project });
+    } catch (error) {
+      setSourcePreviewError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to check repository index.'
+      );
+    } finally {
+      setSourcePreviewLoading(false);
+    }
+  }
+
+  async function copyProjectSchema(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Unable to copy ${label.toLowerCase()}.`);
+    }
+  }
 
   async function applyPersonLookup(
     index: number,
@@ -929,21 +1022,24 @@ function ProjectForm({
             onChange={(title) => {
               const currentSlug =
                 typeof project.slug === 'string' ? project.slug : '';
+              const previousBase = projectSlugBaseFromTitle(
+                typeof project.title === 'string' ? project.title : ''
+              );
+              const followsTitle =
+                currentSlug === 'new-project' ||
+                Boolean(
+                  previousBase &&
+                  new RegExp(`^${previousBase}-[a-f0-9]{6}$`).test(currentSlug)
+                );
               const nextSlug =
-                slugLocked ||
-                (currentSlug !== '' && currentSlug !== 'new-project')
-                  ? currentSlug
-                  : slugify(title);
-              const shouldFollowSlug =
-                typeof project.id !== 'string' ||
-                project.id === `prj-${currentSlug || 'new-project'}`;
+                isNew && followsTitle && title.trim()
+                  ? generatedProjectKey(title, currentSlug)
+                  : currentSlug;
               onChange({
                 ...project,
                 title,
                 slug: nextSlug,
-                id: shouldFollowSlug
-                  ? `prj-${nextSlug || 'new-project'}`
-                  : project.id,
+                id: isNew && project.id === currentSlug ? nextSlug : project.id,
               });
             }}
           />
@@ -951,20 +1047,15 @@ function ProjectForm({
             label="Slug"
             value={typeof project.slug === 'string' ? project.slug : ''}
             required
-            readOnly={readOnly || slugLocked}
+            readOnly={readOnly || !canEditIdentity}
             onChange={(slug) => {
               const currentSlug =
                 typeof project.slug === 'string' ? project.slug : '';
               const nextSlug = slugify(slug);
-              const shouldFollowSlug =
-                typeof project.id !== 'string' ||
-                project.id === `prj-${currentSlug || 'new-project'}`;
               onChange({
                 ...project,
                 slug: nextSlug,
-                id: shouldFollowSlug
-                  ? `prj-${nextSlug || 'new-project'}`
-                  : project.id,
+                id: project.id === currentSlug ? nextSlug : project.id,
               });
             }}
           />
@@ -972,7 +1063,7 @@ function ProjectForm({
             label="ID"
             value={typeof project.id === 'string' ? project.id : ''}
             required
-            readOnly={readOnly}
+            readOnly={readOnly || !canEditIdentity}
             onChange={(value) => setField('id', value)}
           />
           <SelectField
@@ -1302,117 +1393,148 @@ function ProjectForm({
                 } else {
                   delete nextLinks[field];
                 }
-                setNested('links', nextLinks);
+                const nextProject: ProjectRecord = {
+                  ...project,
+                  links: nextLinks,
+                };
+                if (field === 'repository') {
+                  const repoSource = githubRepositorySource(value.trim());
+                  nextProject.source = repoSource ?? {
+                    kind: 'MANUAL',
+                    curator: 'SCS Projects Team',
+                  };
+                }
+                onChange(nextProject);
               }}
             />
           ))}
         </div>
       </ProjectLinksSection>
 
-      {canSubmitAnyProject ? (
-        <ProjectSourceSection>
-          <div className="grid gap-4 md:grid-cols-2">
-            <SelectField
-              label="Source Type"
-              value={sourceKind}
-              options={['MANUAL', 'GITHUB_REPO', 'TEMPLATE_INDEX_JSON']}
-              disabled={readOnly}
-              onChange={(value) => {
-                const nextSource: ProjectSource =
-                  value === 'MANUAL'
-                    ? { kind: 'MANUAL', curator: 'SCS Projects Team' }
-                    : value === 'GITHUB_REPO'
-                      ? {
-                          kind: 'GITHUB_REPO',
-                          repositoryOwner: '',
-                          repositoryName: '',
-                        }
-                      : {
-                          kind: 'TEMPLATE_INDEX_JSON',
-                          repositoryOwner: '',
-                          repositoryName: '',
-                          metadataPath: '.docs/index.json',
-                        };
-                setNested('source', nextSource);
-              }}
-            />
-            {sourceKind === 'MANUAL' ? (
-              <TextField
-                label="Curator"
-                value={typeof source.curator === 'string' ? source.curator : ''}
-                readOnly={readOnly}
-                onChange={(value) =>
-                  setNested('source', { ...source, curator: value })
+      <ProjectSourceSection>
+        {source.kind === 'TEMPLATE_INDEX_JSON' ||
+        source.kind === 'GITHUB_REPO' ? (
+          <div className="bg-muted/35 space-y-3 rounded-md border p-4 text-sm">
+            <p>
+              Add a <code>$schema</code> entry to the root{' '}
+              <code>.docs/index.json</code> for editor help with valid project
+              fields. Project ID and slug stay in the registry.
+            </p>
+            <code className="block overflow-auto break-all">
+              {`"$schema": "${ProjectIndexSchemaUrl}"`}
+            </code>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  void copyProjectSchema(ProjectIndexSchemaUrl, 'Schema URL')
                 }
-              />
-            ) : (
-              <>
-                <TextField
-                  label="Repository Owner"
-                  value={
-                    typeof source.repositoryOwner === 'string'
-                      ? source.repositoryOwner
-                      : ''
-                  }
-                  readOnly={readOnly}
-                  onChange={(value) =>
-                    setNested('source', { ...source, repositoryOwner: value })
-                  }
-                />
-                <TextField
-                  label="Repository Name"
-                  value={
-                    typeof source.repositoryName === 'string'
-                      ? source.repositoryName
-                      : ''
-                  }
-                  readOnly={readOnly}
-                  onChange={(value) =>
-                    setNested('source', { ...source, repositoryName: value })
-                  }
-                />
-                {sourceKind === 'TEMPLATE_INDEX_JSON' ? (
-                  <TextField
-                    label="Metadata Path"
-                    value={
-                      typeof source.metadataPath === 'string'
-                        ? source.metadataPath
-                        : ''
-                    }
-                    readOnly={readOnly}
-                    onChange={(value) =>
-                      setNested('source', { ...source, metadataPath: value })
-                    }
-                  />
-                ) : null}
-              </>
-            )}
-            <TextField
-              label="Icon"
-              value={typeof media.icon === 'string' ? media.icon : ''}
-              placeholder="FolderKanban"
-              readOnly={readOnly}
-              onChange={(value) =>
-                setNested('media', { ...media, icon: value })
-              }
-            />
-            <TextField
-              label="Cover Image"
-              value={
-                typeof media.coverImage === 'string' ? media.coverImage : ''
-              }
-              placeholder="/images/project-categories-hero.png"
-              readOnly={readOnly}
-              onChange={(value) =>
-                setNested('media', {
-                  ...media,
-                  coverImage: value.trim() ? value : undefined,
-                })
-              }
-            />
+              >
+                <Copy className="size-4" /> Copy schema URL
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  void copyProjectSchema(
+                    `"$schema": "${ProjectIndexSchemaUrl}"`,
+                    'JSON entry'
+                  )
+                }
+              >
+                <Copy className="size-4" /> Copy JSON entry
+              </Button>
+              <a
+                href={ProjectIndexSchemaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
+                View schema
+              </a>
+            </div>
           </div>
-        </ProjectSourceSection>
-      ) : null}
+        ) : null}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={
+              readOnly || source.kind === 'MANUAL' || sourcePreviewLoading
+            }
+            onClick={() => void checkRepositoryIndex()}
+          >
+            <RefreshCw className="size-4" />
+            {sourcePreviewLoading
+              ? 'Checking repository…'
+              : 'Check repository index'}
+          </Button>
+          {sourcePreviewError ? (
+            <p role="alert" className="text-destructive text-sm">
+              {sourcePreviewError}
+            </p>
+          ) : null}
+        </div>
+        {sourcePreview?.draft === project ? (
+          <div className="space-y-3 rounded-md border p-4 text-sm">
+            <p className="font-medium">
+              {sourcePreview.changedFields.length === 0
+                ? 'Repository index matches this draft.'
+                : `${sourcePreview.changedFields.length} field(s) differ from this draft.`}
+            </p>
+            <a
+              className="text-primary underline"
+              href={sourcePreview.indexUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View index source
+            </a>
+            {sourcePreview.changedFields.map((field) => (
+              <details key={field} className="rounded-md border p-3">
+                <summary className="cursor-pointer font-medium">
+                  {field}
+                </summary>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <div>
+                    <p className="text-muted-foreground mb-1">Portal draft</p>
+                    <pre className="overflow-auto break-all whitespace-pre-wrap">
+                      {JSON.stringify(project[field], null, 2) ?? 'Not set'}
+                    </pre>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">
+                      Repository index
+                    </p>
+                    <pre className="overflow-auto break-all whitespace-pre-wrap">
+                      {JSON.stringify(sourcePreview.project[field], null, 2) ??
+                        'Not set'}
+                    </pre>
+                  </div>
+                </div>
+              </details>
+            ))}
+          </div>
+        ) : null}
+        <div className="grid gap-4 md:grid-cols-2">
+          <TextField
+            label="Cover Image"
+            value={typeof media.coverImage === 'string' ? media.coverImage : ''}
+            placeholder="/images/project-categories-hero.png"
+            readOnly={readOnly}
+            onChange={(value) =>
+              setNested('media', {
+                ...media,
+                coverImage: value.trim() ? value : undefined,
+              })
+            }
+          />
+        </div>
+      </ProjectSourceSection>
     </div>
   );
 }
@@ -1921,21 +2043,29 @@ export default function ProjectEditor({
 
     const targetSlug = validation.data.slug;
     if (!targetSlug) return;
-    if (!isNew && selectedSlug !== targetSlug) {
+    if (
+      !isNew &&
+      selectedSlug !== targetSlug &&
+      !isSuperAdminRole(user ?? {})
+    ) {
       toast.error('Project slug must match the selected project.');
       return;
     }
+
+    const mutationSlug = isNew ? targetSlug : (selectedSlug ?? targetSlug);
 
     setSaving(true);
     setError(null);
     try {
       const mutationPr = await getProjectPrForMutation(
-        targetSlug,
+        mutationSlug,
         Boolean(
-          prError || prLoading || (!isNew && selectedSlug === targetSlug && !pr)
+          prError ||
+          prLoading ||
+          (!isNew && selectedSlug === mutationSlug && !pr)
         )
       );
-      const res = await fetch(publicProjectPrApiUrl(targetSlug), {
+      const res = await fetch(publicProjectPrApiUrl(mutationSlug), {
         method: 'PUT',
         credentials: 'include',
         headers: apiHeaders({
@@ -1964,10 +2094,10 @@ export default function ProjectEditor({
         { signal: beginOperationPolling() }
       );
       assertMutationSucceeded(operation);
-      const nextPr = await loadProjectPr(targetSlug, { throwOnError: true });
+      const nextPr = await loadProjectPr(mutationSlug, { throwOnError: true });
       if (!nextPr) throw new Error('Project PR status is unavailable.');
       setPrError(null);
-      setSelectedSlug(targetSlug);
+      setSelectedSlug(mutationSlug);
       resetEditor(validation.data, publishedProject);
       setWorkspaceMode('edit');
       router.refresh();
@@ -2333,13 +2463,7 @@ export default function ProjectEditor({
                           ? 'Published data is available for comparison.'
                           : 'This project has not been published yet.'
                     }
-                    sections={
-                      canSubmitAnyProject
-                        ? PROJECT_EDITOR_SECTIONS
-                        : PROJECT_EDITOR_SECTIONS.filter(
-                            (section) => section.id !== 'project-source'
-                          )
-                    }
+                    sections={PROJECT_EDITOR_SECTIONS}
                     canEditJson={canEdit}
                     canSubmit={canEdit}
                     submitting={saving}
@@ -2351,7 +2475,8 @@ export default function ProjectEditor({
                         project={draft}
                         onChange={onDraftChange}
                         canSubmitAnyProject={canSubmitAnyProject}
-                        slugLocked={!isNew}
+                        canEditIdentity={isSuperAdminRole(user ?? {})}
+                        isNew={isNew}
                         courses={courses}
                         offerings={offerings}
                         readOnly={!canEdit}

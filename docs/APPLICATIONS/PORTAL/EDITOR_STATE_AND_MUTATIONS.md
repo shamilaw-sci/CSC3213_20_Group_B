@@ -53,6 +53,24 @@ while retaining a bounded loading skeleton.
 
 ## Submission lifecycle
 
+New projects derive one lowercase, hyphen-normalized ID and slug from the title
+with a six-character hexadecimal suffix. Both values are identical by default.
+Only super admins can edit either field in the form or API. An admin slug edit
+after creation moves the authoritative JSON file through a revision-protected
+GitHub operation; the data repository regenerates its listings from that file.
+Owner updates are authorized against the published record and any open draft,
+not the submitted people list. A new owner submission must use the generated
+title base and a six-character hexadecimal suffix.
+
+The repository link automatically records a GitHub `.docs/index.json` source
+URL in the project record. **Check repository index** refetches the index through
+the API and compares its validated result with the current portal draft without
+changing the draft. Only ID and slug remain controlled by the registry; all
+other project fields may be supplied by the index. The manual data repository
+sync action materializes those values and refreshes person indexes.
+The repository section offers the public JSON Schema URL and a ready-to-paste
+`$schema` entry for the index file, with copy buttons for either form.
+
 Record submission is usually asynchronous:
 
 1. The domain editor validates and sends the draft to `services/api`.

@@ -74,6 +74,30 @@ describe('public project reconciliation helpers', () => {
     expect(result.success).toBe(true);
   });
 
+  test('allows only an admin to rename through the original project path', () => {
+    const request = {
+      slug: 'scholarship-management-system',
+      updatedBy: 'admin@pdn.ac.lk',
+      projectPath:
+        'public/projects/v2/projects/scholarship-management-system.json',
+      aggregatePath: 'public/projects/v2/projects.json',
+      manifestPath: 'public/projects/v2/manifest.json',
+      project: { ...project, slug: 'renamed-scholarship-system' },
+    };
+    expect(
+      updatePublicProjectRequestSchema.safeParse({
+        ...request,
+        updatedByType: 'admin',
+      }).success
+    ).toBeTrue();
+    expect(
+      updatePublicProjectRequestSchema.safeParse({
+        ...request,
+        updatedByType: 'owner',
+      }).success
+    ).toBeFalse();
+  });
+
   test('rejects project update paths that do not match the project slug', () => {
     const result = updatePublicProjectRequestSchema.safeParse({
       slug: 'wrong-project',

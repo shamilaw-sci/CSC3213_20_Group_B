@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 
-import { type Project, ProjectSchema } from '#schemas/projects/project.schema';
+import {
+  type Project,
+  ProjectIndexSchema,
+  ProjectSchema,
+  projectSlugBaseFromTitle,
+} from '#schemas/projects/project.schema';
 
 const baseProject = {
   id: 'prj-scholarship-system',
@@ -63,6 +68,25 @@ const baseProject = {
 };
 
 describe('ProjectSchema', () => {
+  it('normalizes a title into a bounded identifier base', () => {
+    expect(projectSlugBaseFromTitle('  Résumé / Data  ')).toBe('resume-data');
+    expect(projectSlugBaseFromTitle('')).toBe('project');
+  });
+  it('validates a partial repository index and rejects registry identifiers', () => {
+    expect(
+      ProjectIndexSchema.safeParse({
+        $schema: 'https://api.scs-pdn.space/api/projects/v2/schemas/index.json',
+        title: 'Repository title',
+        people: [{ name: 'New Person', role: 'contributor' }],
+      }).success
+    ).toBeTrue();
+    expect(
+      ProjectIndexSchema.safeParse({ slug: 'forged-slug' }).success
+    ).toBeFalse();
+    expect(
+      ProjectIndexSchema.safeParse({ id: 'forged-id' }).success
+    ).toBeFalse();
+  });
   it('accepts a department system with optional course linkage', () => {
     const project = ProjectSchema.parse(baseProject) as Project;
 

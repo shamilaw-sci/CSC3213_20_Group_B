@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
 import { APP_ROLE, setUserPermission } from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
@@ -9,6 +9,52 @@ import { invokeWorker } from 'test/helpers/invoke-worker';
 
 const EMAIL = 'academic@pdn.ac.lk';
 const OPERATION_ID = 'op_12345678901234567890';
+const ownerProject = {
+  id: 'example-project',
+  slug: 'example-project',
+  title: 'Example Project',
+  shortDescription: 'An example project.',
+  description: 'An example project for index comparison.',
+  projectType: 'OPEN_SOURCE',
+  status: 'ACTIVE',
+  categories: ['software'],
+  tags: [],
+  people: [
+    {
+      name: 'Academic User',
+      role: 'maintainer',
+      email: EMAIL,
+      username: 'academic',
+    },
+  ],
+  links: {},
+  source: {
+    kind: 'TEMPLATE_INDEX_JSON',
+    repositoryOwner: 'scs-pdn',
+    repositoryName: 'example',
+    metadataPath: '.docs/index.json',
+    indexUrl:
+      'https://api.github.com/repos/scs-pdn/example/contents/.docs/index.json',
+  },
+  media: {},
+  dates: { lastUpdatedAt: '2026-11-03' },
+};
+const originalFetch = globalThis.fetch;
+beforeEach(() => {
+  globalThis.fetch = ((input, init) => {
+    if (
+      String(input).startsWith(
+        'https://data.test.scs-pdn.space/projects/v2/projects/'
+      )
+    ) {
+      return Promise.resolve(new Response(null, { status: 404 }));
+    }
+    return originalFetch(input, init);
+  }) as typeof fetch;
+});
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
 type ServiceRequest = Parameters<NonNullable<Env['GITHUB_APP']>['fetch']>[0];
 
 async function setup() {
@@ -57,17 +103,142 @@ async function setup() {
 }
 
 describe('registry operation compatibility', () => {
-  test('submits projects with an entity revision and project resource key', async () => {
+  test('publishes the repository index JSON Schema without a session', async () => {
+    const response = await invokeWorker(
+      '/api/projects/v2/schemas/index.json',
+      {
+        method: 'GET',
+      },
+      createTestEnv()
+    );
+    const schema = (await response.json()) as {
+      $id: string;
+      additionalProperties: boolean;
+      properties: Record<string, unknown>;
+    };
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain(
+      'application/schema+json'
+    );
+    expect(schema.$id).toBe(
+      'https://api.scs-pdn.space/api/projects/v2/schemas/index.json'
+    );
+    expect(schema.additionalProperties).toBeFalse();
+    expect(schema.properties.$schema).toBeDefined();
+    expect(schema.properties.id).toBeUndefined();
+    expect(schema.properties.slug).toBeUndefined();
+  });
+  test('rejects a non-admin project ID override at creation', async () => {
     const { env, headers, upstream } = await setup();
     const response = await invokeWorker(
       '/api/projects/v2/projects/example-project/pr',
       {
         method: 'PUT',
         headers,
+        body: JSON.stringify({ project: { ...ownerProject, id: 'custom-id' } }),
+      },
+      env
+    );
+    expect(response.status).toBe(403);
+    expect(upstream).toHaveLength(0);
+  });
+
+  test('requires a title-derived slug for a new owner submission', async () => {
+    const { env, headers, upstream } = await setup();
+    const response = await invokeWorker(
+      '/api/projects/v2/projects/example-project/pr',
+      {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ project: ownerProject }),
+      },
+      env
+    );
+    expect(response.status).toBe(403);
+    expect(upstream).toHaveLength(0);
+  });
+
+  test('checks ownership against the published project, not the submitted people list', async () => {
+    const { env, headers, upstream } = await setup();
+    const fallbackFetch = globalThis.fetch;
+    globalThis.fetch = ((input, init) =>
+      String(input).startsWith(
+        'https://data.test.scs-pdn.space/projects/v2/projects/'
+      )
+        ? Promise.resolve(
+            Response.json({
+              ...ownerProject,
+              people: [
+                {
+                  name: 'Another Owner',
+                  role: 'maintainer',
+                  username: 'another',
+                },
+              ],
+            })
+          )
+        : fallbackFetch(input, init)) as typeof fetch;
+    const response = await invokeWorker(
+      '/api/projects/v2/projects/example-project/pr',
+      {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ project: ownerProject }),
+      },
+      env
+    );
+    expect(response.status).toBe(403);
+    expect(upstream).toHaveLength(0);
+  });
+
+  test('compares repository data without accepting its ID or slug', async () => {
+    const { env, headers } = await setup();
+    const fallbackFetch = globalThis.fetch;
+    const content = btoa(
+      JSON.stringify({
+        $schema: 'https://api.scs-pdn.space/api/projects/v2/schemas/index.json',
+        title: 'Repository title',
+        people: [
+          { name: 'New Person', role: 'contributor', username: 'newperson' },
+        ],
+      })
+    );
+    globalThis.fetch = ((input, init) =>
+      String(input).startsWith('https://api.github.com/')
+        ? Promise.resolve(Response.json({ content }))
+        : fallbackFetch(input, init)) as typeof fetch;
+    const response = await invokeWorker(
+      '/api/projects/v2/projects/example-project/source-preview',
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ project: ownerProject }),
+      },
+      env
+    );
+    const preview = (await response.json()) as {
+      project: Record<string, unknown>;
+      changedFields: string[];
+    };
+    expect(response.status).toBe(200);
+    expect(preview.project).toMatchObject({
+      id: 'example-project',
+      slug: 'example-project',
+      title: 'Repository title',
+    });
+    expect(preview.changedFields).toContain('people');
+  });
+  test('submits projects with an entity revision and project resource key', async () => {
+    const { env, headers, upstream } = await setup();
+    const response = await invokeWorker(
+      '/api/projects/v2/projects/example-project-a1b2c3/pr',
+      {
+        method: 'PUT',
+        headers,
         body: JSON.stringify({
           project: {
-            id: 'project-example',
-            slug: 'example-project',
+            id: 'example-project-a1b2c3',
+            slug: 'example-project-a1b2c3',
             title: 'Example Project',
             shortDescription: 'An example project.',
             description: 'An example project for operation testing.',
@@ -91,7 +262,7 @@ describe('registry operation compatibility', () => {
           },
           control: {
             idempotencyKey: 'request-key-00000001',
-            expectedRevision: 'old-project-blob',
+            expectedRevision: 'missing',
           },
         }),
       },
@@ -104,8 +275,8 @@ describe('registry operation compatibility', () => {
       action: 'upsert',
       idempotencyKey: 'request-key-00000001',
       request: {
-        slug: 'example-project',
-        expectedRevision: 'old-project-blob',
+        slug: 'example-project-a1b2c3',
+        expectedRevision: 'missing',
       },
     });
   });
