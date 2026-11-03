@@ -24,4 +24,7 @@ flowchart LR
 | `CourseOfferingSchema`   | Course, academic year, semester, staff, and departments for one offering. |
 
 Course records are stable catalog entries. Offerings add time and staffing
-context without duplicating the course definition.
+context without duplicating the course definition. A course can exist without
+an offering. Its primary code is editable in the course catalog; changing it
+adds the new code to the catalog's codes while previous codes remain available
+as alternate codes.

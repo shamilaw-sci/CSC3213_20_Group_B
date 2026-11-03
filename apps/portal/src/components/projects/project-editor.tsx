@@ -57,6 +57,7 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -887,16 +888,23 @@ function ProjectForm({
     : {};
   const selectedOfferingId =
     typeof courseOffering.id === 'string' ? courseOffering.id : '';
-  const courseOfferingOptions = offerings.map((offering) => {
-    const catalogCourse = courses.find((item) => item.id === offering.courseId);
-    return {
-      offering,
-      course: catalogCourse,
-      label: `${catalogCourse?.primaryCode ?? offering.courseId} - ${
-        catalogCourse?.title ?? offering.courseId
-      } (${offering.academicYear} ${offering.semester})`,
-    };
-  });
+  const course = isRecord(project.course) ? project.course : {};
+  const selectedCourseId =
+    typeof course.courseId === 'string' ? course.courseId : '';
+  const courseOfferingOptions = offerings
+    .filter((offering) => offering.courseId === selectedCourseId)
+    .map((offering) => {
+      const catalogCourse = courses.find(
+        (item) => item.id === offering.courseId
+      );
+      return {
+        offering,
+        course: catalogCourse,
+        label: `${catalogCourse?.primaryCode ?? offering.courseId} - ${
+          catalogCourse?.title ?? offering.courseId
+        } (${offering.academicYear} ${offering.semester})`,
+      };
+    });
 
   async function checkRepositoryIndex() {
     const slug = typeof project.slug === 'string' ? project.slug : '';
@@ -985,7 +993,14 @@ function ProjectForm({
       onChange({
         ...project,
         courseOffering: undefined,
-        course: undefined,
+        course: isRecord(project.course)
+          ? {
+              ...project.course,
+              offeringId: undefined,
+              academicYear: undefined,
+              semester: undefined,
+            }
+          : undefined,
       });
       return;
     }
@@ -1007,6 +1022,22 @@ function ProjectForm({
       },
       departments:
         selected.course?.departments ?? stringArrayValue(project.departments),
+    });
+  }
+
+  function selectCourse(courseId: string) {
+    const selected = courses.find((item) => item.id === courseId);
+    onChange({
+      ...project,
+      courseOffering: undefined,
+      course: selected
+        ? {
+            courseId: selected.id,
+            code: selected.primaryCode,
+            title: selected.title,
+            departments: selected.departments,
+          }
+        : undefined,
     });
   }
 
@@ -1203,10 +1234,40 @@ function ProjectForm({
             <h3 className="text-base font-semibold">Course Project</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
+                <Label>Course</Label>
+                <Select
+                  value={selectedCourseId}
+                  disabled={readOnly}
+                  items={courses.map((item) => ({
+                    value: item.id,
+                    label: `${item.primaryCode} - ${item.title}`,
+                  }))}
+                  onValueChange={(value) => selectCourse(value ?? '')}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.primaryCode} - {item.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  A course is a stable catalog entry. Edit its primary code in{' '}
+                  <Link href="/academic/courses" className="underline">
+                    Courses
+                  </Link>
+                  .
+                </p>
+              </div>
+              <div className="space-y-2 md:col-span-2">
                 <Label>Course Offering</Label>
                 <Select
                   value={selectedOfferingId}
-                  disabled={readOnly}
+                  disabled={readOnly || !selectedCourseId}
                   items={courseOfferingOptions.map((option) => ({
                     value: option.offering.id,
                     label: option.label,
@@ -1230,8 +1291,20 @@ function ProjectForm({
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Course projects must reference an existing course offering.
+                  Optional: choose a year and semester offering when this
+                  project belongs to that run of the course. Teaching staff are
+                  attached to the offering.
                 </p>
+                {selectedOfferingId && !readOnly ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => selectCourseOffering('')}
+                  >
+                    Clear offering
+                  </Button>
+                ) : null}
               </div>
               <TextField
                 label="Batch"
@@ -1381,6 +1454,7 @@ function ProjectForm({
             <TextField
               key={field}
               label={enumLabel(field)}
+              type="url"
               value={
                 typeof links[field] === 'string' ? (links[field] as string) : ''
               }
@@ -1523,8 +1597,9 @@ function ProjectForm({
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
             label="Cover Image"
+            type="url"
             value={typeof media.coverImage === 'string' ? media.coverImage : ''}
-            placeholder="/images/project-categories-hero.png"
+            placeholder="https://example.com/project-cover.png"
             readOnly={readOnly}
             onChange={(value) =>
               setNested('media', {
@@ -2015,13 +2090,11 @@ export default function ProjectEditor({
 
     if (
       normalizedProject.projectType === 'COURSE_PROJECT' &&
-      (!isRecord(normalizedProject.courseOffering) ||
-        typeof normalizedProject.courseOffering.id !== 'string' ||
-        !normalizedProject.courseOffering.id.trim())
+      (!isRecord(normalizedProject.course) ||
+        typeof normalizedProject.course.courseId !== 'string' ||
+        !normalizedProject.course.courseId.trim())
     ) {
-      toast.error(
-        'Select a course offering before submitting a course project.'
-      );
+      toast.error('Select a course before submitting a course project.');
       return;
     }
 

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
-import { APP_ROLE, setUserPermission } from '@/repositories/permissions.repo';
+import {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  setUserPermission,
+} from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -227,6 +231,83 @@ describe('registry operation compatibility', () => {
       title: 'Repository title',
     });
     expect(preview.changedFields).toContain('people');
+  });
+  test('accepts a catalog course without an offering and checks offering ownership', async () => {
+    const { env, headers, upstream } = await setup();
+    await setUserPermission(
+      EMAIL,
+      {
+        role: APP_ROLE.ACADEMIC,
+        accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+        createdAt: 1,
+      },
+      env
+    );
+    const fallbackFetch = globalThis.fetch;
+    globalThis.fetch = ((input, init) => {
+      const url = String(input);
+      if (url.endsWith('/academic/v2/courses.json'))
+        return Promise.resolve(
+          Response.json([
+            {
+              id: 'course-a',
+              primaryCode: 'CSC3213',
+              codes: ['CSC3213'],
+              title: 'Course A',
+              credits: 3,
+              departments: [],
+            },
+          ])
+        );
+      if (url.endsWith('/academic/v2/offerings.json'))
+        return Promise.resolve(
+          Response.json([
+            {
+              id: 'other-course-2025-2026-sem1',
+              courseId: 'other-course',
+              academicYear: '2025/2026',
+              semester: 'SEM1',
+              staff: [],
+              departments: [],
+            },
+          ])
+        );
+      return fallbackFetch(input, init);
+    }) as typeof fetch;
+    const project = {
+      ...ownerProject,
+      projectType: 'COURSE_PROJECT',
+      course: {
+        courseId: 'course-a',
+        code: 'CSC3213',
+        title: 'Course A',
+      },
+    };
+
+    const withoutOffering = await invokeWorker(
+      '/api/projects/v2/projects/example-project/pr',
+      { method: 'PUT', headers, body: JSON.stringify({ project }) },
+      env
+    );
+    expect(withoutOffering.status).toBe(202);
+    expect(upstream).toHaveLength(1);
+
+    const wrongOffering = await invokeWorker(
+      '/api/projects/v2/projects/example-project/pr',
+      {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          project: {
+            ...project,
+            courseOffering: { id: 'other-course-2025-2026-sem1' },
+          },
+        }),
+      },
+      env
+    );
+    expect(wrongOffering.status).toBe(400);
+    expect(upstream).toHaveLength(1);
   });
   test('submits projects with an entity revision and project resource key', async () => {
     const { env, headers, upstream } = await setup();

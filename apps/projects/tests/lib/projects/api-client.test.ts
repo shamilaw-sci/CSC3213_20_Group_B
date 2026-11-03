@@ -16,6 +16,7 @@ const project = {
   departments: [],
   academicYear: '2025/2026',
   course: {
+    courseId: 'software-systems-design-project',
     code: 'CSC3213',
     title: 'Software Systems Design Project',
     departments: [],

@@ -1100,26 +1100,28 @@ function CourseForm({
         <FieldGroup className="grid gap-4">
           <Field>
             <FieldLabel htmlFor="course-primary-code">Primary Code</FieldLabel>
-            <Select
+            <Input
+              id="course-primary-code"
               value={course.primaryCode}
-              disabled={readOnly || course.codes.length === 0}
-              onValueChange={(primaryCode) => {
-                if (primaryCode !== null) {
-                  setField('primaryCode', primaryCode);
-                }
+              readOnly={readOnly}
+              placeholder="CSC3213"
+              onChange={(event) => {
+                const primaryCode = event.target.value.toUpperCase();
+                const normalized = normalizeCourseCode(primaryCode);
+                onChange({
+                  ...course,
+                  primaryCode,
+                  codes:
+                    normalized && !course.codes.includes(normalized)
+                      ? [...course.codes, normalized]
+                      : course.codes,
+                });
               }}
-            >
-              <SelectTrigger id="course-primary-code" className="w-full">
-                <SelectValue placeholder="Add a course code first" />
-              </SelectTrigger>
-              <SelectContent>
-                {course.codes.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
+            <p className="text-muted-foreground text-xs">
+              Enter the catalog's primary code. Previous codes remain available
+              as alternate codes until removed.
+            </p>
           </Field>
           <Field>
             <FieldLabel htmlFor="course-code-draft">

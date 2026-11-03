@@ -70,6 +70,10 @@ other project fields may be supplied by the index. The manual data repository
 sync action materializes those values and refreshes person indexes.
 The repository section offers the public JSON Schema URL and a ready-to-paste
 `$schema` entry for the index file, with copy buttons for either form.
+Project links and cover images accept complete absolute URLs. A course
+project selects a stable catalog course; a year-specific offering is optional.
+The catalog course editor lets maintainers edit its primary code directly and
+keeps previous codes as alternate codes until removed.
 
 Record submission is usually asynchronous:
 

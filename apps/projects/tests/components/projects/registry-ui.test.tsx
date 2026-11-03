@@ -75,13 +75,19 @@ describe('Project presentation', () => {
       <ProjectGrid
         projects={[
           project({
-            media: { icon: 'FolderKanban', coverImage: '/cover.png' },
+            media: {
+              icon: 'FolderKanban',
+              coverImage: 'https://example.com/cover.png',
+            },
           }),
         ]}
       />
     );
 
-    expect(container.querySelector('img')).toHaveAttribute('src', '/cover.png');
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://example.com/cover.png'
+    );
     expect(container.querySelector('svg')).toBeNull();
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });

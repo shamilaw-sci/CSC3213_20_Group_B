@@ -59,7 +59,7 @@ const baseProject = {
   },
   media: {
     icon: 'GraduationCap',
-    coverImage: '/images/science-projects-hero.png',
+    coverImage: 'https://example.com/images/science-projects-hero.png',
   },
   dates: {
     startedAt: '2026-05-01',
@@ -133,12 +133,19 @@ describe('ProjectSchema', () => {
     ).toThrow();
   });
 
-  it('requires course offering metadata for course projects', () => {
+  it('requires a stable course for course projects while allowing no offering', () => {
     expect(() =>
       ProjectSchema.parse({
         ...baseProject,
         projectType: 'COURSE_PROJECT',
         courseOffering: undefined,
+      })
+    ).not.toThrow();
+    expect(() =>
+      ProjectSchema.parse({
+        ...baseProject,
+        projectType: 'COURSE_PROJECT',
+        course: undefined,
       })
     ).toThrow();
   });
@@ -157,6 +164,30 @@ describe('ProjectSchema', () => {
         links: { repository: 'not-a-url' },
       })
     ).toThrow();
+
+    for (const url of ['/cover.png', './cover.png']) {
+      expect(() =>
+        ProjectSchema.parse({
+          ...baseProject,
+          media: { coverImage: url },
+        })
+      ).toThrow();
+      expect(() =>
+        ProjectIndexSchema.parse({ media: { coverImage: url } })
+      ).toThrow();
+    }
+    expect(() =>
+      ProjectSchema.parse({
+        ...baseProject,
+        links: { website: '/project' },
+      })
+    ).toThrow();
+    expect(() =>
+      ProjectSchema.parse({
+        ...baseProject,
+        media: { coverImage: 'ftp://example.com/cover.png' },
+      })
+    ).not.toThrow();
 
     expect(() =>
       ProjectSchema.parse({

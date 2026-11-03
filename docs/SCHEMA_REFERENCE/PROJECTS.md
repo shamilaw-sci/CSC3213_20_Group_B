@@ -33,9 +33,15 @@ flowchart TD
 | `ProjectSchema`               | Complete showcase record and cross-field rules.                                     |
 | `ProjectIndexJsonSchema`      | JSON Schema published for repository index editor validation.                       |
 
-A course project must reference an offering. People roles are intentionally
-per project; the schema does not infer a permanent role from a person's global
-profile.
+A course project must reference a stable catalog course. It may also reference
+one offering when it belongs to a particular academic year and semester. The
+offering carries the teaching staff for that run of the course. People roles
+are per project; the schema does not infer a permanent role from a person's
+global profile.
+
+Project links, the repository index URL, and the cover image require complete
+absolute URLs. Relative paths such as `/images/cover.png` are invalid in
+both registry records and repository indexes.
 
 `TEMPLATE_INDEX_JSON` stores `repositoryOwner`, `repositoryName`,
 `metadataPath: ".docs/index.json"`, and an optional `indexUrl` for older

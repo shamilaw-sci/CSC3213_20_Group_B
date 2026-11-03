@@ -88,7 +88,7 @@ export type ProjectSource = z.infer<typeof ProjectSourceSchema>;
 
 export const ProjectMediaSchema = z.object({
   icon: z.string().trim().min(1).default('FolderKanban'),
-  coverImage: z.string().trim().min(1).optional(),
+  coverImage: z.url().optional(),
 });
 
 export type ProjectMedia = z.infer<typeof ProjectMediaSchema>;
@@ -208,8 +208,8 @@ export const ProjectIndexJsonSchema = {
 
 export const ProjectSchema = ProjectFieldsSchema.refine(
   (project) =>
-    project.projectType !== 'COURSE_PROJECT' || !!project.courseOffering,
-  'courseOffering is required for COURSE_PROJECT'
+    project.projectType !== 'COURSE_PROJECT' || !!project.course?.courseId,
+  'course.courseId is required for COURSE_PROJECT'
 );
 
 export type Project = z.infer<typeof ProjectSchema>;

@@ -1,4 +1,6 @@
 import {
+  CourseOfferingSchema,
+  CourseSchema,
   ProjectSchema,
   ProjectIndexSchema,
   type Project,
@@ -106,41 +108,60 @@ async function fetchPublicJson(
   return { status: response.status, value: await response.json() };
 }
 
-async function offeringExists(env: Env, offeringId: string): Promise<boolean> {
-  const response = await fetch(
-    dataPublicUrl(env, '/academic/v2/offerings.json')
-  );
-  if (!response.ok) return false;
-
-  const value = await response.json().catch(() => []);
-  if (!Array.isArray(value)) return false;
-
-  return value.some(
-    (record) =>
-      isRecord(record) &&
-      typeof record.id === 'string' &&
-      record.id === offeringId
-  );
-}
-
-async function validateCourseProjectOfferingReference(
+async function validateCourseProjectReferences(
   env: Env,
   project: Record<string, unknown>
 ): Promise<string | null> {
   if (project.projectType !== 'COURSE_PROJECT') return null;
+
+  const course = project.course;
+  const courseId =
+    isRecord(course) && typeof course.courseId === 'string'
+      ? course.courseId
+      : null;
+  if (!courseId) return 'course.courseId is required for course projects';
+
+  const coursesResponse = await fetch(
+    dataPublicUrl(env, '/academic/v2/courses.json')
+  );
+  const courses = coursesResponse.ok
+    ? await coursesResponse.json().catch(() => null)
+    : null;
+  if (
+    !Array.isArray(courses) ||
+    !courses.some((record) => {
+      const parsed = CourseSchema.safeParse(record);
+      return parsed.success && parsed.data.id === courseId;
+    })
+  ) {
+    return 'course.courseId must reference an existing course';
+  }
 
   const courseOffering = project.courseOffering;
   const offeringId =
     isRecord(courseOffering) && typeof courseOffering.id === 'string'
       ? courseOffering.id
       : null;
+  if (!offeringId) return null;
 
-  if (!offeringId) {
-    return 'courseOffering.id is required for course projects';
-  }
-
-  if (!(await offeringExists(env, offeringId))) {
-    return 'courseOffering.id must reference an existing course offering';
+  const offeringsResponse = await fetch(
+    dataPublicUrl(env, '/academic/v2/offerings.json')
+  );
+  const offerings = offeringsResponse.ok
+    ? await offeringsResponse.json().catch(() => null)
+    : null;
+  if (
+    !Array.isArray(offerings) ||
+    !offerings.some((record) => {
+      const parsed = CourseOfferingSchema.safeParse(record);
+      return (
+        parsed.success &&
+        parsed.data.id === offeringId &&
+        parsed.data.courseId === courseId
+      );
+    })
+  ) {
+    return 'courseOffering.id must reference an offering of the selected course';
   }
 
   return null;
@@ -689,12 +710,12 @@ export async function upsertPublicProjectPr(
     }
   }
 
-  const courseOfferingError = await validateCourseProjectOfferingReference(
+  const courseReferenceError = await validateCourseProjectReferences(
     env,
     project as Record<string, unknown>
   );
-  if (courseOfferingError) {
-    return createJsonErrorResponse(courseOfferingError, 400, origin);
+  if (courseReferenceError) {
+    return createJsonErrorResponse(courseReferenceError, 400, origin);
   }
 
   if (!canUserSubmitProjectType(user, parseResult.data.projectType)) {

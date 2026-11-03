@@ -15,7 +15,7 @@ therefore a runtime behavior change, not just a TypeScript declaration change.
 - use `.strict()` where unknown transport fields must be rejected, and make
   that choice explicit rather than assuming every object behaves identically;
 - put cross-field invariants in refinements, such as project completion dates
-  following start dates or course projects requiring an offering;
+  following start dates or course projects requiring a catalog course;
 - use defaults only when the canonical parsed value truly owns that default;
 - infer exported types from schemas instead of duplicating interfaces.
 
