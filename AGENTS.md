@@ -4,6 +4,9 @@ These rules apply to the entire repository. Human instructions for a specific
 task take precedence, but repository safety and verification requirements still
 apply.
 
+For contributor guidance on AI-assisted work, see the
+[proposed AI usage policy](docs/AI_POLICY.md).
+
 ## Before Editing
 
 1. Read `README.md` and the guide relevant to the change.

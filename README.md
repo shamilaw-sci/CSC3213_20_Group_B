@@ -128,6 +128,10 @@ configuration inventory.
 - Use Conventional Commits. Husky validates staged files and commit messages.
 - Docker is not part of the current development or verification workflow.
 
+## Contributor Guidance
+
+The [proposed AI usage policy](docs/AI_POLICY.md) covers human review,
+confidentiality, attribution, and disclosure for AI-assisted contributions.
 Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
 ## Documentation
