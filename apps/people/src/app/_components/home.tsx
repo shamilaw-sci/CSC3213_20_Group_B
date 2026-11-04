@@ -39,7 +39,7 @@ export default function Home() {
             onMouseEnter={prefetchAcademicStaff}
             className="group bg-card hover:border-primary/40 hover:bg-muted/50
               flex min-h-36 flex-col items-start justify-between rounded-md
-              border p-4 text-left transition-colors"
+              border p-4 text-left transition-colors lg:min-h-28"
           >
             <GraduationCap
               className={staffIconClassNames.academic}
@@ -59,7 +59,7 @@ export default function Home() {
             onMouseEnter={prefetchAcademicSupportStaff}
             className="group bg-card hover:border-primary/40 hover:bg-muted/50
               flex min-h-36 flex-col items-start justify-between rounded-md
-              border p-4 text-left transition-colors"
+              border p-4 text-left transition-colors lg:min-h-28"
           >
             <Wrench
               className={staffIconClassNames.academicSupport}
@@ -79,7 +79,7 @@ export default function Home() {
             onMouseEnter={prefetchNonAcademicStaff}
             className="group bg-card hover:border-primary/40 hover:bg-muted/50
               flex min-h-36 flex-col items-start justify-between rounded-md
-              border p-4 text-left transition-colors"
+              border p-4 text-left transition-colors lg:min-h-28"
           >
             <BriefcaseBusiness
               className={staffIconClassNames.nonAcademic}
@@ -115,7 +115,7 @@ export default function Home() {
               }}
               className="group bg-card hover:border-primary/40 hover:bg-muted/50
                 flex min-h-36 flex-col items-start justify-between rounded-md
-                border p-4 text-left transition-colors"
+                border p-4 text-left transition-colors lg:min-h-28"
             >
               <Icon
                 className={`${iconBaseClassName} ${iconClassName}`}
