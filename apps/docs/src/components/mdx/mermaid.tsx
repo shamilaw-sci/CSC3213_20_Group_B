@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { use, useId, useSyncExternalStore } from 'react';
+import { use, useDeferredValue, useId, useSyncExternalStore } from 'react';
 
 type MermaidProps = {
   chart: string;
@@ -22,6 +22,8 @@ function cachedPromise<T>(key: string, create: () => Promise<T>): Promise<T> {
 function MermaidContent({ chart }: MermaidProps) {
   const id = useId();
   const { resolvedTheme } = useTheme();
+  // Keep the current diagram mounted while the other theme renders.
+  const renderedTheme = useDeferredValue(resolvedTheme);
   const { default: mermaid } = use(
     cachedPromise('mermaid-module', () => import('mermaid'))
   );
@@ -30,11 +32,11 @@ function MermaidContent({ chart }: MermaidProps) {
     startOnLoad: false,
     securityLevel: 'strict',
     fontFamily: 'inherit',
-    theme: resolvedTheme === 'dark' ? 'dark' : 'default',
+    theme: renderedTheme === 'dark' ? 'dark' : 'default',
   });
 
   const { bindFunctions, svg } = use(
-    cachedPromise(`${chart}-${resolvedTheme}`, () =>
+    cachedPromise(`${chart}-${renderedTheme}`, () =>
       mermaid.render(id, chart.replaceAll('\\n', '\n'))
     )
   );

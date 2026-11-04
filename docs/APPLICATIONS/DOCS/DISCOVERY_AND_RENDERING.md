@@ -35,10 +35,11 @@ variant.
 
 Mermaid rendering is intentionally client-only because it depends on browser
 state and the resolved color theme. Render results are cached by chart text and
-theme. The renderer uses Mermaid's strict security level and injects only the
-SVG returned by that configured renderer. Preserve that boundary if the
-diagram component changes; do not render arbitrary stored HTML through the
-same path.
+theme. A theme change keeps the current diagram mounted until its replacement
+is ready, preserving the reader's page position. The renderer uses Mermaid's
+strict security level and injects only the SVG returned by that configured
+renderer. Preserve that boundary if the diagram component changes; do not
+render arbitrary stored HTML through the same path.
 
 ## Failure and consistency checks
 
