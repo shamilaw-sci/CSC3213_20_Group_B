@@ -29,10 +29,11 @@ test('keeps programme directory cards focused on student identity', () => {
   expect(markup).not.toContain('>View</span>');
 });
 
-test('matches the mobile card action geometry in its loading skeleton', () => {
+test('matches the larger card layout in its loading skeleton', () => {
   const markup = renderToStaticMarkup(<PeopleCardSkeletonGrid count={1} />);
 
-  expect(markup).toContain('size-9');
-  expect(markup).toContain('rounded-full');
-  expect(markup).toContain('sm:w-full');
+  expect(markup).toContain('grid-cols-1');
+  expect(markup).toContain('sm:grid-cols-2');
+  expect(markup).toContain('lg:grid-cols-3');
+  expect(markup).toContain('h-10 w-full');
 });

@@ -79,7 +79,6 @@ import {
   SiZenodo,
 } from 'react-icons/si';
 
-import publicEnvConfig from '@/config/public.env.config';
 import { avatarUrlForPerson } from '@/lib/avatar-url';
 import {
   getStudentProgrammeField,
@@ -124,7 +123,7 @@ function PersonImage({
   size?: 'md' | 'lg';
 }) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
-  const sizeClass = size === 'lg' ? 'h-80 w-full' : 'size-24 sm:h-40 sm:w-full';
+  const sizeClass = size === 'lg' ? 'h-80 w-full' : 'h-52 w-full sm:h-48';
 
   if (!src || failedSource === src) {
     return (
@@ -196,12 +195,11 @@ function PersonTile({
     <>
       <PersonImage src={imageUrl} name={name} />
       <CardHeader
-        className="min-w-0 flex-1 items-start px-0 text-left sm:min-h-28
-          sm:w-full sm:items-center sm:text-center"
+        className="w-full min-w-0 flex-1 items-center px-0 text-center"
       >
         <CardTitle
           className="text-card-foreground group-hover:text-primary line-clamp-2
-            text-sm/snug sm:text-base"
+            text-base/snug sm:text-lg"
         >
           {title}
         </CardTitle>
@@ -220,17 +218,14 @@ function PersonTile({
         )}
       </CardHeader>
       {href && (
-        <CardFooter
-          className="ml-auto self-center px-0 sm:mt-auto sm:w-full sm:self-auto"
-        >
+        <CardFooter className="mt-auto w-full px-0">
           <span
             className="border-border text-muted-foreground
               group-hover:border-primary/40 group-hover:bg-primary/5
-              group-hover:text-primary flex size-9 items-center justify-center
-              rounded-full border transition-colors sm:w-full sm:gap-1
-              sm:rounded-md sm:px-3"
+              group-hover:text-primary flex h-10 w-full items-center
+              justify-center gap-1 rounded-md border px-3 transition-colors"
           >
-            <span className="sr-only sm:not-sr-only">View Profile</span>
+            <span>View Profile</span>
             <ChevronRight className="size-4" aria-hidden="true" />
           </span>
         </CardFooter>
@@ -239,7 +234,7 @@ function PersonTile({
   );
 
   const className =
-    'group flex min-h-0 flex-row items-start gap-4 rounded-md p-3 transition-colors hover:border-primary/50 hover:bg-muted/40 sm:min-h-80 sm:flex-col sm:p-4';
+    'group flex min-h-88 flex-col gap-4 rounded-md p-4 transition-colors hover:border-primary/50 hover:bg-muted/40';
 
   if (!href) {
     return <Card className={className}>{content}</Card>;
@@ -256,21 +251,15 @@ function PeopleCardSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="bg-card flex min-h-0 animate-pulse flex-row items-start gap-4
-        rounded-md border p-3 sm:min-h-80 sm:flex-col sm:p-4"
+      className="bg-card flex min-h-88 animate-pulse flex-col gap-4 rounded-md
+        border p-4"
     >
-      <div className="bg-muted size-24 shrink-0 rounded-md sm:h-40 sm:w-full" />
-      <div
-        className="flex min-w-0 flex-1 flex-col gap-3 sm:min-h-28 sm:w-full
-          sm:items-center"
-      >
+      <div className="bg-muted h-52 w-full shrink-0 rounded-md sm:h-48" />
+      <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3">
         <div className="bg-muted h-4 w-3/4 rounded" />
         <div className="bg-muted h-3 w-1/2 rounded" />
         <div className="bg-muted h-3 w-2/3 rounded" />
-        <div
-          className="bg-muted mt-auto ml-auto size-9 rounded-full sm:ml-0 sm:h-9
-            sm:w-full sm:rounded-md"
-        />
+        <div className="bg-muted mt-auto h-10 w-full rounded-md" />
       </div>
     </div>
   );
@@ -278,10 +267,7 @@ function PeopleCardSkeleton() {
 
 export function PeopleCardSkeletonGrid({ count = 8 }: { count?: number }) {
   return (
-    <div
-      className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4
-        xl:grid-cols-5"
-    >
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }, (_, index) => (
         <PeopleCardSkeleton key={index} />
       ))}
@@ -1124,12 +1110,6 @@ export function DetailedPersonCard({
           name={person.fullName}
           size="lg"
         />
-        <a
-          href={`${publicEnvConfig.NEXT_PUBLIC_PORTAL_SITE_URL}/user/me/public-avatar`}
-          className="text-primary mt-4 inline-block text-sm hover:underline"
-        >
-          Want to change your public picture? Manage it in Portal.
-        </a>
         <div className="mt-5">
           {showIdentity && (
             <h1 className="text-card-foreground text-2xl/tight font-bold">

@@ -9,8 +9,8 @@ People public profile JSON has no image URL or avatar metadata. Public profile e
 continue through the GitHub App PR workflow. Avatar writes use the API Worker and
 never change GitHub profile data or Portal private profile records.
 Owners upload, replace, and remove their picture at
-`/user/me/public-avatar` in Portal. People profile pages link
-to this Portal page and only display the approved picture.
+`/user/me/public-avatar` in Portal. People profile pages display the approved
+picture.
 
 ## Worker resources
 

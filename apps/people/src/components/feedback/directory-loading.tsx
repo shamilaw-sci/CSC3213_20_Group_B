@@ -118,17 +118,14 @@ export function PeopleGridLoading({
         </div>
       )}
 
-      <div
-        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4
-          xl:grid-cols-5"
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: count }, (_, index) => (
           <div
             key={index}
-            className="bg-card flex min-h-80 flex-col gap-4 rounded-md border
+            className="bg-card flex min-h-88 flex-col gap-4 rounded-md border
               p-4"
           >
-            <div className="bg-muted h-40 w-full rounded-md" />
+            <div className="bg-muted h-52 w-full rounded-md sm:h-48" />
             <div
               className="flex min-h-28 w-full flex-1 flex-col items-center
                 space-y-3"
