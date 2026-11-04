@@ -107,6 +107,7 @@ development hosts; do not copy those values into Vercel Production or Preview.
 | ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
 | `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
 | `NEXT_PUBLIC_API_BASE_URL`           | `browser` | `template` | `runtime` | public avatar API          |
+| `NEXT_PUBLIC_PORTAL_SITE_URL`        | `browser` | `template` | `runtime` | public picture management  |
 | `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`   | `browser` | `template` | `runtime` | people records             |
 | `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | related project records    |
 | `NEXT_PUBLIC_PROJECTS_SITE_URL`      | `browser` | `template` | `runtime` | Projects app destinations  |

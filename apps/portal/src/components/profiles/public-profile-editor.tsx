@@ -55,6 +55,7 @@ import {
 } from '@scs/ui/components/select';
 import { cn } from 'cn';
 import { ExternalLink, Plus, RefreshCw, Trash2, XCircle } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
@@ -2542,6 +2543,25 @@ export default function PublicProfileEditor({
           </Button>
         }
       />
+
+      {!targetEmail ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Public picture</CardTitle>
+            <CardDescription>
+              Change the picture shown in the People directory on its own page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/user/me/public-avatar"
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              Manage public picture
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

@@ -27,6 +27,9 @@ For implementation-level behavior, use the
   `/privacy#security-reporting` is its reporting policy.
 - `/dashboard` and `/account/*` cover the current account.
 - `/user/me/*`, `/user/projects/*`, and `/user/proxy` cover member workflows.
+- `/user/me/public-avatar` manages the current member's public People picture
+  through the API Worker, separately from public profile PR edits and private
+  account pictures.
 - `/academic/courses/*` manages academic records.
 - `/admin/users/*`, `/admin/projects/*`, `/admin/proxies`, and
   `/admin/academic-rules` cover permission-protected administration.

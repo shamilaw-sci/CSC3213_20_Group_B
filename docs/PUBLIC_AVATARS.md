@@ -1,6 +1,6 @@
 ---
 title: Public profile avatars
-description: Public People avatar storage, moderation, and migration operations.
+description: Public People avatar storage, moderation, and operations.
 ---
 
 # Public profile avatars
@@ -8,6 +8,9 @@ description: Public People avatar storage, moderation, and migration operations.
 People public profile JSON has no image URL or avatar metadata. Public profile edits
 continue through the GitHub App PR workflow. Avatar writes use the API Worker and
 never change GitHub profile data or Portal private profile records.
+Owners upload, replace, and remove their picture at
+`/user/me/public-avatar` in Portal. People profile pages link
+to this Portal page and only display the approved picture.
 
 ## Worker resources
 
@@ -58,26 +61,3 @@ is $0.042 per million input tokens with output tokens free. The default account
 rate limits are 100,000 tokens and 80 requests per second. These provider values
 can change; the Worker enforces its own six-attempt hourly owner limit and a
 15-second moderation timeout.
-
-## Existing image migration
-
-The sole legacy public image belongs to `s21513`. Its source remains recorded in
-`services/api/scripts/import-public-avatar.ts` for an idempotent owner-authorized
-import. After R2 and Jev are available, sign in as that public profile owner,
-set `AVATAR_MIGRATION_SESSION_COOKIE` in the local process environment, and run:
-
-```powershell
-bun --filter '@scs/api' avatar:import
-```
-
-The script checks the authenticated username and skips an existing approved
-avatar. It reports failures with the username. As of 2026-11-04, the source
-returns HTTP 200 (`image/jpeg`, 117,948 bytes). A live Jev call with this image
-returned `approved`, and `TYPESAFE_API_KEY` is configured as an API Worker secret.
-R2 was then enabled on the university Cloudflare account. The private Standard
-bucket was created in APAC, the D1 rate-limit migration applied, and the API
-Worker deployed with its R2 and Images bindings. The authenticated owner GET
-returned `{"username":"s21513","url":null}`. The import has **not** run yet;
-the source field is removed from the pending public data change and the profile
-will display initials until import succeeds. Never describe this image as
-migrated before confirming the new API URL serves it.

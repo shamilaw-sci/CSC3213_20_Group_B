@@ -10,19 +10,6 @@ import {
 
 export type WorkerHandler = (req: Request, env: Env) => Promise<Response>;
 
-const AVATAR_ORIGINS = new Set([
-  'https://people.scs-pdn.space',
-  'https://people.scs.pdn.ac.lk',
-  'https://people.scs-pdn.localhost',
-]);
-
-function isPeopleAvatarRequest(req: Request, origin: string): boolean {
-  return (
-    AVATAR_ORIGINS.has(origin) &&
-    new URL(req.url).pathname.startsWith('/api/people/v2/avatars/')
-  );
-}
-
 function applyCorsHeadersToResponse(
   response: Response,
   req: Request
@@ -38,7 +25,7 @@ export async function handleWorkerRequest(
   const origin = getRequestOrigin(req);
 
   if (req.method === 'OPTIONS') {
-    if (isAllowedOrigin(origin) || isPeopleAvatarRequest(req, origin)) {
+    if (isAllowedOrigin(origin)) {
       return createCorsPreflightResponse(origin);
     }
 

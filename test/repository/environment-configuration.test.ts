@@ -81,6 +81,7 @@ const workspaceVariables = {
     variables: templated([
       ['NEXT_PUBLIC_API_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
+      ['NEXT_PUBLIC_PORTAL_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_SITE_URL', 'browser'],

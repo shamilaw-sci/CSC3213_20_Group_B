@@ -79,7 +79,7 @@ import {
   SiZenodo,
 } from 'react-icons/si';
 
-import { AvatarManager } from '@/components/people/avatar-manager';
+import publicEnvConfig from '@/config/public.env.config';
 import { avatarUrlForPerson } from '@/lib/avatar-url';
 import {
   getStudentProgrammeField,
@@ -877,11 +877,6 @@ export function DetailedPersonCard({
   extraTabs?: ProfileTab[];
 }) {
   const [activeTabId, setActiveTabId] = useState<string>();
-  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
-  const avatarUsername =
-    'registrationNo' in person
-      ? person.registrationNo.toLowerCase()
-      : person.email?.split('@')[0]?.toLowerCase();
   const isStaff = isStaffPerson(person);
   const academic = isAcademicTeachingStaff(person) ? person : null;
   const student = isStudentPerson(person) ? person : null;
@@ -1125,16 +1120,16 @@ export function DetailedPersonCard({
     <article className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
       <Card className="rounded-md p-5 lg:sticky lg:top-24">
         <PersonImage
-          src={avatarOverride ?? avatarUrlForPerson(person)}
+          src={avatarUrlForPerson(person)}
           name={person.fullName}
           size="lg"
         />
-        {avatarUsername && (
-          <AvatarManager
-            username={avatarUsername}
-            onChange={setAvatarOverride}
-          />
-        )}
+        <a
+          href={`${publicEnvConfig.NEXT_PUBLIC_PORTAL_SITE_URL}/user/me/public-avatar`}
+          className="text-primary mt-4 inline-block text-sm hover:underline"
+        >
+          Want to change your public picture? Manage it in Portal.
+        </a>
         <div className="mt-5">
           {showIdentity && (
             <h1 className="text-card-foreground text-2xl/tight font-bold">

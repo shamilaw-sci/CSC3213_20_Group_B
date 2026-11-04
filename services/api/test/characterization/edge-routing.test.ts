@@ -58,19 +58,13 @@ describe('edge routing and CORS characterization', () => {
     );
   });
 
-  test('allows People preflight only for public avatar routes', async () => {
+  test('keeps People out of avatar mutation preflight', async () => {
     const origin = 'https://people.scs-pdn.space';
     const avatar = await invokeWorker('/api/people/v2/avatars/me', {
       method: 'OPTIONS',
       headers: { Origin: origin },
     });
-    const privateProfile = await invokeWorker('/api/me', {
-      method: 'OPTIONS',
-      headers: { Origin: origin },
-    });
-    expect(avatar.status).toBe(204);
-    expect(avatar.headers.get('Access-Control-Allow-Origin')).toBe(origin);
-    expect(privateProfile.status).toBe(403);
+    expect(avatar.status).toBe(403);
   });
 
   test('rejects disallowed preflight while echoing its origin', async () => {
