@@ -56,46 +56,20 @@
 }
 
 html {
-  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 55%, transparent)
-    transparent;
   scrollbar-gutter: stable;
+}
+
+/* Keep navigation position visible between scroll events in both sidebars. */
+:is(#nd-sidebar, #nd-sidebar-mobile) [data-radix-scroll-area-viewport] {
   scrollbar-width: thin;
 }
 
-::-webkit-scrollbar {
-  width: 0.75rem;
-  height: 0.75rem;
-}
-
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  border: 0.25rem solid transparent;
-  border-radius: 9999px;
-  background: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--foreground) 55%, transparent);
-  background-clip: padding-box;
-}
-
-/* Keep the desktop navigation position visible between scroll events. */
-#nd-sidebar [data-radix-scroll-area-viewport] {
-  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 55%, transparent)
-    transparent;
-  scrollbar-width: thin;
-}
-
-#nd-sidebar [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+:is(#nd-sidebar, #nd-sidebar-mobile)
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar {
   display: block;
 }
 
-#nd-sidebar [data-orientation='vertical'] {
+:is(#nd-sidebar, #nd-sidebar-mobile) [data-orientation='vertical'] {
   display: none;
 }
 

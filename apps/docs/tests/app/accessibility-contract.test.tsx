@@ -32,11 +32,17 @@ describe('documentation accessibility contracts', () => {
 
   test('reserves one scrollbar gutter and locks the page behind search', () => {
     const styles = source('app/globals.css');
+    const sharedStyles = readFileSync(
+      resolve(sourceRoot, '../../../packages/ui/src/styles/theme.css'),
+      'utf8'
+    );
 
     expect(styles).toContain('scrollbar-gutter: stable;');
-    expect(styles).toContain('scrollbar-color:');
-    expect(styles).toContain('var(--muted-foreground)');
-    expect(styles).toContain('::-webkit-scrollbar-thumb');
+    expect(sharedStyles).toContain('scrollbar-color:');
+    expect(sharedStyles).toContain('scrollbar-width: thin;');
+    expect(sharedStyles).toContain('var(--muted-foreground)');
+    expect(sharedStyles).toContain('::-webkit-scrollbar-thumb');
+    expect(styles).toContain(':is(#nd-sidebar, #nd-sidebar-mobile)');
     expect(styles).toContain('html:has(body[data-scroll-locked])');
     expect(styles).toContain('overflow: hidden;');
     expect(styles).not.toContain('scrollbar-gutter: auto;');

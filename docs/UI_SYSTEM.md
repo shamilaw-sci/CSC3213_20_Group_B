@@ -28,6 +28,12 @@ information architecture. People prioritizes identity and directory browsing;
 Projects prioritizes showcase discovery; Portal prioritizes editing workflows;
 Web prioritizes departmental content.
 
+All applications load the shared theme stylesheet, which gives native page and
+component scrollbars a thin width and colors derived from the current light or
+dark theme. Application shells may reserve scrollbar gutters or opt a specific
+scroll area out when its interaction requires it. Docs keeps the scrollbar
+visible in both its desktop sidebar and mobile drawer.
+
 The Docs application keeps the Fumadocs shell but maps its `fd` color tokens to
 the shared semantic palette, uses the repository's Open Sans and Source Serif
 font configuration, and uses the University of Peradeniya crest in both its
