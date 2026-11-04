@@ -144,7 +144,7 @@ describe('AcademicSupportStaffSchema', () => {
   });
 
   it('accepts support staff with optional fields', () => {
-    expect(() =>
+    expect(
       AcademicSupportStaffSchema.parse({
         ...base,
         email: 'bob@example.com',
@@ -152,8 +152,9 @@ describe('AcademicSupportStaffSchema', () => {
         officePhone: '+94123456789',
         profileImageUrl: 'https://example.com/bob.jpg',
         mobilePhone: '+94123456789',
-      })
-    ).not.toThrow();
+        socialLinks: { urls: { orcid: '0000-0002-1825-0097' } },
+      }).socialLinks?.urls?.orcid
+    ).toBe('https://orcid.org/0000-0002-1825-0097');
   });
 
   it('rejects missing designation', () => {
@@ -214,15 +215,16 @@ describe('NonAcademicStaffSchema', () => {
   });
 
   it('accepts non-academic staff with optional fields', () => {
-    expect(() =>
+    expect(
       NonAcademicStaffSchema.parse({
         ...base,
         email: 'carol@example.com',
         officePhone: '+94123456789',
         profileImageUrl: 'https://example.com/carol.jpg',
         mobilePhone: '+94123456789',
-      })
-    ).not.toThrow();
+        socialLinks: { urls: { github: 'github.com/carol' } },
+      }).socialLinks?.urls?.github
+    ).toBe('https://github.com/carol');
   });
 
   it('rejects missing designation', () => {

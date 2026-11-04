@@ -9,9 +9,28 @@ export const KnownSocialPlatforms = [
   'facebook',
   'instagram',
   'youtube',
+  'orcid',
+  'googleScholar',
+  'researchGate',
+  'academia',
 ] as const;
 
 export type KnownSocialPlatform = (typeof KnownSocialPlatforms)[number];
+
+export const KnownSocialLabels = {
+  linkedin: 'LinkedIn',
+  github: 'GitHub',
+  mastodon: 'Mastodon',
+  bluesky: 'Bluesky',
+  x: 'X',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  orcid: 'ORCID',
+  googleScholar: 'Google Scholar',
+  researchGate: 'ResearchGate',
+  academia: 'Academia.edu',
+} as const satisfies Record<KnownSocialPlatform, string>;
 
 export const KnownSocialIcons = {
   linkedin: { type: 'simple-icons', slug: 'linkedin' },
@@ -22,6 +41,10 @@ export const KnownSocialIcons = {
   facebook: { type: 'simple-icons', slug: 'facebook' },
   instagram: { type: 'simple-icons', slug: 'instagram' },
   youtube: { type: 'simple-icons', slug: 'youtube' },
+  orcid: { type: 'simple-icons', slug: 'orcid' },
+  googleScholar: { type: 'simple-icons', slug: 'googlescholar' },
+  researchGate: { type: 'simple-icons', slug: 'researchgate' },
+  academia: { type: 'simple-icons', slug: 'academia' },
 } as const satisfies Record<
   KnownSocialPlatform,
   { type: 'simple-icons'; slug: string }
@@ -200,6 +223,55 @@ function normalizeYoutube(value: string): string | null {
   return `https://www.youtube.com/@${handle}`;
 }
 
+function normalizeOrcid(value: string): string | null {
+  const input = value.trim();
+  const url = urlFromInput(input);
+  const id =
+    url && isAllowedHost(url.hostname, ['orcid.org'])
+      ? url.pathname.replace(/^\//, '').replace(/\/$/, '')
+      : input;
+  if (!/^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(id)) return null;
+  return `https://orcid.org/${id.toUpperCase()}`;
+}
+
+function normalizeGoogleScholar(value: string): string | null {
+  const input = value.trim();
+  const url = urlFromInput(input);
+  const id =
+    url && isAllowedHost(url.hostname, ['scholar.google.com'])
+      ? url.pathname === '/citations'
+        ? url.searchParams.get('user')
+        : null
+      : input;
+  if (!id || !/^[A-Za-z0-9_-]{6,32}$/.test(id)) return null;
+  return `https://scholar.google.com/citations?user=${encodeURIComponent(id)}`;
+}
+
+function normalizeResearchGate(value: string): string | null {
+  const input = value.trim();
+  const url = urlFromInput(input);
+  const handle =
+    url && isAllowedHost(url.hostname, ['researchgate.net'])
+      ? /^\/profile\/([A-Za-z0-9_-]+)\/?$/.exec(url.pathname)?.[1]
+      : input;
+  if (!handle || !/^[A-Za-z0-9_-]{2,100}$/.test(handle)) return null;
+  return `https://www.researchgate.net/profile/${handle}`;
+}
+
+function normalizeAcademia(value: string): string | null {
+  const input = value.trim();
+  const url = urlFromInput(input);
+  if (url) {
+    const host = url.hostname.toLowerCase();
+    if (host === 'academia.edu' || host.endsWith('.academia.edu')) {
+      const handle = /^\/([A-Za-z0-9_-]+)\/?$/.exec(url.pathname)?.[1];
+      return handle ? `https://${host}/${handle}` : null;
+    }
+  }
+  if (!/^[A-Za-z0-9_-]{2,100}$/.test(input)) return null;
+  return `https://www.academia.edu/${input}`;
+}
+
 export function normalizeKnownSocialUrl(
   platform: KnownSocialPlatform,
   value: string
@@ -213,7 +285,11 @@ export function normalizeKnownSocialUrl(
   if (platform === 'x') return normalizeX(value);
   if (platform === 'facebook') return normalizeFacebook(value);
   if (platform === 'instagram') return normalizeInstagram(value);
-  return normalizeYoutube(value);
+  if (platform === 'youtube') return normalizeYoutube(value);
+  if (platform === 'orcid') return normalizeOrcid(value);
+  if (platform === 'googleScholar') return normalizeGoogleScholar(value);
+  if (platform === 'researchGate') return normalizeResearchGate(value);
+  return normalizeAcademia(value);
 }
 
 export function detectKnownSocialUrl(
@@ -265,19 +341,59 @@ const knownSocialValuesSchema = z
 export const SocialLinksSchema = z
   .object({
     urls: knownSocialValuesSchema,
+    profiles: z
+      .array(
+        z.object({
+          platform: z.enum(KnownSocialPlatforms),
+          url: z.string().trim().min(1),
+        })
+      )
+      .optional(),
     otherPlatforms: z
       .array(
         z.object({
-          platformName: z.string().trim().min(1),
+          platformName: z.string().trim().optional(),
           url: z.url(),
-          icon: SocialIconSchema.optional(),
+          icon: z.unknown().optional(),
         })
       )
       .optional(),
   })
   .transform((value, ctx) => {
     const urls: Partial<Record<KnownSocialPlatform, string>> = {};
-    const otherPlatforms: NonNullable<typeof value.otherPlatforms> = [];
+    const profiles: Array<{ platform: KnownSocialPlatform; url: string }> = [];
+    const otherPlatforms: Array<{
+      platformName: string;
+      url: string;
+      icon?: z.infer<typeof SocialIconSchema>;
+    }> = [];
+
+    function addKnown(
+      platform: KnownSocialPlatform,
+      url: string,
+      path: Array<string | number>
+    ) {
+      if (!urls[platform]) {
+        urls[platform] = url;
+      } else if (
+        urls[platform] !== url &&
+        !profiles.some(
+          (entry) => entry.platform === platform && entry.url === url
+        )
+      ) {
+        if (
+          profiles.filter((entry) => entry.platform === platform).length >= 2
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path,
+            message: `At most three ${platform} profiles are allowed`,
+          });
+          return;
+        }
+        profiles.push({ platform, url });
+      }
+    }
 
     if (value.urls) {
       for (const platform of KnownSocialPlatforms) {
@@ -294,26 +410,73 @@ export const SocialLinksSchema = z
           continue;
         }
 
-        urls[platform] = normalized;
+        addKnown(platform, normalized, ['urls', platform]);
       }
     }
 
-    for (const platform of value.otherPlatforms ?? []) {
+    for (const [index, profile] of (value.profiles ?? []).entries()) {
+      const normalized = normalizeKnownSocialUrl(profile.platform, profile.url);
+      if (!normalized) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['profiles', index, 'url'],
+          message: `Invalid ${profile.platform} profile URL or username`,
+        });
+        continue;
+      }
+      addKnown(profile.platform, normalized, ['profiles', index, 'url']);
+    }
+
+    for (const [index, platform] of (value.otherPlatforms ?? []).entries()) {
       const known = detectKnownSocialUrl(platform.url);
       if (known) {
-        urls[known.platform] = known.url;
+        addKnown(known.platform, known.url, ['otherPlatforms', index, 'url']);
         continue;
       }
 
-      otherPlatforms.push(platform);
+      if (!platform.platformName) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['otherPlatforms', index, 'platformName'],
+          message: 'Custom links need a platform name',
+        });
+        continue;
+      }
+      const icon =
+        platform.icon === undefined
+          ? null
+          : SocialIconSchema.safeParse(platform.icon);
+      if (icon && !icon.success) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['otherPlatforms', index, 'icon'],
+          message: 'Invalid custom link icon',
+        });
+        continue;
+      }
+      otherPlatforms.push({
+        platformName: platform.platformName,
+        url: platform.url,
+        ...(icon?.success ? { icon: icon.data } : {}),
+      });
+    }
+
+    if (otherPlatforms.length > 10) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['otherPlatforms'],
+        message: 'At most ten custom links are allowed',
+      });
     }
 
     const result: {
       urls?: Partial<Record<KnownSocialPlatform, string>>;
+      profiles?: typeof profiles;
       otherPlatforms?: typeof otherPlatforms;
     } = {};
 
     if (Object.keys(urls).length > 0) result.urls = urls;
+    if (profiles.length > 0) result.profiles = profiles;
     if (otherPlatforms.length > 0) result.otherPlatforms = otherPlatforms;
 
     return result;

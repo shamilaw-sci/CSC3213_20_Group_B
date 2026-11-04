@@ -5,6 +5,7 @@ import {
   AcademicUnitCodeSchema,
 } from '#schemas/academics/academic-organization.schema';
 import { PersonSchema } from '#schemas/people/person.schema';
+import { SocialLinksSchema } from '#schemas/people/social-links.schema';
 import { AcademicSupportPositionSchema } from '#schemas/people/staff/academic-support/academic-support-position.schema';
 
 export const AcademicSupportStaffSchema = PersonSchema.extend({
@@ -14,6 +15,7 @@ export const AcademicSupportStaffSchema = PersonSchema.extend({
   unit: AcademicUnitCodeSchema.optional(),
   qualifications: z.array(z.string()).optional(),
   officePhone: z.string().optional(),
+  socialLinks: SocialLinksSchema.optional(),
 });
 
 export type AcademicSupportStaff = z.infer<typeof AcademicSupportStaffSchema>;

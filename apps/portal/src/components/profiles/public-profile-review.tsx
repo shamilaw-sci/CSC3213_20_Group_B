@@ -44,9 +44,11 @@ function links(value: unknown) {
     record.urls && typeof record.urls === 'object'
       ? Object.values(record.urls as ProfileRecord)
       : [];
-  return urls.filter((url) => typeof url === 'string' && url.trim()).length > 0
-    ? `${urls.length} linked profiles`
-    : 'None';
+  const count =
+    urls.filter((url) => typeof url === 'string' && url.trim()).length +
+    (Array.isArray(record.profiles) ? record.profiles.length : 0) +
+    (Array.isArray(record.otherPlatforms) ? record.otherPlatforms.length : 0);
+  return count > 0 ? `${count} linked profiles` : 'None';
 }
 
 export function PublicProfileReview({

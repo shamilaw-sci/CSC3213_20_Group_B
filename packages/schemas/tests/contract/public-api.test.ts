@@ -58,6 +58,7 @@ const expectedRuntimeExports = [
   'HonoursProgrammeCodeSchema',
   'IdempotencyKeySchema',
   'KnownSocialIcons',
+  'KnownSocialLabels',
   'KnownSocialPlatforms',
   'MailerSendRequestSchema',
   'MailerSendResponseSchema',

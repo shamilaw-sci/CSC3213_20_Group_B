@@ -38,6 +38,33 @@ describe('SocialLinksSchema', () => {
     );
   });
 
+  it('normalizes academic profiles and recognizes their URLs', () => {
+    expect(
+      SocialLinksSchema.parse({
+        urls: {
+          orcid: '0000-0002-1825-0097',
+          googleScholar:
+            'https://scholar.google.com/citations?user=ABC12345&hl=en',
+          researchGate: 'researchgate.net/profile/Jane_Doe',
+          academia: 'peradeniya.academia.edu/Jane_Doe',
+        },
+      })
+    ).toEqual({
+      urls: {
+        orcid: 'https://orcid.org/0000-0002-1825-0097',
+        googleScholar: 'https://scholar.google.com/citations?user=ABC12345',
+        researchGate: 'https://www.researchgate.net/profile/Jane_Doe',
+        academia: 'https://peradeniya.academia.edu/Jane_Doe',
+      },
+    });
+    expect(
+      detectKnownSocialUrl('https://orcid.org/0000-0002-1825-0097')
+    ).toEqual({
+      platform: 'orcid',
+      url: 'https://orcid.org/0000-0002-1825-0097',
+    });
+  });
+
   it('normalizes Bluesky front-facing profile URLs to bsky.app', () => {
     expect(
       normalizeKnownSocialUrl(
@@ -122,18 +149,72 @@ describe('SocialLinksSchema', () => {
     ).toEqual({
       urls: {
         x: 'https://x.com/johndoe',
+        researchGate: 'https://www.researchgate.net/profile/johndoe',
       },
-      otherPlatforms: [
-        {
-          platformName: 'ResearchGate',
-          url: 'https://researchgate.net/profile/johndoe',
-          icon: {
-            type: 'simple-icons',
-            slug: 'researchgate',
+    });
+  });
+
+  it('retains a second recognized profile for the same platform', () => {
+    expect(
+      SocialLinksSchema.parse({
+        urls: { facebook: 'facebook.com/first.user' },
+        otherPlatforms: [
+          {
+            url: 'https://facebook.com/second.user',
+            icon: { type: 'invalid', url: 'ignored' },
           },
+        ],
+      })
+    ).toEqual({
+      urls: { facebook: 'https://www.facebook.com/first.user' },
+      profiles: [
+        {
+          platform: 'facebook',
+          url: 'https://www.facebook.com/second.user',
         },
       ],
     });
+  });
+
+  it('allows three known profiles per platform and ten custom links', () => {
+    const three = SocialLinksSchema.parse({
+      urls: { facebook: 'facebook.com/first.user' },
+      profiles: [
+        { platform: 'facebook', url: 'facebook.com/second.user' },
+        { platform: 'facebook', url: 'facebook.com/third.user' },
+      ],
+    });
+    expect(three.profiles).toHaveLength(2);
+    expect(() =>
+      SocialLinksSchema.parse({
+        ...three,
+        otherPlatforms: [
+          {
+            platformName: 'Facebook again',
+            url: 'https://facebook.com/fourth.user',
+          },
+        ],
+      })
+    ).toThrow();
+    expect(() =>
+      SocialLinksSchema.parse({
+        otherPlatforms: Array.from({ length: 11 }, (_, index) => ({
+          platformName: `Custom ${index}`,
+          url: `https://example.com/${index}`,
+        })),
+      })
+    ).toThrow();
+    expect(
+      SocialLinksSchema.parse({
+        otherPlatforms: [
+          ...Array.from({ length: 10 }, (_, index) => ({
+            platformName: `Custom ${index}`,
+            url: `https://example.com/${index}`,
+          })),
+          { url: 'https://facebook.com/another.user' },
+        ],
+      }).otherPlatforms
+    ).toHaveLength(10);
   });
 
   it('accepts Font Awesome brand icons for other platforms', () => {
@@ -165,6 +246,20 @@ describe('SocialLinksSchema', () => {
           {
             platformName: ' ',
             url: 'https://example.com',
+          },
+        ],
+      })
+    ).toThrow();
+  });
+
+  it('rejects an invalid icon for a custom link', () => {
+    expect(() =>
+      SocialLinksSchema.parse({
+        otherPlatforms: [
+          {
+            platformName: 'Example',
+            url: 'https://example.com',
+            icon: { type: 'invalid' },
           },
         ],
       })

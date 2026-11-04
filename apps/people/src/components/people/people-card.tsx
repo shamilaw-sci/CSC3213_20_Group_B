@@ -1,5 +1,6 @@
 'use client';
 
+import { KnownSocialLabels, type SocialIcon } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import {
   Card,
@@ -38,9 +39,45 @@ import {
   FaInstagram,
   FaLinkedinIn,
   FaMastodon,
+  FaMedium,
+  FaOrcid,
   FaXTwitter,
   FaYoutube,
 } from 'react-icons/fa6';
+import {
+  SiAcademia,
+  SiArxiv,
+  SiBitbucket,
+  SiBlogger,
+  SiDatacamp,
+  SiDevdotto,
+  SiDiscord,
+  SiFigshare,
+  SiGitlab,
+  SiGooglescholar,
+  SiHuggingface,
+  SiKaggle,
+  SiLinktree,
+  SiMedium,
+  SiOpenaccess,
+  SiOrcid,
+  SiPinterest,
+  SiReddit,
+  SiResearchgate,
+  SiSignal,
+  SiSnapchat,
+  SiStackoverflow,
+  SiSubstack,
+  SiTelegram,
+  SiThreads,
+  SiTiktok,
+  SiTumblr,
+  SiTwitch,
+  SiWechat,
+  SiWhatsapp,
+  SiWordpress,
+  SiZenodo,
+} from 'react-icons/si';
 
 import {
   getStudentProgrammeField,
@@ -276,6 +313,7 @@ interface ProfileLink {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  iconUrl?: string;
   priority: 'primary' | 'secondary';
 }
 
@@ -301,7 +339,66 @@ const KNOWN_SOCIAL_LINKS = {
   facebook: { label: 'Facebook', icon: FaFacebookF },
   instagram: { label: 'Instagram', icon: FaInstagram },
   youtube: { label: 'YouTube', icon: FaYoutube },
+  orcid: { label: 'ORCID', icon: SiOrcid },
+  googleScholar: { label: 'Google Scholar', icon: SiGooglescholar },
+  researchGate: { label: 'ResearchGate', icon: SiResearchgate },
+  academia: { label: 'Academia.edu', icon: SiAcademia },
 } as const;
+
+const CUSTOM_LIBRARY_ICONS = {
+  academia: SiAcademia,
+  arxiv: SiArxiv,
+  bitbucket: SiBitbucket,
+  blogger: SiBlogger,
+  datacamp: SiDatacamp,
+  devdotto: SiDevdotto,
+  discord: SiDiscord,
+  figshare: SiFigshare,
+  gitlab: SiGitlab,
+  googlescholar: SiGooglescholar,
+  huggingface: SiHuggingface,
+  kaggle: SiKaggle,
+  linktree: SiLinktree,
+  medium: SiMedium,
+  openaccess: SiOpenaccess,
+  orcid: SiOrcid,
+  pinterest: SiPinterest,
+  reddit: SiReddit,
+  researchgate: SiResearchgate,
+  signal: SiSignal,
+  snapchat: SiSnapchat,
+  stackoverflow: SiStackoverflow,
+  substack: SiSubstack,
+  telegram: SiTelegram,
+  threads: SiThreads,
+  tiktok: SiTiktok,
+  tumblr: SiTumblr,
+  twitch: SiTwitch,
+  wechat: SiWechat,
+  whatsapp: SiWhatsapp,
+  wordpress: SiWordpress,
+  zenodo: SiZenodo,
+} as const;
+
+function customLinkIcon(
+  icon?: SocialIcon
+): Pick<ProfileLink, 'icon' | 'iconUrl'> {
+  if (icon?.type === 'url') {
+    return /^https?:\/\//i.test(icon.url)
+      ? { icon: ExternalLink, iconUrl: icon.url }
+      : { icon: ExternalLink };
+  }
+  if (icon?.type === 'font-awesome') {
+    if (icon.name === 'orcid') return { icon: FaOrcid };
+    if (icon.name === 'medium') return { icon: FaMedium };
+  }
+  if (icon?.type === 'simple-icons') {
+    const Icon =
+      CUSTOM_LIBRARY_ICONS[icon.slug as keyof typeof CUSTOM_LIBRARY_ICONS];
+    if (Icon) return { icon: Icon };
+  }
+  return { icon: ExternalLink };
+}
 
 function isStaffPerson(person: Staff | Student): person is Staff {
   return 'staffType' in person;
@@ -371,22 +468,34 @@ function getSocialProfileLinks(socialLinks?: SocialLinks): ProfileLink[] {
     }
   );
 
+  const additionalKnownLinks =
+    socialLinks?.profiles?.flatMap(({ platform, url }) => {
+      const known = KNOWN_SOCIAL_LINKS[platform];
+      if (!known) return [];
+      return [
+        {
+          label: KnownSocialLabels[platform],
+          href: url,
+          icon: known.icon,
+          priority: 'secondary' as const,
+        },
+      ];
+    }) ?? [];
+
   const otherLinks =
     socialLinks?.otherPlatforms?.map((link) => ({
       label: link.platformName,
       href: link.url,
-      icon: ExternalLink,
+      ...customLinkIcon(link.icon),
       priority: 'secondary' as const,
     })) ?? [];
 
-  return [...knownLinks, ...otherLinks];
+  return [...knownLinks, ...additionalKnownLinks, ...otherLinks];
 }
 
 function getProfileLinks(person: Staff | Student): ProfileLink[] {
   const academic = isAcademicTeachingStaff(person) ? person : null;
-  const socialLinks =
-    academic?.socialLinks ??
-    (isStudentPerson(person) ? person.socialLinks : undefined);
+  const socialLinks = person.socialLinks;
   const links: ProfileLink[] = [];
 
   if (person.email) {
@@ -469,7 +578,19 @@ function ProfileLinkList({
               min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm
               transition-colors"
           >
-            <Icon className="size-4 shrink-0" aria-hidden={true} />
+            {link.iconUrl ? (
+              <Image
+                src={link.iconUrl}
+                alt=""
+                width={16}
+                height={16}
+                unoptimized
+                className="size-4 shrink-0 object-contain"
+                aria-hidden={true}
+              />
+            ) : (
+              <Icon className="size-4 shrink-0" aria-hidden={true} />
+            )}
             <span className="truncate">{link.label}</span>
           </a>
         );
@@ -499,7 +620,19 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
               hover:bg-primary hover:text-primary-foreground inline-flex size-10
               items-center justify-center rounded-md border transition-colors"
           >
-            <Icon className="size-5" aria-hidden={true} />
+            {link.iconUrl ? (
+              <Image
+                src={link.iconUrl}
+                alt=""
+                width={20}
+                height={20}
+                unoptimized
+                className="size-5 object-contain"
+                aria-hidden={true}
+              />
+            ) : (
+              <Icon className="size-5" aria-hidden={true} />
+            )}
           </a>
         );
       })}

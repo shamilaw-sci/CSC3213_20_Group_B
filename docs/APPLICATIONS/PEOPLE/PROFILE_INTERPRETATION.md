@@ -50,3 +50,8 @@ Social, publication, and profile links opened in a new tab include
 `noopener noreferrer`. Profile tab controls and cards must preserve keyboard
 focus, explicit active state, and semantic labels described in
 [UI quality assurance](../../UI_QUALITY_ASSURANCE.md).
+
+Known social and academic profiles use their platform icon automatically,
+including additional profiles of the same platform. Custom links display the
+selected library icon or supplied icon URL, falling back to an external-link
+symbol when neither is set.

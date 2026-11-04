@@ -32,6 +32,15 @@ flowchart TD
 | `SocialIconSchema`            | Built-in icon identifier or validated external icon URL.            |
 | `SocialLinksSchema`           | Normalized social-profile collection with platform detection rules. |
 
+Social links are available on student and all staff profile types. They have
+named slots for common social and academic platforms,
+including ORCID, Google Scholar, ResearchGate, and Academia.edu. The `urls`
+object holds one primary profile per known platform. `profiles` holds up to two
+additional profiles for each platform, for a total of three. Known URLs entered
+as custom links are recognized and promoted without the supplied name or icon.
+`otherPlatforms` holds at most ten custom links, each with a name, complete URL,
+and optional library or URL icon. Known profiles do not use custom-link slots.
+
 ## Staff
 
 | Schema                          | Responsibility                                                                        |

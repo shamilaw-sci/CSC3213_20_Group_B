@@ -51,6 +51,13 @@ The CodeMirror editor and JSON preview are client-only dynamic imports. This
 keeps those heavier interactive dependencies out of the initial server render
 while retaining a bounded loading skeleton.
 
+In public profiles, the links editor recognizes known social and academic
+platform URLs while they are entered. Their name and icon are automatic; a
+second or third URL for one platform becomes an additional known profile.
+Custom links have editable names and icon sources, with a keyboard-searchable
+brand icon picker. The editor caps custom links at ten and known profiles at
+three per platform.
+
 ## Submission lifecycle
 
 New projects derive one lowercase, hyphen-normalized ID and slug from the title

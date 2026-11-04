@@ -11,6 +11,7 @@ import {
   detectKnownSocialUrl,
   HonoursProgrammeCodeSchema,
   HonoursProgrammeDepartmentMap,
+  KnownSocialLabels,
   type KnownSocialPlatform,
   type MutationAccepted,
   NonAcademicPositionSchema,
@@ -25,6 +26,7 @@ import {
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
   ScienceAcademicUnits,
+  type SocialIcon,
   type Student,
   StudentLevelSchema,
   type StudentPlacementResponse,
@@ -76,6 +78,7 @@ import { ProfileAboutSection } from '@/components/profiles/sections/profile-abou
 import { ProfileLinksSection } from '@/components/profiles/sections/profile-links-section';
 import { ProfileRoleSection } from '@/components/profiles/sections/profile-role-section';
 import { ProfileWorkSection } from '@/components/profiles/sections/profile-work-section';
+import { SocialIconPicker } from '@/components/profiles/social-icon-picker';
 import {
   adminPublicProfileApiUrl,
   adminPublicProfilePrApiUrl,
@@ -197,6 +200,10 @@ const SOCIAL_FIELDS = [
   ['facebook', 'Facebook'],
   ['instagram', 'Instagram'],
   ['youtube', 'YouTube'],
+  ['orcid', 'ORCID'],
+  ['googleScholar', 'Google Scholar'],
+  ['researchGate', 'ResearchGate'],
+  ['academia', 'Academia.edu'],
 ] as const satisfies ReadonlyArray<readonly [KnownSocialPlatform, string]>;
 
 const SOCIAL_PLACEHOLDERS: Record<(typeof SOCIAL_FIELDS)[number][0], string> = {
@@ -208,6 +215,10 @@ const SOCIAL_PLACEHOLDERS: Record<(typeof SOCIAL_FIELDS)[number][0], string> = {
   facebook: 'username or facebook.com/username',
   instagram: '@username or instagram.com/username',
   youtube: '@username or youtube.com/@username',
+  orcid: '0000-0000-0000-0000 or orcid.org/0000-0000-0000-0000',
+  googleScholar: 'scholar.google.com/citations?user=...',
+  researchGate: 'researchgate.net/profile/Name',
+  academia: 'university.academia.edu/Name',
 };
 
 const KNOWN_SOCIAL_EXAMPLES: Record<KnownSocialPlatform, string> = {
@@ -219,6 +230,10 @@ const KNOWN_SOCIAL_EXAMPLES: Record<KnownSocialPlatform, string> = {
   facebook: 'username or facebook.com/username',
   instagram: '@username or instagram.com/username',
   youtube: '@username or youtube.com/@username',
+  orcid: 'ORCID iD or orcid.org profile URL',
+  googleScholar: 'Google Scholar user ID or citations profile URL',
+  researchGate: 'ResearchGate username or profile URL',
+  academia: 'Academia.edu username or profile URL',
 };
 
 function studentLevelsForTrack(track: unknown) {
@@ -228,29 +243,6 @@ function studentLevelsForTrack(track: unknown) {
 function studentLevelForTrack(track: unknown, level: unknown) {
   return track === 'GENERAL' && level === '4000' ? '3000' : level;
 }
-
-const ICON_LIBRARY_OPTIONS = [
-  {
-    label: 'ResearchGate',
-    provider: 'simple-icons',
-    slug: 'researchgate',
-  },
-  {
-    label: 'ORCID',
-    provider: 'font-awesome',
-    name: 'orcid',
-  },
-  {
-    label: 'Google Scholar',
-    provider: 'simple-icons',
-    slug: 'googlescholar',
-  },
-  {
-    label: 'Medium',
-    provider: 'font-awesome',
-    name: 'medium',
-  },
-] as const;
 
 function enumLabel(value: string) {
   return value
@@ -740,6 +732,7 @@ interface ArrayEditorProps {
   label: string;
   value: ProfileRecord[];
   emptyItem: ProfileRecord;
+  maxItems?: number;
   onChange: (value: ProfileRecord[]) => void;
   renderItem: (
     item: ProfileRecord,
@@ -752,6 +745,7 @@ function ArrayEditor({
   label,
   value,
   emptyItem,
+  maxItems,
   onChange,
   renderItem,
 }: ArrayEditorProps) {
@@ -772,11 +766,17 @@ function ArrayEditor({
           variant="outline"
           size="sm"
           onClick={() => onChange([...value, { ...emptyItem }])}
+          disabled={maxItems !== undefined && value.length >= maxItems}
         >
           <Plus className="size-4" />
           Add
         </Button>
       </div>
+      {maxItems !== undefined ? (
+        <p className="text-muted-foreground text-xs">
+          {value.length} of {maxItems} custom links
+        </p>
+      ) : null}
       {value.length ? (
         <div className="space-y-3">
           {value.map((item, index) => (
@@ -916,6 +916,7 @@ interface SocialLinksEditorProps {
 function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
   const links = isRecord(value) ? value : {};
   const urls = isRecord(links.urls) ? links.urls : {};
+  const profiles = asArray(links.profiles);
   const otherPlatforms = asArray(links.otherPlatforms);
 
   function setUsername(key: string, fieldValue: string) {
@@ -944,12 +945,27 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
     const known = detectKnownSocialUrl(asString(item?.url));
     if (!known) return;
 
+    const primary = asString(urls[known.platform]);
+    const extras = profiles.filter(
+      (profile) => profile.platform === known.platform
+    );
+    const alreadySaved =
+      primary === known.url ||
+      extras.some((profile) => profile.url === known.url);
+    if (primary && !alreadySaved && extras.length >= 2) {
+      toast.error(
+        `At most three ${KnownSocialLabels[known.platform]} profiles are allowed.`
+      );
+      return;
+    }
+
     onChange({
       ...links,
-      urls: {
-        ...urls,
-        [known.platform]: known.url,
-      },
+      urls: primary ? urls : { ...urls, [known.platform]: known.url },
+      profiles:
+        primary && !alreadySaved
+          ? [...profiles, { platform: known.platform, url: known.url }]
+          : profiles,
       otherPlatforms: otherPlatforms.filter(
         (_, itemIndex) => itemIndex !== index
       ),
@@ -958,7 +974,7 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
 
   return (
     <div className="space-y-6">
-      <Label>Social Links</Label>
+      <h3 className="text-sm font-semibold">Social profiles</h3>
       <div className="grid gap-3 md:grid-cols-2">
         {SOCIAL_FIELDS.map(([key, label]) => (
           <Field
@@ -978,39 +994,141 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
           />
         ))}
       </div>
+      {profiles.length > 0 ? (
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">Additional known profiles</h4>
+          {profiles.map((profile, index) => {
+            const platform = profile.platform as KnownSocialPlatform;
+            return (
+              <div
+                key={`${platform}-${index}`}
+                className="rounded-md border p-3"
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <Badge variant="outline">
+                    {KnownSocialLabels[platform] ?? 'Known platform'} ·
+                    automatic icon
+                  </Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Remove additional ${KnownSocialLabels[platform] ?? 'known'} profile ${index + 1}`}
+                    onClick={() =>
+                      onChange({
+                        ...links,
+                        profiles: profiles.filter(
+                          (_, itemIndex) => itemIndex !== index
+                        ),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                <Field
+                  label="Profile URL"
+                  value={asString(profile.url)}
+                  type="url"
+                  onChange={(url) =>
+                    onChange({
+                      ...links,
+                      profiles: profiles.map((entry, itemIndex) =>
+                        itemIndex === index ? { ...entry, url } : entry
+                      ),
+                    })
+                  }
+                  onBlur={() => {
+                    const normalized = normalizeKnownSocialUrl(
+                      platform,
+                      asString(profile.url)
+                    );
+                    if (normalized) {
+                      onChange({
+                        ...links,
+                        profiles: profiles.map((entry, itemIndex) =>
+                          itemIndex === index
+                            ? { ...entry, url: normalized }
+                            : entry
+                        ),
+                      });
+                    }
+                  }}
+                  error={
+                    !normalizeKnownSocialUrl(platform, asString(profile.url))
+                      ? `Use a valid ${KnownSocialLabels[platform]} profile URL.`
+                      : undefined
+                  }
+                />
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
       <ArrayEditor
-        label="Other Platforms"
+        label="Custom links"
         value={otherPlatforms}
+        maxItems={10}
         emptyItem={{
           platformName: '',
           url: '',
-          icon: {
-            type: 'simple-icons',
-            slug: 'researchgate',
-          },
         }}
         onChange={setOtherPlatforms}
-        renderItem={(item, update, index) => (
-          <>
-            <Field
-              label="Platform Name"
-              value={asString(item.platformName)}
-              onChange={(fieldValue) => update('platformName', fieldValue)}
-              required
-            />
-            <Field
-              label="URL"
-              value={asString(item.url)}
-              onChange={(fieldValue) => update('url', fieldValue)}
-              type="url"
-              required
-              placeholder="https://example.com"
-              description="Known socials move into the locked section automatically."
-              onBlur={() => promoteKnownOtherPlatform(index)}
-            />
-            <OtherPlatformIconEditor item={item} update={update} />
-          </>
-        )}
+        renderItem={(item, update, index) => {
+          const known = detectKnownSocialUrl(asString(item.url));
+          const knownCount = known
+            ? Number(Boolean(asString(urls[known.platform]))) +
+              profiles.filter((profile) => profile.platform === known.platform)
+                .length
+            : 0;
+          const alreadyKnown = known
+            ? asString(urls[known.platform]) === known.url ||
+              profiles.some(
+                (profile) =>
+                  profile.platform === known.platform &&
+                  profile.url === known.url
+              )
+            : false;
+          return (
+            <>
+              <Field
+                label="URL"
+                value={asString(item.url)}
+                onChange={(fieldValue) => update('url', fieldValue)}
+                type="url"
+                required
+                placeholder="https://example.com"
+                description="Known platforms are recognized as you type. Their name and icon are automatic."
+                onBlur={() => promoteKnownOtherPlatform(index)}
+              />
+              {known ? (
+                <div className="flex flex-col justify-center gap-1 text-sm">
+                  <Badge variant="secondary" className="w-fit">
+                    {KnownSocialLabels[known.platform]} · automatic icon
+                  </Badge>
+                  {knownCount >= 3 && !alreadyKnown ? (
+                    <p className="text-destructive text-xs">
+                      Three {KnownSocialLabels[known.platform]} profiles are
+                      already saved.
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <>
+                  <Field
+                    label="Platform Name"
+                    value={asString(item.platformName)}
+                    onChange={(fieldValue) =>
+                      update('platformName', fieldValue)
+                    }
+                    required
+                  />
+                  <OtherPlatformIconEditor item={item} update={update} />
+                </>
+              )}
+            </>
+          );
+        }}
       />
     </div>
   );
@@ -1025,31 +1143,8 @@ function OtherPlatformIconEditor({
   item,
   update,
 }: OtherPlatformIconEditorProps) {
-  const icon = isRecord(item.icon)
-    ? item.icon
-    : { type: 'simple-icons', slug: 'researchgate' };
+  const icon = isRecord(item.icon) ? item.icon : {};
   const iconType = asString(icon.type);
-  const libraryValue =
-    iconType === 'font-awesome'
-      ? `font-awesome:${asString(icon.name)}`
-      : `simple-icons:${asString(icon.slug)}`;
-
-  function setLibraryIcon(value: string) {
-    const [type, name] = value.split(':');
-    if (type === 'font-awesome') {
-      update('icon', {
-        type: 'font-awesome',
-        style: 'brands',
-        name,
-      });
-      return;
-    }
-
-    update('icon', {
-      type: 'simple-icons',
-      slug: name,
-    });
-  }
 
   return (
     <>
@@ -1066,10 +1161,7 @@ function OtherPlatformIconEditor({
                 type: 'url',
                 url: '',
               })
-            : update('icon', {
-                type: 'simple-icons',
-                slug: 'researchgate',
-              })
+            : update('icon', undefined)
         }
       />
       {iconType === 'url' ? (
@@ -1086,22 +1178,13 @@ function OtherPlatformIconEditor({
           placeholder="https://example.com/icon.svg"
         />
       ) : (
-        <SelectField
-          label="Library Icon"
-          value={libraryValue}
-          options={ICON_LIBRARY_OPTIONS.map((option) => ({
-            value:
-              option.provider === 'font-awesome'
-                ? `font-awesome:${option.name}`
-                : `simple-icons:${option.slug}`,
-            label:
-              option.provider === 'font-awesome'
-                ? `Font Awesome Brands - ${option.label}`
-                : `Simple Icons - ${option.label}`,
-          }))}
-          onChange={setLibraryIcon}
-          description="Known social platforms use locked automatic icons."
-        />
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium">Library icon</span>
+          <SocialIconPicker
+            value={item.icon as SocialIcon | undefined}
+            onChange={(selected) => update('icon', selected)}
+          />
+        </div>
       )}
     </>
   );
