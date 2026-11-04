@@ -9,7 +9,7 @@ export interface NavigationItem {
 }
 
 export const externalProductUrls = {
-  eLearning: publicEnvConfig.NEXT_PUBLIC_ELEARNING_SITE_URL,
+  moodle: publicEnvConfig.NEXT_PUBLIC_MOODLE_URL,
   people: publicEnvConfig.NEXT_PUBLIC_PEOPLE_SITE_URL,
   projects: publicEnvConfig.NEXT_PUBLIC_PROJECTS_SITE_URL,
 } as const;
@@ -51,8 +51,8 @@ export const secondaryNavigation = [
     destination: 'external-product',
   },
   {
-    href: externalProductUrls.eLearning,
-    label: 'E-learning',
+    href: externalProductUrls.moodle,
+    label: 'Moodle',
     destination: 'external-product',
   },
 ] as const satisfies ReadonlyArray<NavigationItem>;

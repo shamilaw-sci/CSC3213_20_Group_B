@@ -22,6 +22,6 @@ describe('Web sitemap', () => {
     ]);
     expect(paths).not.toContain('/people');
     expect(paths).not.toContain('/projects');
-    expect(paths).not.toContain('/e-learning');
+    expect(paths).not.toContain('/moodle');
   });
 });

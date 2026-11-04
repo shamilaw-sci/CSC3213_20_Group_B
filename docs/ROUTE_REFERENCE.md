@@ -10,13 +10,13 @@ This page is an index, not a replacement for route source or
 
 ## Public applications
 
-| App      | Important paths                                                                                                                                                                                                                                            |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web      | `/`, `/about-us`, `/resources`, `/undergraduate-courses`, `/postgraduate-courses`, `/research`, `/services`, `/societies`, `/contact`, feed routes, `/~{username}/{path}` temporary redirects, and external redirects for People, Projects, and e-learning |
-| People   | `/staff/*`, `/students/{stream}/{batch}`, `/people/{identity}`                                                                                                                                                                                             |
-| Projects | `/browse/{segments}`, `/categories/{category}/{segments}`, `/topics/{topic}/{segments}`, `/types/{type}/{segments}`, `/search/{query}/{segments}`, `/projects/{slug}`, and short redirect `/p/{slug}`                                                      |
-| Portal   | `/login`, `/signup`, `/dashboard`, `/account/*`, `/user/*`, `/academic/courses/*`, and `/admin/*`                                                                                                                                                          |
-| Docs     | `/`, `/docs/{page}`, `/api/search`, `/llms.txt`, `/llms-full.txt`, per-page Markdown, `/sitemap.xml`, and `/robots.txt`                                                                                                                                    |
+| App      | Important paths                                                                                                                                                                                                                                           |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web      | `/`, `/about-us`, `/resources`, `/undergraduate-courses`, `/postgraduate-courses`, `/research`, `/services`, `/societies`, `/contact`, feed routes, `/~{username}/{path}` temporary redirects, and `/people/*`, `/projects`, `/moodle` external redirects |
+| People   | `/staff/*`, `/students/{stream}/{batch}`, `/people/{identity}`                                                                                                                                                                                            |
+| Projects | `/browse/{segments}`, `/categories/{category}/{segments}`, `/topics/{topic}/{segments}`, `/types/{type}/{segments}`, `/search/{query}/{segments}`, `/projects/{slug}`, and short redirect `/p/{slug}`                                                     |
+| Portal   | `/login`, `/signup`, `/dashboard`, `/account/*`, `/user/*`, `/academic/courses/*`, and `/admin/*`                                                                                                                                                         |
+| Docs     | `/`, `/docs/{page}`, `/api/search`, `/llms.txt`, `/llms-full.txt`, per-page Markdown, `/sitemap.xml`, and `/robots.txt`                                                                                                                                   |
 
 The Portal serves the authoritative document at
 `https://portal.scs-pdn.space/.well-known/security.txt`. Every public app and

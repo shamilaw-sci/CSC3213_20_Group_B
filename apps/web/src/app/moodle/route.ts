@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import serverEnvConfig from '@/config/server.env.config';
+import publicEnvConfig from '@/config/public.env.config';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -14,5 +14,5 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
-  return NextResponse.redirect(serverEnvConfig.MOODLE_URL, 308);
+  return NextResponse.redirect(publicEnvConfig.NEXT_PUBLIC_MOODLE_URL, 308);
 }

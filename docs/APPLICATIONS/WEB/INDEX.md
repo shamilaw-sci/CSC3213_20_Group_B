@@ -15,7 +15,7 @@ flowchart LR
   Web --> MDX[Local MDX content]
   Web -->|document navigation| People[People]
   Web -->|document navigation| Projects[Projects]
-  Web -->|document navigation| LMS[E-learning]
+  Web -->|document navigation| Moodle[Moodle]
   Web -->|authenticated /~username lookup| API[API Worker]
   API --> D1[(Redirect settings)]
   Web -->|307 redirect| Personal[Approved personal site]

@@ -10,13 +10,13 @@ const publicEnvConfig = createEnv({
     NEXT_PUBLIC_PROJECTS_SITE_URL: z
       .url()
       .default('https://projects.scs-pdn.space'),
-    NEXT_PUBLIC_ELEARNING_SITE_URL: z.url().default('https://scilms.pdn.ac.lk'),
+    NEXT_PUBLIC_MOODLE_URL: z.url().default('https://scilms.pdn.ac.lk'),
   },
   runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_PEOPLE_SITE_URL: process.env.NEXT_PUBLIC_PEOPLE_SITE_URL,
     NEXT_PUBLIC_PROJECTS_SITE_URL: process.env.NEXT_PUBLIC_PROJECTS_SITE_URL,
-    NEXT_PUBLIC_ELEARNING_SITE_URL: process.env.NEXT_PUBLIC_ELEARNING_SITE_URL,
+    NEXT_PUBLIC_MOODLE_URL: process.env.NEXT_PUBLIC_MOODLE_URL,
   },
   emptyStringAsUndefined: true,
 });

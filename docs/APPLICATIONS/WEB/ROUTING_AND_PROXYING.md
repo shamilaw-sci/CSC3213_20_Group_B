@@ -12,12 +12,12 @@ cross-product entry routes and `~username` personal-site redirects.
 
 `/people` and its staff and student subpaths return permanent redirects to the
 configured People origin. `/projects` redirects to the Projects origin, and
-`/e-learning` redirects to the configured Moodle origin. Their `OPTIONS`
-handlers allow `GET` and `OPTIONS` from any origin.
+`/moodle` redirects to the Moodle origin. Their
+`OPTIONS` handlers allow `GET` and `OPTIONS` from any origin.
 
-Navigation components link directly to configured product origins, while the
-route handlers preserve stable inbound Web URLs. Because these are different
-origins, callers must use document navigation rather than expect a cross-origin
+Navigation components link directly to configured product origins. The route
+handlers provide entry URLs for People, Projects, and Moodle. Because these are
+different origins, callers must use document navigation rather than expect a cross-origin
 RSC fetch to succeed.
 
 Requests ending in `.php` are normalized by removing that suffix before normal

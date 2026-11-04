@@ -19,7 +19,7 @@ native Markdown elements. Reusable shadcn primitives and theme tokens come from
 
 Primary navigation contains local departmental content. Secondary navigation
 contains less prominent local pages and direct links to the People, Projects,
-and e-learning products. Every item declares whether its destination is local
+and Moodle. Every item declares whether its destination is local
 or an external product:
 
 - local links use Next.js `Link` for client navigation;

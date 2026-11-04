@@ -31,6 +31,7 @@ describe('Web navigation contract', () => {
         }),
         expect.objectContaining({
           href: 'https://scilms.pdn.ac.lk',
+          label: 'Moodle',
           destination: 'external-product',
         }),
       ])
@@ -41,5 +42,29 @@ describe('Web navigation contract', () => {
     expect(navigationItems.some((item) => item.href.includes('portal'))).toBe(
       false
     );
+  });
+
+  test('uses the configured Moodle URL for navigation and the /moodle redirect', async () => {
+    vi.stubEnv('NEXT_PUBLIC_MOODLE_URL', 'https://moodle.example.test/');
+    vi.resetModules();
+
+    try {
+      const [{ secondaryNavigation }, { GET }] = await Promise.all([
+        import('@/config/navigation.config'),
+        import('@/app/moodle/route'),
+      ]);
+
+      expect(secondaryNavigation).toContainEqual({
+        href: 'https://moodle.example.test/',
+        label: 'Moodle',
+        destination: 'external-product',
+      });
+      expect((await GET()).headers.get('location')).toBe(
+        'https://moodle.example.test/'
+      );
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });

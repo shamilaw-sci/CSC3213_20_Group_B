@@ -91,16 +91,15 @@ Production uses `https://scs-pdn.space` for `NEXT_PUBLIC_SITE_URL` and
 `scs-pdn.space` for `BASE_DOMAIN`. The Web app's `.env.example` uses local
 development hosts; do not copy those values into Vercel Production or Preview.
 
-| Name                             | Kind      | Supply     | Status    | Purpose                         |
-| -------------------------------- | --------- | ---------- | --------- | ------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`           | `browser` | `template` | `runtime` | canonical URL and metadata      |
-| `NEXT_PUBLIC_PEOPLE_SITE_URL`    | `browser` | `template` | `runtime` | People app destinations         |
-| `NEXT_PUBLIC_PROJECTS_SITE_URL`  | `browser` | `template` | `runtime` | Projects app destinations       |
-| `NEXT_PUBLIC_ELEARNING_SITE_URL` | `browser` | `template` | `runtime` | e-learning destinations         |
-| `BASE_DOMAIN`                    | `server`  | `template` | `runtime` | application domain construction |
-| `MOODLE_URL`                     | `server`  | `template` | `runtime` | Moodle redirect fallback        |
-| `PROXY_API_URL`                  | `server`  | `template` | `runtime` | API proxy-resolution requests   |
-| `WEB_PROXY_INTERNAL_SECRET`      | `secret`  | `template` | `runtime` | API proxy-resolution trust      |
+| Name                            | Kind      | Supply     | Status    | Purpose                         |
+| ------------------------------- | --------- | ---------- | --------- | ------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`          | `browser` | `template` | `runtime` | canonical URL and metadata      |
+| `NEXT_PUBLIC_PEOPLE_SITE_URL`   | `browser` | `template` | `runtime` | People app destinations         |
+| `NEXT_PUBLIC_PROJECTS_SITE_URL` | `browser` | `template` | `runtime` | Projects app destinations       |
+| `NEXT_PUBLIC_MOODLE_URL`        | `browser` | `template` | `runtime` | Moodle link and redirect        |
+| `BASE_DOMAIN`                   | `server`  | `template` | `runtime` | application domain construction |
+| `PROXY_API_URL`                 | `server`  | `template` | `runtime` | API proxy-resolution requests   |
+| `WEB_PROXY_INTERNAL_SECRET`     | `secret`  | `template` | `runtime` | API proxy-resolution trust      |
 
 ### People
 
