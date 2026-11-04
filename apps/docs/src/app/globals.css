@@ -55,6 +55,27 @@
   --fd-layout-width: 92rem;
 }
 
+[data-pele] {
+  width: 100%;
+  max-width: 100%;
+  --pele-bg: var(--background);
+  --pele-fg: var(--foreground);
+  --pele-muted: var(--muted-foreground);
+  --pele-line: var(--foreground);
+  --pele-surface: var(--card);
+  --pele-surface-alt: var(--secondary);
+  --pele-border: var(--border);
+  --pele-accent: var(--primary);
+  --pele-critical: var(--destructive);
+  --pele-error: var(--destructive);
+  --pele-font: var(--font-open-sans);
+}
+
+[data-pele] svg {
+  max-width: 100%;
+  height: auto;
+}
+
 html {
   scrollbar-gutter: stable;
 }

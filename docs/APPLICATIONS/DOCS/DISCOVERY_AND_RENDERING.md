@@ -33,13 +33,13 @@ diagrams. The shell links directly to the main GitHub repository; there is no
 repository selector, persisted repository preference, or alternate rendered
 variant.
 
-Mermaid rendering is intentionally client-only because it depends on browser
-state and the resolved color theme. Render results are cached by chart text and
-theme. A theme change keeps the current diagram mounted until its replacement
-is ready, preserving the reader's page position. The renderer uses Mermaid's
-strict security level and injects only the SVG returned by that configured
-renderer. Preserve that boundary if the diagram component changes; do not
-render arbitrary stored HTML through the same path.
+Fumadocs' `remarkMdxMermaid` turns Mermaid code fences into the registered
+`Mermaid` component. The client component loads Pele on demand, mounts the SVG
+after hydration, and destroys the mount on navigation or source changes. Pele
+observes container width and redraws when needed. Fumadocs theme tokens feed
+Pele CSS variables, so light/dark changes recolor diagrams without rerendering.
+Invalid or unsupported diagrams show their original Mermaid source. Pele filters
+links and styles in diagrams; the renderer does not accept arbitrary HTML.
 
 ## Failure and consistency checks
 
