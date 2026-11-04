@@ -92,17 +92,17 @@ The `bun run` commands below work in PowerShell, Bash/Zsh/Git Bash and
 interactive CMD. Set optional executable and session-file paths in the shell
 that launches the command (replace these example paths):
 
-```powershell
+```powershell tab="PowerShell" tab-group="terminal"
 $env:PERF_K6_BINARY = 'C:\tools\k6.exe'
 $env:PERF_SESSIONS_FILE = 'C:\private\sessions.local.json'
 ```
 
-```bash
+```bash tab="Bash" tab-group="terminal"
 export PERF_K6_BINARY='/absolute/path/to/k6'
 export PERF_SESSIONS_FILE='/absolute/private/sessions.local.json'
 ```
 
-```cmd
+```cmd tab="Command Prompt" tab-group="terminal"
 set "PERF_K6_BINARY=C:\tools\k6.exe"
 set "PERF_SESSIONS_FILE=C:\private\sessions.local.json"
 ```
