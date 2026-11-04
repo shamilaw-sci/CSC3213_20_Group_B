@@ -165,7 +165,10 @@ export default function AcademicStaffPage() {
           <h2 className="text-card-foreground mb-4 text-xl font-semibold">
             {ACADEMIC_RANK_LABELS[rank]}s
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4
+              xl:grid-cols-5"
+          >
             {members.map((staff) => (
               <StaffCard key={staff.email} staff={staff} />
             ))}
