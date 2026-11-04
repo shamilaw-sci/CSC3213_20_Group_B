@@ -79,6 +79,8 @@ import {
   SiZenodo,
 } from 'react-icons/si';
 
+import { AvatarManager } from '@/components/people/avatar-manager';
+import { avatarUrlForPerson } from '@/lib/avatar-url';
 import {
   getStudentProgrammeField,
   getStudentSubjectLabels,
@@ -121,9 +123,10 @@ function PersonImage({
   name: string;
   size?: 'md' | 'lg';
 }) {
+  const [failedSource, setFailedSource] = useState<string | null>(null);
   const sizeClass = size === 'lg' ? 'h-80 w-full' : 'size-24 sm:h-40 sm:w-full';
 
-  if (!src) {
+  if (!src || failedSource === src) {
     return (
       <div
         role="img"
@@ -144,6 +147,8 @@ function PersonImage({
     >
       <Image
         src={src}
+        unoptimized
+        onError={() => setFailedSource(src)}
         alt={name}
         width={size === 'lg' ? 352 : 320}
         height={size === 'lg' ? 448 : 200}
@@ -288,7 +293,7 @@ export function StaffCard({ staff }: { staff: Staff }) {
   return (
     <PersonTile
       href={getStaffLink(staff)}
-      imageUrl={staff.profileImageUrl}
+      imageUrl={avatarUrlForPerson(staff)}
       name={staff.fullName}
       title={`${staff.title} ${staff.fullName}`}
       subtitle={getRoleLabel(staff)}
@@ -301,7 +306,7 @@ export function StudentCard({ student }: { student: Student }) {
   return (
     <PersonTile
       href={`/people/${encodeURIComponent(student.registrationNo.toLowerCase())}`}
-      imageUrl={student.profileImageUrl}
+      imageUrl={avatarUrlForPerson(student)}
       name={student.fullName}
       title={`${student.title} ${student.fullName}`}
       meta={student.registrationNo}
@@ -872,6 +877,11 @@ export function DetailedPersonCard({
   extraTabs?: ProfileTab[];
 }) {
   const [activeTabId, setActiveTabId] = useState<string>();
+  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
+  const avatarUsername =
+    'registrationNo' in person
+      ? person.registrationNo.toLowerCase()
+      : person.email?.split('@')[0]?.toLowerCase();
   const isStaff = isStaffPerson(person);
   const academic = isAcademicTeachingStaff(person) ? person : null;
   const student = isStudentPerson(person) ? person : null;
@@ -1115,10 +1125,16 @@ export function DetailedPersonCard({
     <article className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
       <Card className="rounded-md p-5 lg:sticky lg:top-24">
         <PersonImage
-          src={person.profileImageUrl}
+          src={avatarOverride ?? avatarUrlForPerson(person)}
           name={person.fullName}
           size="lg"
         />
+        {avatarUsername && (
+          <AvatarManager
+            username={avatarUsername}
+            onChange={setAvatarOverride}
+          />
+        )}
         <div className="mt-5">
           {showIdentity && (
             <h1 className="text-card-foreground text-2xl/tight font-bold">

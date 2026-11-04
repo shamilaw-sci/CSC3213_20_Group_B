@@ -106,6 +106,7 @@ development hosts; do not copy those values into Vercel Production or Preview.
 | Name                                 | Kind      | Supply     | Status    | Purpose                    |
 | ------------------------------------ | --------- | ---------- | --------- | -------------------------- |
 | `NEXT_PUBLIC_SITE_URL`               | `browser` | `template` | `runtime` | canonical URL and metadata |
+| `NEXT_PUBLIC_API_BASE_URL`           | `browser` | `template` | `runtime` | public avatar API          |
 | `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`   | `browser` | `template` | `runtime` | people records             |
 | `NEXT_PUBLIC_PROJECTS_DATA_BASE_URL` | `browser` | `template` | `runtime` | related project records    |
 | `NEXT_PUBLIC_PROJECTS_SITE_URL`      | `browser` | `template` | `runtime` | Projects app destinations  |
@@ -148,6 +149,9 @@ development hosts; do not copy those values into Vercel Production or Preview.
 | `DATA_PUBLIC_BASE_URL`       | `server`  | `wrangler` | `runtime` | public data URL construction         |
 | `AUTH_DB`                    | `binding` | `wrangler` | `binding` | D1 auth and settings store           |
 | `GITHUB_APP`                 | `binding` | `wrangler` | `binding` | private GitHub App service transport |
+| `PROFILE_PICTURES`           | `binding` | `wrangler` | `binding` | public avatar R2 bucket              |
+| `IMAGES`                     | `binding` | `wrangler` | `binding` | avatar decode and normalization      |
+| `TYPESAFE_API_KEY`           | `secret`  | `template` | `runtime` | Jev image moderation                 |
 
 ### GitHub App
 

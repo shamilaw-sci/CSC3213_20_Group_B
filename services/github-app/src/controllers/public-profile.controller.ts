@@ -25,6 +25,15 @@ import type { OperationRecord } from '@/operations/operation.types';
 import type { GithubAppEnv } from '@/types/env';
 import { createValidationErrorResponse, readJsonBody } from '@/utils/request';
 
+function hasLegacyPublicImageField(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || !('profile' in value))
+    return false;
+  const profile = value.profile;
+  return Boolean(
+    profile && typeof profile === 'object' && 'profileImageUrl' in profile
+  );
+}
+
 export async function handleGetPublicProfile(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const query = getPublicProfileQuerySchema.safeParse({
@@ -62,6 +71,12 @@ export async function handleUpsertPublicProfilePr(
   req: Request
 ): Promise<Response> {
   const body = await readJsonBody(req);
+  if (hasLegacyPublicImageField(body)) {
+    return Response.json(
+      { error: 'Legacy profile image field is not accepted' },
+      { status: 400 }
+    );
+  }
   const request = updatePublicProfileRequestSchema.safeParse(body);
 
   if (!request.success) {
@@ -87,6 +102,17 @@ export async function handleSubmitPublicProfileOperation(
   env: GithubAppEnv
 ): Promise<Response> {
   const body = await readJsonBody(req);
+  if (
+    body &&
+    typeof body === 'object' &&
+    'request' in body &&
+    hasLegacyPublicImageField(body.request)
+  ) {
+    return Response.json(
+      { error: 'Legacy profile image field is not accepted' },
+      { status: 400 }
+    );
+  }
   const parsed = submitPublicProfileOperationRequestSchema.safeParse(body);
   if (!parsed.success) return createValidationErrorResponse(parsed.error);
 

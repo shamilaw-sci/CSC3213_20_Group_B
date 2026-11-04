@@ -76,7 +76,6 @@ describe('AcademicTeachingStaffSchema', () => {
         conferencesAttended: [{ name: 'ICSE', date: '2025-05-15' }],
         teachings: ['CSC3213'],
         cvUrl: 'https://alice.example.com/cv.pdf',
-        profileImageUrl: 'https://example.com/alice.jpg',
         mobilePhone: '+94123456789',
       })
     ).not.toThrow();
@@ -150,7 +149,6 @@ describe('AcademicSupportStaffSchema', () => {
         email: 'bob@example.com',
         qualifications: ['BSc IT', 'MSc CS'],
         officePhone: '+94123456789',
-        profileImageUrl: 'https://example.com/bob.jpg',
         mobilePhone: '+94123456789',
         socialLinks: { urls: { orcid: '0000-0002-1825-0097' } },
       }).socialLinks?.urls?.orcid
@@ -220,7 +218,6 @@ describe('NonAcademicStaffSchema', () => {
         ...base,
         email: 'carol@example.com',
         officePhone: '+94123456789',
-        profileImageUrl: 'https://example.com/carol.jpg',
         mobilePhone: '+94123456789',
         socialLinks: { urls: { github: 'github.com/carol' } },
       }).socialLinks?.urls?.github

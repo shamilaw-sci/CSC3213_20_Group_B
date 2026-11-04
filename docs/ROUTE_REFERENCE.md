@@ -34,7 +34,8 @@ failures remain errors and are not converted into `404` responses.
 The API exposes Better Auth routes plus `/api/me`, `/api/me/proxy`,
 the authenticated Web resolver `/api/internal/proxies/{username}`,
 `/api/people/v2/*`, `/api/projects/v2/*`, `/api/academic/v2/*`,
-`/api/admin/*`, and `/api/operations/{id}`. The GitHub App exposes internal
+`/api/admin/*`, and `/api/operations/{id}`. Public People avatar routes are
+listed in [API contracts](API_CONTRACTS.md#public-profile-management). The GitHub App exposes internal
 operation, profile, project, course, and course-offering routes. The mailer
 exposes authenticated `POST /send`.
 

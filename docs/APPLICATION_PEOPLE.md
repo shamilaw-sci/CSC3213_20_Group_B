@@ -37,9 +37,11 @@ badges. Program, stream/department, honours track, level, and status are
 different fields and must be labelled explicitly. Project participation renders
 each schema role and must not replace multiple roles with a guessed title.
 
-The app owns public interpretation and presentation, not editing. Profile and
-placement changes belong to Portal/API/GitHub App. Configure canonical and data
-origins through typed public environment values.
+The app owns public interpretation and presentation. Profile and placement
+changes belong to Portal/API/GitHub App. Public avatar controls on an owner's
+profile call the separate API Worker avatar route; they do not edit published
+profile JSON. Configure canonical, data, and API origins through typed public
+environment values.
 
 ## Change and verify
 

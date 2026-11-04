@@ -394,7 +394,6 @@ function applyKindDefaults(kind: ProfileKind, current: ProfileRecord) {
     title: current.title ?? emptyProfile(kind).title,
     fullName: current.fullName ?? '',
     email: current.email ?? '',
-    profileImageUrl: current.profileImageUrl ?? '',
     mobilePhone: current.mobilePhone ?? '',
   };
 
@@ -535,14 +534,9 @@ function profileIssueField(path: PropertyKey[]) {
     return 'profile-work';
   }
   if (
-    [
-      'title',
-      'fullName',
-      'email',
-      'personalEmail',
-      'profileImageUrl',
-      'mobilePhone',
-    ].includes(root)
+    ['title', 'fullName', 'email', 'personalEmail', 'mobilePhone'].includes(
+      root
+    )
   ) {
     return 'profile-about';
   }
@@ -1293,13 +1287,6 @@ function ProfileForm({
             type="email"
             placeholder="name@pdn.ac.lk"
             disabled={lockedEmail}
-          />
-          <Field
-            label="Profile Image URL"
-            value={asString(profile.profileImageUrl)}
-            onChange={(value) => setField('profileImageUrl', value)}
-            type="url"
-            placeholder="https://example.com/profile.jpg"
           />
           <Field
             label="Mobile Phone"

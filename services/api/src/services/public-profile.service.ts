@@ -1120,6 +1120,13 @@ export async function upsertMyPublicProfilePr(
   if (!isRecord(profile)) {
     return createJsonErrorResponse('Profile must be an object', 400, origin);
   }
+  if ('profileImageUrl' in profile) {
+    return createJsonErrorResponse(
+      'Legacy profile image field is not accepted',
+      400,
+      origin
+    );
+  }
 
   let studentPlacement: StudentPlacementResponse | undefined;
   if (profileKind === 'student') {
@@ -1270,6 +1277,14 @@ export async function upsertAdminUserPublicProfilePr(
 
   if (!isRecord(profile)) {
     return createJsonErrorResponse('Profile must be an object', 400, origin);
+  }
+
+  if ('profileImageUrl' in profile) {
+    return createJsonErrorResponse(
+      'Legacy profile image field is not accepted',
+      400,
+      origin
+    );
   }
 
   let studentPlacement: StudentPlacementResponse | undefined;

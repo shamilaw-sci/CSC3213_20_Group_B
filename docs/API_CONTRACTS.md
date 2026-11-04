@@ -175,6 +175,17 @@ the current permission record so blacklisting and role changes take effect.
 | `GET`, `PUT`, `DELETE` | `/api/people/v2/admin/student-placement/pr` | manage the placement pull request       |
 | varies                 | `/api/people/v2/admin/users/:identity/...`  | manage another user's public profile    |
 
+Public avatar calls are separate from GitHub-backed profile mutations:
+
+| Method           | Route                                           | Purpose                                    |
+| ---------------- | ----------------------------------------------- | ------------------------------------------ |
+| `GET`            | `/api/people/v2/avatars/me`                     | current owner's identity and avatar URL    |
+| `POST`, `DELETE` | `/api/people/v2/avatars/me`                     | upload or remove the current owner's image |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username`              | resolve the current approved image         |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username/:sha256.webp` | read only the currently approved version   |
+
+See [public avatars](PUBLIC_AVATARS.md) for validation, moderation, and cache behavior.
+
 Admin profile suffixes include `/schema`, `/pr`, and `/student-placement`.
 Unknown suffixes are rejected rather than interpreted as repository paths.
 

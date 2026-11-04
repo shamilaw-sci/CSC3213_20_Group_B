@@ -27,7 +27,6 @@ describe('PersonSchema', () => {
       PersonSchema.parse({
         ...validPerson,
         email: 'john@example.com',
-        profileImageUrl: 'https://example.com/img.jpg',
         mobilePhone: '+94123456789',
       })
     ).not.toThrow();
@@ -36,12 +35,6 @@ describe('PersonSchema', () => {
   it('rejects a person with invalid email', () => {
     expect(() =>
       PersonSchema.parse({ ...validPerson, email: 'not-an-email' })
-    ).toThrow();
-  });
-
-  it('rejects a person with invalid profileImageUrl', () => {
-    expect(() =>
-      PersonSchema.parse({ ...validPerson, profileImageUrl: 'not-a-url' })
     ).toThrow();
   });
 
@@ -97,7 +90,6 @@ describe('StudentSchema', () => {
         ...validStudent,
         email: 'student@example.com',
         personalEmail: 'personal@example.com',
-        profileImageUrl: 'https://example.com/img.jpg',
         mobilePhone: '+94123456789',
         researchInterests: ['AI', 'ML'],
         publications: [{ title: 'My Paper' }],

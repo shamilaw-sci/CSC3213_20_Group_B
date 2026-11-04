@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "env": [
+        "NEXT_PUBLIC_API_BASE_URL",
         "NEXT_PUBLIC_PEOPLE_DATA_BASE_URL",
         "NEXT_PUBLIC_PROJECTS_DATA_BASE_URL",
         "NEXT_PUBLIC_PROJECTS_SITE_URL",

@@ -79,6 +79,7 @@ const workspaceVariables = {
     template: 'apps/people/.env.example',
     turboConfig: 'apps/people/turbo.json',
     variables: templated([
+      ['NEXT_PUBLIC_API_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_PROJECTS_SITE_URL', 'browser'],
@@ -119,10 +120,13 @@ const workspaceVariables = {
       ['GITHUB_APP_INTERNAL_SECRET', 'secret', 'template', 'runtime'],
       ['GITHUB_CLIENT_ID', 'server', 'wrangler', 'runtime'],
       ['GITHUB_CLIENT_SECRET', 'secret', 'template', 'runtime'],
+      ['IMAGES', 'binding', 'wrangler', 'binding'],
       ['GOOGLE_CLIENT_ID', 'server', 'wrangler', 'runtime'],
       ['GOOGLE_CLIENT_SECRET', 'secret', 'template', 'runtime'],
       ['MAILER_API_KEY', 'secret', 'template', 'runtime'],
       ['MAILER_API_URL', 'server', 'wrangler', 'runtime'],
+      ['PROFILE_PICTURES', 'binding', 'wrangler', 'binding'],
+      ['TYPESAFE_API_KEY', 'secret', 'template', 'runtime'],
       ['AUTH_DB', 'binding', 'wrangler', 'binding'],
       ['WEB_PROXY_INTERNAL_SECRET', 'secret', 'template', 'runtime'],
     ]),
@@ -236,9 +240,11 @@ describe('environment configuration discovery', () => {
     expect(bindings).toEqual([
       'AUTH_DB',
       'GITHUB_APP',
+      'IMAGES',
       'MUTATION_COORDINATOR',
       'OPERATION_QUEUE',
       'OPERATION_STATE',
+      'PROFILE_PICTURES',
     ]);
     expect(
       variables.find(

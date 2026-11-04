@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
+    "avatar:import": "bun scripts/import-public-avatar.ts",
     "build": "wrangler build",
     "deploy": "wrangler deploy",
     "test": "bun test",

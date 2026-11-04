@@ -18,4 +18,7 @@ export interface Env {
 
   DATA_PUBLIC_BASE_URL: string;
   WEB_PROXY_INTERNAL_SECRET: string;
+  TYPESAFE_API_KEY: string;
+  PROFILE_PICTURES: R2Bucket;
+  IMAGES: ImagesBinding;
 }

@@ -58,6 +58,12 @@ import {
 } from '@/services/public-course.service';
 import type { Env } from '@/types/env';
 import {
+  deleteMyAvatar,
+  getMyAvatar,
+  getPublicAvatar,
+  uploadMyAvatar,
+} from '@/services/public-avatar.service';
+import {
   createMethodNotAllowedResponse,
   createNotFoundResponse,
 } from '@/http/responses';
@@ -74,6 +80,31 @@ type RegisteredRoute = {
 };
 
 const routes: RegisteredRoute[] = [
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/people/v2/avatars/me' },
+    handler: uploadMyAvatar,
+  },
+  {
+    method: 'DELETE',
+    match: { kind: 'exact', path: '/api/people/v2/avatars/me' },
+    handler: deleteMyAvatar,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/people/v2/avatars/me' },
+    handler: getMyAvatar,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'prefix', path: '/api/people/v2/avatars/' },
+    handler: getPublicAvatar,
+  },
+  {
+    method: 'HEAD',
+    match: { kind: 'prefix', path: '/api/people/v2/avatars/' },
+    handler: getPublicAvatar,
+  },
   {
     method: 'GET',
     match: { kind: 'exact', path: '/api/projects/v2/schemas/index.json' },

@@ -32,6 +32,7 @@ flowchart LR
   Portal --> API[API Worker]
   Web -->|personal-site lookup| API
   API --> State[(API D1: auth, proxy, and permission state)]
+  API --> Avatars[(R2: public avatars)]
   API --> Mailer[Mailer]
   API --> Automation[GitHub App Worker]
   Automation --> Operations[(Durable Object SQLite: operations and leases)]
@@ -39,11 +40,13 @@ flowchart LR
   Automation --> DataRepo[data repository]
   Web --> PublicData[Published public data]
   People --> PublicData
+  People -->|public avatars| API
   Projects --> PublicData
 ```
 
 Read [Architecture](docs/ARCHITECTURE.md) before changing a boundary between
 workspaces.
+Public People pictures use the separate [avatar API](docs/PUBLIC_AVATARS.md).
 
 ## Workspaces
 

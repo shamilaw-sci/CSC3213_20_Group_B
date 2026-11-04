@@ -11,6 +11,7 @@ function createTestD1Database(): D1Database {
     CREATE TABLE "verification" ("id" text NOT NULL PRIMARY KEY, "identifier" text NOT NULL, "value" text NOT NULL, "expiresAt" integer NOT NULL, "createdAt" integer NOT NULL, "updatedAt" integer NOT NULL);
     CREATE TABLE "passkey" ("id" text NOT NULL PRIMARY KEY, "name" text, "publicKey" text NOT NULL, "userId" text NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE, "credentialID" text NOT NULL, "counter" integer NOT NULL, "deviceType" text NOT NULL, "backedUp" integer NOT NULL, "transports" text, "createdAt" integer, "aaguid" text);
     CREATE TABLE "rateLimit" ("id" text NOT NULL PRIMARY KEY, "key" text NOT NULL UNIQUE, "count" integer NOT NULL, "lastRequest" integer NOT NULL);
+    CREATE TABLE "public_avatar_rate" ("user_id" text PRIMARY KEY, "window_start" integer NOT NULL, "attempts" integer NOT NULL);
     CREATE TABLE "proxySettings" ("email" text NOT NULL PRIMARY KEY, "username" text NOT NULL, "active" integer NOT NULL DEFAULT 0 CHECK ("active" IN (0, 1)), "url" text NOT NULL DEFAULT '', "availableAttempts" integer NOT NULL DEFAULT 5 CHECK ("availableAttempts" BETWEEN 0 AND 5), "attemptWindowStartedAt" integer, "updatedAt" integer, "updatedBy" text, "revision" integer NOT NULL DEFAULT 1);
     CREATE TABLE "permission" ("email" text NOT NULL PRIMARY KEY COLLATE NOCASE, "permissionJson" text NOT NULL CHECK (json_valid("permissionJson")), "role" text NOT NULL CHECK ("role" IN ('USER', 'OTHER', 'STUDENT', 'ACADEMIC', 'NON_ACADEMIC', 'ACADEMIC_SUPPORT')), "accessLevel" text NOT NULL DEFAULT 'NONE' CHECK ("accessLevel" IN ('NONE', 'ADMIN', 'SUPER_ADMIN')), "name" text NOT NULL DEFAULT '', "picture" text NOT NULL DEFAULT '', "blacklisted" integer NOT NULL DEFAULT 0 CHECK ("blacklisted" IN (0, 1)), "createdAt" integer);
     CREATE INDEX "proxySettings_updatedAt_idx" ON "proxySettings" ("updatedAt");
@@ -105,6 +106,9 @@ export function createTestEnv(overrides: Partial<Env> = {}): Env {
     GITHUB_APP_INTERNAL_SECRET: 'test-github-app-internal-secret',
     DATA_PUBLIC_BASE_URL: 'https://data.test.scs-pdn.space',
     WEB_PROXY_INTERNAL_SECRET: 'test-web-proxy-internal-secret',
+    TYPESAFE_API_KEY: 'test-typesafe-api-key',
+    PROFILE_PICTURES: {} as R2Bucket,
+    IMAGES: {} as ImagesBinding,
     ...overrides,
   };
 }

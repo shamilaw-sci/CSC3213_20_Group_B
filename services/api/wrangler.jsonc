@@ -28,7 +28,8 @@
       "GITHUB_CLIENT_SECRET",
       "MAILER_API_KEY",
       "GITHUB_APP_INTERNAL_SECRET",
-      "WEB_PROXY_INTERNAL_SECRET"
+      "WEB_PROXY_INTERNAL_SECRET",
+      "TYPESAFE_API_KEY"
     ]
   },
   "d1_databases": [
@@ -39,6 +40,10 @@
       "migrations_dir": "migrations"
     }
   ],
+  "r2_buckets": [
+    { "binding": "PROFILE_PICTURES", "bucket_name": "scs-profile-pictures" }
+  ],
+  "images": { "binding": "IMAGES" },
   "services": [
     {
       "binding": "GITHUB_APP",
