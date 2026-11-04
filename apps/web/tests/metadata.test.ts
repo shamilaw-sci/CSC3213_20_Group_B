@@ -12,16 +12,16 @@ describe('createPageMetadata', () => {
       title: 'About the department',
       description: 'Department history and academic contribution.',
       alternates: {
-        canonical: 'https://scs.pdn.ac.lk/about-us',
-        languages: { en: 'https://scs.pdn.ac.lk/about-us' },
+        canonical: 'https://scs-pdn.space/about-us',
+        languages: { en: 'https://scs-pdn.space/about-us' },
       },
       openGraph: {
         title: 'About the department',
         description: 'Department history and academic contribution.',
-        url: 'https://scs.pdn.ac.lk/about-us',
+        url: 'https://scs-pdn.space/about-us',
         images: [
           {
-            url: 'https://scs.pdn.ac.lk/favicon/android-chrome-512x512.png',
+            url: 'https://scs-pdn.space/favicon/android-chrome-512x512.png',
             width: 512,
             height: 512,
           },

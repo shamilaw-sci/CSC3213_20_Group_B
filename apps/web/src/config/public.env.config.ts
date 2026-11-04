@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const publicEnvConfig = createEnv({
   client: {
-    NEXT_PUBLIC_SITE_URL: z.url().default('https://scs.pdn.ac.lk'),
+    NEXT_PUBLIC_SITE_URL: z.url().default('https://scs-pdn.space'),
     NEXT_PUBLIC_PEOPLE_SITE_URL: z
       .url()
       .default('https://people.scs-pdn.space'),

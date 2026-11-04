@@ -87,6 +87,10 @@ to be unused.
 
 ### Web
 
+Production uses `https://scs-pdn.space` for `NEXT_PUBLIC_SITE_URL` and
+`scs-pdn.space` for `BASE_DOMAIN`. The Web app's `.env.example` uses local
+development hosts; do not copy those values into Vercel Production or Preview.
+
 | Name                             | Kind      | Supply     | Status    | Purpose                         |
 | -------------------------------- | --------- | ---------- | --------- | ------------------------------- |
 | `NEXT_PUBLIC_SITE_URL`           | `browser` | `template` | `runtime` | canonical URL and metadata      |

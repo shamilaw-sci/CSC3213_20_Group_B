@@ -18,8 +18,7 @@
     "GITHUB_INSTALLATION_ID": "110608346",
     "GITHUB_OWNER": "csc3213-2026-group-b",
     "GITHUB_PEOPLE_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
-    "GITHUB_PROJECTS_DATA_REPOSITORY": "data.scs.pdn.ac.lk",
-    "PORT": "3000"
+    "GITHUB_PROJECTS_DATA_REPOSITORY": "data.scs.pdn.ac.lk"
   },
   "secrets": {
     "required": ["GITHUB_PRIVATE_KEY", "X_INTERNAL_SECRET"]
