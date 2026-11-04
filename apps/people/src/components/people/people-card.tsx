@@ -218,7 +218,8 @@ function PersonTile({
           <p
             className={`mt-1 max-w-full truncate ${
               emphasizeMeta
-                ? 'text-foreground text-base font-semibold sm:text-lg'
+                ? `text-foreground group-hover:text-primary text-base
+                  font-semibold transition-colors sm:text-lg`
                 : 'text-muted-foreground text-xs'
             }`}
           >

@@ -24,7 +24,8 @@ test('keeps programme directory cards focused on student identity', () => {
 
   expect(markup).toContain('Sivothayan Sivasiva');
   expect(markup).toContain('S21513');
-  expect(markup).toContain('text-base font-semibold sm:text-lg');
+  expect(markup).toContain('group-hover:text-primary');
+  expect(markup).toMatch(/text-base\s+font-semibold/);
   expect(markup).not.toContain('Honours Undergraduate');
   expect(markup).toContain('View Profile');
   expect(markup).not.toContain('>View</span>');
