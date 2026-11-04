@@ -84,6 +84,21 @@ html {
   background-clip: padding-box;
 }
 
+/* Keep the desktop navigation position visible between scroll events. */
+#nd-sidebar [data-radix-scroll-area-viewport] {
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 55%, transparent)
+    transparent;
+  scrollbar-width: thin;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: block;
+}
+
+#nd-sidebar [data-orientation='vertical'] {
+  display: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
