@@ -51,7 +51,7 @@ Tests prove shared-schema acceptance and named-template HTML/text rendering.
 They stop before a real SMTP send. Provider authentication, sender
 verification, mailbox delivery, and reputation remain deployment checks.
 
-```powershell
+```bash
 bun --filter '@scs/mailer' lint
 bun --filter '@scs/mailer' typecheck
 bun --filter '@scs/mailer' typecheck:test

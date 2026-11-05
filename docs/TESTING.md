@@ -19,7 +19,7 @@ TypeScript and test TypeScript are checked separately where a workspace defines
 Run the smallest relevant test first. Then run only scripts declared by the
 workspace:
 
-```powershell
+```bash
 bun --filter '<workspace>' lint
 bun --filter '<workspace>' typecheck
 bun --filter '<workspace>' typecheck:test

@@ -85,7 +85,7 @@ Node 24-compatible `actions/checkout@v7` and `actions/cache@v6`.
 
 For repository policy failures:
 
-```powershell
+```bash
 bun run docs:check
 bun run test:repo
 bun run knip
@@ -94,7 +94,7 @@ bun run format:check
 
 For a complete CI-equivalent workspace gate:
 
-```powershell
+```bash
 bun install --frozen-lockfile
 bun run lint
 bun run typecheck
@@ -106,7 +106,7 @@ git diff --check
 
 Preview Turbo's task graph without executing it:
 
-```powershell
+```bash
 bunx turbo run lint typecheck typecheck:test test build --dry=json
 ```
 

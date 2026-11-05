@@ -64,7 +64,7 @@ Tests cover operation idempotency, concurrency, recovery, authorization,
 GitHub error classification, atomic commits, gateways, each domain operation
 and projection, repository behavior, and aggregate reconciliation.
 
-```powershell
+```bash
 bun --filter '@scs/github-app' lint
 bun --filter '@scs/github-app' typecheck
 bun --filter '@scs/github-app' typecheck:test

@@ -113,7 +113,7 @@ where PowerShell examples use `Set-Location`.
 
 From the repository root:
 
-```powershell
+```bash
 bun install --frozen-lockfile
 bun run perf:check
 bun run perf:verify-local
@@ -132,7 +132,7 @@ check, not part of ordinary unit tests or the smoke workflow.
 
 For a normal two-minute local smoke:
 
-```powershell
+```bash
 # Terminal one: loopback contract simulator; stop with Ctrl+C.
 bun run perf:fixture
 
@@ -145,7 +145,7 @@ Root wrappers execute in `packages/performance`. Relative settings and report
 paths therefore resolve from that workspace. Use absolute paths when useful.
 Example read-only open workload:
 
-```powershell
+```bash
 bun run perf:baseline --environment local --settings config/public-open.json
 ```
 
@@ -361,7 +361,7 @@ not native cache-enabled page-load benchmarks or HTTP capacity evidence.
 Use Ctrl+C, cancel the GitHub Actions job, or create a `CANCEL` file in the run
 directory. For either engine:
 
-```powershell
+```bash
 bun run --cwd packages/performance src/cli.ts cancel --run perf-YYYYMMDDHHMMSSmmm-xxxxxxxx
 ```
 
@@ -377,7 +377,7 @@ identical compatibility copy for existing consumers. The local Next.js report
 application reads `report.json` on the server and renders interactive Recharts
 views, structured assessment sections, and endpoint/phase tables with Tailwind:
 
-```powershell
+```bash
 bun --filter '@scs/performance-report' dev
 ```
 
@@ -385,7 +385,7 @@ Open `http://localhost:3000` and select a run. The viewer makes no provider or
 application API calls; it reads only local report artifacts. k6 runs also retain
 `plan.json`, `state.json` and the raw JSON metric stream locally for regeneration:
 
-```powershell
+```bash
 bun run perf:report --run perf-YYYYMMDDHHMMSSmmm-xxxxxxxx
 bun run perf:compare --baseline C:\evidence\baseline\report.json --current C:\evidence\current\report.json
 ```
@@ -430,7 +430,7 @@ overload; use Vercel observability for duration/errors and dependency logs for
 queue, GitHub and SMTP failures. The framework needs no cloud credentials.
 Export aggregate evidence for the run's full UTC window and attach it:
 
-```powershell
+```bash
 bun run perf:report --run perf-YYYYMMDDHHMMSSmmm-xxxxxxxx --telemetry C:\evidence\provider.local.json
 ```
 

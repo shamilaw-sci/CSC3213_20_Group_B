@@ -148,7 +148,7 @@ directly from `@scs/schemas`; do not create pass-through re-export modules.
 
 ## Verification
 
-```powershell
+```bash
 bun --filter '@scs/schemas' lint
 bun --filter '@scs/schemas' typecheck
 bun --filter '@scs/schemas' typecheck:test

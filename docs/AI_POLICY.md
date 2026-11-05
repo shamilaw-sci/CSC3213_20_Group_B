@@ -9,7 +9,7 @@ description: Proposed contributor guidance for responsible AI use, human review,
 - **Maintainer:** SCS PDN Monorepo maintainers
 - **Status:** Proposed — subject to maintainer approval
 - **Version:** 1.0 (draft)
-- **Last updated:** 2026-11-04
+- **Last updated:** 2026-11-05
 
 ## 1. Purpose
 
@@ -93,7 +93,7 @@ All changes must comply with root `AGENTS.md`, applicable workspace instructions
 
 For repository-wide changes, the existing root instructions identify these commands as the full gate, as applicable:
 
-```sh
+```bash
 bun run docs:check
 bun run test:repo
 bun run knip
@@ -151,6 +151,15 @@ Any proposed production feature that sends user information to an AI service, ma
 Coding agents must follow `AGENTS.md` and all applicable scoped instructions. Agent access should be limited to the task and necessary files, commands, network destinations, and credentials. Changes should remain reviewable, with a clear record of affected paths and validation.
 
 Agents must not silently alter unrelated work, suppress checks, rewrite Git history, modify separate repositories, or make unapproved production changes. Existing repository rules on branches, commits, and concurrent work remain in force.
+
+### Shared project skills
+
+AI coding agents **MUST** use the repository's approved, project-local skills
+recorded in `skills-lock.json` and restored into `.agents/skills/`. See
+[AI agent skills](AI_AGENT_SKILLS.md). Do not install global, user-level, or
+agent-specific skills. `AGENTS.md`, this policy, and repository security rules
+take precedence over any skill instruction. A skill is guidance, not
+authorization; introducing or updating one requires human review.
 
 ## 12. Enforcement, exceptions, and review
 

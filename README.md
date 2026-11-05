@@ -8,12 +8,32 @@ but every application and service remains independently deployable.
 
 Install the pinned Bun version shown in `.bun-version`, then run:
 
-```powershell
-git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
-Set-Location scs-pdn-monorepo
-bun install --frozen-lockfile
-bun --filter '@scs/web' dev
-```
+- Windows PowerShell:
+
+  ```powershell
+  git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+  Set-Location scs-pdn-monorepo
+  bun install --frozen-lockfile
+  bun --filter '@scs/web' dev
+  ```
+
+- macOS or Linux:
+
+  ```bash
+  git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+  cd scs-pdn-monorepo
+  bun install --frozen-lockfile
+  bun --filter '@scs/web' dev
+  ```
+
+- Windows Command Prompt:
+
+  ```cmd
+  git clone https://github.com/csc3213-2026-group-b/scs-pdn-monorepo.git
+  cd /d scs-pdn-monorepo
+  bun install --frozen-lockfile
+  bun --filter '@scs/web' dev
+  ```
 
 Open the URL printed by Next.js. Most public applications can start with their
 checked-in defaults. Portal, API, GitHub automation, and mail delivery need the
@@ -73,7 +93,7 @@ this repository.
 
 ## Daily Commands
 
-```powershell
+```bash
 # Run every declared development task.
 bun run dev
 
@@ -137,6 +157,21 @@ The [proposed AI usage policy](docs/AI_POLICY.md) covers human review,
 confidentiality, attribution, and disclosure for AI-assisted contributions.
 Automated contributors must also follow [AGENTS.md](AGENTS.md).
 
+## AI Agent Skills
+
+The repository shares one project-local skill set across compatible AI coding
+agents. Approved skills are recorded in `skills-lock.json` and restored from
+`.agents/skills/`, which is local and ignored. After cloning:
+
+```bash
+bunx skills experimental_install
+bunx skills list
+```
+
+Use `bunx`, not `npx`, and do not install skills globally or per agent. See
+[AI agent skills](docs/AI_AGENT_SKILLS.md) for the developer and maintainer
+workflow. Skills do not affect runtime behavior.
+
 ## Documentation
 
 | Guide                                                      | Read it when you need to…                                             |
@@ -168,6 +203,7 @@ Automated contributors must also follow [AGENTS.md](AGENTS.md).
 | [Testing](docs/TESTING.md)                                 | select and run the correct verification layers                        |
 | [Performance testing](docs/PERFORMANCE_TESTING.md)         | configure safe k6/browser workloads and interpret capacity evidence   |
 | [Dependency management](docs/DEPENDENCY_MANAGEMENT.md)     | add, update, audit, or remove dependencies                            |
+| [AI agent skills](docs/AI_AGENT_SKILLS.md)                 | manage shared, project-local skills for compatible coding agents      |
 | [Documentation authoring](docs/DOCUMENTATION_AUTHORING.md) | add or publish a handbook page                                        |
 | [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)     | configure local or deployed runtimes                                  |
 | [Continuous Integration](docs/CI.md)                       | understand required checks and merge behavior                         |

@@ -92,11 +92,15 @@ The root `bun.lock` is authoritative for every workspace. Repository links and
 source actions point to the
 [main repository](https://github.com/csc3213-2026-group-b/scs-pdn-monorepo).
 
+Contributors using a compatible AI coding agent can restore the shared project
+skills with `bunx skills experimental_install`. Do not install them globally or
+per agent. See [AI agent skills](AI_AGENT_SKILLS.md).
+
 ## Run a Workspace
 
 Use one filtered development task while learning the system:
 
-```powershell
+```bash
 bun --filter '@scs/web' dev
 bun --filter '@scs/docs' dev
 bun --filter '@scs/people' dev
@@ -152,7 +156,7 @@ use the most relevant policy or load check instead of inventing a behavior test.
 
 Root commands coordinate only tasks declared by workspaces:
 
-```powershell
+```bash
 bun run docs:check
 bun run test:repo
 bun run knip
@@ -167,7 +171,7 @@ git diff --check
 
 Run a focused task with a package filter:
 
-```powershell
+```bash
 bun --filter '@scs/api' lint
 bun --filter '@scs/api' typecheck
 bun --filter '@scs/api' typecheck:test
@@ -249,7 +253,7 @@ except the narrow compatibility exclusion recorded there.
 Before removing or ignoring a Knip finding, search dynamic imports, framework
 entry points, config loading, and deployment adapters. Run a workspace scan:
 
-```powershell
+```bash
 bun --filter '@scs/portal' knip
 bun --filter '@scs/portal' knip:depcheck
 ```
@@ -261,7 +265,7 @@ Files under `docs` use `UPPER_SNAKE_CASE.md`. Update a guide with the code when
 a command, route, environment variable, workflow, deployment step, or ownership
 boundary changes.
 
-```powershell
+```bash
 bun run docs:check
 bun run test:docs
 ```

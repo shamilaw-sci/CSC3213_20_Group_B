@@ -69,7 +69,7 @@ Docker is not part of the current build or deployment process.
 
 Complete root gate:
 
-```powershell
+```bash
 bun install --frozen-lockfile
 bun run docs:check
 bun run test:repo
@@ -101,7 +101,7 @@ routes, and the private calls to Mailer and GitHub App.
 
 From `services/api`:
 
-```powershell
+```bash
 bun run lint
 bun run typecheck
 bun run typecheck:test
@@ -141,7 +141,7 @@ Required production environment secrets:
 
 For inspection from `services/api`:
 
-```powershell
+```bash
 bunx wrangler d1 migrations list scs-portal-auth --remote
 ```
 
@@ -156,7 +156,7 @@ grant organization-wide administration for convenience.
 
 From `services/github-app`:
 
-```powershell
+```bash
 bun run lint
 bun run typecheck
 bun run typecheck:test
@@ -206,7 +206,7 @@ The Mailer validates an authenticated request before passing it to SMTP. It
 must have a unique `MAILER_API_KEY`, valid sender identity, and provider-specific
 SMTP settings.
 
-```powershell
+```bash
 bun --filter '@scs/mailer' lint
 bun --filter '@scs/mailer' typecheck
 bun --filter '@scs/mailer' typecheck:test

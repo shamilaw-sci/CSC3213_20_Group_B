@@ -41,7 +41,7 @@ original query string and never enables POST or another unsupported method.
 
 ## Verification
 
-```powershell
+```bash
 bun --filter '@scs/security' lint
 bun --filter '@scs/security' typecheck
 bun --filter '@scs/security' typecheck:test

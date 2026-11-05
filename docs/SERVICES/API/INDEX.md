@@ -52,7 +52,7 @@ boundary. `test/unit` covers auth configuration, session cookies, pagination,
 the GitHub App client, Mailer request construction, and public-project helpers.
 The workspace gate is:
 
-```powershell
+```bash
 bun --filter '@scs/api' lint
 bun --filter '@scs/api' typecheck
 bun --filter '@scs/api' typecheck:test

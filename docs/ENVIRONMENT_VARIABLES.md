@@ -187,7 +187,7 @@ development hosts; do not copy those values into Vercel Production or Preview.
 Copy only the templates needed for the workspaces you will run. Next.js apps
 use `.env.local`; Wrangler uses `.dev.vars`; Bun services use `.env`.
 
-```powershell
+```powershell tab="PowerShell" tab-group="terminal"
 Copy-Item apps/web/.env.example apps/web/.env.local
 Copy-Item apps/docs/.env.example apps/docs/.env.local
 Copy-Item apps/people/.env.example apps/people/.env.local
@@ -196,6 +196,28 @@ Copy-Item apps/portal/.env.example apps/portal/.env.local
 Copy-Item services/api/.dev.vars.example services/api/.dev.vars
 Copy-Item services/github-app/.env.example services/github-app/.env
 Copy-Item services/mailer/.env.example services/mailer/.env
+```
+
+```bash tab="Bash" tab-group="terminal"
+cp apps/web/.env.example apps/web/.env.local
+cp apps/docs/.env.example apps/docs/.env.local
+cp apps/people/.env.example apps/people/.env.local
+cp apps/projects/.env.example apps/projects/.env.local
+cp apps/portal/.env.example apps/portal/.env.local
+cp services/api/.dev.vars.example services/api/.dev.vars
+cp services/github-app/.env.example services/github-app/.env
+cp services/mailer/.env.example services/mailer/.env
+```
+
+```cmd tab="Command Prompt" tab-group="terminal"
+copy apps\web\.env.example apps\web\.env.local
+copy apps\docs\.env.example apps\docs\.env.local
+copy apps\people\.env.example apps\people\.env.local
+copy apps\projects\.env.example apps\projects\.env.local
+copy apps\portal\.env.example apps\portal\.env.local
+copy services\api\.dev.vars.example services\api\.dev.vars
+copy services\github-app\.env.example services\github-app\.env
+copy services\mailer\.env.example services\mailer\.env
 ```
 
 These destinations are ignored. Never reuse production secrets locally or
@@ -214,7 +236,7 @@ Non-secret API and GitHub App values, resource bindings, and required secret
 names are declared in their `wrangler.jsonc` files. Store values in the
 provider, never in Wrangler configuration:
 
-```powershell
+```powershell tab="PowerShell" tab-group="terminal"
 Set-Location services/api
 bunx wrangler secret put BETTER_AUTH_SECRET
 bunx wrangler secret put GOOGLE_CLIENT_SECRET
@@ -224,6 +246,34 @@ bunx wrangler secret put GITHUB_APP_INTERNAL_SECRET
 bunx wrangler secret put WEB_PROXY_INTERNAL_SECRET
 
 Set-Location ../github-app
+bunx wrangler secret put GITHUB_PRIVATE_KEY
+bunx wrangler secret put X_INTERNAL_SECRET
+```
+
+```bash tab="Bash" tab-group="terminal"
+cd services/api
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+bunx wrangler secret put GITHUB_CLIENT_SECRET
+bunx wrangler secret put MAILER_API_KEY
+bunx wrangler secret put GITHUB_APP_INTERNAL_SECRET
+bunx wrangler secret put WEB_PROXY_INTERNAL_SECRET
+
+cd ../github-app
+bunx wrangler secret put GITHUB_PRIVATE_KEY
+bunx wrangler secret put X_INTERNAL_SECRET
+```
+
+```cmd tab="Command Prompt" tab-group="terminal"
+cd services\api
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+bunx wrangler secret put GITHUB_CLIENT_SECRET
+bunx wrangler secret put MAILER_API_KEY
+bunx wrangler secret put GITHUB_APP_INTERNAL_SECRET
+bunx wrangler secret put WEB_PROXY_INTERNAL_SECRET
+
+cd ..\github-app
 bunx wrangler secret put GITHUB_PRIVATE_KEY
 bunx wrangler secret put X_INTERNAL_SECRET
 ```

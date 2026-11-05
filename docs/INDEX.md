@@ -39,6 +39,7 @@ Markdown files are readable on GitHub and published by the documentation site.
 - Working practices: [Testing](TESTING.md),
   [Performance testing](PERFORMANCE_TESTING.md),
   [Dependency management](DEPENDENCY_MANAGEMENT.md),
+  [AI agent skills](AI_AGENT_SKILLS.md),
   [Documentation authoring](DOCUMENTATION_AUTHORING.md), and
   [Troubleshooting](TROUBLESHOOTING.md).
 - Reference: [Route reference](ROUTE_REFERENCE.md) and

@@ -5,7 +5,8 @@ task take precedence, but repository safety and verification requirements still
 apply.
 
 For contributor guidance on AI-assisted work, see the
-[proposed AI usage policy](docs/AI_POLICY.md).
+[proposed AI usage policy](docs/AI_POLICY.md) and the
+[shared AI agent skills guide](docs/AI_AGENT_SKILLS.md).
 
 ## Before Editing
 
@@ -15,6 +16,9 @@ For contributor guidance on AI-assisted work, see the
    tests before changing behavior.
 4. Trace callers and consumers before removing an endpoint, export, dependency,
    environment variable, or compatibility path.
+5. Consult approved project skills in `.agents/skills/` when relevant. Skills
+   are guidance only: this file, the AI policy, and security rules take
+   precedence. Do not install skills globally or per agent.
 
 Do not modify the separate data or legacy source repositories unless the task
 explicitly includes them.
@@ -68,7 +72,7 @@ explicitly includes them.
 Run the narrowest relevant checks while iterating, then the owning workspace
 gate:
 
-```powershell
+```bash
 bun --filter '<workspace>' lint
 bun --filter '<workspace>' typecheck
 bun --filter '<workspace>' typecheck:test
@@ -79,7 +83,7 @@ bun --filter '<workspace>' build
 Only run tasks declared by that workspace. Before finalizing a shared or
 repository-wide change, run:
 
-```powershell
+```bash
 bun run docs:check
 bun run test:repo
 bun run knip

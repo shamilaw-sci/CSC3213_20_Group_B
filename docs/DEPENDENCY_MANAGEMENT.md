@@ -15,7 +15,7 @@ packages are referenced with `workspace:*`. Type-only and build/test tools
 belong in `devDependencies`. Keep versions aligned with equivalent workspaces
 unless a concrete compatibility constraint requires otherwise.
 
-```powershell
+```bash
 bun add --filter '@scs/example' package-name
 bun add --dev --filter '@scs/example' package-name
 ```
