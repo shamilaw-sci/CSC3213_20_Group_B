@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import {
   animated,
+  avatarQuota,
   formatFromMagic,
   getPublicAvatar,
   moderate,
@@ -63,35 +64,109 @@ describe('public avatar validation', () => {
     expect(animated(bytes, 'image/png')).toBe(true);
   });
 
+  test('reports fixed hourly quota windows without consuming attempts', () => {
+    const now = Date.UTC(2026, 10, 6, 12, 34, 56, 789);
+    const empty = avatarQuota(0, now);
+    expect(empty).toMatchObject({
+      limit: 6,
+      used: 0,
+      remaining: 6,
+      available: true,
+      windowStartedAt: '2026-11-06T12:00:00.000Z',
+      resetsAt: '2026-11-06T13:00:00.000Z',
+    });
+    expect(empty.retryAfterSeconds).toBe(1504);
+
+    expect(avatarQuota(2, now)).toMatchObject({
+      used: 2,
+      remaining: 4,
+      available: true,
+    });
+    expect(avatarQuota(6, now)).toMatchObject({
+      used: 6,
+      remaining: 0,
+      available: false,
+    });
+    expect(avatarQuota(9, now)).toMatchObject({
+      used: 6,
+      remaining: 0,
+      available: false,
+    });
+  });
+
   test('approves safe professional and casual portraits on the same visible criteria', () => {
-    expect(result('safe', 'portrait')).toEqual({ status: 'approved' });
+    expect(result('safe', 'portrait')).toMatchObject({
+      status: 'approved',
+      code: 'approved',
+      checks: [
+        { id: 'safety', status: 'passed' },
+        { id: 'portrait', status: 'passed' },
+      ],
+    });
   });
 
   test.each(['sexual', 'violence', 'hate', 'gesture'])(
     'rejects %s safety class',
     (kind) => {
-      expect(result(kind, 'portrait').status).toBe('rejected');
+      expect(result(kind, 'portrait')).toMatchObject({
+        status: 'rejected',
+        code: 'unsafe_content',
+        checks: [
+          { id: 'safety', status: 'failed' },
+          { id: 'portrait', status: 'passed' },
+        ],
+      });
     }
   );
 
   test.each(['blurry', 'obscured', 'non_portrait', 'meme_logo', 'multiple'])(
     'rejects %s suitability class',
     (kind) => {
-      expect(result('safe', kind).status).toBe('rejected');
+      expect(result('safe', kind)).toMatchObject({
+        status: 'rejected',
+        code: 'unsuitable_portrait',
+        checks: [
+          { id: 'safety', status: 'passed' },
+          { id: 'portrait', status: 'failed' },
+        ],
+      });
     }
   );
 
-  test('holds uncertain, low confidence, and malformed responses', () => {
-    expect(result('uncertain', 'portrait').status).toBe('review_required');
+  test('holds uncertain and low-confidence responses for review', () => {
+    expect(result('uncertain', 'portrait')).toMatchObject({
+      status: 'review_required',
+      code: 'review_required',
+      checks: [
+        { id: 'safety', status: 'needs_review' },
+        { id: 'portrait', status: 'passed' },
+      ],
+    });
     expect(
       moderationDecision({
         answers: {
           safety: { ...answer('safe', safety), confidence: 0.1 },
           suitability: answer('portrait', suitability),
         },
-      }).status
-    ).toBe('review_required');
-    expect(moderationDecision({ answers: {} }).status).toBe('review_required');
+      })
+    ).toMatchObject({
+      status: 'review_required',
+      checks: [
+        { id: 'safety', status: 'needs_review' },
+        { id: 'portrait', status: 'passed' },
+      ],
+    });
+  });
+
+  test('distinguishes malformed moderation responses from policy rejection', () => {
+    expect(moderationDecision({ answers: {} })).toMatchObject({
+      status: 'unavailable',
+      code: 'moderation_invalid_response',
+      checks: [
+        { id: 'safety', status: 'not_checked' },
+        { id: 'portrait', status: 'not_checked' },
+      ],
+    });
   });
 
   test('sends real JPEG bytes with the experimental image header', async () => {
@@ -113,31 +188,32 @@ describe('public avatar validation', () => {
     };
     expect(
       await moderate(jpeg, { TYPESAFE_API_KEY: 'test-key' } as Env, fetcher)
-    ).toEqual({ status: 'approved' });
+    ).toMatchObject({ status: 'approved', code: 'approved' });
     expect(sent).toBe(true);
   });
 
-  test('holds timeouts, HTTP errors, and missing credentials', async () => {
+  test('reports timeouts, HTTP errors, and missing credentials as unavailable', async () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
     const env = { TYPESAFE_API_KEY: 'test-key' } as Env;
     expect(
-      (
-        await moderate(jpeg, env, async () => {
-          throw new Error('timeout');
-        })
-      ).status
-    ).toBe('review_required');
+      await moderate(jpeg, env, async () => {
+        throw new Error('timeout');
+      })
+    ).toMatchObject({
+      status: 'unavailable',
+      code: 'moderation_unavailable',
+    });
     expect(
-      (
-        await moderate(
-          jpeg,
-          env,
-          async () => new Response(null, { status: 401 })
-        )
-      ).status
-    ).toBe('review_required');
-    expect((await moderate(jpeg, { TYPESAFE_API_KEY: '' } as Env)).status).toBe(
-      'review_required'
+      await moderate(jpeg, env, async () => new Response(null, { status: 401 }))
+    ).toMatchObject({
+      status: 'unavailable',
+      code: 'moderation_unavailable',
+    });
+    expect(await moderate(jpeg, { TYPESAFE_API_KEY: '' } as Env)).toMatchObject(
+      {
+        status: 'unavailable',
+        code: 'moderation_unavailable',
+      }
     );
   });
 

@@ -77,3 +77,23 @@ and optional library or URL icon. Known profiles do not use custom-link slots.
 Honours programme is required only for honours undergraduates. Special-degree
 subjects are restricted to honours students at the applicable levels; the
 schema is the authority for these rules, not UI inference.
+
+## Public avatars
+
+| Schema                               | Responsibility                                                    |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `PublicAvatarSchema`                 | Owner identity, published image URL, and optional upload quota.   |
+| `PublicAvatarQuotaSchema`            | Hourly attempt limit, usage, reset time, and availability.        |
+| `PublicAvatarUploadResultSchema`     | Published image metadata, moderation result, and refreshed quota. |
+| `PublicAvatarDeleteResultSchema`     | Removal outcome and refreshed quota.                              |
+| `PublicAvatarErrorSchema`            | Structured avatar error with optional quota and moderation data.  |
+| `PublicAvatarModerationSchema`       | Moderation status, stable code, message, and check outcomes.      |
+| `PublicAvatarModerationStatusSchema` | Approved, rejected, review-required, or unavailable status.       |
+| `PublicAvatarModerationCodeSchema`   | Stable moderation outcome code.                                   |
+| `PublicAvatarCheckSchema`            | One safety or portrait check and its outcome.                     |
+| `PublicAvatarCheckIdSchema`          | Safety or portrait check identifier.                              |
+| `PublicAvatarCheckStatusSchema`      | Passed, failed, needs-review, or not-checked outcome.             |
+
+Public avatar contracts describe the API-only picture shown in the People
+directory. They are separate from private account pictures and public profile
+pull requests.

@@ -1,4 +1,7 @@
+import type { PublicAvatarModeration, PublicAvatarQuota } from '@scs/schemas';
+
 import {
+  createCorsHeaders,
   createJsonErrorResponse,
   createJsonResponse,
   getRequestOrigin,
@@ -29,10 +32,11 @@ type Pointer = {
   updatedAt: string;
 };
 
-type Moderation =
-  | { status: 'approved' }
-  | { status: 'rejected'; reason: string }
-  | { status: 'review_required'; reason: string };
+type ChoiceAnswer = {
+  value: string;
+  confidence: number;
+  probability: number;
+};
 
 function bodyStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
   return new Blob([bytes.slice().buffer]).stream();
@@ -123,7 +127,44 @@ async function readPointer(
   return { value: value as Pointer, etag: object.etag };
 }
 
-export function moderationDecision(payload: unknown): Moderation {
+const NOT_CHECKED_CHECKS: PublicAvatarModeration['checks'] = [
+  { id: 'safety', status: 'not_checked' },
+  { id: 'portrait', status: 'not_checked' },
+];
+
+function unavailableModeration(
+  code: 'moderation_unavailable' | 'moderation_invalid_response',
+  message: string
+): PublicAvatarModeration {
+  return {
+    status: 'unavailable',
+    code,
+    message,
+    checks: NOT_CHECKED_CHECKS,
+  };
+}
+
+function checkOutcome(
+  answer: ChoiceAnswer,
+  positive: string
+): 'passed' | 'failed' | 'needs_review' {
+  if (
+    answer.value !== positive &&
+    answer.value !== 'uncertain' &&
+    answer.probability >= 0.85 &&
+    answer.confidence >= 0.5
+  )
+    return 'failed';
+  if (
+    answer.value === positive &&
+    answer.probability >= 0.9 &&
+    answer.confidence >= 0.65
+  )
+    return 'passed';
+  return 'needs_review';
+}
+
+export function moderationDecision(payload: unknown): PublicAvatarModeration {
   if (
     !payload ||
     typeof payload !== 'object' ||
@@ -131,12 +172,12 @@ export function moderationDecision(payload: unknown): Moderation {
     !payload.answers ||
     typeof payload.answers !== 'object'
   )
-    return {
-      status: 'review_required',
-      reason: 'Moderation response unavailable',
-    };
+    return unavailableModeration(
+      'moderation_invalid_response',
+      'Moderation response unavailable'
+    );
   const answers = payload.answers as Record<string, unknown>;
-  const choice = (name: string, options: string[]) => {
+  const choice = (name: string, options: string[]): ChoiceAnswer | null => {
     const answer = answers[name];
     if (!answer || typeof answer !== 'object') return null;
     const item = answer as Record<string, unknown>;
@@ -182,52 +223,53 @@ export function moderationDecision(payload: unknown): Moderation {
     'uncertain',
   ]);
   if (!safety || !suitability)
+    return unavailableModeration(
+      'moderation_invalid_response',
+      'Moderation response unavailable'
+    );
+  const checks: PublicAvatarModeration['checks'] = [
+    { id: 'safety', status: checkOutcome(safety, 'safe') },
+    { id: 'portrait', status: checkOutcome(suitability, 'portrait') },
+  ];
+  if (checks[0].status === 'failed')
+    return {
+      status: 'rejected',
+      code: 'unsafe_content',
+      message: 'Image does not meet public avatar safety rules',
+      checks,
+    };
+  if (checks[1].status === 'failed')
+    return {
+      status: 'rejected',
+      code: 'unsuitable_portrait',
+      message: 'Image is not a suitable single-person portrait',
+      checks,
+    };
+  if (checks.some((check) => check.status !== 'passed'))
     return {
       status: 'review_required',
-      reason: 'Moderation response unavailable',
+      code: 'review_required',
+      message: 'Image needs manual review',
+      checks,
     };
-  if (
-    safety.value !== 'safe' &&
-    safety.value !== 'uncertain' &&
-    safety.probability >= 0.85 &&
-    safety.confidence >= 0.5
-  )
-    return {
-      status: 'rejected',
-      reason: 'Image does not meet public avatar safety rules',
-    };
-  if (
-    suitability.value !== 'portrait' &&
-    suitability.value !== 'uncertain' &&
-    suitability.probability >= 0.85 &&
-    suitability.confidence >= 0.5
-  )
-    return {
-      status: 'rejected',
-      reason: 'Image is not a suitable single-person portrait',
-    };
-  if (
-    safety.value !== 'safe' ||
-    suitability.value !== 'portrait' ||
-    safety.probability < 0.9 ||
-    suitability.probability < 0.9 ||
-    safety.confidence < 0.65 ||
-    suitability.confidence < 0.65
-  )
-    return { status: 'review_required', reason: 'Image needs manual review' };
-  return { status: 'approved' };
+  return {
+    status: 'approved',
+    code: 'approved',
+    message: 'Picture approved',
+    checks,
+  };
 }
 
 export async function moderate(
   jpeg: Uint8Array,
   env: Env,
   fetcher: (url: string, init: RequestInit) => Promise<Response> = fetch
-): Promise<Moderation> {
+): Promise<PublicAvatarModeration> {
   if (!env.TYPESAFE_API_KEY)
-    return {
-      status: 'review_required',
-      reason: 'Moderation service unavailable',
-    };
+    return unavailableModeration(
+      'moderation_unavailable',
+      'Moderation service unavailable'
+    );
   const form = new FormData();
   form.append(
     'request',
@@ -289,16 +331,16 @@ export async function moderate(
       signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok)
-      return {
-        status: 'review_required',
-        reason: 'Moderation service unavailable',
-      };
+      return unavailableModeration(
+        'moderation_unavailable',
+        'Moderation service unavailable'
+      );
     return moderationDecision(await response.json());
   } catch {
-    return {
-      status: 'review_required',
-      reason: 'Moderation service unavailable',
-    };
+    return unavailableModeration(
+      'moderation_unavailable',
+      'Moderation service unavailable'
+    );
   }
 }
 
@@ -351,15 +393,91 @@ async function owner(
   return { username };
 }
 
-async function rateLimit(env: Env, username: string): Promise<boolean> {
-  const now = Date.now();
-  const start = Math.floor(now / HOUR) * HOUR;
+const HOUR_MS = HOUR;
+
+function currentWindowStart(now: number): number {
+  return Math.floor(now / HOUR_MS) * HOUR_MS;
+}
+
+export function avatarQuota(
+  attempts: number,
+  now = Date.now()
+): PublicAvatarQuota {
+  const windowStartedAt = currentWindowStart(now);
+  const resetsAt = windowStartedAt + HOUR_MS;
+  const normalizedAttempts = Number.isFinite(attempts)
+    ? Math.max(0, Math.trunc(attempts))
+    : 0;
+  const used = Math.min(normalizedAttempts, MAX_ATTEMPTS);
+  return {
+    limit: MAX_ATTEMPTS,
+    used,
+    remaining: MAX_ATTEMPTS - used,
+    windowStartedAt: new Date(windowStartedAt).toISOString(),
+    resetsAt: new Date(resetsAt).toISOString(),
+    retryAfterSeconds: Math.max(0, Math.ceil((resetsAt - now) / 1000)),
+    available: used < MAX_ATTEMPTS,
+  };
+}
+
+async function readAvatarQuota(
+  env: Env,
+  username: string,
+  now = Date.now()
+): Promise<PublicAvatarQuota> {
+  const windowStartedAt = currentWindowStart(now);
+  const row = await env.AUTH_DB.prepare(
+    `SELECT window_start AS windowStart, attempts FROM public_avatar_rate WHERE user_id = ?`
+  )
+    .bind(username)
+    .first<{ windowStart: number; attempts: number }>();
+  const attempts =
+    row && row.windowStart === windowStartedAt ? row.attempts : 0;
+  return avatarQuota(attempts, now);
+}
+
+async function consumeAttempt(
+  env: Env,
+  username: string,
+  now = Date.now()
+): Promise<PublicAvatarQuota | null> {
+  const windowStartedAt = currentWindowStart(now);
   const result = await env.AUTH_DB.prepare(
     `INSERT INTO public_avatar_rate (user_id, window_start, attempts) VALUES (?, ?, 1) ON CONFLICT(user_id) DO UPDATE SET window_start = excluded.window_start, attempts = CASE WHEN window_start = excluded.window_start THEN attempts + 1 ELSE 1 END RETURNING attempts`
   )
-    .bind(username, start)
+    .bind(username, windowStartedAt)
     .first<{ attempts: number }>();
-  return Boolean(result && result.attempts <= MAX_ATTEMPTS);
+  return result ? avatarQuota(result.attempts, now) : null;
+}
+
+interface AvatarErrorOptions {
+  code?: string;
+  moderation?: PublicAvatarModeration;
+  quota?: PublicAvatarQuota;
+}
+
+function avatarError(
+  message: string,
+  status: number,
+  origin: string,
+  options: AvatarErrorOptions = {}
+): Response {
+  const headers = createCorsHeaders(origin);
+  if (status === 429 && options.quota) {
+    headers['Retry-After'] = String(
+      Math.max(1, options.quota.retryAfterSeconds)
+    );
+    headers['Access-Control-Expose-Headers'] = 'Retry-After';
+  }
+  return Response.json(
+    {
+      error: message,
+      ...(options.code ? { code: options.code } : {}),
+      ...(options.quota ? { quota: options.quota } : {}),
+      ...(options.moderation ? { moderation: options.moderation } : {}),
+    },
+    { status, headers }
+  );
 }
 
 async function boundedMultipart(req: Request): Promise<FormData | null> {
@@ -397,24 +515,28 @@ export async function uploadMyAvatar(
   const origin = getRequestOrigin(req);
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
-  if (!(await rateLimit(env, identity.username)))
-    return createJsonErrorResponse('Avatar upload limit reached', 429, origin);
+  const quota = await consumeAttempt(env, identity.username);
+  if (!quota || !quota.available)
+    return avatarError('Avatar upload limit reached', 429, origin, {
+      code: 'avatar_rate_limited',
+      ...(quota ? { quota } : {}),
+    });
   // Snapshot the pointer before processing so a slower earlier upload cannot
   // overwrite a newer successful request after moderation.
   const before = await readPointer(env.PROFILE_PICTURES, identity.username);
   const contentLength = Number(req.headers.get('content-length'));
   if (contentLength > MAX_UPLOAD + 16_384)
-    return createJsonErrorResponse('Image exceeds 4 MiB', 413, origin);
+    return avatarError('Image exceeds 4 MiB', 413, origin, { quota });
   if (!req.headers.get('content-type')?.startsWith('multipart/form-data'))
-    return createJsonErrorResponse('Multipart image required', 415, origin);
+    return avatarError('Multipart image required', 415, origin, { quota });
   let form: FormData;
   try {
     const parsed = await boundedMultipart(req);
     if (!parsed)
-      return createJsonErrorResponse('Image exceeds 4 MiB', 413, origin);
+      return avatarError('Image exceeds 4 MiB', 413, origin, { quota });
     form = parsed;
   } catch {
-    return createJsonErrorResponse('Invalid multipart upload', 400, origin);
+    return avatarError('Invalid multipart upload', 400, origin, { quota });
   }
   const file = form.get('image');
   if (
@@ -422,21 +544,17 @@ export async function uploadMyAvatar(
     form.getAll('image').length !== 1 ||
     [...form.keys()].some((key) => key !== 'image')
   )
-    return createJsonErrorResponse('One image is required', 400, origin);
+    return avatarError('One image is required', 400, origin, { quota });
   if (file.size === 0 || file.size > MAX_UPLOAD)
-    return createJsonErrorResponse(
-      'Image exceeds 4 MiB or is empty',
-      413,
-      origin
-    );
+    return avatarError('Image exceeds 4 MiB or is empty', 413, origin, {
+      quota,
+    });
   const bytes = new Uint8Array(await file.arrayBuffer());
   const format = formatFromMagic(bytes);
   if (!format || file.type !== format || animated(bytes, format))
-    return createJsonErrorResponse(
-      'Unsupported, animated, or spoofed image',
-      415,
-      origin
-    );
+    return avatarError('Unsupported, animated, or spoofed image', 415, origin, {
+      quota,
+    });
   let webp: Uint8Array;
   let jpeg: Uint8Array;
   try {
@@ -450,7 +568,7 @@ export async function uploadMyAvatar(
       info.height > MAX_SIDE ||
       info.width * info.height > MAX_PIXELS
     )
-      return createJsonErrorResponse('Invalid image dimensions', 422, origin);
+      return avatarError('Invalid image dimensions', 422, origin, { quota });
     const transform = { width: 512, height: 512, fit: 'cover' as const };
     const webpResponse = (
       await env.IMAGES.input(bodyStream(bytes))
@@ -467,15 +585,24 @@ export async function uploadMyAvatar(
     if (!webp.length || !jpeg.length)
       throw new Error('Empty transformed image');
   } catch {
-    return createJsonErrorResponse('Image could not be decoded', 422, origin);
+    return avatarError('Image could not be decoded', 422, origin, { quota });
   }
   const decision = await moderate(jpeg, env);
   if (decision.status !== 'approved')
-    return createJsonErrorResponse(
-      decision.reason,
+    return avatarError(
+      decision.message,
       decision.status === 'rejected' ? 422 : 503,
       origin,
-      decision.status
+      {
+        code:
+          decision.status === 'rejected'
+            ? 'avatar_moderation_rejected'
+            : decision.status === 'unavailable'
+              ? 'avatar_moderation_unavailable'
+              : 'avatar_moderation_review_required',
+        moderation: decision,
+        quota,
+      }
     );
   const hash = [
     ...new Uint8Array(
@@ -508,17 +635,17 @@ export async function uploadMyAvatar(
     }
   );
   if (!stored)
-    return createJsonErrorResponse(
-      'Avatar changed concurrently; retry',
-      409,
-      origin
-    );
+    return avatarError('Avatar changed concurrently; retry', 409, origin, {
+      quota,
+    });
   return createJsonResponse(
     {
       url: imageUrl(req, identity.username, hash),
       sha256: hash,
       size: webp.length,
       updatedAt: pointer.updatedAt,
+      moderation: decision,
+      quota,
     },
     200,
     origin
@@ -532,9 +659,16 @@ export async function deleteMyAvatar(
   const origin = getRequestOrigin(req);
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
+  const quota = await readAvatarQuota(env, identity.username).catch(
+    () => undefined
+  );
   const before = await readPointer(env.PROFILE_PICTURES, identity.username);
   if (!before.value?.key)
-    return createJsonResponse({ deleted: false }, 200, origin);
+    return createJsonResponse(
+      { deleted: false, ...(quota ? { quota } : {}) },
+      200,
+      origin
+    );
   const tombstone: Pointer = {
     version: 1,
     key: null,
@@ -552,25 +686,31 @@ export async function deleteMyAvatar(
     }
   );
   if (!stored)
-    return createJsonErrorResponse(
-      'Avatar changed concurrently; retry',
-      409,
-      origin
-    );
-  return createJsonResponse({ deleted: true }, 200, origin);
+    return avatarError('Avatar changed concurrently; retry', 409, origin, {
+      ...(quota ? { quota } : {}),
+    });
+  return createJsonResponse(
+    { deleted: true, ...(quota ? { quota } : {}) },
+    200,
+    origin
+  );
 }
 
 export async function getMyAvatar(req: Request, env: Env): Promise<Response> {
   const origin = getRequestOrigin(req);
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
-  const current = await readPointer(env.PROFILE_PICTURES, identity.username);
+  const [current, quota] = await Promise.all([
+    readPointer(env.PROFILE_PICTURES, identity.username),
+    readAvatarQuota(env, identity.username).catch(() => undefined),
+  ]);
   return createJsonResponse(
     {
       username: identity.username,
       url: current.value?.sha256
         ? imageUrl(req, identity.username, current.value.sha256)
         : null,
+      ...(quota ? { quota } : {}),
     },
     200,
     origin

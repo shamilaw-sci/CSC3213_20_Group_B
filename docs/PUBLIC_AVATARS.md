@@ -38,6 +38,18 @@ unreferenced private object, which must be cleaned up only after checking all
 current pointers. Pointer changes use R2 ETag conditional writes and concurrent
 updates return 409. Uploads are limited to six attempts per owner per hour.
 
+The authenticated `GET /api/people/v2/avatars/me` response includes the current
+canonical identity, published URL, and a `quota` object with `limit`, `used`,
+`remaining`, `windowStartedAt`, `resetsAt`, `retryAfterSeconds`, and `available`.
+Reading the quota never consumes an attempt. `POST` consumes one attempt before
+it parses or validates the multipart body, so malformed files, oversize images,
+validation failures, moderation rejections, and service failures all count
+toward the hourly window. Successful uploads, validation errors, moderation
+errors, and 429 responses include the refreshed quota; 429 also sets
+`Retry-After`. `DELETE` does not consume an attempt. Windows start on fixed UTC
+hour boundaries. Stored attempts are capped at six when reported so the UI never
+shows more than the permitted limit.
+
 The Worker verifies magic bytes, checks for PNG and WebP animation, uses the
 Images binding to decode, bounds dimensions and pixel count, and re-encodes a
 512 by 512 WebP without source metadata. It sends a JPEG rendering of the same
@@ -45,10 +57,17 @@ image to Jev `jev-latest` with `TypeSafe-Danger-Zone-Images: true`. Separate
 Choice questions classify safety and single-person portrait suitability in one
 request. A high-confidence unsafe or unsuitable choice is rejected; uncertain,
 low-confidence, malformed, timed-out, or unavailable moderation is held and
-never published. No review queue exists yet, so `review_required` asks the user
-to retry or contact an administrator. Jev image support is experimental; its
-accuracy, latency, and production reliability require live evaluation before
-opening uploads widely.
+never published. The API returns structured moderation metadata with a `status`
+of `approved`, `rejected`, `review_required`, or `unavailable`, a stable code,
+a user-facing message, and per-check outcomes for safety and portrait
+suitability. It does not expose raw model probabilities, confidence values, or
+provider payloads. Policy rejections use HTTP 422. Review-required and
+unavailable checks use HTTP 503; `unavailable` identifies a technical failure
+such as a timeout, missing credential, HTTP error, or malformed provider
+response and is not a policy rejection. No review queue exists yet, so
+`review_required` asks the user to retry or contact an administrator. Jev image
+support is experimental; its accuracy, latency, and production reliability
+require live evaluation before opening uploads widely.
 The official JavaScript SDK documents Node.js 22+ and optional zstd compression.
 The Worker therefore uses the documented typed multipart HTTP endpoint directly,
 without a Node-specific dependency or a text-only gateway.

@@ -19,6 +19,7 @@ export * from '#schemas/people/identifiers/academic-username.schema';
 export * from '#schemas/people/identifiers/s-number.schema';
 export * from '#schemas/people/people-search.schema';
 export * from '#schemas/people/person.schema';
+export * from '#schemas/people/public-avatar.schema';
 export * from '#schemas/people/social-links.schema';
 export * from '#schemas/people/staff/academic-support/academic-support-position.schema';
 export * from '#schemas/people/staff/academic-support/academic-support-staff.schema';

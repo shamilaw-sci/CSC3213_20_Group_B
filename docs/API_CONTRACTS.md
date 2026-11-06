@@ -177,14 +177,22 @@ the current permission record so blacklisting and role changes take effect.
 
 Public avatar calls are separate from GitHub-backed profile mutations:
 
-| Method           | Route                                           | Purpose                                    |
-| ---------------- | ----------------------------------------------- | ------------------------------------------ |
-| `GET`            | `/api/people/v2/avatars/me`                     | current owner's identity and avatar URL    |
-| `POST`, `DELETE` | `/api/people/v2/avatars/me`                     | upload or remove the current owner's image |
-| `GET`, `HEAD`    | `/api/people/v2/avatars/:username`              | resolve the current approved image         |
-| `GET`, `HEAD`    | `/api/people/v2/avatars/:username/:sha256.webp` | read only the currently approved version   |
+| Method           | Route                                           | Purpose                                          |
+| ---------------- | ----------------------------------------------- | ------------------------------------------------ |
+| `GET`            | `/api/people/v2/avatars/me`                     | owner identity, avatar URL, and upload quota     |
+| `POST`, `DELETE` | `/api/people/v2/avatars/me`                     | upload (consumes an attempt) or remove the image |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username`              | resolve the current approved image               |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username/:sha256.webp` | read only the currently approved version         |
 
-See [public avatars](PUBLIC_AVATARS.md) for validation, moderation, and cache behavior.
+The authenticated `GET` is read-only and does not consume an upload attempt.
+`POST` consumes one attempt before validation and moderation, and returns the
+refreshed quota with success or failure responses. Rate-limited responses use
+HTTP 429 with `Retry-After` and the current quota. Moderation failures include a
+structured `moderation` object plus a distinct error code so Portal can separate
+policy rejections from unavailable analysis.
+
+See [public avatars](PUBLIC_AVATARS.md) for validation, moderation, quota, and
+cache behavior.
 
 Admin profile suffixes include `/schema`, `/pr`, and `/student-placement`.
 Unknown suffixes are rejected rather than interpreted as repository paths.
