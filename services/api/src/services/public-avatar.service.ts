@@ -548,10 +548,18 @@ async function deleteReviewObject(
   env: Env,
   review: PublicAvatarReviewRecord
 ): Promise<void> {
-  const current = await readPointer(env.PROFILE_PICTURES, review.username);
-  if (current.value?.sha256 === review.sha256) return;
-  if (await hasPendingAvatarObject(env, review.username, review.sha256)) return;
-  await env.PROFILE_PICTURES.delete(review.objectKey);
+  try {
+    const current = await readPointer(env.PROFILE_PICTURES, review.username);
+    if (current.value?.sha256 === review.sha256) return;
+    if (await hasPendingAvatarObject(env, review.username, review.sha256))
+      return;
+    await env.PROFILE_PICTURES.delete(review.objectKey);
+  } catch (error) {
+    // The review row is authoritative. A failed cleanup must not turn an
+    // already-recorded decision into an error response; the private object
+    // simply remains unreferenced in R2.
+    console.error('Failed to delete public avatar review object:', error);
+  }
 }
 
 const HOUR_MS = HOUR;
@@ -761,6 +769,7 @@ export async function uploadMyAvatar(
         sha256: hash,
       });
       const reviewId = crypto.randomUUID();
+      const submittedAt = Date.now();
       await createAvatarReview(env, {
         id: reviewId,
         username: identity.username,
@@ -768,7 +777,7 @@ export async function uploadMyAvatar(
         objectKey: key,
         size: webp.length,
         moderation: decision,
-        submittedAt: Date.now(),
+        submittedAt,
       });
       await recordOwnerAudit(env, {
         email: identity.email,
@@ -778,6 +787,16 @@ export async function uploadMyAvatar(
         sha256: hash,
         reviewId,
         note: decision.message,
+      });
+      // Keep at most one pending candidate per member. The review row exists
+      // first so its shared content-addressed object is never deleted as part
+      // of cancelling an older review with the same bytes.
+      await cancelPendingForUser(env, {
+        username: identity.username,
+        actorEmail: identity.email,
+        actorKind: 'owner',
+        note: 'Superseded by a newer picture awaiting review.',
+        submittedBefore: submittedAt,
       });
       return avatarError(
         'Image needs manual review. An administrator can approve it.',
@@ -1281,30 +1300,46 @@ export async function decideAdminAvatarReview(
       }))
     )
       return createJsonErrorResponse('Review already decided', 409, origin);
-    const before = await readPointer(env.PROFILE_PICTURES, review.username);
-    const pointer: Pointer = {
-      version: 1,
-      key: review.objectKey,
-      sha256: review.sha256,
-      contentType: 'image/webp',
-      size: review.size,
-      updatedAt: new Date(reviewedAt).toISOString(),
-    };
-    const stored = await env.PROFILE_PICTURES.put(
-      pointerKey(review.username),
-      JSON.stringify(pointer),
-      {
-        onlyIf: before.etag
-          ? { etagMatches: before.etag }
-          : { etagDoesNotMatch: '*' },
-        httpMetadata: { contentType: 'application/json' },
+    let previousSha256: string | null = null;
+    try {
+      if (!(await env.PROFILE_PICTURES.head(review.objectKey)))
+        throw new Error('Review image is missing');
+      const before = await readPointer(env.PROFILE_PICTURES, review.username);
+      previousSha256 = before.value?.sha256 ?? null;
+      const pointer: Pointer = {
+        version: 1,
+        key: review.objectKey,
+        sha256: review.sha256,
+        contentType: 'image/webp',
+        size: review.size,
+        updatedAt: new Date(reviewedAt).toISOString(),
+      };
+      const stored = await env.PROFILE_PICTURES.put(
+        pointerKey(review.username),
+        JSON.stringify(pointer),
+        {
+          onlyIf: before.etag
+            ? { etagMatches: before.etag }
+            : { etagDoesNotMatch: '*' },
+          httpMetadata: { contentType: 'application/json' },
+        }
+      );
+      if (!stored) {
+        await reopenAvatarReview(env, id, reviewedAt);
+        return createJsonErrorResponse(
+          'Avatar changed concurrently; retry',
+          409,
+          origin
+        );
       }
-    );
-    if (!stored) {
+    } catch {
+      // Publishing failed after the review was claimed. Return it to the queue
+      // so the administrator can retry or reject it instead of publishing a
+      // pointer to a missing or unwritable object.
       await reopenAvatarReview(env, id, reviewedAt);
       return createJsonErrorResponse(
-        'Avatar changed concurrently; retry',
-        409,
+        'Could not publish the reviewed picture; reject it instead',
+        502,
         origin
       );
     }
@@ -1320,7 +1355,7 @@ export async function decideAdminAvatarReview(
       actorEmail: admin.email,
       actorKind: 'admin',
       action: PUBLIC_AVATAR_AUDIT_ACTION.REVIEW_APPROVED,
-      previousSha256: before.value?.sha256 ?? null,
+      previousSha256,
       sha256: review.sha256,
       reviewId: review.id,
       note,

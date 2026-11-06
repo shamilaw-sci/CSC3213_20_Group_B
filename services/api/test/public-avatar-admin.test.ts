@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 
 import type { PublicAvatarModeration } from '@scs/schemas';
 
@@ -7,6 +7,7 @@ import {
   createAvatarReview,
   getAvatarReview,
   listAvatarAudit,
+  listPendingAvatarReviewsForUser,
 } from '@/repositories/public-avatar.repo';
 import {
   ACCESS_LEVEL,
@@ -100,6 +101,125 @@ const MODERATION: PublicAvatarModeration = {
     { id: 'portrait', status: 'passed' },
   ],
 };
+
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
+
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+
+function pngBytes(fill: number): Uint8Array {
+  return new Uint8Array([
+    ...PNG_SIGNATURE,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    fill,
+    fill,
+    fill,
+    fill,
+  ]);
+}
+
+function createImagesBinding(): ImagesBinding {
+  let revision = 0;
+  function output() {
+    revision += 1;
+    const bytes = new Uint8Array([revision, revision, revision]);
+    return Promise.resolve({
+      response: () =>
+        new Response(bytes, { headers: { 'Content-Type': 'image/jpeg' } }),
+    });
+  }
+  return {
+    info: async () => ({
+      format: 'image/png',
+      width: 512,
+      height: 512,
+      fileSize: 20,
+    }),
+    input: () => ({ transform: () => ({ output }) }),
+  } as unknown as ImagesBinding;
+}
+
+function answer(value: string, options: string[]) {
+  return {
+    type: 'choice',
+    choice: value,
+    confidence: 0.9,
+    probabilities: Object.fromEntries(
+      options.map((option) => [option, option === value ? 0.95 : 0.01])
+    ),
+  };
+}
+
+function stubReviewModerationFetch() {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (url.includes('/people/v2/users/'))
+      return Response.json({ email: MEMBER_EMAIL });
+    if (url.startsWith('https://api.typesafe.ai/'))
+      return Response.json({
+        answers: {
+          safety: answer('uncertain', [
+            'safe',
+            'sexual',
+            'violence',
+            'hate',
+            'gesture',
+            'uncertain',
+          ]),
+          suitability: answer('portrait', [
+            'portrait',
+            'blurry',
+            'obscured',
+            'non_portrait',
+            'meme_logo',
+            'multiple',
+            'uncertain',
+          ]),
+        },
+      });
+    throw new Error(`Unexpected fetch: ${url}`);
+  }) as typeof fetch;
+}
+
+async function uploadAvatar(
+  env: Env,
+  cookie: string,
+  bytes: Uint8Array
+): Promise<Response> {
+  const form = new FormData();
+  form.append(
+    'image',
+    new File([bytes.slice().buffer], 'avatar.png', { type: 'image/png' })
+  );
+  return invokeWorker(
+    '/api/people/v2/avatars/me',
+    {
+      method: 'POST',
+      headers: {
+        Origin: ALLOWED_ORIGIN,
+        'X-Client-Id': 'portal',
+        Cookie: cookie,
+      },
+      body: form,
+    },
+    env
+  );
+}
 
 async function createAdminEnv(): Promise<{
   env: Env;
@@ -367,6 +487,107 @@ describe('admin public avatar controls', () => {
     expect(await getAvatarReview(env, newerId)).toMatchObject({
       status: 'pending',
     });
+  });
+
+  test('cancels every older pending review without a page limit', async () => {
+    const { env } = await createAdminEnv();
+    const key = `avatars/${USERNAME}/${HASH}.webp`;
+    const ids: string[] = [];
+    for (let index = 0; index < 60; index += 1) {
+      const id = crypto.randomUUID();
+      ids.push(id);
+      await createAvatarReview(env, {
+        id,
+        username: USERNAME,
+        sha256: HASH,
+        objectKey: key,
+        size: 3,
+        moderation: MODERATION,
+        submittedAt: index + 1,
+      });
+    }
+
+    const cancelled = await cancelPendingAvatarReviews(env, {
+      username: USERNAME,
+      reviewedBy: ADMIN_EMAIL,
+      reviewedAt: 1_000,
+      note: 'Superseded by a newer picture.',
+      submittedBefore: 1_000,
+    });
+
+    expect(cancelled).toHaveLength(60);
+    expect(new Set(cancelled.map((review) => review.id))).toEqual(new Set(ids));
+  });
+
+  test('keeps a review pending when its stored picture is missing', async () => {
+    const { env } = await createAdminEnv();
+    const reviewId = crypto.randomUUID();
+    await createAvatarReview(env, {
+      id: reviewId,
+      username: USERNAME,
+      sha256: HASH,
+      objectKey: `avatars/${USERNAME}/${HASH}.webp`,
+      size: 3,
+      moderation: MODERATION,
+      submittedAt: Date.now(),
+    });
+    const cookie = await adminCookie(env);
+
+    const response = await invokeWorker(
+      `/api/admin/avatar-reviews/${reviewId}`,
+      {
+        method: 'POST',
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'approve' }),
+      },
+      env
+    );
+
+    expect(response.status).toBe(502);
+    expect(await getAvatarReview(env, reviewId)).toMatchObject({
+      status: 'pending',
+      reviewedBy: null,
+    });
+  });
+
+  test('queues a review-required upload and supersedes the older candidate', async () => {
+    const bucket = createMemoryBucket();
+    const env = createTestEnv({
+      PROFILE_PICTURES: bucket,
+      IMAGES: createImagesBinding(),
+    });
+    await setUserPermission(
+      MEMBER_EMAIL,
+      { role: APP_ROLE.STUDENT, accessLevel: ACCESS_LEVEL.NONE },
+      env
+    );
+    const cookie = await createTestSessionCookie(env, MEMBER_EMAIL);
+    stubReviewModerationFetch();
+
+    const first = await uploadAvatar(env, cookie, pngBytes(1));
+    expect(first.status).toBe(503);
+    expect(await first.json()).toMatchObject({
+      code: 'avatar_moderation_review_required',
+    });
+    const [firstReview] = await listPendingAvatarReviewsForUser(env, USERNAME);
+    expect(firstReview).toBeDefined();
+
+    const second = await uploadAvatar(env, cookie, pngBytes(2));
+    expect(second.status).toBe(503);
+    const pending = await listPendingAvatarReviewsForUser(env, USERNAME);
+    expect(pending).toHaveLength(1);
+    expect(pending[0].id).not.toBe(firstReview!.id);
+    expect(await getAvatarReview(env, firstReview!.id)).toMatchObject({
+      status: 'rejected',
+      reviewedBy: MEMBER_EMAIL,
+    });
+    expect(bucket.objects.has(firstReview!.objectKey)).toBe(false);
+    expect(bucket.objects.has(pending[0].objectKey)).toBe(true);
   });
 
   test('rejects a review without publishing the picture', async () => {

@@ -296,23 +296,24 @@ export async function cancelPendingAvatarReviews(
     submittedBefore: number;
   }
 ): Promise<PublicAvatarReviewRecord[]> {
-  const pending = await listPendingAvatarReviewsForUser(env, input.username, {
-    submittedBefore: input.submittedBefore,
-  });
-  const cancelled: PublicAvatarReviewRecord[] = [];
-  for (const review of pending) {
-    // Only audit reviews this call actually transitioned, so a decision that
-    // raced ahead of us is never attributed to the wrong actor.
-    const result = await env.AUTH_DB.prepare(
-      `UPDATE public_avatar_review
-       SET status = 'rejected', reviewed_at = ?, reviewed_by = ?, review_note = ?
-       WHERE id = ? AND status = 'pending'`
+  // One statement both cancels and returns exactly the rows this call
+  // transitioned. This avoids a page-sized limit leaving stale pending rows and
+  // never re-audits a decision that raced ahead of us.
+  const rows = await env.AUTH_DB.prepare(
+    `UPDATE public_avatar_review
+     SET status = 'rejected', reviewed_at = ?, reviewed_by = ?, review_note = ?
+     WHERE username = ? AND status = 'pending' AND submitted_at < ?
+     RETURNING ${REVIEW_COLUMNS}`
+  )
+    .bind(
+      input.reviewedAt,
+      input.reviewedBy,
+      input.note,
+      input.username,
+      input.submittedBefore
     )
-      .bind(input.reviewedAt, input.reviewedBy, input.note, review.id)
-      .run();
-    if ((result.meta?.changes ?? 0) > 0) cancelled.push(review);
-  }
-  return cancelled;
+    .all<ReviewRow>();
+  return rows.results.map(toReview);
 }
 
 export async function hasPendingAvatarObject(

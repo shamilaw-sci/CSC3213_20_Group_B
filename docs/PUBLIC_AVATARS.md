@@ -83,10 +83,18 @@ administrator decides it. Super administrators can:
 - remove a published picture at `DELETE /api/admin/users/:email/avatar`.
 
 Approval publishes the stored pending object through the same R2 pointer rule as
-an automatic approval. Rejection keeps the current published picture in place.
-Both decisions store `reviewed_by`, `reviewed_at`, and an optional note on the
-review row. Portal exposes the queue at `/admin/avatar-reviews` and the same
-controls on each admin user page.
+an automatic approval. If the object is missing or the pointer cannot be written,
+the review returns to `pending` so the administrator can retry or reject it;
+approval never publishes a pointer to an absent object. Rejection keeps the
+current published picture in place. Both decisions store `reviewed_by`,
+`reviewed_at`, and an optional note on the review row. Portal exposes the queue at
+`/admin/avatar-reviews` and the same controls on each admin user page.
+
+A member has at most one pending candidate per username: a newer upload that also
+needs review supersedes older pending candidates, and a newer approved upload
+supersedes them as well. Only candidates submitted before the superseding request
+started are cancelled, so a concurrently completing newer upload is never
+discarded.
 
 Every owner upload, owner removal, administrator removal, review submission, and
 review decision appends an immutable row to `public_avatar_audit`. Each row
@@ -94,7 +102,8 @@ records the target username, acting owner or administrator email, actor kind,
 action, previous and resulting SHA-256 values, review identifier, optional note,
 and timestamp. The admin user page reads the bounded history so an administrator
 can see who allowed or removed a picture. Superseded pending reviews are marked
-`rejected` with an audit note rather than left in the queue.
+`rejected` with an audit note rather than left in the queue. Private objects are
+deleted on a best-effort basis once no pointer or pending review references them.
 
 Jev image support is experimental; its accuracy, latency, and production
 reliability require live evaluation before opening uploads widely.
