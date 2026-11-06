@@ -20,6 +20,7 @@ administrative surface.
 | `/user/proxy`              | delegated profile-management settings               |
 | `/academic/courses/*`      | course and offering editing                         |
 | `/admin/users/*`           | user inspection and administration                  |
+| `/admin/avatar-reviews`    | pending public-picture moderation                   |
 | `/admin/projects/*`        | administrative project editing                      |
 | `/admin/proxies`           | proxy relationship administration                   |
 | `/admin/academic-rules`    | student placement metadata                          |

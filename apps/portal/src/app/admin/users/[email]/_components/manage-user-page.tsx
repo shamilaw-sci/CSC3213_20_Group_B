@@ -12,6 +12,7 @@ import { Separator } from '@scs/ui/components/separator';
 import { Calendar, IdCard, Mail, Shield, UserCheck, UserX } from 'lucide-react';
 import Link from 'next/link';
 
+import { AdminUserAvatarCard } from '@/app/admin/users/[email]/_components/admin-user-avatar-card';
 import { PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import { emailPathSegment } from '@/lib/email';
@@ -236,6 +237,8 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
           )}
         </CardContent>
       </Card>
+
+      <AdminUserAvatarCard email={user.email} name={user.name} />
     </PageShell>
   );
 }

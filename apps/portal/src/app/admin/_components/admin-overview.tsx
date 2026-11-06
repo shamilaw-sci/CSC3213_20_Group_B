@@ -1,4 +1,10 @@
-import { FolderKanban, GraduationCap, Network, Users } from 'lucide-react';
+import {
+  FolderKanban,
+  GraduationCap,
+  Images,
+  Network,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
@@ -10,6 +16,13 @@ const sections = [
     href: '/admin/users',
     description: 'Manage user accounts, roles, and account status.',
     icon: Users,
+  },
+  {
+    title: 'Avatar Reviews',
+    href: '/admin/avatar-reviews',
+    description:
+      'Approve or reject public pictures that need a manual moderation decision.',
+    icon: Images,
   },
   {
     title: 'Personal-Site Redirects',

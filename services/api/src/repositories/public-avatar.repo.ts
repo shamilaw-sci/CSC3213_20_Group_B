@@ -1,0 +1,375 @@
+import type { PublicAvatarModeration } from '@scs/schemas';
+
+import type { Env } from '@/types/env';
+
+type PublicAvatarReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export const PUBLIC_AVATAR_AUDIT_ACTION = {
+  UPLOAD: 'upload',
+  DELETE: 'delete',
+  ADMIN_DELETE: 'admin_delete',
+  REVIEW_SUBMITTED: 'review_submitted',
+  REVIEW_APPROVED: 'review_approved',
+  REVIEW_REJECTED: 'review_rejected',
+} as const;
+
+export type PublicAvatarAuditAction =
+  (typeof PUBLIC_AVATAR_AUDIT_ACTION)[keyof typeof PUBLIC_AVATAR_AUDIT_ACTION];
+
+type PublicAvatarAuditActorKind = 'owner' | 'admin';
+
+export interface PublicAvatarReviewRecord {
+  id: string;
+  username: string;
+  sha256: string;
+  objectKey: string;
+  size: number;
+  moderation: PublicAvatarModeration | null;
+  status: PublicAvatarReviewStatus;
+  submittedAt: number;
+  reviewedAt: number | null;
+  reviewedBy: string | null;
+  note: string | null;
+}
+
+export interface PublicAvatarAuditRecord {
+  id: string;
+  username: string;
+  actorEmail: string;
+  actorKind: PublicAvatarAuditActorKind;
+  action: PublicAvatarAuditAction;
+  previousSha256: string | null;
+  sha256: string | null;
+  reviewId: string | null;
+  note: string | null;
+  createdAt: number;
+}
+
+export interface PublicAvatarReviewCursor {
+  submittedAt: number;
+  id: string;
+}
+
+export interface PublicAvatarReviewPage {
+  items: PublicAvatarReviewRecord[];
+  nextCursor: PublicAvatarReviewCursor | null;
+}
+
+interface ReviewRow {
+  id: string;
+  username: string;
+  sha256: string;
+  objectKey: string;
+  size: number;
+  moderationJson: string;
+  status: PublicAvatarReviewStatus;
+  submittedAt: number;
+  reviewedAt: number | null;
+  reviewedBy: string | null;
+  note: string | null;
+}
+
+interface AuditRow {
+  id: string;
+  username: string;
+  actorEmail: string;
+  actorKind: PublicAvatarAuditActorKind;
+  action: PublicAvatarAuditAction;
+  previousSha256: string | null;
+  sha256: string | null;
+  reviewId: string | null;
+  note: string | null;
+  createdAt: number;
+}
+
+function parseModeration(value: string): PublicAvatarModeration | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'status' in parsed &&
+      'checks' in parsed &&
+      Array.isArray(parsed.checks)
+    )
+      return parsed as PublicAvatarModeration;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function toReview(row: ReviewRow): PublicAvatarReviewRecord {
+  return {
+    id: row.id,
+    username: row.username,
+    sha256: row.sha256,
+    objectKey: row.objectKey,
+    size: row.size,
+    moderation: parseModeration(row.moderationJson),
+    status: row.status,
+    submittedAt: row.submittedAt,
+    reviewedAt: row.reviewedAt,
+    reviewedBy: row.reviewedBy,
+    note: row.note,
+  };
+}
+
+function toAudit(row: AuditRow): PublicAvatarAuditRecord {
+  return {
+    id: row.id,
+    username: row.username,
+    actorEmail: row.actorEmail,
+    actorKind: row.actorKind,
+    action: row.action,
+    previousSha256: row.previousSha256,
+    sha256: row.sha256,
+    reviewId: row.reviewId,
+    note: row.note,
+    createdAt: row.createdAt,
+  };
+}
+
+const REVIEW_COLUMNS = `id, username, sha256, object_key AS objectKey,
+  size, moderation_json AS moderationJson, status, submitted_at AS submittedAt,
+  reviewed_at AS reviewedAt, reviewed_by AS reviewedBy, review_note AS note`;
+
+const AUDIT_COLUMNS = `id, username, actor_email AS actorEmail,
+  actor_kind AS actorKind, action, previous_sha256 AS previousSha256,
+  sha256, review_id AS reviewId, note, created_at AS createdAt`;
+
+export async function createAvatarReview(
+  env: Env,
+  input: {
+    id: string;
+    username: string;
+    sha256: string;
+    objectKey: string;
+    size: number;
+    moderation: PublicAvatarModeration;
+    submittedAt: number;
+  }
+): Promise<void> {
+  await env.AUTH_DB.prepare(
+    `INSERT INTO public_avatar_review (
+      id, username, sha256, object_key, size, moderation_json, status, submitted_at
+    ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+  )
+    .bind(
+      input.id,
+      input.username,
+      input.sha256,
+      input.objectKey,
+      input.size,
+      JSON.stringify(input.moderation),
+      input.submittedAt
+    )
+    .run();
+}
+
+export async function getAvatarReview(
+  env: Env,
+  id: string
+): Promise<PublicAvatarReviewRecord | null> {
+  const row = await env.AUTH_DB.prepare(
+    `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review WHERE id = ? LIMIT 1`
+  )
+    .bind(id)
+    .first<ReviewRow>();
+  return row ? toReview(row) : null;
+}
+
+export async function markAvatarReview(
+  env: Env,
+  input: {
+    id: string;
+    status: 'approved' | 'rejected';
+    reviewedBy: string;
+    reviewedAt: number;
+    note?: string | null;
+  }
+): Promise<boolean> {
+  const result = await env.AUTH_DB.prepare(
+    `UPDATE public_avatar_review
+     SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
+     WHERE id = ? AND status = 'pending'`
+  )
+    .bind(
+      input.status,
+      input.reviewedAt,
+      input.reviewedBy,
+      input.note ?? null,
+      input.id
+    )
+    .run();
+  return (result.meta?.changes ?? 0) > 0;
+}
+
+export async function reopenAvatarReview(
+  env: Env,
+  id: string,
+  reviewedAt: number
+): Promise<void> {
+  // Only undo the decision made by the caller whose reviewed_at matches, so a
+  // concurrent decision is never reopened by a failed publish attempt.
+  await env.AUTH_DB.prepare(
+    `UPDATE public_avatar_review
+     SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL, review_note = NULL
+     WHERE id = ? AND status = 'approved' AND reviewed_at = ?`
+  )
+    .bind(id, reviewedAt)
+    .run();
+}
+
+export async function listPendingAvatarReviewsForUser(
+  env: Env,
+  username: string,
+  options: { limit?: number; submittedBefore?: number } = {}
+): Promise<PublicAvatarReviewRecord[]> {
+  const limit = options.limit ?? 50;
+  const rows =
+    options.submittedBefore === undefined
+      ? await env.AUTH_DB.prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+           WHERE username = ? AND status = 'pending'
+           ORDER BY submitted_at DESC, id DESC
+           LIMIT ?`
+        )
+          .bind(username, limit)
+          .all<ReviewRow>()
+      : await env.AUTH_DB.prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+           WHERE username = ? AND status = 'pending' AND submitted_at <= ?
+           ORDER BY submitted_at DESC, id DESC
+           LIMIT ?`
+        )
+          .bind(username, options.submittedBefore, limit)
+          .all<ReviewRow>();
+  return rows.results.map(toReview);
+}
+
+export async function listPendingAvatarReviewPage(
+  env: Env,
+  input: { cursor?: PublicAvatarReviewCursor; limit: number }
+): Promise<PublicAvatarReviewPage> {
+  const rows = input.cursor
+    ? await env.AUTH_DB.prepare(
+        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+         WHERE status = 'pending'
+           AND (submitted_at < ? OR (submitted_at = ? AND id < ?))
+         ORDER BY submitted_at DESC, id DESC
+         LIMIT ?`
+      )
+        .bind(
+          input.cursor.submittedAt,
+          input.cursor.submittedAt,
+          input.cursor.id,
+          input.limit + 1
+        )
+        .all<ReviewRow>()
+    : await env.AUTH_DB.prepare(
+        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+         WHERE status = 'pending'
+         ORDER BY submitted_at DESC, id DESC
+         LIMIT ?`
+      )
+        .bind(input.limit + 1)
+        .all<ReviewRow>();
+
+  const hasMore = rows.results.length > input.limit;
+  const pageRows = rows.results.slice(0, input.limit);
+  const last = pageRows.at(-1);
+  return {
+    items: pageRows.map(toReview),
+    nextCursor:
+      hasMore && last ? { submittedAt: last.submittedAt, id: last.id } : null,
+  };
+}
+
+export async function cancelPendingAvatarReviews(
+  env: Env,
+  input: {
+    username: string;
+    reviewedBy: string;
+    reviewedAt: number;
+    note: string;
+    submittedBefore: number;
+  }
+): Promise<PublicAvatarReviewRecord[]> {
+  const pending = await listPendingAvatarReviewsForUser(env, input.username, {
+    submittedBefore: input.submittedBefore,
+  });
+  const cancelled: PublicAvatarReviewRecord[] = [];
+  for (const review of pending) {
+    // Only audit reviews this call actually transitioned, so a decision that
+    // raced ahead of us is never attributed to the wrong actor.
+    const result = await env.AUTH_DB.prepare(
+      `UPDATE public_avatar_review
+       SET status = 'rejected', reviewed_at = ?, reviewed_by = ?, review_note = ?
+       WHERE id = ? AND status = 'pending'`
+    )
+      .bind(input.reviewedAt, input.reviewedBy, input.note, review.id)
+      .run();
+    if ((result.meta?.changes ?? 0) > 0) cancelled.push(review);
+  }
+  return cancelled;
+}
+
+export async function hasPendingAvatarObject(
+  env: Env,
+  username: string,
+  sha256: string
+): Promise<boolean> {
+  const row = await env.AUTH_DB.prepare(
+    `SELECT 1 AS present FROM public_avatar_review
+     WHERE username = ? AND sha256 = ? AND status = 'pending'
+     LIMIT 1`
+  )
+    .bind(username, sha256)
+    .first<{ present: number }>();
+  return row !== null;
+}
+
+export async function recordAvatarAudit(
+  env: Env,
+  input: Omit<PublicAvatarAuditRecord, 'id' | 'createdAt'> & {
+    createdAt?: number;
+  }
+): Promise<void> {
+  await env.AUTH_DB.prepare(
+    `INSERT INTO public_avatar_audit (
+      id, username, actor_email, actor_kind, action, previous_sha256, sha256,
+      review_id, note, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  )
+    .bind(
+      crypto.randomUUID(),
+      input.username,
+      input.actorEmail,
+      input.actorKind,
+      input.action,
+      input.previousSha256,
+      input.sha256,
+      input.reviewId,
+      input.note,
+      input.createdAt ?? Date.now()
+    )
+    .run();
+}
+
+export async function listAvatarAudit(
+  env: Env,
+  username: string,
+  limit = 50
+): Promise<PublicAvatarAuditRecord[]> {
+  const bounded = Math.min(Math.max(1, Math.trunc(limit)), 100);
+  const rows = await env.AUTH_DB.prepare(
+    `SELECT ${AUDIT_COLUMNS} FROM public_avatar_audit
+     WHERE username = ?
+     ORDER BY created_at DESC, id DESC
+     LIMIT ?`
+  )
+    .bind(username, bounded)
+    .all<AuditRow>();
+  return rows.results.map(toAudit);
+}

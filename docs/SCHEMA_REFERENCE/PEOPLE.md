@@ -93,7 +93,17 @@ schema is the authority for these rules, not UI inference.
 | `PublicAvatarCheckSchema`            | One safety or portrait check and its outcome.                     |
 | `PublicAvatarCheckIdSchema`          | Safety or portrait check identifier.                              |
 | `PublicAvatarCheckStatusSchema`      | Passed, failed, needs-review, or not-checked outcome.             |
+| `PublicAvatarReviewSchema`           | Pending or decided review with reviewer and note.                 |
+| `PublicAvatarReviewStatusSchema`     | Pending, approved, or rejected review status.                     |
+| `PublicAvatarAuditEntrySchema`       | One actor, action, image hash, note, and timestamp.               |
+| `PublicAvatarAuditActionSchema`      | Upload, delete, admin delete, or review action.                   |
+| `PublicAvatarAuditActorKindSchema`   | Owner or administrator actor.                                     |
+| `AdminUserAvatarSchema`              | Current picture, pending reviews, and bounded audit history.      |
+| `AdminAvatarReviewPageSchema`        | Bounded pending-review page with cursor metadata.                 |
+| `AdminAvatarReviewDecisionSchema`    | Decided review and the resulting published URL.                   |
+| `AdminAvatarDeleteResultSchema`      | Whether an administrator removed a published picture.             |
 
 Public avatar contracts describe the API-only picture shown in the People
 directory. They are separate from private account pictures and public profile
-pull requests.
+pull requests. Review and audit contracts carry the administrator identity that
+allowed or removed a picture.

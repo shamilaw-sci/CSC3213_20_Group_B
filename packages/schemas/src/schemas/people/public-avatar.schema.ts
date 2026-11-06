@@ -75,6 +75,75 @@ export const PublicAvatarErrorSchema = z.object({
   moderation: PublicAvatarModerationSchema.optional(),
 });
 
+export const PublicAvatarReviewStatusSchema = z.enum([
+  'pending',
+  'approved',
+  'rejected',
+]);
+
+export const PublicAvatarAuditActorKindSchema = z.enum(['owner', 'admin']);
+
+export const PublicAvatarAuditActionSchema = z.enum([
+  'upload',
+  'delete',
+  'admin_delete',
+  'review_submitted',
+  'review_approved',
+  'review_rejected',
+]);
+
+export const PublicAvatarReviewSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  sha256: z.string(),
+  size: z.number().int().nonnegative(),
+  status: PublicAvatarReviewStatusSchema,
+  submittedAt: z.iso.datetime({ offset: true }),
+  reviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  reviewedBy: z.string().nullable(),
+  note: z.string().nullable(),
+  moderation: PublicAvatarModerationSchema.nullable(),
+});
+
+export const PublicAvatarAuditEntrySchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  actorEmail: z.string(),
+  actorKind: PublicAvatarAuditActorKindSchema,
+  action: PublicAvatarAuditActionSchema,
+  previousSha256: z.string().nullable(),
+  sha256: z.string().nullable(),
+  reviewId: z.string().nullable(),
+  note: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+
+export const AdminUserAvatarSchema = z.object({
+  email: z.string(),
+  username: z.string(),
+  url: z.string().nullable(),
+  pending: z.array(PublicAvatarReviewSchema),
+  history: z.array(PublicAvatarAuditEntrySchema),
+});
+
+export const AdminAvatarReviewPageSchema = z.object({
+  version: z.literal(1),
+  items: z.array(PublicAvatarReviewSchema),
+  page: z.object({
+    nextCursor: z.string().nullable(),
+    hasMore: z.boolean(),
+  }),
+});
+
+export const AdminAvatarReviewDecisionSchema = z.object({
+  review: PublicAvatarReviewSchema,
+  url: z.string().nullable(),
+});
+
+export const AdminAvatarDeleteResultSchema = z.object({
+  deleted: z.boolean(),
+});
+
 export type PublicAvatarCheckId = z.infer<typeof PublicAvatarCheckIdSchema>;
 export type PublicAvatarCheckStatus = z.infer<
   typeof PublicAvatarCheckStatusSchema
@@ -92,3 +161,24 @@ export type PublicAvatarDeleteResult = z.infer<
   typeof PublicAvatarDeleteResultSchema
 >;
 export type PublicAvatarError = z.infer<typeof PublicAvatarErrorSchema>;
+export type PublicAvatarReviewStatus = z.infer<
+  typeof PublicAvatarReviewStatusSchema
+>;
+export type PublicAvatarReview = z.infer<typeof PublicAvatarReviewSchema>;
+export type PublicAvatarAuditAction = z.infer<
+  typeof PublicAvatarAuditActionSchema
+>;
+export type PublicAvatarAuditActorKind = z.infer<
+  typeof PublicAvatarAuditActorKindSchema
+>;
+export type PublicAvatarAuditEntry = z.infer<
+  typeof PublicAvatarAuditEntrySchema
+>;
+export type AdminUserAvatar = z.infer<typeof AdminUserAvatarSchema>;
+export type AdminAvatarReviewPage = z.infer<typeof AdminAvatarReviewPageSchema>;
+export type AdminAvatarReviewDecision = z.infer<
+  typeof AdminAvatarReviewDecisionSchema
+>;
+export type AdminAvatarDeleteResult = z.infer<
+  typeof AdminAvatarDeleteResultSchema
+>;

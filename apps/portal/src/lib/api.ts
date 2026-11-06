@@ -147,6 +147,25 @@ export function adminUserApiUrl(email: string) {
   return apiUrl(`/api/admin/users/${encodeURIComponent(email)}`);
 }
 
+export function adminUserAvatarApiUrl(email: string) {
+  return apiUrl(`/api/admin/users/${encodeURIComponent(email)}/avatar`);
+}
+
+export function adminAvatarReviewsPageApiUrl(cursor?: string, limit = 50) {
+  const url = apiUrl('/api/admin/avatar-reviews/page');
+  url.searchParams.set('limit', String(limit));
+  if (cursor) url.searchParams.set('cursor', cursor);
+  return url;
+}
+
+export function adminAvatarReviewApiUrl(id: string) {
+  return apiUrl(`/api/admin/avatar-reviews/${encodeURIComponent(id)}`);
+}
+
+export function adminAvatarReviewImageApiUrl(id: string) {
+  return apiUrl(`/api/admin/avatar-reviews/${encodeURIComponent(id)}/image`);
+}
+
 export function publicProjectsPageApiUrl(cursor?: string, limit = 24) {
   const url = apiUrl('/api/projects/v2/projects/page');
   url.searchParams.set('limit', String(limit));

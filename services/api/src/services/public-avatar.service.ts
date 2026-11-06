@@ -4,17 +4,47 @@ import {
   createCorsHeaders,
   createJsonErrorResponse,
   createJsonResponse,
+  createTextErrorResponse,
   getRequestOrigin,
 } from '@/http/responses';
-import { verifyIdentitySession } from '@/middleware/session';
+import {
+  verifyIdentitySession,
+  verifySessionRequest,
+} from '@/middleware/session';
 import {
   getPermissionRole,
   getUserPermission,
+  isSuperAdmin,
 } from '@/repositories/permissions.repo';
+import {
+  cancelPendingAvatarReviews,
+  createAvatarReview,
+  getAvatarReview,
+  hasPendingAvatarObject,
+  listAvatarAudit,
+  listPendingAvatarReviewsForUser,
+  listPendingAvatarReviewPage,
+  markAvatarReview,
+  PUBLIC_AVATAR_AUDIT_ACTION,
+  recordAvatarAudit,
+  reopenAvatarReview,
+  type PublicAvatarAuditAction,
+  type PublicAvatarReviewCursor,
+  type PublicAvatarReviewRecord,
+} from '@/repositories/public-avatar.repo';
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  InvalidPaginationCursorError,
+  parsePaginationRequest,
+} from '@/pagination/cursor';
 import type { Env } from '@/types/env';
 
 const ROOT = '/api/people/v2/avatars/';
+const ADMIN_USERS = '/api/admin/users/';
+const ADMIN_REVIEWS = '/api/admin/avatar-reviews/';
 const MAX_UPLOAD = 4 * 1024 * 1024;
+const MAX_NOTE = 500;
 const USERNAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const HASH = /^[a-f0-9]{64}$/;
 const MIN_SIDE = 280;
@@ -52,6 +82,16 @@ function imageKey(username: string, hash: string): string {
 
 function imageUrl(request: Request, username: string, hash: string): string {
   return `${new URL(request.url).origin}${ROOT}${username}/${hash}.webp`;
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  return [
+    ...new Uint8Array(
+      await crypto.subtle.digest('SHA-256', bytes.slice().buffer)
+    ),
+  ]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export function formatFromMagic(
@@ -347,7 +387,7 @@ export async function moderate(
 async function owner(
   req: Request,
   env: Env
-): Promise<{ username: string } | Response> {
+): Promise<{ username: string; email: string } | Response> {
   const origin = getRequestOrigin(req);
   const session = await verifyIdentitySession(req, env, 'people');
   if (session instanceof Response) return session;
@@ -390,7 +430,128 @@ async function owner(
       403,
       origin
     );
-  return { username };
+  return { username, email };
+}
+
+function usernameForEmail(email: string): string | null {
+  const username = email.toLowerCase().split('@')[0] ?? '';
+  return USERNAME.test(username) ? username : null;
+}
+
+async function requireSuperAdmin(
+  req: Request,
+  env: Env
+): Promise<{ email: string } | Response> {
+  const origin = getRequestOrigin(req);
+  const verified = await verifySessionRequest(req, env);
+  if (!verified.ok) return verified;
+  const { email }: { email: string } = await verified.json();
+  if (!email) return createTextErrorResponse('Unauthorized', 401, origin);
+  const permission = await getUserPermission(email, env);
+  if (!permission || permission.blacklisted || !isSuperAdmin(permission))
+    return createTextErrorResponse('Forbidden', 403, origin);
+  return { email: email.toLowerCase() };
+}
+
+function targetEmail(req: Request, suffix: string): string | null {
+  const pathname = new URL(req.url).pathname;
+  if (!pathname.startsWith(ADMIN_USERS)) return null;
+  const segment = pathname.slice(ADMIN_USERS.length);
+  if (!segment.endsWith(suffix)) return null;
+  try {
+    const email = decodeURIComponent(segment.slice(0, -suffix.length));
+    return email && email.includes('@') ? email.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function reviewPayload(review: PublicAvatarReviewRecord) {
+  return {
+    id: review.id,
+    username: review.username,
+    sha256: review.sha256,
+    size: review.size,
+    status: review.status,
+    submittedAt: new Date(review.submittedAt).toISOString(),
+    reviewedAt: review.reviewedAt
+      ? new Date(review.reviewedAt).toISOString()
+      : null,
+    reviewedBy: review.reviewedBy,
+    note: review.note,
+    moderation: review.moderation,
+  };
+}
+
+async function recordOwnerAudit(
+  env: Env,
+  input: {
+    email: string;
+    username: string;
+    action: Extract<
+      PublicAvatarAuditAction,
+      'upload' | 'delete' | 'review_submitted'
+    >;
+    previousSha256: string | null;
+    sha256: string | null;
+    reviewId?: string | null;
+    note?: string | null;
+  }
+): Promise<void> {
+  await recordAvatarAudit(env, {
+    username: input.username,
+    actorEmail: input.email,
+    actorKind: 'owner',
+    action: input.action,
+    previousSha256: input.previousSha256,
+    sha256: input.sha256,
+    reviewId: input.reviewId ?? null,
+    note: input.note ?? null,
+  });
+}
+
+async function cancelPendingForUser(
+  env: Env,
+  input: {
+    username: string;
+    actorEmail: string;
+    actorKind: 'owner' | 'admin';
+    note: string;
+    submittedBefore: number;
+  }
+): Promise<void> {
+  const reviewedAt = Date.now();
+  const cancelled = await cancelPendingAvatarReviews(env, {
+    username: input.username,
+    reviewedBy: input.actorEmail,
+    reviewedAt,
+    note: input.note,
+    submittedBefore: input.submittedBefore,
+  });
+  for (const review of cancelled) {
+    await recordAvatarAudit(env, {
+      username: input.username,
+      actorEmail: input.actorEmail,
+      actorKind: input.actorKind,
+      action: PUBLIC_AVATAR_AUDIT_ACTION.REVIEW_REJECTED,
+      previousSha256: null,
+      sha256: review.sha256,
+      reviewId: review.id,
+      note: input.note,
+      createdAt: reviewedAt,
+    });
+    await deleteReviewObject(env, review);
+  }
+}
+
+async function deleteReviewObject(
+  env: Env,
+  review: PublicAvatarReviewRecord
+): Promise<void> {
+  const current = await readPointer(env.PROFILE_PICTURES, review.username);
+  if (current.value?.sha256 === review.sha256) return;
+  if (await hasPendingAvatarObject(env, review.username, review.sha256)) return;
+  await env.PROFILE_PICTURES.delete(review.objectKey);
 }
 
 const HOUR_MS = HOUR;
@@ -513,6 +674,9 @@ export async function uploadMyAvatar(
   env: Env
 ): Promise<Response> {
   const origin = getRequestOrigin(req);
+  // Pending reviews submitted after this point may belong to a newer upload
+  // that is still in flight, so only older reviews are superseded below.
+  const startedAt = Date.now();
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
   const quota = await consumeAttempt(env, identity.username);
@@ -588,7 +752,44 @@ export async function uploadMyAvatar(
     return avatarError('Image could not be decoded', 422, origin, { quota });
   }
   const decision = await moderate(jpeg, env);
-  if (decision.status !== 'approved')
+  const hash = await sha256Hex(webp);
+  const key = imageKey(identity.username, hash);
+  if (decision.status !== 'approved') {
+    if (decision.status === 'review_required') {
+      await env.PROFILE_PICTURES.put(key, webp, {
+        httpMetadata: { contentType: 'image/webp' },
+        sha256: hash,
+      });
+      const reviewId = crypto.randomUUID();
+      await createAvatarReview(env, {
+        id: reviewId,
+        username: identity.username,
+        sha256: hash,
+        objectKey: key,
+        size: webp.length,
+        moderation: decision,
+        submittedAt: Date.now(),
+      });
+      await recordOwnerAudit(env, {
+        email: identity.email,
+        username: identity.username,
+        action: PUBLIC_AVATAR_AUDIT_ACTION.REVIEW_SUBMITTED,
+        previousSha256: before.value?.sha256 ?? null,
+        sha256: hash,
+        reviewId,
+        note: decision.message,
+      });
+      return avatarError(
+        'Image needs manual review. An administrator can approve it.',
+        503,
+        origin,
+        {
+          code: 'avatar_moderation_review_required',
+          moderation: decision,
+          quota,
+        }
+      );
+    }
     return avatarError(
       decision.message,
       decision.status === 'rejected' ? 422 : 503,
@@ -597,21 +798,12 @@ export async function uploadMyAvatar(
         code:
           decision.status === 'rejected'
             ? 'avatar_moderation_rejected'
-            : decision.status === 'unavailable'
-              ? 'avatar_moderation_unavailable'
-              : 'avatar_moderation_review_required',
+            : 'avatar_moderation_unavailable',
         moderation: decision,
         quota,
       }
     );
-  const hash = [
-    ...new Uint8Array(
-      await crypto.subtle.digest('SHA-256', webp.slice().buffer)
-    ),
-  ]
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-  const key = imageKey(identity.username, hash);
+  }
   await env.PROFILE_PICTURES.put(key, webp, {
     httpMetadata: { contentType: 'image/webp' },
     sha256: hash,
@@ -638,6 +830,20 @@ export async function uploadMyAvatar(
     return avatarError('Avatar changed concurrently; retry', 409, origin, {
       quota,
     });
+  await cancelPendingForUser(env, {
+    username: identity.username,
+    actorEmail: identity.email,
+    actorKind: 'owner',
+    note: 'Superseded by a newer approved picture.',
+    submittedBefore: startedAt,
+  });
+  await recordOwnerAudit(env, {
+    email: identity.email,
+    username: identity.username,
+    action: PUBLIC_AVATAR_AUDIT_ACTION.UPLOAD,
+    previousSha256: before.value?.sha256 ?? null,
+    sha256: hash,
+  });
   return createJsonResponse(
     {
       url: imageUrl(req, identity.username, hash),
@@ -652,23 +858,21 @@ export async function uploadMyAvatar(
   );
 }
 
-export async function deleteMyAvatar(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  const origin = getRequestOrigin(req);
-  const identity = await owner(req, env);
-  if (identity instanceof Response) return identity;
-  const quota = await readAvatarQuota(env, identity.username).catch(
-    () => undefined
-  );
-  const before = await readPointer(env.PROFILE_PICTURES, identity.username);
+async function tombstoneAvatar(
+  env: Env,
+  username: string
+): Promise<
+  | { deleted: false; previousSha256: string | null; conflict: false }
+  | { deleted: true; previousSha256: string | null; conflict: false }
+  | { deleted: false; previousSha256: string | null; conflict: true }
+> {
+  const before = await readPointer(env.PROFILE_PICTURES, username);
   if (!before.value?.key)
-    return createJsonResponse(
-      { deleted: false, ...(quota ? { quota } : {}) },
-      200,
-      origin
-    );
+    return {
+      deleted: false,
+      previousSha256: before.value?.sha256 ?? null,
+      conflict: false,
+    };
   const tombstone: Pointer = {
     version: 1,
     key: null,
@@ -678,17 +882,63 @@ export async function deleteMyAvatar(
     updatedAt: new Date().toISOString(),
   };
   const stored = await env.PROFILE_PICTURES.put(
-    pointerKey(identity.username),
+    pointerKey(username),
     JSON.stringify(tombstone),
     {
       onlyIf: { etagMatches: before.etag! },
       httpMetadata: { contentType: 'application/json' },
     }
   );
-  if (!stored)
+  return stored
+    ? { deleted: true, previousSha256: before.value.sha256, conflict: false }
+    : { deleted: false, previousSha256: before.value.sha256, conflict: true };
+}
+
+export async function deleteMyAvatar(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const startedAt = Date.now();
+  const identity = await owner(req, env);
+  if (identity instanceof Response) return identity;
+  const quota = await readAvatarQuota(env, identity.username).catch(
+    () => undefined
+  );
+  const pending = await listPendingAvatarReviewsForUser(
+    env,
+    identity.username,
+    {
+      submittedBefore: startedAt,
+    }
+  );
+  const result = await tombstoneAvatar(env, identity.username);
+  if (result.conflict)
     return avatarError('Avatar changed concurrently; retry', 409, origin, {
       ...(quota ? { quota } : {}),
     });
+  await cancelPendingForUser(env, {
+    username: identity.username,
+    actorEmail: identity.email,
+    actorKind: 'owner',
+    note: 'Removed by the profile owner.',
+    submittedBefore: startedAt,
+  });
+  if (!result.deleted && pending.length === 0)
+    return createJsonResponse(
+      { deleted: false, ...(quota ? { quota } : {}) },
+      200,
+      origin
+    );
+  if (result.deleted) {
+    await recordOwnerAudit(env, {
+      email: identity.email,
+      username: identity.username,
+      action: PUBLIC_AVATAR_AUDIT_ACTION.DELETE,
+      previousSha256: result.previousSha256,
+      sha256: null,
+    });
+  }
   return createJsonResponse(
     { deleted: true, ...(quota ? { quota } : {}) },
     200,
@@ -778,4 +1028,353 @@ export async function getPublicAvatar(
         ? (object.body as ReadableStream<Uint8Array>)
         : null;
   return new Response(body, { status: 200, headers });
+}
+
+async function optionalNote(
+  req: Request
+): Promise<{ ok: true; note: string | null } | { ok: false }> {
+  const text = await req.text();
+  if (!text.trim()) return { ok: true, note: null };
+  try {
+    const body: unknown = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body))
+      return { ok: false };
+    const note = (body as Record<string, unknown>).note;
+    if (note === undefined || note === null) return { ok: true, note: null };
+    if (typeof note !== 'string' || note.trim().length > MAX_NOTE)
+      return { ok: false };
+    return { ok: true, note: note.trim() || null };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export async function getAdminUserAvatar(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  const email = targetEmail(req, '/avatar');
+  if (!email) return createJsonErrorResponse('Email required', 400, origin);
+  const username = usernameForEmail(email);
+  if (!username)
+    return createJsonErrorResponse('Invalid avatar username', 400, origin);
+  const [current, pending, history] = await Promise.all([
+    readPointer(env.PROFILE_PICTURES, username),
+    listPendingAvatarReviewsForUser(env, username),
+    listAvatarAudit(env, username),
+  ]);
+  return createJsonResponse(
+    {
+      email,
+      username,
+      url: current.value?.sha256
+        ? imageUrl(req, username, current.value.sha256)
+        : null,
+      pending: pending.map(reviewPayload),
+      history: history.map((entry) => ({
+        id: entry.id,
+        username: entry.username,
+        actorEmail: entry.actorEmail,
+        actorKind: entry.actorKind,
+        action: entry.action,
+        previousSha256: entry.previousSha256,
+        sha256: entry.sha256,
+        reviewId: entry.reviewId,
+        note: entry.note,
+        createdAt: new Date(entry.createdAt).toISOString(),
+      })),
+    },
+    200,
+    origin
+  );
+}
+
+export async function deleteAdminUserAvatar(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  const email = targetEmail(req, '/avatar');
+  if (!email) return createJsonErrorResponse('Email required', 400, origin);
+  const username = usernameForEmail(email);
+  if (!username)
+    return createJsonErrorResponse('Invalid avatar username', 400, origin);
+  const parsed = await optionalNote(req);
+  if (!parsed.ok) return createJsonErrorResponse('Invalid note', 400, origin);
+  const startedAt = Date.now();
+  const pending = await listPendingAvatarReviewsForUser(env, username, {
+    submittedBefore: startedAt,
+  });
+  const result = await tombstoneAvatar(env, username);
+  if (result.conflict)
+    return createJsonErrorResponse(
+      'Avatar changed concurrently; retry',
+      409,
+      origin
+    );
+  await cancelPendingForUser(env, {
+    username,
+    actorEmail: admin.email,
+    actorKind: 'admin',
+    note: 'Removed by an administrator.',
+    submittedBefore: startedAt,
+  });
+  if (!result.deleted && pending.length === 0)
+    return createJsonResponse({ deleted: false }, 200, origin);
+  if (result.deleted) {
+    await recordAvatarAudit(env, {
+      username,
+      actorEmail: admin.email,
+      actorKind: 'admin',
+      action: PUBLIC_AVATAR_AUDIT_ACTION.ADMIN_DELETE,
+      previousSha256: result.previousSha256,
+      sha256: null,
+      reviewId: null,
+      note: parsed.note,
+    });
+  }
+  return createJsonResponse({ deleted: true }, 200, origin);
+}
+
+export async function listAdminAvatarReviews(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  try {
+    const request = parsePaginationRequest(new URL(req.url));
+    const value = request.cursor
+      ? decodePaginationCursor('admin-avatar-reviews', request.cursor)
+      : null;
+    let cursor: PublicAvatarReviewCursor | undefined;
+    if (value) {
+      const [submittedAt, id] = value.split('|');
+      const parsedAt = Number(submittedAt);
+      if (!Number.isFinite(parsedAt) || !id)
+        throw new InvalidPaginationCursorError();
+      cursor = { submittedAt: parsedAt, id };
+    }
+    const result = await listPendingAvatarReviewPage(env, {
+      cursor,
+      limit: request.limit,
+    });
+    const nextCursor = result.nextCursor
+      ? encodePaginationCursor(
+          'admin-avatar-reviews',
+          `${result.nextCursor.submittedAt}|${result.nextCursor.id}`
+        )
+      : null;
+    return createJsonResponse(
+      {
+        version: 1,
+        items: result.items.map(reviewPayload),
+        page: { nextCursor, hasMore: nextCursor !== null },
+      },
+      200,
+      origin
+    );
+  } catch (error) {
+    if (error instanceof InvalidPaginationCursorError)
+      return createJsonErrorResponse(
+        'Invalid cursor or page limit',
+        400,
+        origin
+      );
+    console.error('Error fetching avatar reviews:', error);
+    return createTextErrorResponse('Internal Server Error', 500, origin);
+  }
+}
+
+export async function getAdminAvatarReviewImage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  const pathname = new URL(req.url).pathname;
+  const parts = pathname.slice(ADMIN_REVIEWS.length).split('/');
+  if (parts.length !== 2 || parts[1] !== 'image')
+    return createJsonErrorResponse('Not Found', 404, origin);
+  let id: string;
+  try {
+    id = decodeURIComponent(parts[0]);
+  } catch {
+    return createJsonErrorResponse('Not Found', 404, origin);
+  }
+  const review = await getAvatarReview(env, id);
+  if (!review) return createJsonErrorResponse('Review not found', 404, origin);
+  const object = await env.PROFILE_PICTURES.get(review.objectKey);
+  if (!object)
+    return createJsonErrorResponse('Review image not found', 404, origin);
+  const headers = new Headers(createCorsHeaders(origin));
+  headers.set('Content-Type', 'image/webp');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Cache-Control', 'no-store');
+  return new Response(
+    'body' in object ? (object.body as ReadableStream<Uint8Array>) : null,
+    { status: 200, headers }
+  );
+}
+
+export async function decideAdminAvatarReview(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  const pathname = new URL(req.url).pathname;
+  const rawId = pathname.slice(ADMIN_REVIEWS.length);
+  if (!rawId || rawId.includes('/'))
+    return createJsonErrorResponse('Not Found', 404, origin);
+  let id: string;
+  try {
+    id = decodeURIComponent(rawId);
+  } catch {
+    return createJsonErrorResponse('Not Found', 404, origin);
+  }
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return createJsonErrorResponse('Invalid JSON body', 400, origin);
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body))
+    return createJsonErrorResponse(
+      'Request body must be a JSON object',
+      400,
+      origin
+    );
+  const record = body as Record<string, unknown>;
+  const action = record.action;
+  if (action !== 'approve' && action !== 'reject')
+    return createJsonErrorResponse('Invalid review action', 400, origin);
+  let note: string | null = null;
+  if (record.note !== undefined && record.note !== null) {
+    if (typeof record.note !== 'string' || record.note.trim().length > MAX_NOTE)
+      return createJsonErrorResponse('Invalid note', 400, origin);
+    note = record.note.trim() || null;
+  }
+  const review = await getAvatarReview(env, id);
+  if (!review) return createJsonErrorResponse('Review not found', 404, origin);
+  if (review.status !== 'pending')
+    return createJsonErrorResponse('Review already decided', 409, origin);
+  const reviewedAt = Date.now();
+  if (action === 'approve') {
+    // Claim the review before publishing so a concurrent rejection can never
+    // leave a picture public that has no approving administrator on record.
+    if (
+      !(await markAvatarReview(env, {
+        id,
+        status: 'approved',
+        reviewedBy: admin.email,
+        reviewedAt,
+        note,
+      }))
+    )
+      return createJsonErrorResponse('Review already decided', 409, origin);
+    const before = await readPointer(env.PROFILE_PICTURES, review.username);
+    const pointer: Pointer = {
+      version: 1,
+      key: review.objectKey,
+      sha256: review.sha256,
+      contentType: 'image/webp',
+      size: review.size,
+      updatedAt: new Date(reviewedAt).toISOString(),
+    };
+    const stored = await env.PROFILE_PICTURES.put(
+      pointerKey(review.username),
+      JSON.stringify(pointer),
+      {
+        onlyIf: before.etag
+          ? { etagMatches: before.etag }
+          : { etagDoesNotMatch: '*' },
+        httpMetadata: { contentType: 'application/json' },
+      }
+    );
+    if (!stored) {
+      await reopenAvatarReview(env, id, reviewedAt);
+      return createJsonErrorResponse(
+        'Avatar changed concurrently; retry',
+        409,
+        origin
+      );
+    }
+    await cancelPendingForUser(env, {
+      username: review.username,
+      actorEmail: admin.email,
+      actorKind: 'admin',
+      note: 'Superseded by an approved review.',
+      submittedBefore: review.submittedAt,
+    });
+    await recordAvatarAudit(env, {
+      username: review.username,
+      actorEmail: admin.email,
+      actorKind: 'admin',
+      action: PUBLIC_AVATAR_AUDIT_ACTION.REVIEW_APPROVED,
+      previousSha256: before.value?.sha256 ?? null,
+      sha256: review.sha256,
+      reviewId: review.id,
+      note,
+      createdAt: reviewedAt,
+    });
+    return createJsonResponse(
+      {
+        review: reviewPayload({
+          ...review,
+          status: 'approved',
+          reviewedAt,
+          reviewedBy: admin.email,
+          note,
+        }),
+        url: imageUrl(req, review.username, review.sha256),
+      },
+      200,
+      origin
+    );
+  }
+  if (
+    !(await markAvatarReview(env, {
+      id,
+      status: 'rejected',
+      reviewedBy: admin.email,
+      reviewedAt,
+      note,
+    }))
+  )
+    return createJsonErrorResponse('Review already decided', 409, origin);
+  await recordAvatarAudit(env, {
+    username: review.username,
+    actorEmail: admin.email,
+    actorKind: 'admin',
+    action: PUBLIC_AVATAR_AUDIT_ACTION.REVIEW_REJECTED,
+    previousSha256: null,
+    sha256: review.sha256,
+    reviewId: review.id,
+    note,
+    createdAt: reviewedAt,
+  });
+  await deleteReviewObject(env, review);
+  return createJsonResponse(
+    {
+      review: reviewPayload({
+        ...review,
+        status: 'rejected',
+        reviewedAt,
+        reviewedBy: admin.email,
+        note,
+      }),
+      url: null,
+    },
+    200,
+    origin
+  );
 }

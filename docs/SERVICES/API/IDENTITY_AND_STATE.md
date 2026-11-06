@@ -45,7 +45,7 @@ session.
 
 ## D1 ownership
 
-Migrations are append-only and currently create five state groups:
+Migrations are append-only and currently create seven state groups:
 
 | Migration                           | Owned state                                                                         |
 | ----------------------------------- | ----------------------------------------------------------------------------------- |
@@ -54,6 +54,8 @@ Migrations are append-only and currently create five state groups:
 | `0003_proxy_settings.sql`           | per-user proxy destination, attempt budget/window, audit fields, and revision       |
 | `0004_permissions.sql`              | normalized role/access fields plus the complete JSON permission record              |
 | `0005_proxy_username_lookup.sql`    | indexed username lookup for internal Web resolution                                 |
+| `0006_public_avatar_rate.sql`       | hourly public-avatar upload attempt window per username                             |
+| `0007_public_avatar_moderation.sql` | pending avatar reviews, reviewer identity, and append-only avatar audit history     |
 
 The relational role and access columns support filtering and constraints; the
 JSON column preserves the complete application permission shape. Repository
@@ -81,6 +83,16 @@ the current session, target eligibility, administrator requirements, and
 attempt budget before saving. Admin list routes use bounded cursor pagination.
 The internal Web resolver accepts a shared server credential, returns only one
 active validated HTTPS destination, and treats ambiguous usernames as not found.
+
+## Public avatar state
+
+Public avatar images live in R2. D1 keeps only the hourly upload window, pending
+review rows, and the audit history. A review row stores the candidate SHA-256,
+private object key, moderation result, status, and the administrator who decided
+it. Audit rows are append-only and identify whether the owner or an administrator
+performed the upload, removal, submission, or decision. The service never accepts
+a reviewer identity from the request body; it derives it from the verified
+super-admin session.
 
 ## Safe schema changes
 

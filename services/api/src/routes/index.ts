@@ -58,9 +58,14 @@ import {
 } from '@/services/public-course.service';
 import type { Env } from '@/types/env';
 import {
+  decideAdminAvatarReview,
+  deleteAdminUserAvatar,
   deleteMyAvatar,
+  getAdminAvatarReviewImage,
+  getAdminUserAvatar,
   getMyAvatar,
   getPublicAvatar,
+  listAdminAvatarReviews,
   uploadMyAvatar,
 } from '@/services/public-avatar.service';
 import {
@@ -400,13 +405,33 @@ const routes: RegisteredRoute[] = [
   },
   {
     method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/avatar-reviews/page' },
+    handler: listAdminAvatarReviews,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'prefix', path: '/api/admin/avatar-reviews/' },
+    handler: getAdminAvatarReviewImage,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'prefix', path: '/api/admin/avatar-reviews/' },
+    handler: decideAdminAvatarReview,
+  },
+  {
+    method: 'GET',
     match: { kind: 'exact', path: '/api/admin/users/page' },
     handler: listUsersPage,
   },
   {
     method: 'GET',
     match: { kind: 'prefix', path: '/api/admin/users/' },
-    handler: getUserPermissions,
+    handler: async (req, env) => {
+      if (new URL(req.url).pathname.endsWith('/avatar')) {
+        return getAdminUserAvatar(req, env);
+      }
+      return getUserPermissions(req, env);
+    },
   },
   {
     method: 'PATCH',
@@ -416,7 +441,12 @@ const routes: RegisteredRoute[] = [
   {
     method: 'DELETE',
     match: { kind: 'prefix', path: '/api/admin/users/' },
-    handler: deleteUserPermissions,
+    handler: async (req, env) => {
+      if (new URL(req.url).pathname.endsWith('/avatar')) {
+        return deleteAdminUserAvatar(req, env);
+      }
+      return deleteUserPermissions(req, env);
+    },
   },
 ];
 

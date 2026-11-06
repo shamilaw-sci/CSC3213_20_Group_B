@@ -32,8 +32,10 @@ For implementation-level behavior, use the
   server-reported upload usage, and structured automatic-check results. It is
   separate from public profile PR edits and private account pictures.
 - `/academic/courses/*` manages academic records.
-- `/admin/users/*`, `/admin/projects/*`, `/admin/proxies`, and
-  `/admin/academic-rules` cover permission-protected administration.
+- `/admin/users/*`, `/admin/avatar-reviews`, `/admin/projects/*`,
+  `/admin/proxies`, and `/admin/academic-rules` cover permission-protected
+  administration. Admin user pages show the public picture, pending review
+  decisions, removal controls, and the recorded change history.
 
 ## Interaction model
 

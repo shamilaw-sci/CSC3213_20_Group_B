@@ -18,9 +18,10 @@ Enable R2 on the Cloudflare account, create one Standard bucket named
 `scs-profile-pictures`, and apply the API Worker configuration. The native
 `PROFILE_PICTURES` R2 binding stores immutable WebP objects and `current.json`
 pointers in the same bucket. The `IMAGES` binding decodes, resizes, and
-re-encodes upload bytes. Apply `0006_public_avatar_rate.sql` to the API D1
-database before deployment. Set the Worker secret `TYPESAFE_API_KEY` to a TypeSafe
-API key. No S3 credentials or second metadata database are used.
+re-encodes upload bytes. Apply `0006_public_avatar_rate.sql` and
+`0007_public_avatar_moderation.sql` to the API D1 database before deployment. Set
+the Worker secret `TYPESAFE_API_KEY` to a TypeSafe API key. No S3 credentials or
+second metadata database are used.
 
 The API requires a published public profile whose email matches the signed-in
 member. Owners can `POST` one multipart field named `image` to
@@ -64,10 +65,39 @@ suitability. It does not expose raw model probabilities, confidence values, or
 provider payloads. Policy rejections use HTTP 422. Review-required and
 unavailable checks use HTTP 503; `unavailable` identifies a technical failure
 such as a timeout, missing credential, HTTP error, or malformed provider
-response and is not a policy rejection. No review queue exists yet, so
-`review_required` asks the user to retry or contact an administrator. Jev image
-support is experimental; its accuracy, latency, and production reliability
-require live evaluation before opening uploads widely.
+response and is not a policy rejection.
+
+## Review queue and audit history
+
+A `review_required` upload is stored privately in R2 and registered in
+`public_avatar_review` with status `pending`. It is never published until an
+administrator decides it. Super administrators can:
+
+- list pending reviews at `GET /api/admin/avatar-reviews/page`;
+- preview the private pending image at
+  `GET /api/admin/avatar-reviews/:id/image`;
+- approve or reject at `POST /api/admin/avatar-reviews/:id` with
+  `{"action":"approve"|"reject","note":"..."}`;
+- inspect a member's current picture, pending reviews, and change history at
+  `GET /api/admin/users/:email/avatar`;
+- remove a published picture at `DELETE /api/admin/users/:email/avatar`.
+
+Approval publishes the stored pending object through the same R2 pointer rule as
+an automatic approval. Rejection keeps the current published picture in place.
+Both decisions store `reviewed_by`, `reviewed_at`, and an optional note on the
+review row. Portal exposes the queue at `/admin/avatar-reviews` and the same
+controls on each admin user page.
+
+Every owner upload, owner removal, administrator removal, review submission, and
+review decision appends an immutable row to `public_avatar_audit`. Each row
+records the target username, acting owner or administrator email, actor kind,
+action, previous and resulting SHA-256 values, review identifier, optional note,
+and timestamp. The admin user page reads the bounded history so an administrator
+can see who allowed or removed a picture. Superseded pending reviews are marked
+`rejected` with an audit note rather than left in the queue.
+
+Jev image support is experimental; its accuracy, latency, and production
+reliability require live evaluation before opening uploads widely.
 The official JavaScript SDK documents Node.js 22+ and optional zstd compression.
 The Worker therefore uses the documented typed multipart HTTP endpoint directly,
 without a Node-specific dependency or a text-only gateway.
