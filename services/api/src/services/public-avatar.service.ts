@@ -1140,10 +1140,11 @@ export async function getAdminUserAvatar(
   const username = usernameForEmail(email);
   if (!username)
     return createJsonErrorResponse('Invalid avatar username', 400, origin);
-  const [current, pending, history] = await Promise.all([
+  const [current, pending, history, quota] = await Promise.all([
     readPointer(env.PROFILE_PICTURES, username),
     listPendingAvatarReviewsForUser(env, username),
     listAvatarAudit(env, username),
+    readAvatarQuota(env, username).catch(() => undefined),
   ]);
   return createJsonResponse(
     {
@@ -1153,6 +1154,7 @@ export async function getAdminUserAvatar(
         ? imageUrl(req, username, current.value.sha256)
         : null,
       pending: pending.map(reviewPayload),
+      ...(quota ? { quota } : {}),
       history: history.map((entry) => ({
         id: entry.id,
         username: entry.username,
@@ -1218,6 +1220,37 @@ export async function deleteAdminUserAvatar(
     });
   }
   return createJsonResponse({ deleted: true }, 200, origin);
+}
+
+export async function resetAdminUserAvatarQuota(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const admin = await requireSuperAdmin(req, env);
+  if (admin instanceof Response) return admin;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return createJsonErrorResponse('Invalid JSON body', 400, origin);
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body))
+    return createJsonErrorResponse(
+      'Request body must be a JSON object',
+      400,
+      origin
+    );
+  const username = (body as Record<string, unknown>).username;
+  if (typeof username !== 'string')
+    return createJsonErrorResponse('Invalid avatar username', 400, origin);
+  const normalizedUsername = username.trim().toLowerCase();
+  if (!USERNAME.test(normalizedUsername))
+    return createJsonErrorResponse('Invalid avatar username', 400, origin);
+  await env.AUTH_DB.prepare('DELETE FROM public_avatar_rate WHERE user_id = ?')
+    .bind(normalizedUsername)
+    .run();
+  return createJsonResponse({ quota: avatarQuota(0) }, 200, origin);
 }
 
 export async function listAdminAvatarReviews(

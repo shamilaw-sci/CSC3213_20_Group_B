@@ -1,6 +1,8 @@
 import {
   type AdminAvatarDeleteResult,
   AdminAvatarDeleteResultSchema,
+  type AdminAvatarQuotaResetResult,
+  AdminAvatarQuotaResetResultSchema,
   type AdminAvatarReviewDecision,
   AdminAvatarReviewDecisionSchema,
   type AdminUserAvatar,
@@ -8,6 +10,7 @@ import {
 } from '@scs/schemas';
 
 import {
+  adminAvatarRateResetApiUrl,
   adminAvatarReviewApiUrl,
   adminAvatarReviewImageApiUrl,
   adminUserAvatarApiUrl,
@@ -53,6 +56,26 @@ export async function deleteAdminUserAvatar(
     throw new Error(error.message ?? 'Could not remove the public picture.');
   }
   const parsed = AdminAvatarDeleteResultSchema.safeParse(await response.json());
+  if (!parsed.success) throw unexpectedResponse();
+  return parsed.data;
+}
+
+export async function resetAdminAvatarRate(
+  username: string
+): Promise<AdminAvatarQuotaResetResult> {
+  const response = await fetch(adminAvatarRateResetApiUrl(), {
+    method: 'POST',
+    credentials: 'include',
+    headers: apiHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ username }),
+  });
+  if (!response.ok) {
+    const error = await readApiError(response);
+    throw new Error(error.message ?? 'Could not reset the upload count.');
+  }
+  const parsed = AdminAvatarQuotaResetResultSchema.safeParse(
+    await response.json()
+  );
   if (!parsed.success) throw unexpectedResponse();
   return parsed.data;
 }

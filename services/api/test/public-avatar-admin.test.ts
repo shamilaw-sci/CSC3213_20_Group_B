@@ -393,6 +393,83 @@ describe('admin public avatar controls', () => {
     expect(response.status).toBe(403);
   });
 
+  test('reports and resets a member hourly upload count', async () => {
+    const { env, bucket } = await createAdminEnv();
+    await seedCurrentAvatar(env, bucket);
+    const windowStartedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+    await env.AUTH_DB.prepare(
+      `INSERT INTO public_avatar_rate (user_id, window_start, attempts) VALUES (?, ?, ?)`
+    )
+      .bind(USERNAME, windowStartedAt, 4)
+      .run();
+    const cookie = await adminCookie(env);
+    const headers = {
+      Origin: ALLOWED_ORIGIN,
+      'X-Client-Id': 'portal',
+      Cookie: cookie,
+    };
+
+    const before = await invokeWorker(
+      `/api/admin/users/${encodeURIComponent(MEMBER_EMAIL)}/avatar`,
+      { headers },
+      env
+    );
+    expect(before.status).toBe(200);
+    expect(await before.json()).toMatchObject({
+      quota: { limit: 6, used: 4, remaining: 2, available: true },
+    });
+
+    const reset = await invokeWorker(
+      '/api/admin/avatar-rate/reset',
+      {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: USERNAME }),
+      },
+      env
+    );
+    expect(reset.status).toBe(200);
+    expect(await reset.json()).toMatchObject({
+      quota: { limit: 6, used: 0, remaining: 6, available: true },
+    });
+
+    const after = await invokeWorker(
+      `/api/admin/users/${encodeURIComponent(MEMBER_EMAIL)}/avatar`,
+      { headers },
+      env
+    );
+    expect(await after.json()).toMatchObject({
+      quota: { used: 0, remaining: 6 },
+    });
+  });
+
+  test('requires a super administrator to reset upload counts', async () => {
+    const { env } = await createAdminEnv();
+    await setUserPermission(
+      MEMBER_EMAIL,
+      { role: APP_ROLE.STUDENT, accessLevel: ACCESS_LEVEL.NONE },
+      env
+    );
+    const cookie = await createTestSessionCookie(env, MEMBER_EMAIL);
+
+    const response = await invokeWorker(
+      '/api/admin/avatar-rate/reset',
+      {
+        method: 'POST',
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: USERNAME }),
+      },
+      env
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   test('approves a review and records the administrator who allowed it', async () => {
     const { env, bucket } = await createAdminEnv();
     const key = `avatars/${USERNAME}/${HASH}.webp`;

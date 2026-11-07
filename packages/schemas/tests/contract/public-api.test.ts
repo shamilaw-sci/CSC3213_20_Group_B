@@ -39,6 +39,7 @@ const expectedRuntimeExports = [
   'AcademicUsernameSchema',
   'AcademicYearSchema',
   'AdminAvatarDeleteResultSchema',
+  'AdminAvatarQuotaResetResultSchema',
   'AdminAvatarReviewDecisionSchema',
   'AdminAvatarReviewPageSchema',
   'AdminUserAvatarSchema',

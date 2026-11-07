@@ -133,6 +133,11 @@ export const AdminUserAvatarSchema = z.object({
   url: z.string().nullable(),
   pending: z.array(PublicAvatarReviewSchema),
   history: z.array(PublicAvatarAuditEntrySchema),
+  quota: PublicAvatarQuotaSchema.optional(),
+});
+
+export const AdminAvatarQuotaResetResultSchema = z.object({
+  quota: PublicAvatarQuotaSchema,
 });
 
 export const AdminAvatarReviewPageSchema = z.object({
@@ -193,4 +198,7 @@ export type AdminAvatarReviewDecision = z.infer<
 >;
 export type AdminAvatarDeleteResult = z.infer<
   typeof AdminAvatarDeleteResultSchema
+>;
+export type AdminAvatarQuotaResetResult = z.infer<
+  typeof AdminAvatarQuotaResetResultSchema
 >;

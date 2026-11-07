@@ -80,29 +80,30 @@ schema is the authority for these rules, not UI inference.
 
 ## Public avatars
 
-| Schema                               | Responsibility                                                                     |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| `PublicAvatarSchema`                 | Owner identity, published image URL, pending candidate, and optional upload quota. |
-| `PublicAvatarPendingReviewSchema`    | Pending candidate identity, submitted time, and moderation result.                 |
-| `PublicAvatarQuotaSchema`            | Hourly attempt limit, usage, reset time, and availability.                         |
-| `PublicAvatarUploadResultSchema`     | Published image metadata, moderation result, and refreshed quota.                  |
-| `PublicAvatarDeleteResultSchema`     | Removal outcome and refreshed quota.                                               |
-| `PublicAvatarErrorSchema`            | Structured avatar error with optional quota and moderation data.                   |
-| `PublicAvatarModerationSchema`       | Moderation status, stable code, message, and check outcomes.                       |
-| `PublicAvatarModerationStatusSchema` | Approved, rejected, review-required, or unavailable status.                        |
-| `PublicAvatarModerationCodeSchema`   | Stable moderation outcome code.                                                    |
-| `PublicAvatarCheckSchema`            | One safety or portrait check and its outcome.                                      |
-| `PublicAvatarCheckIdSchema`          | Safety or portrait check identifier.                                               |
-| `PublicAvatarCheckStatusSchema`      | Passed, failed, needs-review, or not-checked outcome.                              |
-| `PublicAvatarReviewSchema`           | Pending or decided review with reviewer and note.                                  |
-| `PublicAvatarReviewStatusSchema`     | Pending, approved, or rejected review status.                                      |
-| `PublicAvatarAuditEntrySchema`       | One actor, action, image hash, note, and timestamp.                                |
-| `PublicAvatarAuditActionSchema`      | Upload, delete, admin delete, or review action.                                    |
-| `PublicAvatarAuditActorKindSchema`   | Owner or administrator actor.                                                      |
-| `AdminUserAvatarSchema`              | Current picture, pending reviews, and bounded audit history.                       |
-| `AdminAvatarReviewPageSchema`        | Bounded pending-review page with cursor metadata.                                  |
-| `AdminAvatarReviewDecisionSchema`    | Decided review and the resulting published URL.                                    |
-| `AdminAvatarDeleteResultSchema`      | Whether an administrator removed a published picture.                              |
+| Schema                               | Responsibility                                                                      |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| `PublicAvatarSchema`                 | Owner identity, published image URL, pending candidate, and optional upload quota.  |
+| `PublicAvatarPendingReviewSchema`    | Pending candidate identity, submitted time, and moderation result.                  |
+| `PublicAvatarQuotaSchema`            | Hourly attempt limit, usage, reset time, and availability.                          |
+| `PublicAvatarUploadResultSchema`     | Published image metadata, moderation result, and refreshed quota.                   |
+| `PublicAvatarDeleteResultSchema`     | Removal outcome and refreshed quota.                                                |
+| `PublicAvatarErrorSchema`            | Structured avatar error with optional quota and moderation data.                    |
+| `PublicAvatarModerationSchema`       | Moderation status, stable code, message, and check outcomes.                        |
+| `PublicAvatarModerationStatusSchema` | Approved, rejected, review-required, or unavailable status.                         |
+| `PublicAvatarModerationCodeSchema`   | Stable moderation outcome code.                                                     |
+| `PublicAvatarCheckSchema`            | One safety or portrait check and its outcome.                                       |
+| `PublicAvatarCheckIdSchema`          | Safety or portrait check identifier.                                                |
+| `PublicAvatarCheckStatusSchema`      | Passed, failed, needs-review, or not-checked outcome.                               |
+| `PublicAvatarReviewSchema`           | Pending or decided review with reviewer and note.                                   |
+| `PublicAvatarReviewStatusSchema`     | Pending, approved, or rejected review status.                                       |
+| `PublicAvatarAuditEntrySchema`       | One actor, action, image hash, note, and timestamp.                                 |
+| `PublicAvatarAuditActionSchema`      | Upload, delete, admin delete, or review action.                                     |
+| `PublicAvatarAuditActorKindSchema`   | Owner or administrator actor.                                                       |
+| `AdminUserAvatarSchema`              | Current picture, pending reviews, bounded audit history, and optional upload quota. |
+| `AdminAvatarQuotaResetResultSchema`  | A member's refreshed hourly upload quota after an administrator reset.              |
+| `AdminAvatarReviewPageSchema`        | Bounded pending-review page with cursor metadata.                                   |
+| `AdminAvatarReviewDecisionSchema`    | Decided review and the resulting published URL.                                     |
+| `AdminAvatarDeleteResultSchema`      | Whether an administrator removed a published picture.                               |
 
 Public avatar contracts describe the API-only picture shown in the People
 directory. They are separate from private account pictures and public profile

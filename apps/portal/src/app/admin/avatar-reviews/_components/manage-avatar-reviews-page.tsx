@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
-import { Check, Clock3, ShieldCheck, X } from 'lucide-react';
+import { Check, Clock3, RotateCcw, ShieldCheck, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -18,8 +18,11 @@ import { toast } from 'sonner';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import { Pagination } from '@/components/navigation/pagination';
-import { AdminAvatarReviewImage } from '@/components/profiles/admin-avatar-review-image';
-import { decideAdminAvatarReview } from '@/lib/admin-avatar';
+import { AdminAvatarReviewPreview } from '@/components/profiles/admin-avatar-review-preview';
+import {
+  decideAdminAvatarReview,
+  resetAdminAvatarRate,
+} from '@/lib/admin-avatar';
 
 function formatTime(value: string): string {
   const date = new Date(value);
@@ -52,6 +55,26 @@ export default function ManageAvatarReviewsPage({
 }: ManageAvatarReviewsPageProps) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
+
+  async function resetUploadCount(username: string) {
+    if (busyId || resetting) return;
+    setResetting(username);
+    try {
+      const { quota } = await resetAdminAvatarRate(username);
+      toast.success(
+        `Upload count reset for @${username}. ${quota.remaining} of ${quota.limit} attempts remain.`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not reset the upload count.'
+      );
+    } finally {
+      setResetting(null);
+    }
+  }
 
   async function decide(
     review: PublicAvatarReview,
@@ -118,10 +141,11 @@ export default function ManageAvatarReviewsPage({
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <AdminAvatarReviewImage
+                  <AdminAvatarReviewPreview
                     reviewId={review.id}
+                    username={review.username}
                     alt={`Picture submitted by ${review.username}`}
-                    className="bg-muted mx-auto size-48 rounded-md object-cover"
+                    className="mx-auto aspect-square w-full max-w-48"
                   />
                   <ul className="flex flex-wrap gap-2 text-xs">
                     {(review.moderation?.checks ?? []).map((check) => (
@@ -154,6 +178,18 @@ export default function ManageAvatarReviewsPage({
                     >
                       <X />
                       Reject
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={busyId !== null || resetting !== null}
+                      title={`Reset @${review.username}'s hourly upload count`}
+                      onClick={() => void resetUploadCount(review.username)}
+                    >
+                      <RotateCcw />
+                      {resetting === review.username
+                        ? 'Resetting…'
+                        : 'Reset upload count'}
                     </Button>
                   </div>
                 </CardContent>

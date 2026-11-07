@@ -233,18 +233,19 @@ reference data; new collection UIs should use page routes.
 
 ## Administration and Personal-Site Redirect Settings
 
-| Method                   | Route                                 | Purpose                                      |
-| ------------------------ | ------------------------------------- | -------------------------------------------- |
-| `GET`                    | `/api/admin/users/page`               | list a bounded page of users                 |
-| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`             | manage one permission record                 |
-| `GET`, `DELETE`          | `/api/admin/users/:email/avatar`      | inspect or remove a public picture           |
-| `GET`                    | `/api/admin/avatar-reviews/page`      | list pending public-picture reviews          |
-| `GET`                    | `/api/admin/avatar-reviews/:id/image` | preview a pending picture                    |
-| `POST`                   | `/api/admin/avatar-reviews/:id`       | approve or reject a pending picture          |
-| `GET`                    | `/api/admin/proxies/page`             | list personal-site redirect settings from D1 |
-| `POST`                   | `/api/admin/proxies/reset-attempts`   | reset one user's edit attempts               |
-| `GET`, `POST`            | `/api/me/proxy`                       | read or edit the current user's redirect     |
-| `GET`                    | `/api/internal/proxies/:username`     | resolve one active mapping for Web           |
+| Method                   | Route                                 | Purpose                                       |
+| ------------------------ | ------------------------------------- | --------------------------------------------- |
+| `GET`                    | `/api/admin/users/page`               | list a bounded page of users                  |
+| `GET`, `PATCH`, `DELETE` | `/api/admin/users/:email`             | manage one permission record                  |
+| `GET`, `DELETE`          | `/api/admin/users/:email/avatar`      | inspect or remove a public picture            |
+| `POST`                   | `/api/admin/avatar-rate/reset`        | reset one member's hourly avatar upload count |
+| `GET`                    | `/api/admin/avatar-reviews/page`      | list pending public-picture reviews           |
+| `GET`                    | `/api/admin/avatar-reviews/:id/image` | preview a pending picture                     |
+| `POST`                   | `/api/admin/avatar-reviews/:id`       | approve or reject a pending picture           |
+| `GET`                    | `/api/admin/proxies/page`             | list personal-site redirect settings from D1  |
+| `POST`                   | `/api/admin/proxies/reset-attempts`   | reset one user's edit attempts                |
+| `GET`, `POST`            | `/api/me/proxy`                       | read or edit the current user's redirect      |
+| `GET`                    | `/api/internal/proxies/:username`     | resolve one active mapping for Web            |
 
 These routes require a non-blacklisted super-admin except `/api/me/proxy`.
 Users cannot reset their own attempt counter. Redirect edits use one atomic D1

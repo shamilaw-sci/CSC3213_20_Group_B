@@ -94,7 +94,9 @@ performed the upload, removal, submission, or decision. The service never accept
 a reviewer identity from the request body; it derives it from the verified
 super-admin session. An owner can read their own pending candidate image until a
 decision is recorded and can withdraw it; withdrawal updates the review row and
-audit history but leaves the published R2 pointer unchanged.
+audit history but leaves the published R2 pointer unchanged. Super administrators
+can inspect a member's current hourly upload quota and clear the stored rate row
+so the member can upload again immediately; the reset is idempotent.
 
 ## Safe schema changes
 

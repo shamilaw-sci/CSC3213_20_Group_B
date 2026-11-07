@@ -37,9 +37,11 @@ For implementation-level behavior, use the
 - `/admin/users/*`, `/admin/avatar-reviews`, `/admin/projects/*`,
   `/admin/proxies`, and `/admin/academic-rules` cover permission-protected
   administration. Admin user pages show the public picture, pending review
-  decisions, removal controls, and the recorded change history. The admin public
-  profile links to a remove-only public picture page; administrators remove the
-  current published picture but never upload a replacement there.
+  decisions with circle, square, and rounded previews, removal controls, the
+  hourly upload count with a reset action, and the recorded change history. The
+  admin public profile links to a remove-only public picture page;
+  administrators remove the current published picture but never upload a
+  replacement there.
 
 ## Interaction model
 

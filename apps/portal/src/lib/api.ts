@@ -151,6 +151,10 @@ export function adminUserAvatarApiUrl(email: string) {
   return apiUrl(`/api/admin/users/${encodeURIComponent(email)}/avatar`);
 }
 
+export function adminAvatarRateResetApiUrl() {
+  return apiUrl('/api/admin/avatar-rate/reset');
+}
+
 export function adminAvatarReviewsPageApiUrl(cursor?: string, limit = 50) {
   const url = apiUrl('/api/admin/avatar-reviews/page');
   url.searchParams.set('limit', String(limit));

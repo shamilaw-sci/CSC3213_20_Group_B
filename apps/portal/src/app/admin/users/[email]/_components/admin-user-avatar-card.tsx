@@ -31,18 +31,21 @@ import {
   Image as ImageIcon,
   LoaderCircle,
   RefreshCw,
+  RotateCcw,
   Trash2,
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { AdminAvatarReviewImage } from '@/components/profiles/admin-avatar-review-image';
+import { AdminAvatarReviewPreview } from '@/components/profiles/admin-avatar-review-preview';
 import {
   decideAdminAvatarReview,
   deleteAdminUserAvatar,
   getAdminUserAvatar,
+  resetAdminAvatarRate,
 } from '@/lib/admin-avatar';
+import { formatResetTime } from '@/lib/public-avatar';
 
 const ACTION_LABEL: Record<PublicAvatarAuditAction, string> = {
   upload: 'Uploaded',
@@ -79,6 +82,9 @@ export function AdminUserAvatarCard({ email, name }: AdminUserAvatarCardProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [removeNote, setRemoveNote] = useState('');
+  const quotaReset = state?.quota
+    ? formatResetTime(state.quota.resetsAt)
+    : null;
 
   const load = useCallback(
     async (showLoading = false) => {
@@ -140,6 +146,26 @@ export function AdminUserAvatarCard({ email, name }: AdminUserAvatarCardProps) {
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Could not update the review.'
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetUploadCount() {
+    if (busy || !state) return;
+    setBusy(true);
+    try {
+      const { quota } = await resetAdminAvatarRate(state.username);
+      toast.success(
+        `Upload count reset. ${quota.remaining} of ${quota.limit} attempts remain.`
+      );
+      await load();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not reset the upload count.'
       );
     } finally {
       setBusy(false);
@@ -247,6 +273,39 @@ export function AdminUserAvatarCard({ email, name }: AdminUserAvatarCardProps) {
               ) : null}
             </div>
 
+            <div
+              className="flex flex-wrap items-center justify-between gap-3
+                rounded-md border p-3"
+            >
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Hourly upload allowance</p>
+                <p className="text-muted-foreground text-sm">
+                  {state.quota ? (
+                    <>
+                      {state.quota.used} of {state.quota.limit} upload attempts
+                      used
+                      {quotaReset
+                        ? ` · resets ${quotaReset.relative} at ${quotaReset.time}`
+                        : ''}
+                      .
+                    </>
+                  ) : (
+                    'Upload usage is not available right now.'
+                  )}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={() => void resetUploadCount()}
+              >
+                <RotateCcw />
+                Reset upload count
+              </Button>
+            </div>
+
             <Separator />
 
             <section
@@ -274,12 +333,14 @@ export function AdminUserAvatarCard({ email, name }: AdminUserAvatarCardProps) {
                       className="flex flex-col gap-3 rounded-md border p-3
                         sm:flex-row"
                     >
-                      <AdminAvatarReviewImage
-                        reviewId={review.id}
-                        alt="Picture awaiting review"
-                        className="bg-muted size-28 shrink-0 rounded-md
-                          object-cover"
-                      />
+                      <div className="w-full shrink-0 sm:w-40">
+                        <AdminAvatarReviewPreview
+                          reviewId={review.id}
+                          username={review.username}
+                          alt="Picture awaiting review"
+                          className="aspect-square w-full"
+                        />
+                      </div>
                       <div className="min-w-0 flex-1 space-y-2">
                         <p
                           className="text-muted-foreground flex items-center

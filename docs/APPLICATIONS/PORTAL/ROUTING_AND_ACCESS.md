@@ -11,20 +11,20 @@ administrative surface.
 
 ## Route families
 
-| Route family               | Purpose                                                     |
-| -------------------------- | ----------------------------------------------------------- |
-| `/login`, `/signup`        | email-code, OAuth, and passkey entry flows                  |
-| `/dashboard`, `/account/*` | signed-in landing page and current account settings         |
-| `/user/me/*`               | current member profile and publishing workflows             |
-| `/user/projects/*`         | member project editing and submission                       |
-| `/user/proxy`              | delegated profile-management settings                       |
-| `/academic/courses/*`      | course and offering editing                                 |
-| `/admin/users/*`           | user inspection, public-picture removal, and administration |
-| `/admin/avatar-reviews`    | pending public-picture moderation                           |
-| `/admin/projects/*`        | administrative project editing                              |
-| `/admin/proxies`           | proxy relationship administration                           |
-| `/admin/academic-rules`    | student placement metadata                                  |
-| `/privacy`, `/tos`         | public policy pages                                         |
+| Route family               | Purpose                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| `/login`, `/signup`        | email-code, OAuth, and passkey entry flows                                      |
+| `/dashboard`, `/account/*` | signed-in landing page and current account settings                             |
+| `/user/me/*`               | current member profile and publishing workflows                                 |
+| `/user/projects/*`         | member project editing and submission                                           |
+| `/user/proxy`              | delegated profile-management settings                                           |
+| `/academic/courses/*`      | course and offering editing                                                     |
+| `/admin/users/*`           | user inspection, public-picture removal, upload-count reset, and administration |
+| `/admin/avatar-reviews`    | pending public-picture moderation                                               |
+| `/admin/projects/*`        | administrative project editing                                                  |
+| `/admin/proxies`           | proxy relationship administration                                               |
+| `/admin/academic-rules`    | student placement metadata                                                      |
+| `/privacy`, `/tos`         | public policy pages                                                             |
 
 ## Guard sequence
 

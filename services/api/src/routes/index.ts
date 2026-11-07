@@ -68,6 +68,7 @@ import {
   getMyPendingAvatarReviewImage,
   getPublicAvatar,
   listAdminAvatarReviews,
+  resetAdminUserAvatarQuota,
   uploadMyAvatar,
 } from '@/services/public-avatar.service';
 import {
@@ -414,6 +415,11 @@ const routes: RegisteredRoute[] = [
       }
       return deletePublicOfferingPr(req, env);
     },
+  },
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/admin/avatar-rate/reset' },
+    handler: resetAdminUserAvatarQuota,
   },
   {
     method: 'GET',

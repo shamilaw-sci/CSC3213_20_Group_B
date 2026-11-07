@@ -85,9 +85,11 @@ administrator decides it. Super administrators can:
   `GET /api/admin/avatar-reviews/:id/image`;
 - approve or reject at `POST /api/admin/avatar-reviews/:id` with
   `{"action":"approve"|"reject","note":"..."}`;
-- inspect a member's current picture, pending reviews, and change history at
-  `GET /api/admin/users/:email/avatar`;
-- remove a published picture at `DELETE /api/admin/users/:email/avatar`.
+- inspect a member's current picture, pending reviews, upload quota, and change
+  history at `GET /api/admin/users/:email/avatar`;
+- remove a published picture at `DELETE /api/admin/users/:email/avatar`;
+- reset a member's hourly upload count at `POST /api/admin/avatar-rate/reset`
+  with `{"username":"..."}`.
 
 Approval publishes the stored pending object through the same R2 pointer rule as
 an automatic approval. If the object is missing or the pointer cannot be written,
@@ -95,7 +97,10 @@ the review returns to `pending` so the administrator can retry or reject it;
 approval never publishes a pointer to an absent object. Rejection keeps the
 current published picture in place. Both decisions store `reviewed_by`,
 `reviewed_at`, and an optional note on the review row. Portal exposes the queue at
-`/admin/avatar-reviews` and the same controls on each admin user page. An admin
+`/admin/avatar-reviews` and the same controls on each admin user page. Both
+admin review views preview candidates with the same circle, square, and rounded
+styles and expandable dialog as the owner page. Administrators can also reset a
+member's hourly upload count from those views. An admin
 user's public profile also links to `/admin/users/:email/public-avatar`, a
 remove-only picture page where an administrator can inspect and remove the
 current published picture but cannot upload a replacement.
