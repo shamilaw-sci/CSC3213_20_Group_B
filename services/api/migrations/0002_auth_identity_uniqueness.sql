@@ -1,5 +1,5 @@
-create unique index "account_provider_account_unique" on "account" ("providerId", "accountId");
+CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("providerId", "accountId");
 
-drop index "passkey_credentialID_idx";
+DROP INDEX "passkey_credentialID_idx";
 
-create unique index "passkey_credentialID_unique" on "passkey" ("credentialID");
+CREATE UNIQUE INDEX "passkey_credentialID_unique" ON "passkey" ("credentialID");

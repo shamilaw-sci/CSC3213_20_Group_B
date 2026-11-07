@@ -1,14 +1,14 @@
-create table "proxySettings" (
-  "email" text not null primary key,
-  "username" text not null,
-  "active" integer not null default 0 check ("active" in (0, 1)),
-  "url" text not null default '',
-  "availableAttempts" integer not null default 5 check ("availableAttempts" between 0 and 5),
-  "attemptWindowStartedAt" integer,
-  "updatedAt" integer,
-  "updatedBy" text,
-  "revision" integer not null default 1
+CREATE TABLE "proxySettings" (
+  "email" TEXT NOT NULL PRIMARY KEY,
+  "username" TEXT NOT NULL,
+  "active" INTEGER NOT NULL DEFAULT 0 CHECK ("active" IN (0, 1)),
+  "url" TEXT NOT NULL DEFAULT '',
+  "availableAttempts" INTEGER NOT NULL DEFAULT 5 CHECK ("availableAttempts" BETWEEN 0 AND 5),
+  "attemptWindowStartedAt" INTEGER,
+  "updatedAt" INTEGER,
+  "updatedBy" TEXT,
+  "revision" INTEGER NOT NULL DEFAULT 1
 );
 
-create index "proxySettings_updatedAt_idx"
-  on "proxySettings" ("updatedAt");
+CREATE INDEX "proxySettings_updatedAt_idx"
+  ON "proxySettings" ("updatedAt");

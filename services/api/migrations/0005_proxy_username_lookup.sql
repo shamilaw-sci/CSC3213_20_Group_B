@@ -1,2 +1,2 @@
-create index "proxySettings_username_idx"
-  on "proxySettings" ("username");
+CREATE INDEX "proxySettings_username_idx"
+  ON "proxySettings" ("username");

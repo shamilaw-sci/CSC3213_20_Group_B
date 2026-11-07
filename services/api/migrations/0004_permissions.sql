@@ -1,8 +1,8 @@
-create table "permission" (
-  "email" text not null primary key collate nocase,
-  "permissionJson" text not null check (json_valid("permissionJson")),
-  "role" text not null check (
-    "role" in (
+CREATE TABLE "permission" (
+  "email" TEXT NOT NULL PRIMARY KEY COLLATE NOCASE,
+  "permissionJson" TEXT NOT NULL CHECK (json_valid("permissionJson")),
+  "role" TEXT NOT NULL CHECK (
+    "role" IN (
       'USER',
       'OTHER',
       'STUDENT',
@@ -11,14 +11,14 @@ create table "permission" (
       'ACADEMIC_SUPPORT'
     )
   ),
-  "accessLevel" text not null default 'NONE' check (
-    "accessLevel" in ('NONE', 'ADMIN', 'SUPER_ADMIN')
+  "accessLevel" TEXT NOT NULL DEFAULT 'NONE' CHECK (
+    "accessLevel" IN ('NONE', 'ADMIN', 'SUPER_ADMIN')
   ),
-  "name" text not null default '',
-  "picture" text not null default '',
-  "blacklisted" integer not null default 0 check ("blacklisted" in (0, 1)),
-  "createdAt" integer
+  "name" TEXT NOT NULL DEFAULT '',
+  "picture" TEXT NOT NULL DEFAULT '',
+  "blacklisted" INTEGER NOT NULL DEFAULT 0 CHECK ("blacklisted" IN (0, 1)),
+  "createdAt" INTEGER
 );
 
-create index "permission_accessLevel_idx"
-  on "permission" ("accessLevel");
+CREATE INDEX "permission_accessLevel_idx"
+  ON "permission" ("accessLevel");
