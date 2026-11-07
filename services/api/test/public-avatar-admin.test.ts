@@ -92,6 +92,8 @@ function createMemoryBucket(): R2Bucket & {
   } as unknown as R2Bucket & { objects: Map<string, MemoryObject> };
 }
 
+const PENDING_HASH = 'b'.repeat(64);
+
 const MODERATION: PublicAvatarModeration = {
   status: 'review_required',
   code: 'review_required',
@@ -219,6 +221,67 @@ async function uploadAvatar(
     },
     env
   );
+}
+
+function stubMemberProfileFetch() {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (url.includes('/people/v2/users/'))
+      return Response.json({ email: MEMBER_EMAIL });
+    throw new Error(`Unexpected fetch: ${url}`);
+  }) as typeof fetch;
+}
+
+async function createMemberEnv(): Promise<{
+  env: Env;
+  bucket: ReturnType<typeof createMemoryBucket>;
+  cookie: string;
+}> {
+  const bucket = createMemoryBucket();
+  const env = createTestEnv({
+    PROFILE_PICTURES: bucket,
+    IMAGES: createImagesBinding(),
+  });
+  await setUserPermission(
+    MEMBER_EMAIL,
+    {
+      role: APP_ROLE.STUDENT,
+      accessLevel: ACCESS_LEVEL.NONE,
+      name: 'Student',
+    },
+    env
+  );
+  return {
+    env,
+    bucket,
+    cookie: await createTestSessionCookie(env, MEMBER_EMAIL),
+  };
+}
+
+async function seedPendingReview(
+  env: Env,
+  bucket: ReturnType<typeof createMemoryBucket>,
+  sha256 = PENDING_HASH,
+  submittedAt = Date.now()
+): Promise<{ id: string; key: string }> {
+  const key = `avatars/${USERNAME}/${sha256}.webp`;
+  await bucket.put(key, new Uint8Array([4, 5, 6]));
+  const id = crypto.randomUUID();
+  await createAvatarReview(env, {
+    id,
+    username: USERNAME,
+    sha256,
+    objectKey: key,
+    size: 3,
+    moderation: MODERATION,
+    submittedAt,
+  });
+  return { id, key };
 }
 
 async function createAdminEnv(): Promise<{
@@ -636,5 +699,158 @@ describe('admin public avatar controls', () => {
       actorEmail: ADMIN_EMAIL,
       note: 'Not a portrait',
     });
+  });
+});
+
+describe('owner public avatar review visibility', () => {
+  test('returns the pending candidate beside the published picture', async () => {
+    const { env, bucket, cookie } = await createMemberEnv();
+    await seedCurrentAvatar(env, bucket);
+    const review = await seedPendingReview(env, bucket);
+    stubMemberProfileFetch();
+
+    const response = await invokeWorker(
+      '/api/people/v2/avatars/me',
+      {
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      username: USERNAME,
+      url: expect.stringContaining(`/${USERNAME}/${HASH}.webp`),
+      pending: {
+        id: review.id,
+        sha256: PENDING_HASH,
+        size: 3,
+        moderation: MODERATION,
+      },
+    });
+  });
+
+  test('serves the pending image only to its owner and only while pending', async () => {
+    const { env, bucket, cookie } = await createMemberEnv();
+    const review = await seedPendingReview(env, bucket);
+    stubMemberProfileFetch();
+
+    const response = await invokeWorker(
+      `/api/people/v2/avatars/me/pending?id=${review.id}`,
+      {
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/webp');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(
+      new Uint8Array([4, 5, 6])
+    );
+
+    const missing = await invokeWorker(
+      `/api/people/v2/avatars/me/pending?id=${crypto.randomUUID()}`,
+      {
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+    expect(missing.status).toBe(404);
+  });
+
+  test('withdraws the pending candidate without removing the published picture', async () => {
+    const { env, bucket, cookie } = await createMemberEnv();
+    await seedCurrentAvatar(env, bucket);
+    const review = await seedPendingReview(env, bucket);
+    stubMemberProfileFetch();
+
+    const response = await invokeWorker(
+      '/api/people/v2/avatars/me/pending',
+      {
+        method: 'DELETE',
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ deleted: true });
+
+    const pointer = JSON.parse(
+      new TextDecoder().decode(
+        bucket.objects.get(`avatars/${USERNAME}/current.json`)!.body
+      )
+    ) as { key: string | null; sha256: string | null };
+    expect(pointer).toMatchObject({
+      key: `avatars/${USERNAME}/${HASH}.webp`,
+      sha256: HASH,
+    });
+    expect(bucket.objects.has(review.key)).toBe(false);
+    expect(await getAvatarReview(env, review.id)).toMatchObject({
+      status: 'rejected',
+      reviewedBy: MEMBER_EMAIL,
+      note: 'Withdrawn by the profile owner.',
+    });
+    expect((await listAvatarAudit(env, USERNAME))[0]).toMatchObject({
+      action: 'review_rejected',
+      actorKind: 'owner',
+      actorEmail: MEMBER_EMAIL,
+      note: 'Withdrawn by the profile owner.',
+    });
+
+    const current = await invokeWorker(
+      '/api/people/v2/avatars/me',
+      {
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+    expect(await current.json()).toMatchObject({
+      url: expect.stringContaining(`/${USERNAME}/${HASH}.webp`),
+      pending: null,
+    });
+  });
+
+  test('reports no withdrawal when nothing is pending', async () => {
+    const { env, cookie } = await createMemberEnv();
+    stubMemberProfileFetch();
+
+    const response = await invokeWorker(
+      '/api/people/v2/avatars/me/pending',
+      {
+        method: 'DELETE',
+        headers: {
+          Origin: ALLOWED_ORIGIN,
+          'X-Client-Id': 'portal',
+          Cookie: cookie,
+        },
+      },
+      env
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ deleted: false });
   });
 });

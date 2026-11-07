@@ -47,9 +47,18 @@ export const PublicAvatarQuotaSchema = z.object({
   available: z.boolean(),
 });
 
+export const PublicAvatarPendingReviewSchema = z.object({
+  id: z.string(),
+  sha256: z.string(),
+  size: z.number().int().nonnegative(),
+  submittedAt: z.iso.datetime({ offset: true }),
+  moderation: PublicAvatarModerationSchema.nullable(),
+});
+
 export const PublicAvatarSchema = z.object({
   username: z.string(),
   url: z.string().nullable(),
+  pending: PublicAvatarPendingReviewSchema.nullable(),
   quota: PublicAvatarQuotaSchema.optional(),
 });
 
@@ -153,6 +162,9 @@ export type PublicAvatarModeration = z.infer<
   typeof PublicAvatarModerationSchema
 >;
 export type PublicAvatarQuota = z.infer<typeof PublicAvatarQuotaSchema>;
+export type PublicAvatarPendingReview = z.infer<
+  typeof PublicAvatarPendingReviewSchema
+>;
 export type PublicAvatar = z.infer<typeof PublicAvatarSchema>;
 export type PublicAvatarUploadResult = z.infer<
   typeof PublicAvatarUploadResultSchema

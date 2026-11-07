@@ -20,6 +20,7 @@ import {
   cancelPendingAvatarReviews,
   createAvatarReview,
   getAvatarReview,
+  getPendingAvatarReviewForUser,
   hasPendingAvatarObject,
   listAvatarAudit,
   listPendingAvatarReviewsForUser,
@@ -483,6 +484,16 @@ function reviewPayload(review: PublicAvatarReviewRecord) {
   };
 }
 
+function pendingPayload(review: PublicAvatarReviewRecord) {
+  return {
+    id: review.id,
+    sha256: review.sha256,
+    size: review.size,
+    submittedAt: new Date(review.submittedAt).toISOString(),
+    moderation: review.moderation,
+  };
+}
+
 async function recordOwnerAudit(
   env: Env,
   input: {
@@ -519,7 +530,7 @@ async function cancelPendingForUser(
     note: string;
     submittedBefore: number;
   }
-): Promise<void> {
+): Promise<number> {
   const reviewedAt = Date.now();
   const cancelled = await cancelPendingAvatarReviews(env, {
     username: input.username,
@@ -542,6 +553,7 @@ async function cancelPendingForUser(
     });
     await deleteReviewObject(env, review);
   }
+  return cancelled.length;
 }
 
 async function deleteReviewObject(
@@ -969,8 +981,9 @@ export async function getMyAvatar(req: Request, env: Env): Promise<Response> {
   const origin = getRequestOrigin(req);
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
-  const [current, quota] = await Promise.all([
+  const [current, pending, quota] = await Promise.all([
     readPointer(env.PROFILE_PICTURES, identity.username),
+    getPendingAvatarReviewForUser(env, identity.username),
     readAvatarQuota(env, identity.username).catch(() => undefined),
   ]);
   return createJsonResponse(
@@ -979,11 +992,58 @@ export async function getMyAvatar(req: Request, env: Env): Promise<Response> {
       url: current.value?.sha256
         ? imageUrl(req, identity.username, current.value.sha256)
         : null,
+      pending: pending ? pendingPayload(pending) : null,
       ...(quota ? { quota } : {}),
     },
     200,
     origin
   );
+}
+
+export async function getMyPendingAvatarReviewImage(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const identity = await owner(req, env);
+  if (identity instanceof Response) return identity;
+  const id = new URL(req.url).searchParams.get('id')?.trim() || undefined;
+  const review = await getPendingAvatarReviewForUser(
+    env,
+    identity.username,
+    id
+  );
+  if (!review)
+    return createJsonErrorResponse('Review picture not found', 404, origin);
+  const object = await env.PROFILE_PICTURES.get(review.objectKey);
+  if (!object)
+    return createJsonErrorResponse('Review picture not found', 404, origin);
+  const headers = new Headers(createCorsHeaders(origin));
+  headers.set('Content-Type', 'image/webp');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Cache-Control', 'no-store');
+  return new Response(
+    'body' in object ? (object.body as ReadableStream<Uint8Array>) : null,
+    { status: 200, headers }
+  );
+}
+
+export async function deleteMyPendingAvatarReview(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const startedAt = Date.now();
+  const identity = await owner(req, env);
+  if (identity instanceof Response) return identity;
+  const cancelled = await cancelPendingForUser(env, {
+    username: identity.username,
+    actorEmail: identity.email,
+    actorKind: 'owner',
+    note: 'Withdrawn by the profile owner.',
+    submittedBefore: startedAt,
+  });
+  return createJsonResponse({ deleted: cancelled > 0 }, 200, origin);
 }
 
 export async function getPublicAvatar(

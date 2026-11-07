@@ -296,15 +296,17 @@ export function PublicAvatarAnalysisPanel({
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-semibold">
-                Picture needs another look
+                Picture is waiting for review
               </h2>
               <Badge variant="outline" className="bg-background/70">
-                Not published
+                Pending review
               </Badge>
             </div>
             <p className="text-sm/6">
               The automatic check could not confidently approve this picture, so
-              it was not published. This is not a confirmed policy rejection.
+              an administrator will review it. This is not a confirmed policy
+              rejection. The candidate is shown beside your published picture
+              until a decision is made.
             </p>
             <p className="text-sm/6">{analysis.message}</p>
           </div>

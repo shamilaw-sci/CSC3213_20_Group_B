@@ -96,6 +96,7 @@ import {
   profileToolBackRoute,
   type ProfileToolSource,
 } from '@/lib/back-routes';
+import { emailPathSegment } from '@/lib/email';
 import {
   assertMutationSucceeded,
   isOperationPollingAbort,
@@ -2544,24 +2545,28 @@ export default function PublicProfileEditor({
         }
       />
 
-      {!targetEmail ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Public picture</CardTitle>
-            <CardDescription>
-              Change the picture shown in the People directory on its own page.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link
-              href="/user/me/public-avatar"
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              Manage public picture
-            </Link>
-          </CardContent>
-        </Card>
-      ) : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>Public picture</CardTitle>
+          <CardDescription>
+            {targetEmail
+              ? `View or remove the picture shown for ${targetName || targetEmail} in the People directory.`
+              : 'Change the picture shown in the People directory on its own page.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href={
+              targetEmail
+                ? `/admin/users/${emailPathSegment(targetEmail)}/public-avatar`
+                : '/user/me/public-avatar'
+            }
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {targetEmail ? 'View public picture' : 'Manage public picture'}
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

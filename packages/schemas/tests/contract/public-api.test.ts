@@ -120,6 +120,7 @@ const expectedRuntimeExports = [
   'PublicAvatarModerationCodeSchema',
   'PublicAvatarModerationSchema',
   'PublicAvatarModerationStatusSchema',
+  'PublicAvatarPendingReviewSchema',
   'PublicAvatarQuotaSchema',
   'PublicAvatarReviewSchema',
   'PublicAvatarReviewStatusSchema',

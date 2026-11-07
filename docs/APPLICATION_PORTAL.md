@@ -29,13 +29,17 @@ For implementation-level behavior, use the
 - `/user/me/*`, `/user/projects/*`, and `/user/proxy` cover member workflows.
 - `/user/me/public-avatar` manages the current member's public People picture
   through the API Worker, including circle, square, and rounded previews,
-  server-reported upload usage, and structured automatic-check results. It is
-  separate from public profile PR edits and private account pictures.
+  server-reported upload usage, and structured automatic-check results. While a
+  candidate waits for manual review, the page compares it with the published
+  picture and lets the owner replace or withdraw the candidate. It is separate
+  from public profile PR edits and private account pictures.
 - `/academic/courses/*` manages academic records.
 - `/admin/users/*`, `/admin/avatar-reviews`, `/admin/projects/*`,
   `/admin/proxies`, and `/admin/academic-rules` cover permission-protected
   administration. Admin user pages show the public picture, pending review
-  decisions, removal controls, and the recorded change history.
+  decisions, removal controls, and the recorded change history. The admin public
+  profile links to a remove-only public picture page; administrators remove the
+  current published picture but never upload a replacement there.
 
 ## Interaction model
 

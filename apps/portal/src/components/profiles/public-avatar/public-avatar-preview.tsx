@@ -78,9 +78,12 @@ function PreviewVisual({
   );
 }
 
+type PublicAvatarPendingKind = 'review' | 'selection';
+
 interface PublicAvatarPreviewProps {
   onStyleChange: (style: PublicAvatarPreviewStyle) => void;
   pendingFileName: string | null;
+  pendingKind: PublicAvatarPendingKind | null;
   pendingUrl: string | null;
   publishedUrl: string | null;
   style: PublicAvatarPreviewStyle;
@@ -90,6 +93,7 @@ interface PublicAvatarPreviewProps {
 export function PublicAvatarPreview({
   onStyleChange,
   pendingFileName,
+  pendingKind,
   pendingUrl,
   publishedUrl,
   style,
@@ -98,8 +102,11 @@ export function PublicAvatarPreview({
   const [expanded, setExpanded] = useState(false);
   const imageUrl = pendingUrl ?? publishedUrl;
   const initial = username?.trim().charAt(0).toUpperCase() || '?';
+  const reviewing = pendingKind === 'review';
   const alt = pendingUrl
-    ? `Unsaved preview of ${pendingFileName ?? 'your selected picture'}`
+    ? reviewing
+      ? 'Picture waiting for administrator review'
+      : `Unsaved preview of ${pendingFileName ?? 'your selected picture'}`
     : publishedUrl
       ? 'Your published public picture'
       : 'No public picture selected';
@@ -166,7 +173,7 @@ export function PublicAvatarPreview({
               className="border-warning-border bg-warning-surface
                 text-warning-surface-foreground"
             >
-              Unsaved preview
+              {reviewing ? 'In review' : 'Unsaved preview'}
             </Badge>
           ) : publishedUrl ? (
             <Badge
@@ -234,7 +241,7 @@ export function PublicAvatarPreview({
                 className="text-muted-foreground text-center text-xs
                   font-medium"
               >
-                Selected preview
+                {reviewing ? 'Awaiting review' : 'Selected preview'}
               </figcaption>
             </figure>
           </div>
@@ -254,13 +261,15 @@ export function PublicAvatarPreview({
         </div>
 
         <p className="text-muted-foreground text-center text-xs">
-          {comparing
-            ? 'The published picture stays live in the People directory until the selected preview is accepted.'
-            : pendingUrl
-              ? 'Your selected preview is not published until it passes the automatic check.'
-              : publishedUrl
-                ? 'This is the picture people see in the People directory.'
-                : 'Choose a picture below to preview it here before publishing.'}
+          {reviewing
+            ? 'The published picture stays live while an administrator reviews the candidate. You can change or withdraw the candidate below.'
+            : comparing
+              ? 'The published picture stays live in the People directory until the selected preview is accepted.'
+              : pendingUrl
+                ? 'Your selected preview is not published until it passes the automatic check.'
+                : publishedUrl
+                  ? 'This is the picture people see in the People directory.'
+                  : 'Choose a picture below to preview it here before publishing.'}
         </p>
       </div>
 
@@ -270,7 +279,9 @@ export function PublicAvatarPreview({
             <DialogTitle>Picture preview</DialogTitle>
             <DialogDescription>
               {pendingUrl
-                ? 'This selected picture has not been published yet.'
+                ? reviewing
+                  ? 'This picture is waiting for administrator review and has not been published.'
+                  : 'This selected picture has not been published yet.'
                 : 'This is your current published public picture.'}
             </DialogDescription>
           </DialogHeader>

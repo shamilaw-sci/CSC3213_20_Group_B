@@ -12,11 +12,14 @@ import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import { PublicAvatarAnalysisPanel } from '@/components/profiles/public-avatar/public-avatar-analysis';
 import { PublicAvatarGuidelines } from '@/components/profiles/public-avatar/public-avatar-guidelines';
+import { PublicAvatarPendingReviewPanel } from '@/components/profiles/public-avatar/public-avatar-pending-review';
 import { PublicAvatarPreview } from '@/components/profiles/public-avatar/public-avatar-preview';
 import { PublicAvatarUploadControls } from '@/components/profiles/public-avatar/public-avatar-upload-controls';
 import { PublicAvatarUsage } from '@/components/profiles/public-avatar/public-avatar-usage';
 import {
+  deleteMyPendingPublicAvatarReview,
   deleteMyPublicAvatar,
+  fetchMyPendingPublicAvatarImage,
   getMyPublicAvatar,
   isSamePublicAvatarSelection,
   type PendingPublicAvatar,
@@ -27,7 +30,7 @@ import {
   validatePublicAvatarFile,
 } from '@/lib/public-avatar';
 
-type LoadMode = 'initial' | 'quiet' | 'notify';
+type LoadMode = 'initial' | 'poll' | 'quiet' | 'notify';
 
 function messageFor(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -45,6 +48,7 @@ export default function PublicAvatarPage() {
   });
   const [previewStyle, setPreviewStyle] =
     useState<PublicAvatarPreviewStyle>('circle');
+  const [reviewPreviewUrl, setReviewPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
 
@@ -61,9 +65,34 @@ export default function PublicAvatarPage() {
     return () => URL.revokeObjectURL(url);
   }, [pending]);
 
+  const pendingReviewId = current?.pending?.id ?? null;
+
+  useEffect(() => {
+    if (!pendingReviewId) {
+      setReviewPreviewUrl(null);
+      return;
+    }
+    let active = true;
+    let objectUrl: string | null = null;
+    void fetchMyPendingPublicAvatarImage(pendingReviewId).then(
+      (blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setReviewPreviewUrl(objectUrl);
+      },
+      () => {
+        if (active) setReviewPreviewUrl(null);
+      }
+    );
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [pendingReviewId]);
+
   const load = useCallback(async (mode: LoadMode = 'initial') => {
     if (mode === 'initial') setLoading(true);
-    else setRefreshing(true);
+    else if (mode !== 'poll') setRefreshing(true);
     try {
       const next = await getMyPublicAvatar();
       if (!mountedRef.current) return;
@@ -85,6 +114,14 @@ export default function PublicAvatarPage() {
   useEffect(() => {
     void load('initial');
   }, [load]);
+
+  useEffect(() => {
+    if (!pendingReviewId) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load('poll');
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, [load, pendingReviewId]);
 
   const resetsAt = current?.quota?.resetsAt;
   useEffect(() => {
@@ -118,63 +155,70 @@ export default function PublicAvatarPage() {
     setAnalysis({ kind: 'idle' });
   }
 
-  const handleUploadError = useCallback((error: unknown) => {
-    if (error instanceof PublicAvatarRequestError) {
-      if (error.quota)
-        setCurrent((previous) =>
-          previous ? { ...previous, quota: error.quota } : previous
-        );
-      if (error.status === 429 || error.code === 'avatar_rate_limited') {
+  const handleUploadError = useCallback(
+    (error: unknown) => {
+      if (error instanceof PublicAvatarRequestError) {
+        if (error.quota)
+          setCurrent((previous) =>
+            previous ? { ...previous, quota: error.quota } : previous
+          );
+        if (error.status === 429 || error.code === 'avatar_rate_limited') {
+          setAnalysis({
+            kind: 'rate_limited',
+            message: error.message,
+            quota: error.quota,
+            retryAfterSeconds: error.retryAfterSeconds,
+          });
+          return;
+        }
+        if (error.code === 'avatar_moderation_rejected') {
+          setAnalysis({
+            kind: 'rejected',
+            message: error.message,
+            moderation: error.moderation,
+          });
+          return;
+        }
+        if (error.code === 'avatar_moderation_review_required') {
+          setAnalysis({
+            kind: 'review_required',
+            message: error.message,
+            moderation: error.moderation,
+          });
+          // The candidate now lives on the server, so replace the local
+          // selection with the persisted pending review and its comparison.
+          setPending(null);
+          void load('poll');
+          return;
+        }
+        if (
+          error.code === 'avatar_moderation_unavailable' ||
+          error.status === 503
+        ) {
+          setAnalysis({
+            kind: 'unavailable',
+            message: error.message,
+            moderation: error.moderation,
+          });
+          return;
+        }
         setAnalysis({
-          kind: 'rate_limited',
+          kind: 'error',
           message: error.message,
-          quota: error.quota,
-          retryAfterSeconds: error.retryAfterSeconds,
+          code: error.code,
+          retryable: error.status >= 500 || error.status === 409,
         });
         return;
       }
-      if (error.code === 'avatar_moderation_rejected') {
-        setAnalysis({
-          kind: 'rejected',
-          message: error.message,
-          moderation: error.moderation,
-        });
-        return;
-      }
-      if (error.code === 'avatar_moderation_review_required') {
-        setAnalysis({
-          kind: 'review_required',
-          message: error.message,
-          moderation: error.moderation,
-        });
-        return;
-      }
-      if (
-        error.code === 'avatar_moderation_unavailable' ||
-        error.status === 503
-      ) {
-        setAnalysis({
-          kind: 'unavailable',
-          message: error.message,
-          moderation: error.moderation,
-        });
-        return;
-      }
-      setAnalysis({
-        kind: 'error',
-        message: error.message,
-        code: error.code,
-        retryable: error.status >= 500 || error.status === 409,
-      });
-      return;
-    }
-    const message = messageFor(
-      error,
-      'The upload did not finish. Check your connection and try again.'
-    );
-    setAnalysis({ kind: 'error', message, retryable: true });
-    toast.error(message);
-  }, []);
+      const message = messageFor(
+        error,
+        'The upload did not finish. Check your connection and try again.'
+      );
+      setAnalysis({ kind: 'error', message, retryable: true });
+      toast.error(message);
+    },
+    [load]
+  );
 
   const submit = useCallback(async () => {
     if (!pending || busy) return;
@@ -196,6 +240,7 @@ export default function PublicAvatarPage() {
       setCurrent((previous) => ({
         username: previous?.username ?? '',
         url: result.url,
+        pending: null,
         quota: result.quota ?? previous?.quota,
       }));
       setPending(null);
@@ -240,9 +285,37 @@ export default function PublicAvatarPage() {
     }
   }
 
+  async function withdrawPendingReview() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await deleteMyPendingPublicAvatarReview();
+      if (!mountedRef.current) return;
+      setCurrent((previous) =>
+        previous ? { ...previous, pending: null } : previous
+      );
+      setReviewPreviewUrl(null);
+      setAnalysis({ kind: 'idle' });
+      toast.success('The picture awaiting review was withdrawn.');
+    } catch (error) {
+      if (!mountedRef.current) return;
+      toast.error(
+        messageFor(error, 'Could not withdraw the picture awaiting review.')
+      );
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  }
+
   const quotaAvailable = current?.quota?.available ?? null;
   const canUpload = quotaAvailable !== false;
   const canRetry = canUpload && Boolean(pending) && !busy;
+  const pendingPreviewUrl = pending?.url ?? reviewPreviewUrl;
+  const pendingPreviewKind = pending
+    ? 'selection'
+    : reviewPreviewUrl
+      ? 'review'
+      : null;
 
   return (
     <PageShell width="default">
@@ -303,7 +376,8 @@ export default function PublicAvatarPage() {
                 <PublicAvatarPreview
                   onStyleChange={setPreviewStyle}
                   pendingFileName={pending?.file.name ?? null}
-                  pendingUrl={pending?.url ?? null}
+                  pendingKind={pendingPreviewKind}
+                  pendingUrl={pendingPreviewUrl}
                   publishedUrl={current.url}
                   style={previewStyle}
                   username={current.username}
@@ -323,6 +397,15 @@ export default function PublicAvatarPage() {
                 />
               </CardContent>
             </Card>
+
+            {current.pending ? (
+              <PublicAvatarPendingReviewPanel
+                busy={busy}
+                onChange={() => fileInputRef.current?.click()}
+                onWithdraw={() => void withdrawPendingReview()}
+                review={current.pending}
+              />
+            ) : null}
 
             <PublicAvatarAnalysisPanel
               analysis={analysis}

@@ -13,6 +13,7 @@ import {
 import { apiHeaders, apiUrl, readApiError } from '@/lib/api';
 
 const PUBLIC_AVATAR_ENDPOINT = '/api/people/v2/avatars/me';
+const PUBLIC_AVATAR_PENDING_ENDPOINT = '/api/people/v2/avatars/me/pending';
 export const MAX_PUBLIC_AVATAR_BYTES = 4 * 1024 * 1024;
 export const PUBLIC_AVATAR_MAX_SIDE = 4096;
 export const PUBLIC_AVATAR_MIN_SIDE = 280;
@@ -291,6 +292,38 @@ export async function deleteMyPublicAvatar(): Promise<PublicAvatarDeleteResult> 
   if (!parsed.success)
     throw new PublicAvatarRequestError(
       'The picture was removed, but the response could not be read. Reload the page to confirm.',
+      response.status
+    );
+  return parsed.data;
+}
+
+export async function fetchMyPendingPublicAvatarImage(
+  id?: string
+): Promise<Blob> {
+  const url = apiUrl(PUBLIC_AVATAR_PENDING_ENDPOINT);
+  if (id) url.searchParams.set('id', id);
+  const response = await fetch(url, {
+    cache: 'no-store',
+    credentials: 'include',
+    headers: apiHeaders(),
+  });
+  if (!response.ok) throw await structuredError(response);
+  return response.blob();
+}
+
+export async function deleteMyPendingPublicAvatarReview(): Promise<PublicAvatarDeleteResult> {
+  const response = await fetch(apiUrl(PUBLIC_AVATAR_PENDING_ENDPOINT), {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: apiHeaders(),
+  });
+  if (!response.ok) throw await structuredError(response);
+  const parsed = PublicAvatarDeleteResultSchema.safeParse(
+    await response.json()
+  );
+  if (!parsed.success)
+    throw new PublicAvatarRequestError(
+      'The pending picture was withdrawn, but the response could not be read. Reload the page to confirm.',
       response.status
     );
   return parsed.data;

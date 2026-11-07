@@ -92,7 +92,9 @@ private object key, moderation result, status, and the administrator who decided
 it. Audit rows are append-only and identify whether the owner or an administrator
 performed the upload, removal, submission, or decision. The service never accepts
 a reviewer identity from the request body; it derives it from the verified
-super-admin session.
+super-admin session. An owner can read their own pending candidate image until a
+decision is recorded and can withdraw it; withdrawal updates the review row and
+audit history but leaves the published R2 pointer unchanged.
 
 ## Safe schema changes
 

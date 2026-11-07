@@ -10,7 +10,9 @@ continue through the GitHub App PR workflow. Avatar writes use the API Worker an
 never change GitHub profile data or Portal private profile records.
 Owners upload, replace, and remove their picture at
 `/user/me/public-avatar` in Portal. People profile pages display the approved
-picture.
+picture. While an upload is awaiting review, the owner sees the published
+picture beside the pending candidate and can replace or withdraw the candidate
+without removing the published picture.
 
 ## Worker resources
 
@@ -40,8 +42,13 @@ current pointers. Pointer changes use R2 ETag conditional writes and concurrent
 updates return 409. Uploads are limited to six attempts per owner per hour.
 
 The authenticated `GET /api/people/v2/avatars/me` response includes the current
-canonical identity, published URL, and a `quota` object with `limit`, `used`,
-`remaining`, `windowStartedAt`, `resetsAt`, `retryAfterSeconds`, and `available`.
+canonical identity, published URL, a nullable `pending` review candidate, and a
+`quota` object with `limit`, `used`, `remaining`, `windowStartedAt`, `resetsAt`,
+`retryAfterSeconds`, and `available`.
+`GET /api/people/v2/avatars/me/pending?id=:reviewId` returns the private
+candidate image to its signed-in owner only, and
+`DELETE /api/people/v2/avatars/me/pending` withdraws the owner's pending
+candidate. Withdrawal keeps the published picture and pointer unchanged.
 Reading the quota never consumes an attempt. `POST` consumes one attempt before
 it parses or validates the multipart body, so malformed files, oversize images,
 validation failures, moderation rejections, and service failures all count
@@ -88,13 +95,19 @@ the review returns to `pending` so the administrator can retry or reject it;
 approval never publishes a pointer to an absent object. Rejection keeps the
 current published picture in place. Both decisions store `reviewed_by`,
 `reviewed_at`, and an optional note on the review row. Portal exposes the queue at
-`/admin/avatar-reviews` and the same controls on each admin user page.
+`/admin/avatar-reviews` and the same controls on each admin user page. An admin
+user's public profile also links to `/admin/users/:email/public-avatar`, a
+remove-only picture page where an administrator can inspect and remove the
+current published picture but cannot upload a replacement.
 
 A member has at most one pending candidate per username: a newer upload that also
 needs review supersedes older pending candidates, and a newer approved upload
 supersedes them as well. Only candidates submitted before the superseding request
 started are cancelled, so a concurrently completing newer upload is never
-discarded.
+discarded. The owner can keep viewing the candidate beside the published picture
+until a decision is recorded. Withdrawing the candidate marks the review rejected
+with the owner as the actor and records a `Withdrawn by the profile owner.` note;
+the private object is deleted and the published picture is untouched.
 
 Every owner upload, owner removal, administrator removal, review submission, and
 review decision appends an immutable row to `public_avatar_audit`. Each row

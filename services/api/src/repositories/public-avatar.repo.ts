@@ -221,6 +221,30 @@ export async function reopenAvatarReview(
     .run();
 }
 
+export async function getPendingAvatarReviewForUser(
+  env: Env,
+  username: string,
+  id?: string
+): Promise<PublicAvatarReviewRecord | null> {
+  const row = id
+    ? await env.AUTH_DB.prepare(
+        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+         WHERE username = ? AND id = ? AND status = 'pending'
+         LIMIT 1`
+      )
+        .bind(username, id)
+        .first<ReviewRow>()
+    : await env.AUTH_DB.prepare(
+        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+         WHERE username = ? AND status = 'pending'
+         ORDER BY submitted_at DESC, id DESC
+         LIMIT 1`
+      )
+        .bind(username)
+        .first<ReviewRow>();
+  return row ? toReview(row) : null;
+}
+
 export async function listPendingAvatarReviewsForUser(
   env: Env,
   username: string,

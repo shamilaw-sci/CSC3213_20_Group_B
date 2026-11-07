@@ -177,19 +177,23 @@ the current permission record so blacklisting and role changes take effect.
 
 Public avatar calls are separate from GitHub-backed profile mutations:
 
-| Method           | Route                                           | Purpose                                          |
-| ---------------- | ----------------------------------------------- | ------------------------------------------------ |
-| `GET`            | `/api/people/v2/avatars/me`                     | owner identity, avatar URL, and upload quota     |
-| `POST`, `DELETE` | `/api/people/v2/avatars/me`                     | upload (consumes an attempt) or remove the image |
-| `GET`, `HEAD`    | `/api/people/v2/avatars/:username`              | resolve the current approved image               |
-| `GET`, `HEAD`    | `/api/people/v2/avatars/:username/:sha256.webp` | read only the currently approved version         |
+| Method           | Route                                           | Purpose                                                             |
+| ---------------- | ----------------------------------------------- | ------------------------------------------------------------------- |
+| `GET`            | `/api/people/v2/avatars/me`                     | owner identity, published URL, pending candidate, and upload quota  |
+| `POST`, `DELETE` | `/api/people/v2/avatars/me`                     | upload (consumes an attempt) or remove the image                    |
+| `GET`            | `/api/people/v2/avatars/me/pending`             | read the signed-in owner's private pending image                    |
+| `DELETE`         | `/api/people/v2/avatars/me/pending`             | withdraw the pending candidate without removing the published image |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username`              | resolve the current approved image                                  |
+| `GET`, `HEAD`    | `/api/people/v2/avatars/:username/:sha256.webp` | read only the currently approved version                            |
 
 The authenticated `GET` is read-only and does not consume an upload attempt.
 `POST` consumes one attempt before validation and moderation, and returns the
 refreshed quota with success or failure responses. Rate-limited responses use
 HTTP 429 with `Retry-After` and the current quota. Moderation failures include a
 structured `moderation` object plus a distinct error code so Portal can separate
-policy rejections from unavailable analysis.
+policy rejections from unavailable analysis. The owner pending-image route
+requires the same session as the canonical owner route and returns `no-store`;
+withdrawal keeps the current published pointer intact.
 
 See [public avatars](PUBLIC_AVATARS.md) for validation, moderation, quota, and
 cache behavior.

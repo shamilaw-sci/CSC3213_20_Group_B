@@ -61,9 +61,11 @@ import {
   decideAdminAvatarReview,
   deleteAdminUserAvatar,
   deleteMyAvatar,
+  deleteMyPendingAvatarReview,
   getAdminAvatarReviewImage,
   getAdminUserAvatar,
   getMyAvatar,
+  getMyPendingAvatarReviewImage,
   getPublicAvatar,
   listAdminAvatarReviews,
   uploadMyAvatar,
@@ -99,6 +101,16 @@ const routes: RegisteredRoute[] = [
     method: 'GET',
     match: { kind: 'exact', path: '/api/people/v2/avatars/me' },
     handler: getMyAvatar,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/people/v2/avatars/me/pending' },
+    handler: getMyPendingAvatarReviewImage,
+  },
+  {
+    method: 'DELETE',
+    match: { kind: 'exact', path: '/api/people/v2/avatars/me/pending' },
+    handler: deleteMyPendingAvatarReview,
   },
   {
     method: 'GET',
