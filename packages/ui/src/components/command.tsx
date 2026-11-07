@@ -56,7 +56,7 @@ function CommandDialog({
       >
         <Command
           className="**:[[cmdk-group-heading]]:text-muted-foreground
-            **:data-[slot=command-input-wrapper]:h-12
+            **:data-[slot=command-input-wrapper]:pr-12
             [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0
             [&_[cmdk-input-wrapper]_svg]:size-5 [&_[cmdk-item]_svg]:size-5
             **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-medium
@@ -77,15 +77,19 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
+      className="group focus-within:border-ring/60 focus-within:bg-muted/40 flex
+        h-12 items-center gap-2 border-b px-3 transition-colors"
     >
-      <SearchIcon className="size-4 shrink-0 opacity-50" />
+      <SearchIcon
+        className="size-4 shrink-0 opacity-50 transition-opacity
+          group-focus-within:opacity-100"
+      />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
-          `placeholder:text-muted-foreground flex h-10 w-full rounded-md
-          bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed
-          disabled:opacity-50`,
+          `placeholder:text-muted-foreground flex size-full bg-transparent
+          text-sm outline-hidden focus-visible:outline-none!
+          disabled:cursor-not-allowed disabled:opacity-50`,
           className
         )}
         {...props}
