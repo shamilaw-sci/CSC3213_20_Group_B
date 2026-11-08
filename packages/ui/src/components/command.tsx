@@ -7,6 +7,7 @@ import * as React from 'react';
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -51,8 +52,9 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent
-        className={cn('overflow-hidden p-0', className)}
-        showCloseButton={showCloseButton}
+        className={cn('top-[12dvh] overflow-hidden p-0', className)}
+        centered={false}
+        showCloseButton={false}
       >
         <Command
           className="**:[[cmdk-group-heading]]:text-muted-foreground
@@ -65,6 +67,21 @@ function CommandDialog({
         >
           {children}
         </Command>
+        {showCloseButton ? (
+          <DialogClose
+            type="button"
+            aria-label="Close search"
+            aria-keyshortcuts="Escape"
+            className="text-muted-foreground bg-muted/60 hover:bg-muted
+              hover:text-foreground focus-visible:border-ring
+              focus-visible:ring-ring/50 absolute top-3 right-3 inline-flex h-6
+              min-w-8 items-center justify-center rounded-sm border px-1.5
+              font-mono text-[10px] font-medium tracking-wide transition-colors
+              focus-visible:ring-2 focus-visible:outline-none!"
+          >
+            Esc
+          </DialogClose>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

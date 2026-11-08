@@ -114,10 +114,9 @@ export function SocialIconPicker({
         onOpenChange={setOpen}
         title="Choose a link icon"
         description="Search the available brand icons. Use arrow keys and Enter to select."
-        className="h-[min(26rem,calc(100dvh-2rem))]"
       >
         <CommandInput placeholder="Search icons..." autoFocus />
-        <CommandList className="max-h-none min-h-0 flex-1">
+        <CommandList>
           <CommandEmpty>No matching icon.</CommandEmpty>
           <CommandGroup heading="Brand icons">
             {ICONS.map(({ label, slug, Icon }) => (
