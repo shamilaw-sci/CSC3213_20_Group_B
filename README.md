@@ -223,4 +223,4 @@ adding, renaming, linking, or removing a Markdown file.
 Start with the relevant guide and the nearest workspace `package.json`. When
 reporting a problem, include the workspace, command, error output, commit SHA,
 and whether the failure is local or from GitHub Actions. Report suspected
-security issues privately as described in [Security](docs/SECURITY.md).
+security issues privately as described in [Security](SECURITY.md).

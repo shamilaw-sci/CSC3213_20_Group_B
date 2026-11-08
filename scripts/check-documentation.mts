@@ -208,6 +208,7 @@ function documentationViolations(root: string, paths: string[]): string[] {
     const normalized = path.replaceAll('\\', '/');
     const allowedLocation =
       normalized === 'README.md' ||
+      normalized === 'SECURITY.md' ||
       normalized === 'AGENTS.md' ||
       normalized.startsWith('docs/');
 
