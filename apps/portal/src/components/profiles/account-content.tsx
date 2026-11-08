@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import { FieldTitle } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { Separator } from '@scs/ui/components/separator';
@@ -624,12 +625,14 @@ export default function ProfileContent({
                 sm:justify-between"
             >
               <div className="space-y-1">
-                <Label className="text-base">Login Notifications</Label>
+                <Label htmlFor="login-notifications" className="text-base">
+                  Login Notifications
+                </Label>
                 <p className="text-muted-foreground text-sm">
                   Get notified when someone logs into your account
                 </p>
               </div>
-              <Switch checked={false} disabled />
+              <Switch id="login-notifications" checked={false} disabled />
             </div>
           </CardContent>
         </Card>
@@ -652,7 +655,7 @@ export default function ProfileContent({
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Fingerprint className="size-5 shrink-0" />
-                    <Label className="text-base">Passkeys</Label>
+                    <FieldTitle className="text-base">Passkeys</FieldTitle>
                     <Badge
                       variant="outline"
                       className={
@@ -922,12 +925,15 @@ export default function ProfileContent({
                 sm:items-center sm:justify-between"
             >
               <div className="space-y-1">
-                <Label className="text-base">Email Notifications</Label>
+                <Label htmlFor="email-notifications" className="text-base">
+                  Email Notifications
+                </Label>
                 <p className="text-muted-foreground text-sm">
                   Receive notifications via email
                 </p>
               </div>
               <Switch
+                id="email-notifications"
                 checked={emailNotificationState}
                 disabled={notificationSaving}
                 onCheckedChange={async (checked) => {
@@ -963,12 +969,15 @@ export default function ProfileContent({
                 sm:items-center sm:justify-between"
             >
               <div className="space-y-1">
-                <Label className="text-base">Push Notifications</Label>
+                <Label htmlFor="push-notifications" className="text-base">
+                  Push Notifications
+                </Label>
                 <p className="text-muted-foreground text-sm">
                   Receive push notifications in your browser
                 </p>
               </div>
               <Switch
+                id="push-notifications"
                 checked={pushNotificationState}
                 disabled={notificationSaving}
                 onCheckedChange={async (checked) => {

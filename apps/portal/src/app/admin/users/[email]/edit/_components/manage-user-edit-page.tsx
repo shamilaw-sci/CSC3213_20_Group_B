@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import { FieldTitle } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { Separator } from '@scs/ui/components/separator';
@@ -180,7 +181,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-base">Profile Picture</Label>
+              <FieldTitle className="text-base">Profile Picture</FieldTitle>
               <p className="text-muted-foreground text-sm">
                 Choose how this user&apos;s saved picture URL should be updated.
               </p>
@@ -201,7 +202,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-base">Role</Label>
+              <FieldTitle className="text-base">Role</FieldTitle>
               <p className="text-muted-foreground text-sm">
                 Choose the user&apos;s person role.
               </p>
@@ -226,7 +227,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-base">Access Level</Label>
+              <FieldTitle className="text-base">Access Level</FieldTitle>
               <p className="text-muted-foreground text-sm">
                 Choose the inherited management permission.
               </p>
@@ -254,7 +255,9 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="text-base">Blacklisted</Label>
+              <Label htmlFor="user-blacklisted" className="text-base">
+                Blacklisted
+              </Label>
               <p className="text-muted-foreground text-sm">
                 Prevent this user from accessing the platform
               </p>
@@ -271,6 +274,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
                 </Badge>
               )}
               <Switch
+                id="user-blacklisted"
                 checked={blacklisted}
                 onCheckedChange={setBlacklisted}
                 disabled={saving}

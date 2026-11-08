@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import { FieldTitle } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { Separator } from '@scs/ui/components/separator';
@@ -212,12 +213,15 @@ export default function ProxySettingsPage({
                   sm:justify-between"
               >
                 <div className="space-y-1">
-                  <Label className="text-base">Enable Redirect</Label>
+                  <Label htmlFor="proxy-redirect-enabled" className="text-base">
+                    Enable Redirect
+                  </Label>
                   <p className="text-muted-foreground text-sm">
                     Toggle your personal-site redirect on or off
                   </p>
                 </div>
                 <Switch
+                  id="proxy-redirect-enabled"
                   checked={active}
                   onCheckedChange={setActive}
                   disabled={saving || !canEdit}
@@ -268,7 +272,7 @@ export default function ProxySettingsPage({
                   sm:justify-between"
               >
                 <div className="space-y-1">
-                  <Label className="text-base">Enable Redirect</Label>
+                  <FieldTitle className="text-base">Enable Redirect</FieldTitle>
                   <p className="text-muted-foreground text-sm">
                     {savedActive
                       ? 'Personal-site redirect is enabled'
@@ -283,7 +287,7 @@ export default function ProxySettingsPage({
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-base">Destination URL</Label>
+                <FieldTitle className="text-base">Destination URL</FieldTitle>
                 <p className="text-muted-foreground text-sm break-all">
                   {savedProxyUrl || 'No destination URL configured'}
                 </p>

@@ -282,9 +282,15 @@ export default function ManageProxiesPage({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <Label className="text-sm">Enable Redirect</Label>
+                        <Label
+                          htmlFor={`proxy-redirect-enabled-${entry.email}`}
+                          className="text-sm"
+                        >
+                          Enable Redirect
+                        </Label>
                       </div>
                       <Switch
+                        id={`proxy-redirect-enabled-${entry.email}`}
                         checked={editing.active}
                         onCheckedChange={(v) =>
                           setEditing((prev) =>

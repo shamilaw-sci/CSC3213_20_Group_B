@@ -33,7 +33,15 @@ import {
   Trash2,
   UsersRound,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import { AcademicRulesLoading } from '@/components/feedback/page-loading';
@@ -977,14 +985,23 @@ function FieldShell({
   compact?: boolean;
   children: React.ReactNode;
 }) {
+  const generatedId = useId();
+  const childId = isValidElement<{ id?: string }>(children)
+    ? children.props.id
+    : undefined;
+  const fieldId = childId ?? generatedId;
+
   return (
     <Field className="min-w-0 *:min-w-0">
       <FieldLabel
+        htmlFor={fieldId}
         className={compact ? 'md:sr-only md:w-px! md:min-w-0!' : undefined}
       >
         {label}
       </FieldLabel>
-      {children}
+      {isValidElement<{ id?: string }>(children)
+        ? cloneElement(children, { id: fieldId })
+        : children}
     </Field>
   );
 }
@@ -1020,10 +1037,12 @@ function ToggleControl({
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
+  const fieldId = useId();
+
   return (
     <Field orientation="horizontal" className="h-9 min-w-0 items-end">
-      <FieldLabel>{label}</FieldLabel>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+      <Switch id={fieldId} checked={checked} onCheckedChange={onChange} />
     </Field>
   );
 }
@@ -1045,9 +1064,12 @@ function SelectControl({
   disabled?: boolean;
   onChange: (value: string) => void;
 }) {
+  const fieldId = useId();
+
   return (
     <Field className="min-w-0">
       <FieldLabel
+        htmlFor={fieldId}
         className={compact ? 'md:sr-only md:w-px! md:min-w-0!' : undefined}
       >
         {label}
@@ -1063,7 +1085,7 @@ function SelectControl({
           if (nextValue !== null) onChange(nextValue);
         }}
       >
-        <SelectTrigger className="w-full min-w-0">
+        <SelectTrigger id={fieldId} className="w-full min-w-0">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

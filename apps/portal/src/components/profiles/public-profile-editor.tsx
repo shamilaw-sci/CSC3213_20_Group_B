@@ -44,6 +44,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import { FieldTitle } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import {
@@ -570,13 +571,16 @@ function Field({
   error,
   onBlur,
 }: FieldProps) {
+  const fieldId = useId();
+
   return (
     <div className="space-y-1.5">
-      <Label>
+      <Label htmlFor={fieldId}>
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
       <Input
+        id={fieldId}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -608,9 +612,11 @@ function SelectField({
   onChange,
   description,
 }: SelectFieldProps) {
+  const fieldId = useId();
+
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <Label htmlFor={fieldId}>{label}</Label>
       <Select
         value={value}
         items={options}
@@ -618,7 +624,7 @@ function SelectField({
           if (nextValue !== null) onChange(nextValue);
         }}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger id={fieldId} className="w-full">
           <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
@@ -694,10 +700,10 @@ function OptionGrid({
 }: OptionGridProps) {
   return (
     <div className="space-y-2">
-      <Label>
+      <FieldTitle>
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
-      </Label>
+      </FieldTitle>
       <div
         className={cn(
           'grid gap-2',
@@ -756,7 +762,7 @@ function ArrayEditor({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>{label}</Label>
+        <FieldTitle>{label}</FieldTitle>
         <Button
           type="button"
           variant="outline"
@@ -836,7 +842,7 @@ function StringArrayEditor({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>{label}</Label>
+        <FieldTitle>{label}</FieldTitle>
         <Button
           type="button"
           variant="outline"

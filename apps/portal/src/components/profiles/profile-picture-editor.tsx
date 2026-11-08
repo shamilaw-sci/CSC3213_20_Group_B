@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Button } from '@scs/ui/components/button';
+import { FieldTitle } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { cn } from 'cn';
@@ -188,7 +189,7 @@ export default function ProfilePictureEditor({
       </div>
 
       <div className="space-y-3">
-        <Label className="text-base">Profile Picture Source</Label>
+        <FieldTitle className="text-base">Profile Picture Source</FieldTitle>
         <div className="grid gap-2">
           <SourceOption
             active={draft.pictureMode === 'google'}
@@ -227,7 +228,7 @@ export default function ProfilePictureEditor({
 
       {draft.pictureMode === 'gravatar' && (
         <div className="space-y-3">
-          <Label className="text-base">Gravatar Email</Label>
+          <FieldTitle className="text-base">Gravatar Email</FieldTitle>
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
               type="button"
