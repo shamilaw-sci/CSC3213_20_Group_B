@@ -14,6 +14,32 @@ picture. While an upload is awaiting review, the owner sees the published
 picture beside the pending candidate and can replace or withdraw the candidate
 without removing the published picture.
 
+## Publication flow
+
+The API Worker is the only writer of avatar state. Portal and People call it
+over HTTP; neither application receives R2 credentials or writes avatar objects
+directly.
+
+```mermaid
+flowchart LR
+  Owner["Portal owner<br/>/user/me/public-avatar"]
+  Admin["Portal administrator<br/>/admin/avatar-reviews"]
+  People["People profile page"]
+  API["API Worker<br/>/api/people/v2/avatars/*"]
+  Images["Cloudflare Images<br/>validate, crop, re-encode"]
+  Jev["TypeSafe Jev<br/>safety + portrait checks"]
+  R2[("R2 PROFILE_PICTURES<br/>WebP objects + current.json")]
+  D1[("API D1<br/>rate window, reviews, audit")]
+
+  Owner -->|"upload / withdraw"| API
+  Admin -->|"approve / reject / remove"| API
+  People -->|"GET / HEAD"| API
+  API -->|"decode + 512px WebP/JPEG"| Images
+  API -->|"JPEG + two Choice questions"| Jev
+  API -->|"read / write pointer"| R2
+  API -->|"quota, review, audit"| D1
+```
+
 ## Worker resources
 
 Enable R2 on the Cloudflare account, create one Standard bucket named
@@ -58,6 +84,54 @@ errors, and 429 responses include the refreshed quota; 429 also sets
 hour boundaries. Stored attempts are capped at six when reported so the UI never
 shows more than the permitted limit.
 
+An upload then moves through validation, normalization, and AI moderation before
+any pointer changes:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant O as Portal owner
+  participant A as API Worker
+  participant Q as D1 rate window
+  participant I as Cloudflare Images
+  participant J as TypeSafe Jev
+  participant R as R2 PROFILE_PICTURES
+  participant D as D1 reviews and audit
+  participant P as People
+
+  O->>A: POST multipart image
+  A->>Q: consume one attempt
+  Q-->>A: refreshed quota
+  alt limit reached
+    A-->>O: 429 + Retry-After
+  else attempt available
+    A->>A: validate size, magic bytes, MIME, animation
+    A->>I: decode, bound dimensions, transform
+    I-->>A: 512x512 WebP and JPEG
+    A->>J: JPEG + safety and portrait questions
+    J-->>A: choice answers
+    A->>A: classify confidence and outcome
+    alt approved
+      A->>R: put immutable WebP object
+      A->>R: conditional write current.json
+      A->>D: append upload audit
+      A-->>O: 200 approved
+    else rejected
+      A-->>O: 422 policy rejection
+    else review_required
+      A->>R: put private pending object
+      A->>D: create pending review and audit
+      A-->>O: 503 review required
+    else unavailable
+      A-->>O: 503 moderation unavailable
+    end
+  end
+  P->>A: GET or HEAD mutable avatar URL
+  A->>R: read current.json
+  R-->>A: approved version key
+  A-->>P: redirect to versioned WebP
+```
+
 The Worker verifies magic bytes, checks for PNG and WebP animation, uses the
 Images binding to decode, bounds dimensions and pixel count, and re-encodes a
 512 by 512 WebP without source metadata. It sends a JPEG rendering of the same
@@ -73,6 +147,29 @@ provider payloads. Policy rejections use HTTP 422. Review-required and
 unavailable checks use HTTP 503; `unavailable` identifies a technical failure
 such as a timeout, missing credential, HTTP error, or malformed provider
 response and is not a policy rejection.
+
+The moderation result is derived from the two checks as follows:
+
+```mermaid
+flowchart TD
+  Upload[Upload bytes] --> Valid{"Magic bytes, MIME,<br/>still image, dimensions OK?"}
+  Valid -- no --> Invalid["4xx validation error"]
+  Valid -- yes --> Normalize["Normalize to 512x512<br/>WebP and JPEG"]
+  Normalize --> Jev{"Jev response<br/>valid and available?"}
+  Jev -- no --> Unavailable["unavailable<br/>503, never published"]
+  Jev -- yes --> Safety{"Safety check failed?"}
+  Safety -- yes --> RejectedUnsafe["rejected<br/>422 unsafe_content"]
+  Safety -- no --> Portrait{"Portrait check failed?"}
+  Portrait -- yes --> RejectedPortrait["rejected<br/>422 unsuitable_portrait"]
+  Portrait -- no --> Uncertain{"Any check<br/>needs review?"}
+  Uncertain -- yes --> Pending["review_required<br/>store privately and queue"]
+  Uncertain -- no --> Approved["approved<br/>publish current.json pointer"]
+```
+
+A failed check is a high-confidence negative result. An uncertain or
+low-confidence check needs manual review; a malformed, timed-out, or unavailable
+provider response returns `unavailable` and is neither queued nor published.
+Rejections never change the published pointer.
 
 ## Review queue and audit history
 
@@ -113,6 +210,17 @@ discarded. The owner can keep viewing the candidate beside the published picture
 until a decision is recorded. Withdrawing the candidate marks the review rejected
 with the owner as the actor and records a `Withdrawn by the profile owner.` note;
 the private object is deleted and the published picture is untouched.
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending: review_required upload
+  pending --> approved: administrator approves
+  pending --> rejected: administrator rejects
+  pending --> rejected: owner withdraws
+  pending --> rejected: newer upload supersedes
+  approved --> [*]: current.json points to object
+  rejected --> [*]: published picture unchanged
+```
 
 Every owner upload, owner removal, administrator removal, review submission, and
 review decision appends an immutable row to `public_avatar_audit`. Each row
