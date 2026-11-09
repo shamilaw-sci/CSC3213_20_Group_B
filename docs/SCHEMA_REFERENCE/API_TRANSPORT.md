@@ -38,6 +38,14 @@ sequenceDiagram
 | `PublicCourseSchemaResponseSchema`  | Course editor permission and identity response.                        |
 | `PublicAcademicPrSchema`            | Course or offering pull-request state, revision, paths, and draft.     |
 
+## Student placement administration
+
+| Schema                           | Responsibility                                                       |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `StudentPlacementMetadataSchema` | Placement, alumni, postgraduate programme, and stream configuration. |
+| `StudentPlacementPrStatusSchema` | Draft pull-request state for placement metadata.                     |
+| `StudentPlacementPrSchema`       | Placement pull-request state, revision, and edit permission.         |
+
 ## Errors
 
 | Schema                   | Responsibility                                                      |

@@ -7,6 +7,7 @@ export * from '#schemas/api/mutation.schema';
 export * from '#schemas/api/operation.schema';
 export * from '#schemas/api/pagination.schema';
 export * from '#schemas/api/proxy.schema';
+export * from '#schemas/api/student-placement.schema';
 
 // Academics
 export * from '#schemas/academics/academic-organization.schema';

@@ -12,16 +12,21 @@ import {
   SlqfLevelSchema,
   type AcademicSupportStaff,
   type AcademicTeachingStaff,
+  type AlumniBatch,
   type NonAcademicStaff,
   type OperationStatusResponse,
   type PostgraduateProgramme,
+  type PostgraduateProgrammeDefinition,
   type PublicProfileKind as ProfileKind,
   type PublicProfilePr,
   type PublicProfileSchemaResponse,
   type SlqfLevel,
   type Student,
+  type StudentPlacement,
+  type StudentPlacementPr,
   type StudentPlacementResponse,
   type StudentStream as SpecialStream,
+  type StudentStreamDefinition,
   type StudentTrack,
 } from '@scs/schemas';
 
@@ -52,8 +57,6 @@ const STUDENT_TRACKS = StudentTrackSchema.options;
 const POSTGRADUATE_PROGRAMMES = PostgraduateProgrammeSchema.options;
 const SLQF_LEVELS = SlqfLevelSchema.options;
 
-type StudentLevel = NonNullable<Student['level']>;
-
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
   'academic-support': AcademicSupportStaff;
@@ -62,16 +65,6 @@ type ProfileByKind = {
 };
 
 type PublicProfile = ProfileByKind[ProfileKind];
-
-interface StudentPlacementPr {
-  status: 'none' | 'open' | 'merged' | 'closed';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-}
 
 interface ProfileConcurrency {
   expectedUserFileSha?: string | null;
@@ -128,29 +121,10 @@ interface PublicProfileUserContext {
   isSuperAdmin: boolean;
 }
 
-interface StudentPlacementRecord {
-  batch: string;
-  studentTrack: StudentTrack;
-  level: StudentLevel;
-}
-
-interface AlumniRecord {
-  batch: string;
-  studentTracks: StudentTrack[];
-}
-
-interface PostgraduateProgrammeRecord {
-  programme: PostgraduateProgramme;
-  label: string;
-  slqfLevel: SlqfLevel;
-}
-
-interface StudentStreamRecord {
-  stream: SpecialStream;
-  label: string;
-  directory?: string;
-  publicDirectory: boolean;
-}
+type StudentPlacementRecord = StudentPlacement;
+type AlumniRecord = AlumniBatch;
+type PostgraduateProgrammeRecord = PostgraduateProgrammeDefinition;
+type StudentStreamRecord = StudentStreamDefinition;
 
 const schemas = {
   academic: AcademicTeachingStaffSchema,

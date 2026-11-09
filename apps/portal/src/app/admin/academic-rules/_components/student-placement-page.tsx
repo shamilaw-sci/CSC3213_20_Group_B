@@ -1,5 +1,13 @@
 'use client';
 
+import type {
+  AlumniBatch as AlumniRule,
+  StudentLevel,
+  StudentPlacement as PlacementRule,
+  StudentPlacementMetadata as MetadataResponse,
+  StudentPlacementPr,
+  StudentTrack,
+} from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
 import {
@@ -56,65 +64,8 @@ import {
   readApiError,
 } from '@/lib/api';
 
-type StudentTrack = 'GENERAL' | 'HONOURS';
-type StudentLevel = '1000' | '2000' | '3000' | '4000';
-type StudentStream = 'cs' | 'ds' | 'stat' | 'sor';
-type SlqfLevel = 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12';
-type PostgraduateProgramme =
-  | 'POSTGRADUATE_CERTIFICATE'
-  | 'POSTGRADUATE_DIPLOMA'
-  | 'MASTERS_COURSEWORK'
-  | 'MSC'
-  | 'MPHIL'
-  | 'MPHIL_UPGRADE_FROM_MSC'
-  | 'PHD'
-  | 'PHD_UPGRADE_FROM_MSC'
-  | 'PHD_UPGRADE_FROM_MPHIL';
-
-interface PlacementRule {
-  batch: string;
-  studentTrack: StudentTrack;
-  level: StudentLevel;
-}
-
-interface AlumniRule {
-  batch: string;
-  studentTracks: StudentTrack[];
-}
-
-interface PostgraduateProgrammeRule {
-  programme: PostgraduateProgramme;
-  label: string;
-  slqfLevel: SlqfLevel;
-}
-
-interface StudentStreamRule {
-  stream: StudentStream;
-  label: string;
-  directory?: string;
-  publicDirectory: boolean;
-}
-
-interface MetadataResponse {
-  placement: PlacementRule[];
-  alumni: AlumniRule[];
-  postgraduateProgrammes: PostgraduateProgrammeRule[];
-  studentStreams: StudentStreamRule[];
-}
-
-interface StudentPlacementPr {
-  status: 'none' | 'open' | 'merged' | 'closed';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-}
-
 const TRACKS: StudentTrack[] = ['GENERAL', 'HONOURS'];
 const LEVELS: StudentLevel[] = ['1000', '2000', '3000', '4000'];
-const SLQF_LEVELS: SlqfLevel[] = ['L7', 'L8', 'L9', 'L10', 'L11', 'L12'];
 
 const TRACK_LABELS: Record<StudentTrack, string> = {
   GENERAL: 'General',
@@ -301,23 +252,6 @@ export default function StudentPlacementPage() {
                   itemIndex === index ? rule : item
                 )
               : current.alumni.filter((_, itemIndex) => itemIndex !== index),
-          }
-        : current
-    );
-  }
-
-  function setProgramme(
-    index: number,
-    patch: Partial<PostgraduateProgrammeRule>
-  ) {
-    setData((current) =>
-      current
-        ? {
-            ...current,
-            postgraduateProgrammes: current.postgraduateProgrammes.map(
-              (rule, ruleIndex) =>
-                ruleIndex === index ? { ...rule, ...patch } : rule
-            ),
           }
         : current
     );
@@ -827,14 +761,14 @@ export default function StudentPlacementPage() {
 
         <RulesSection
           title="Postgraduate SLQF Programmes"
-          description="Programme labels and locked SLQF framework levels used by public profile forms."
+          description="Read-only programme labels and locked SLQF framework levels used by public profile forms."
         >
           <RuleGrid>
             <RuleGridHeader
               columns="md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_8rem]"
               labels={['Programme', 'Label', 'SLQF']}
             />
-            {data?.postgraduateProgrammes.map((rule, index) => (
+            {data?.postgraduateProgrammes.map((rule) => (
               <RuleGridRow
                 key={rule.programme}
                 columns="md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_8rem]"
@@ -843,22 +777,11 @@ export default function StudentPlacementPage() {
                   <Input value={rule.programme} readOnly />
                 </FieldShell>
                 <FieldShell label="Label" compact>
-                  <Input
-                    value={rule.label}
-                    onChange={(event) =>
-                      setProgramme(index, { label: event.target.value })
-                    }
-                  />
+                  <Input value={rule.label} readOnly />
                 </FieldShell>
-                <SelectControl
-                  label="SLQF"
-                  value={rule.slqfLevel}
-                  options={SLQF_LEVELS}
-                  compact
-                  onChange={(value) =>
-                    setProgramme(index, { slqfLevel: value as SlqfLevel })
-                  }
-                />
+                <FieldShell label="SLQF" compact>
+                  <Input value={rule.slqfLevel} readOnly />
+                </FieldShell>
               </RuleGridRow>
             ))}
           </RuleGrid>

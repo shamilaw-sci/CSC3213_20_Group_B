@@ -1,19 +1,11 @@
+import type { StudentPlacementPr as StudentPlacementPrStatus } from '@scs/schemas';
+
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
 
 interface FileEntry {
   content: string;
   sha?: string;
-}
-
-export interface StudentPlacementPrStatus {
-  status: 'none' | 'open' | 'merged' | 'closed';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  canEdit: boolean;
-  updatedAt?: string;
 }
 
 export interface StudentPlacementPrCleanupResult {
