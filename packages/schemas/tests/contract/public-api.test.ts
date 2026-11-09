@@ -20,6 +20,11 @@ function acceptsPublicApiTypes(_contracts: {
 }): void {}
 
 const expectedRuntimeExports = [
+  'ACCESS_LEVEL',
+  'ACCESS_LEVELS',
+  'APP_ROLE',
+  'APP_ROLES',
+  'AccessLevelSchema',
   'ApiErrorCodeSchema',
   'ApiErrorEnvelopeSchema',
   'ApiErrorSchema',
@@ -45,6 +50,7 @@ const expectedRuntimeExports = [
   'AdminUserAvatarSchema',
   'AlumniBatchListSchema',
   'AlumniBatchSchema',
+  'AppRoleSchema',
   'ConferenceSchema',
   'ConflictDetailsSchema',
   'CorrelationIdSchema',
@@ -77,6 +83,7 @@ const expectedRuntimeExports = [
   'OperationResourceTypeSchema',
   'OperationStatusResponseSchema',
   'OperationStatusSchema',
+  'PROFILE_PICTURE_MODES',
   'PageInfoSchema',
   'PageLimitSchema',
   'PaginationRequestSchema',
@@ -88,6 +95,7 @@ const expectedRuntimeExports = [
   'PostgraduateProgrammeDefinitionSchema',
   'PostgraduateProgrammeSchema',
   'PrincipalSubjectArea1000LevelCodes',
+  'ProfilePictureModeSchema',
   'ProgramSchema',
   'ProjectCourseOfferingSchema',
   'ProjectCourseSchema',

@@ -2,11 +2,11 @@ import type {
   AcademicSupportStaff,
   AcademicTeachingStaff,
   NonAcademicStaff,
+  PublicProfileKind as ProfileKind,
   Student,
 } from '@scs/schemas';
 
-export type ProfileKind =
-  'academic' | 'academic-support' | 'non-academic' | 'student';
+export type { ProfileKind };
 
 type ProfileByKind = {
   academic: AcademicTeachingStaff;

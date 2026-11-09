@@ -1,45 +1,25 @@
+import {
+  ACCESS_LEVEL,
+  ACCESS_LEVELS,
+  APP_ROLE,
+  APP_ROLES,
+  PROFILE_PICTURE_MODES,
+  type AccessLevel,
+  type AppRole,
+  type ProfilePictureMode,
+} from '@scs/schemas';
+
 import type { Env } from '@/types/env';
 
+export {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  type AccessLevel,
+  type AppRole,
+  type ProfilePictureMode,
+};
+
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
-
-const APP_ROLES = [
-  'USER',
-  'OTHER',
-  'STUDENT',
-  'ACADEMIC',
-  'NON_ACADEMIC',
-  'ACADEMIC_SUPPORT',
-] as const;
-
-export type AppRole = (typeof APP_ROLES)[number];
-
-export const APP_ROLE = {
-  USER: 'USER',
-  OTHER: 'OTHER',
-  STUDENT: 'STUDENT',
-  ACADEMIC: 'ACADEMIC',
-  NON_ACADEMIC: 'NON_ACADEMIC',
-  ACADEMIC_SUPPORT: 'ACADEMIC_SUPPORT',
-} as const satisfies Record<AppRole, AppRole>;
-
-const ACCESS_LEVELS = ['NONE', 'ADMIN', 'SUPER_ADMIN'] as const;
-
-export type AccessLevel = (typeof ACCESS_LEVELS)[number];
-
-export const ACCESS_LEVEL = {
-  NONE: 'NONE',
-  ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-} as const satisfies Record<AccessLevel, AccessLevel>;
-
-const PROFILE_PICTURE_MODES = [
-  'google',
-  'github',
-  'manual',
-  'gravatar',
-] as const;
-
-export type ProfilePictureMode = (typeof PROFILE_PICTURE_MODES)[number];
 
 /**
  * Stored in API D1. `role` identifies the person category; `accessLevel` is an

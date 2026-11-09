@@ -46,6 +46,14 @@ sequenceDiagram
 | `StudentPlacementPrStatusSchema` | Draft pull-request state for placement metadata.                     |
 | `StudentPlacementPrSchema`       | Placement pull-request state, revision, and edit permission.         |
 
+## Shared permissions
+
+| Schema                     | Responsibility                                           |
+| -------------------------- | -------------------------------------------------------- |
+| `AppRoleSchema`            | Person category used by portal authorization.            |
+| `AccessLevelSchema`        | Independent management grant, separate from person role. |
+| `ProfilePictureModeSchema` | Supported profile picture sources.                       |
+
 ## Errors
 
 | Schema                   | Responsibility                                                      |

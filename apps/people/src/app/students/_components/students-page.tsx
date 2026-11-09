@@ -1,5 +1,6 @@
 'use client';
 
+import type { StudentStreamDefinition } from '@scs/schemas';
 import { Card, CardContent } from '@scs/ui/components/card';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -13,7 +14,6 @@ import {
   prefetchPeopleManifest,
   prefetchStudentStreamDefinitions,
   prefetchSubject,
-  type StudentStreamDefinition,
 } from '@/lib/data/people-data';
 
 type SubjectCard = {

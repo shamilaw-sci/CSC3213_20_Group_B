@@ -5,23 +5,25 @@ import {
   AcademicTeachingStaffSchema,
   type NonAcademicStaff,
   NonAcademicStaffSchema,
+  type PeopleSearchEntry,
   type Staff,
   StaffSchema,
   type Student,
   StudentSchema,
+  type StudentStatus,
+  type StudentStreamDefinition,
 } from '@scs/schemas';
 
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { isSubjectSlug, type SubjectSlug } from '@/config/subjects';
 
-type PeopleBatchCategory = 'CURRENT' | 'ALUMNI';
 export type StudentSubject = SubjectSlug;
 
 export interface PeopleBatch {
   id: string;
   displayName: string;
-  defaultCategory: PeopleBatchCategory;
+  defaultCategory: StudentStatus;
   intakeYear: number;
 }
 
@@ -39,13 +41,6 @@ export interface PeopleManifest {
   programmes: PeopleProgramme[];
 }
 
-export interface StudentStreamDefinition {
-  stream: string;
-  label: string;
-  directory?: string;
-  publicDirectory: boolean;
-}
-
 export interface StudentDirectoryContext {
   subject: StudentSubject;
   programme: PeopleProgramme;
@@ -61,17 +56,6 @@ export interface PersonProject {
   shortDescription: string;
   status: string;
   role: string;
-}
-
-export interface PeopleSearchEntry {
-  id: string;
-  type: 'STAFF' | 'STUDENT';
-  identity: string;
-  href: string;
-  name: string;
-  subtitle: string;
-  email?: string;
-  keywords: string[];
 }
 
 interface CacheEntry<T> {

@@ -1,6 +1,11 @@
 import { Buffer } from 'node:buffer';
 
-import { HonoursProgrammeStudentStreamMap } from '@scs/schemas';
+import {
+  AcademicDepartmentCodeSchema,
+  HonoursProgrammeStudentStreamMap,
+  StudentStreamSchema,
+  type PublicProfilePr,
+} from '@scs/schemas';
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
@@ -27,22 +32,9 @@ export class PublicProfileRequestError extends Error {
   }
 }
 
-export interface PublicProfilePrStatus {
-  status: 'none' | 'open' | 'merged' | 'closed';
-  number?: number;
-  url?: string;
-  branch?: string;
-  headSha?: string;
-  currentUserFileSha?: string | null;
-  revision?: string;
-  canEdit: boolean;
-  updatedAt?: string;
-  profileKind?: PublicProfileKind;
-  stream?: string;
-  targetUserFile?: string;
-  targetAggregateFiles?: string[];
-  draftProfile?: Record<string, unknown> | null;
-}
+// The stored PR metadata carries a stream hint that the shared transport
+// contract intentionally omits, so keep the local extension additive.
+export type PublicProfilePrStatus = PublicProfilePr & { stream?: string };
 
 export interface PublicProfilePrResult extends PublicProfilePrStatus {
   status: 'open';
@@ -87,32 +79,10 @@ const STAFF_AGGREGATE_PATHS = [
   'public/people/v2/staff/academic-support.json',
   'public/people/v2/staff/non-academic.json',
 ] as const;
-const SPECIAL_STREAMS = [
-  'biomedical-science',
-  'botany',
-  'computer-science',
-  'data-science',
-  'geology',
-  'mathematics',
-  'microbiology',
-  'molecular-biology',
-  'physics',
-  'statistics',
-  'zoology',
-  'applied-science',
-  'statistics-and-operations-research',
-] as const;
-const STAFF_DEPARTMENTS = [
-  'botany',
-  'chemistry',
-  'environmental-and-industrial-sciences',
-  'geology',
-  'mathematics',
-  'molecular-biology-and-biotechnology',
-  'physics',
-  'statistics-and-computer-science',
-  'zoology',
-] as const;
+const SPECIAL_STREAMS = StudentStreamSchema.options;
+const STAFF_DEPARTMENTS = AcademicDepartmentCodeSchema.options.map((code) =>
+  code.toLowerCase().replaceAll('_', '-')
+);
 const STAFF_KINDS = ['academic', 'academic-support', 'non-academic'] as const;
 const SEARCH_INDEX_PATH = 'public/people/v2/search.json';
 

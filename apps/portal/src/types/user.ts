@@ -1,4 +1,6 @@
-import { AccessLevel, AppRole } from '@/types/role';
+import type { AccessLevel, AppRole, ProfilePictureMode } from '@scs/schemas';
+
+export type { ProfilePictureMode };
 
 export interface AdminUserData {
   id: string;
@@ -35,5 +37,3 @@ export interface CurrentUserProfile {
   githubOAuth?: boolean;
   githubUserID?: number | null;
 }
-
-export type ProfilePictureMode = 'google' | 'github' | 'manual' | 'gravatar';

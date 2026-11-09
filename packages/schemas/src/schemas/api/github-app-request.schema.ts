@@ -11,8 +11,11 @@ import { AcademicSupportStaffSchema } from '#schemas/people/staff/academic-suppo
 import { AcademicTeachingStaffSchema } from '#schemas/people/staff/academic-teaching/academic-teaching-staff.schema';
 import { NonAcademicStaffSchema } from '#schemas/people/staff/non-academic/non-academic-staff.schema';
 import {
+  AlumniBatchSchema,
+  PostgraduateProgrammeDefinitionSchema,
+  StudentPlacementSchema,
   StudentSchema,
-  StudentStreamSchema,
+  StudentStreamDefinitionSchema,
 } from '#schemas/people/students/student.schema';
 import { ProjectSchema } from '#schemas/projects/project.schema';
 
@@ -66,57 +69,14 @@ export const getPublicAcademicRecordQuerySchema = z.object({
 });
 
 const PublicProfileStudentSchema = StudentSchema.passthrough();
-const studentTrackSchema = z.enum(['GENERAL', 'HONOURS']);
-const studentLevelSchema = z.enum(['1000', '2000', '3000', '4000']);
-const postgraduateProgrammeSchema = z.enum([
-  'POSTGRADUATE_CERTIFICATE',
-  'POSTGRADUATE_DIPLOMA',
-  'MASTERS_COURSEWORK',
-  'MSC',
-  'MPHIL',
-  'MPHIL_UPGRADE_FROM_MSC',
-  'PHD',
-  'PHD_UPGRADE_FROM_MSC',
-  'PHD_UPGRADE_FROM_MPHIL',
-]);
-const slqfLevelSchema = z.enum(['L7', 'L8', 'L9', 'L10', 'L11', 'L12']);
-
-const studentPlacementSchema = z.object({
-  batch: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^s\d{2}$/),
-  studentTrack: studentTrackSchema,
-  level: studentLevelSchema,
-});
-const alumniRuleSchema = z.object({
-  batch: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^s\d{2}$/),
-  studentTracks: z.array(studentTrackSchema).min(1).max(2),
-});
-const postgraduateProgrammeDefinitionSchema = z.object({
-  programme: postgraduateProgrammeSchema,
-  label: z.string().trim().min(1),
-  slqfLevel: slqfLevelSchema,
-});
-const studentStreamDefinitionSchema = z.object({
-  stream: StudentStreamSchema,
-  label: z.string().trim().min(1),
-  directory: z.string().trim().min(1).optional(),
-  publicDirectory: z.boolean(),
-});
 
 export const updateStudentPlacementMetadataRequestSchema = z
   .object({
     updatedBy: actorSchema,
-    placement: z.array(studentPlacementSchema),
-    alumni: z.array(alumniRuleSchema),
-    postgraduateProgrammes: z.array(postgraduateProgrammeDefinitionSchema),
-    studentStreams: z.array(studentStreamDefinitionSchema),
+    placement: z.array(StudentPlacementSchema),
+    alumni: z.array(AlumniBatchSchema),
+    postgraduateProgrammes: z.array(PostgraduateProgrammeDefinitionSchema),
+    studentStreams: z.array(StudentStreamDefinitionSchema),
   })
   .refine(
     ({ alumni, placement }) => {

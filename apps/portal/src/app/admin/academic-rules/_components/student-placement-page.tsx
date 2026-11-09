@@ -1,12 +1,14 @@
 'use client';
 
-import type {
-  AlumniBatch as AlumniRule,
-  StudentLevel,
-  StudentPlacement as PlacementRule,
-  StudentPlacementMetadata as MetadataResponse,
-  StudentPlacementPr,
-  StudentTrack,
+import {
+  type AlumniBatch as AlumniRule,
+  type StudentLevel,
+  StudentLevelSchema,
+  type StudentPlacement as PlacementRule,
+  type StudentPlacementMetadata as MetadataResponse,
+  type StudentPlacementPr,
+  type StudentTrack,
+  StudentTrackSchema,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
@@ -64,8 +66,8 @@ import {
   readApiError,
 } from '@/lib/api';
 
-const TRACKS: StudentTrack[] = ['GENERAL', 'HONOURS'];
-const LEVELS: StudentLevel[] = ['1000', '2000', '3000', '4000'];
+const TRACKS: StudentTrack[] = [...StudentTrackSchema.options];
+const LEVELS: StudentLevel[] = [...StudentLevelSchema.options];
 
 const TRACK_LABELS: Record<StudentTrack, string> = {
   GENERAL: 'General',

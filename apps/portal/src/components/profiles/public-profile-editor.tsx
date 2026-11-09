@@ -19,6 +19,7 @@ import {
   normalizeKnownSocialUrl,
   PersonSchema,
   type PostgraduateProgramme,
+  PostgraduateProgrammeSchema,
   type PublicProfileKind as ProfileKind,
   type PublicProfilePr,
   type PublicProfileResponse,
@@ -137,17 +138,7 @@ const GENERAL_STUDENT_LEVELS = STUDENT_LEVELS.filter(
   (level) => level !== '4000'
 );
 const STUDENT_STATUSES = StudentStatusSchema.options;
-const POSTGRADUATE_PROGRAMMES: PostgraduateProgramme[] = [
-  'POSTGRADUATE_CERTIFICATE',
-  'POSTGRADUATE_DIPLOMA',
-  'MASTERS_COURSEWORK',
-  'MSC',
-  'MPHIL',
-  'MPHIL_UPGRADE_FROM_MSC',
-  'PHD',
-  'PHD_UPGRADE_FROM_MSC',
-  'PHD_UPGRADE_FROM_MPHIL',
-];
+const POSTGRADUATE_PROGRAMMES = PostgraduateProgrammeSchema.options;
 const POSTGRADUATE_PROGRAMME_LABELS: Record<PostgraduateProgramme, string> = {
   POSTGRADUATE_CERTIFICATE: 'Postgraduate Certificate',
   POSTGRADUATE_DIPLOMA: 'Postgraduate Diploma',

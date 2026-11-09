@@ -1,32 +1,20 @@
-export const APP_ROLES = [
-  'USER',
-  'OTHER',
-  'STUDENT',
-  'ACADEMIC',
-  'NON_ACADEMIC',
-  'ACADEMIC_SUPPORT',
-] as const;
+import {
+  ACCESS_LEVEL,
+  ACCESS_LEVELS,
+  type AccessLevel,
+  APP_ROLE,
+  APP_ROLES,
+  type AppRole,
+} from '@scs/schemas';
 
-export type AppRole = (typeof APP_ROLES)[number];
-
-export const APP_ROLE = {
-  USER: 'USER',
-  OTHER: 'OTHER',
-  STUDENT: 'STUDENT',
-  ACADEMIC: 'ACADEMIC',
-  NON_ACADEMIC: 'NON_ACADEMIC',
-  ACADEMIC_SUPPORT: 'ACADEMIC_SUPPORT',
-} as const satisfies Record<AppRole, AppRole>;
-
-export const ACCESS_LEVELS = ['NONE', 'ADMIN', 'SUPER_ADMIN'] as const;
-
-export type AccessLevel = (typeof ACCESS_LEVELS)[number];
-
-export const ACCESS_LEVEL = {
-  NONE: 'NONE',
-  ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-} as const satisfies Record<AccessLevel, AccessLevel>;
+export {
+  ACCESS_LEVEL,
+  ACCESS_LEVELS,
+  type AccessLevel,
+  APP_ROLE,
+  APP_ROLES,
+  type AppRole,
+};
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   [APP_ROLE.USER]: 'User',

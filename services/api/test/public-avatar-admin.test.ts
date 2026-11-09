@@ -267,7 +267,7 @@ async function seedPendingReview(
   env: Env,
   bucket: ReturnType<typeof createMemoryBucket>,
   sha256 = PENDING_HASH,
-  submittedAt = Date.now()
+  submittedAt = Date.now() - 1
 ): Promise<{ id: string; key: string }> {
   const key = `avatars/${USERNAME}/${sha256}.webp`;
   await bucket.put(key, new Uint8Array([4, 5, 6]));

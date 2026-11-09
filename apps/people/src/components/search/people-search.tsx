@@ -1,12 +1,12 @@
 'use client';
 
+import type { PeopleSearchEntry } from '@scs/schemas';
 import { Loader2, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { useId, useMemo, useRef, useState } from 'react';
 
 import {
   getPeopleSearchIndex,
-  type PeopleSearchEntry,
   prefetchPeopleSearchIndex,
 } from '@/lib/data/people-data';
 

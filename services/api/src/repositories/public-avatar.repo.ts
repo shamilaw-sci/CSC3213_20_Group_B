@@ -1,8 +1,11 @@
-import type { PublicAvatarModeration } from '@scs/schemas';
+import type {
+  PublicAvatarAuditAction,
+  PublicAvatarAuditActorKind,
+  PublicAvatarModeration,
+  PublicAvatarReviewStatus,
+} from '@scs/schemas';
 
 import type { Env } from '@/types/env';
-
-type PublicAvatarReviewStatus = 'pending' | 'approved' | 'rejected';
 
 export const PUBLIC_AVATAR_AUDIT_ACTION = {
   UPLOAD: 'upload',
@@ -12,11 +15,6 @@ export const PUBLIC_AVATAR_AUDIT_ACTION = {
   REVIEW_APPROVED: 'review_approved',
   REVIEW_REJECTED: 'review_rejected',
 } as const;
-
-export type PublicAvatarAuditAction =
-  (typeof PUBLIC_AVATAR_AUDIT_ACTION)[keyof typeof PUBLIC_AVATAR_AUDIT_ACTION];
-
-type PublicAvatarAuditActorKind = 'owner' | 'admin';
 
 export interface PublicAvatarReviewRecord {
   id: string;

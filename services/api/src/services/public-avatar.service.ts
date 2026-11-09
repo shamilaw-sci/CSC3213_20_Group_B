@@ -1,4 +1,9 @@
-import type { PublicAvatarModeration, PublicAvatarQuota } from '@scs/schemas';
+import type {
+  PublicAvatarAuditAction,
+  PublicAvatarAuditActorKind,
+  PublicAvatarModeration,
+  PublicAvatarQuota,
+} from '@scs/schemas';
 
 import {
   createCorsHeaders,
@@ -29,7 +34,6 @@ import {
   PUBLIC_AVATAR_AUDIT_ACTION,
   recordAvatarAudit,
   reopenAvatarReview,
-  type PublicAvatarAuditAction,
   type PublicAvatarReviewCursor,
   type PublicAvatarReviewRecord,
 } from '@/repositories/public-avatar.repo';
@@ -526,7 +530,7 @@ async function cancelPendingForUser(
   input: {
     username: string;
     actorEmail: string;
-    actorKind: 'owner' | 'admin';
+    actorKind: PublicAvatarAuditActorKind;
     note: string;
     submittedBefore: number;
   }
