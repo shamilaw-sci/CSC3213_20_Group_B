@@ -448,6 +448,7 @@
         "@scs/security": "workspace:*",
         "@t3-oss/env-core": "^0.13.11",
         "hono": "^4.12.30",
+        "pg": "^8.23.1",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -455,6 +456,7 @@
         "@scs/eslint-config": "workspace:*",
         "@scs/tsconfig": "workspace:*",
         "@types/bun": "^1.4.4",
+        "@types/pg": "^8.23.1",
         "eslint": "^9.39.5",
         "globals": "^17.7.0",
         "knip": "^6.41.0",

@@ -56,6 +56,36 @@ Local Bun execution uses the same `OperationStore` interface with an in-memory
 implementation. That mode is for development: process restarts discard status,
 and it is not a durability substitute.
 
+For a future self-hosted profile, `PostgresOperationStore` implements the same
+interface using the existing `pg` driver. The separately reviewed migration
+`services/github-app/migrations/postgres/0001_operation_state.sql` creates a
+PostgreSQL table with a primary key on operation ID and a JSONB record. Apply
+it once to a dedicated schema before starting workers; the application does
+not create tables at runtime. The PostgreSQL adapter is not imported by the
+Cloudflare Worker or the current local Bun entry point.
+
+PostgreSQL creation uses `INSERT ... ON CONFLICT DO NOTHING`; the unique index
+decides the winner across processes. Saves and cancellation requests use row
+locks in transactions. A save also preserves the database's cancellation flag
+in its conflict update, including a race with a previously absent row. Reads
+and writes validate records with the existing `OperationRecordSchema`.
+Operation status, attempts, outcome, timestamps, and metadata persist across
+store and process recreation. The store does not provide resource locking or
+job delivery; those remain separate Phase 4 and Phase 5 responsibilities.
+
+To move existing Cloudflare operations to PostgreSQL, stop new submissions and
+queue consumers, export the validated operation JSON for every operation ID,
+and import each ID and JSON record into the new table in a reviewed migration.
+Check record counts, IDs, statuses, cancellation flags, outcomes, and a sample
+of pending and terminal operations before enabling the new profile. The
+Durable Object namespace does not expose a global list of operation IDs, so
+the handover needs an authoritative ID inventory or a separate export path.
+Changing the store configuration alone does not migrate records.
+
+Live tests require `POSTGRES_TEST_URL` for an isolated PostgreSQL 17 database.
+They create and drop a random schema, exercise two independent pools, and
+skip when no test URL is provided. Do not point this variable at production.
+
 ## Resource serialization
 
 Execution uses the canonical key `{resource.type}:{resource.id}`. One
