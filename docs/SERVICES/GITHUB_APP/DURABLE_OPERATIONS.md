@@ -57,7 +57,7 @@ implementation. That mode is for development: process restarts discard status,
 and it is not a durability substitute.
 
 For a future self-hosted profile, `PostgresOperationStore` implements the same
-interface using the existing `pg` driver. The separately reviewed migration
+interface using the existing `pg` driver. The dedicated migration
 `services/github-app/migrations/postgres/0001_operation_state.sql` creates a
 PostgreSQL table with a primary key on operation ID and a JSONB record. Apply
 it once to a dedicated schema before starting workers; the application does
