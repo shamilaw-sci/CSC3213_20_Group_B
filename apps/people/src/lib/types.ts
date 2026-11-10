@@ -1,42 +1,19 @@
 import {
   type AcademicDepartmentCode,
-  type AcademicRank,
   AcademicRankSchema,
   type AcademicSubjectCode,
   AcademicSupportPositionSchema,
-  type AcademicSupportStaff,
-  type AcademicTeachingStaff,
   type AcademicUnitCode,
   type HonoursProgrammeCode as HonoursProgramme,
   NonAcademicPositionSchema,
-  type NonAcademicStaff,
   type PostgraduateProgramme,
-  type Publication,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
   ScienceAcademicUnits,
   type SlqfLevel,
-  type SocialLinks,
   type Staff,
   type Student,
 } from '@scs/schemas';
-
-export type {
-  AcademicDepartmentCode,
-  AcademicRank,
-  AcademicSubjectCode,
-  AcademicSupportStaff,
-  AcademicTeachingStaff,
-  AcademicUnitCode,
-  HonoursProgramme,
-  NonAcademicStaff,
-  PostgraduateProgramme,
-  Publication,
-  SlqfLevel,
-  SocialLinks,
-  Staff,
-  Student,
-};
 
 export type StudentLevel = Student['level'];
 function formatDomainValue(value: string): string {

@@ -1,5 +1,6 @@
 'use client';
 
+import type { AcademicSupportStaff } from '@scs/schemas';
 import { useEffect, useState } from 'react';
 
 import PageHeader from '@/components/layout/page-header';
@@ -11,7 +12,6 @@ import {
   getAcademicSupportStaff,
   prefetchPeopleProfiles,
 } from '@/lib/data/people-data';
-import type { AcademicSupportStaff } from '@/lib/types';
 
 export default function AcademicSupportStaffPage() {
   const [academicSupportStaff, setAcademicSupportStaff] = useState<

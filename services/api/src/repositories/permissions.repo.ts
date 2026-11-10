@@ -1,9 +1,9 @@
 import {
   ACCESS_LEVEL,
-  ACCESS_LEVELS,
+  AccessLevelSchema,
   APP_ROLE,
-  APP_ROLES,
-  PROFILE_PICTURE_MODES,
+  AppRoleSchema,
+  ProfilePictureModeSchema,
   type AccessLevel,
   type AppRole,
   type ProfilePictureMode,
@@ -20,6 +20,55 @@ export {
 };
 
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isRepoRoleMap(value: unknown): value is Record<string, RepoRole> {
+  return (
+    isRecord(value) &&
+    Object.values(value).every(
+      (role) => role === 'ADMIN' || role === 'EDITOR' || role === 'VIEWER'
+    )
+  );
+}
+
+function parseStoredPermission(value: unknown): Permission | null {
+  if (!isRecord(value)) return null;
+  const role = normalizeAppRole(value.role) ?? APP_ROLE.USER;
+  const accessLevel =
+    normalizeAccessLevel(value.accessLevel) ?? ACCESS_LEVEL.NONE;
+  const permission: Permission = { role, accessLevel };
+  if (isRepoRoleMap(value.include)) permission.include = value.include;
+  if (
+    Array.isArray(value.exclude) &&
+    value.exclude.every((item) => typeof item === 'string')
+  ) {
+    permission.exclude = value.exclude;
+  }
+  if (typeof value.blacklisted === 'boolean') {
+    permission.blacklisted = value.blacklisted;
+  }
+  if (isRecord(value.notifications)) {
+    const { email, push } = value.notifications;
+    permission.notifications = {
+      ...(typeof email === 'boolean' ? { email } : {}),
+      ...(typeof push === 'boolean' ? { push } : {}),
+    };
+  }
+  if (typeof value.name === 'string') permission.name = value.name;
+  if (typeof value.picture === 'string') permission.picture = value.picture;
+  if (typeof value.gravatarMail === 'string')
+    permission.gravatarMail = value.gravatarMail;
+  if (isProfilePictureMode(value.pictureMode)) {
+    permission.pictureMode = value.pictureMode;
+  }
+  if (typeof value.createdAt === 'number' && Number.isFinite(value.createdAt)) {
+    permission.createdAt = value.createdAt;
+  }
+  return permission;
+}
 
 /**
  * Stored in API D1. `role` identifies the person category; `accessLevel` is an
@@ -59,33 +108,20 @@ export interface UserDataPage {
   nextCursor: string | null;
 }
 
-function isAppRole(value: unknown): value is AppRole {
-  return typeof value === 'string' && APP_ROLES.includes(value as AppRole);
-}
-
 export function normalizeAppRole(value: unknown): AppRole | null {
-  if (isAppRole(value)) return value;
-  return null;
-}
-
-function isAccessLevel(value: unknown): value is AccessLevel {
-  return (
-    typeof value === 'string' && ACCESS_LEVELS.includes(value as AccessLevel)
-  );
+  const parsed = AppRoleSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 export function normalizeAccessLevel(value: unknown): AccessLevel | null {
-  if (isAccessLevel(value)) return value;
-  return null;
+  const parsed = AccessLevelSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 export function isProfilePictureMode(
   value: unknown
 ): value is ProfilePictureMode {
-  return (
-    typeof value === 'string' &&
-    PROFILE_PICTURE_MODES.includes(value as ProfilePictureMode)
-  );
+  return ProfilePictureModeSchema.safeParse(value).success;
 }
 
 export function getPermissionRole(permission?: Permission | null): AppRole {
@@ -223,7 +259,8 @@ export async function getUserPermission(
   if (!row) return null;
 
   try {
-    return sanitizePermission(JSON.parse(row.permissionJson) as Permission);
+    const permission = parseStoredPermission(JSON.parse(row.permissionJson));
+    return permission ? sanitizePermission(permission) : null;
   } catch {
     return null;
   }

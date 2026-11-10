@@ -1,5 +1,6 @@
+import type { Staff, Student } from '@scs/schemas';
+
 import publicEnvConfig from '@/config/public.env.config';
-import type { Staff, Student } from '@/lib/types';
 
 export function avatarUrlForPerson(
   person: Staff | Student

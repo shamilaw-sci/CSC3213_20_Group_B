@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type { ProjectDraftRepository } from '@/domains/projects/project.repository';
 import type {
   OperationCommand,
@@ -19,6 +21,17 @@ export interface ProjectOperationRequest {
 interface ProjectOperationPayload {
   request: ProjectOperationRequest;
 }
+
+const ProjectOperationPayloadSchema = z.object({
+  request: z.object({
+    action: z.enum(['upsert', 'delete']),
+    slug: z.string(),
+    updatedBy: z.string(),
+    projectPath: z.string(),
+    expectedRevision: z.string().optional(),
+    project: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
 
 export function createProjectOperationCommand(input: {
   request: ProjectOperationRequest;
@@ -43,7 +56,7 @@ export function createProjectOperationHandlers(
   repository: ProjectDraftRepository
 ): Record<string, OperationHandler> {
   const handler: OperationHandler = async (command, operation) => {
-    const payload = command.payload as ProjectOperationPayload;
+    const payload = ProjectOperationPayloadSchema.parse(command.payload);
     const result = await repository.saveDraft(payload.request, {
       operationId: operation.operationId,
     });

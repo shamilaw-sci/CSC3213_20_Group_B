@@ -1,5 +1,6 @@
 'use client';
 
+import type { Staff, Student } from '@scs/schemas';
 import { useEffect, useState } from 'react';
 
 import PageHeader, {
@@ -18,7 +19,6 @@ import {
   getStudentDirectoryContext,
   type PersonProject,
 } from '@/lib/data/people-data';
-import type { Staff, Student } from '@/lib/types';
 
 function isStudentPerson(person: Staff | Student): person is Student {
   return 'registrationNo' in person;

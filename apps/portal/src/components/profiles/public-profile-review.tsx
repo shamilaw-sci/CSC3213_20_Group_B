@@ -1,6 +1,6 @@
 'use client';
 
-import type { PublicProfileKind as ProfileKind } from '@scs/schemas';
+import type { PublicProfileKind } from '@scs/schemas';
 import { Button } from '@scs/ui/components/button';
 import { useState } from 'react';
 
@@ -13,7 +13,7 @@ import type { ProfileRecord } from '@/components/profiles/profile-types';
 interface PublicProfileReviewProps {
   draft: ProfileRecord;
   onChangeField: (field: string) => void;
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   published: Readonly<ProfileRecord> | null;
 }
 

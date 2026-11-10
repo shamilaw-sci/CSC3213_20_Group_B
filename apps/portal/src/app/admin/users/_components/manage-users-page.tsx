@@ -1,5 +1,6 @@
 'use client';
 
+import { ACCESS_LEVEL, ACCESS_LEVELS, APP_ROLES } from '@scs/schemas';
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
 import { Button, buttonVariants } from '@scs/ui/components/button';
@@ -21,10 +22,7 @@ import { BackButton } from '@/components/navigation/back-button';
 import { Pagination } from '@/components/navigation/pagination';
 import { emailPathSegment } from '@/lib/email';
 import {
-  ACCESS_LEVEL,
   ACCESS_LEVEL_LABEL,
-  ACCESS_LEVELS,
-  APP_ROLES,
   getUserAccessLevel,
   getUserRole,
   isSuperAdminRole,

@@ -1,5 +1,12 @@
 'use client';
 
+import {
+  ACCESS_LEVEL,
+  ACCESS_LEVELS,
+  type AccessLevel,
+  APP_ROLES,
+  type AppRole,
+} from '@scs/schemas';
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
@@ -29,13 +36,8 @@ import ProfilePictureEditor, {
 } from '@/components/profiles/profile-picture-editor';
 import { adminUserApiUrl, apiHeaders, readApiError } from '@/lib/api';
 import { emailPathSegment } from '@/lib/email';
-import type { AppRole } from '@/types/role';
 import {
-  ACCESS_LEVEL,
   ACCESS_LEVEL_LABEL,
-  ACCESS_LEVELS,
-  type AccessLevel,
-  APP_ROLES,
   getUserAccessLevel,
   getUserRole,
   ROLE_LABEL,

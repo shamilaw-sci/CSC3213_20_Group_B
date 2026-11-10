@@ -36,16 +36,26 @@ export function parseRuntimeConfig(
     throw new RuntimeConfigurationError(invalidFields);
   }
 
+  const required = (field: (typeof REQUIRED_FIELDS)[number]): string => {
+    const value = bindings[field];
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new RuntimeConfigurationError([field]);
+    }
+    return value;
+  };
+
   return {
-    GITHUB_APP_ID: bindings.GITHUB_APP_ID!.trim(),
-    GITHUB_PRIVATE_KEY: bindings.GITHUB_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    GITHUB_INSTALLATION_ID: bindings.GITHUB_INSTALLATION_ID!.trim(),
-    GITHUB_OWNER: bindings.GITHUB_OWNER!.trim(),
-    GITHUB_PEOPLE_DATA_REPOSITORY:
-      bindings.GITHUB_PEOPLE_DATA_REPOSITORY!.trim(),
-    GITHUB_PROJECTS_DATA_REPOSITORY:
-      bindings.GITHUB_PROJECTS_DATA_REPOSITORY!.trim(),
-    X_INTERNAL_SECRET: bindings.X_INTERNAL_SECRET!,
+    GITHUB_APP_ID: required('GITHUB_APP_ID').trim(),
+    GITHUB_PRIVATE_KEY: required('GITHUB_PRIVATE_KEY').replace(/\\n/g, '\n'),
+    GITHUB_INSTALLATION_ID: required('GITHUB_INSTALLATION_ID').trim(),
+    GITHUB_OWNER: required('GITHUB_OWNER').trim(),
+    GITHUB_PEOPLE_DATA_REPOSITORY: required(
+      'GITHUB_PEOPLE_DATA_REPOSITORY'
+    ).trim(),
+    GITHUB_PROJECTS_DATA_REPOSITORY: required(
+      'GITHUB_PROJECTS_DATA_REPOSITORY'
+    ).trim(),
+    X_INTERNAL_SECRET: required('X_INTERNAL_SECRET'),
     PORT: port,
   };
 }

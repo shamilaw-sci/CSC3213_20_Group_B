@@ -1,5 +1,6 @@
 'use client';
 
+import type { NonAcademicStaff } from '@scs/schemas';
 import { useEffect, useState } from 'react';
 
 import PageHeader from '@/components/layout/page-header';
@@ -11,7 +12,6 @@ import {
   getNonAcademicStaff,
   prefetchPeopleProfiles,
 } from '@/lib/data/people-data';
-import type { NonAcademicStaff } from '@/lib/types';
 
 export default function NonAcademicStaffPage() {
   const [nonAcademicStaff, setNonAcademicStaff] = useState<NonAcademicStaff[]>(

@@ -1,5 +1,6 @@
 'use client';
 
+import type { AcademicRank, AcademicTeachingStaff } from '@scs/schemas';
 import { Tabs, TabsList, TabsTrigger } from '@scs/ui/components/tabs';
 import { useEffect, useState } from 'react';
 
@@ -12,11 +13,7 @@ import {
   getAcademicStaff,
   prefetchPeopleProfiles,
 } from '@/lib/data/people-data';
-import {
-  ACADEMIC_RANK_LABELS,
-  type AcademicRank,
-  type AcademicTeachingStaff,
-} from '@/lib/types';
+import { ACADEMIC_RANK_LABELS } from '@/lib/types';
 
 const RANK_ORDER: AcademicRank[] = [
   'EMERITUS_PROFESSOR',

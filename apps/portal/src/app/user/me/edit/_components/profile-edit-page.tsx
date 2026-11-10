@@ -1,5 +1,6 @@
 'use client';
 
+import type { ProfilePictureMode } from '@scs/schemas';
 import { Button } from '@scs/ui/components/button';
 import {
   Card,
@@ -23,7 +24,6 @@ import ProfilePictureEditor, {
   validateProfilePictureDraft,
 } from '@/components/profiles/profile-picture-editor';
 import { apiHeaders, meApiUrl, readApiError } from '@/lib/api';
-import type { ProfilePictureMode } from '@/types/user';
 
 interface ProfileEditPageProps {
   email: string;

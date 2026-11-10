@@ -5,9 +5,11 @@ import {
   CourseCodeSchema,
   type CourseStaff,
   CourseStaffSchema,
-  type MutationAccepted,
-  type PublicAcademicPr as AcademicPr,
-  type PublicCourseSchemaResponse as SchemaResponse,
+  MutationAcceptedSchema,
+  type PublicAcademicPr,
+  PublicAcademicPrSchema,
+  type PublicCourseSchemaResponse,
+  PublicCourseSchemaResponseSchema,
   ScienceAcademicDepartments,
   type Semester,
   SemesterSchema,
@@ -80,9 +82,9 @@ interface CourseEditorProps {
   newCourse?: boolean;
   initialUser?: Record<string, unknown>;
   initialCourses?: unknown[];
-  initialSchema?: SchemaResponse;
+  initialSchema?: PublicCourseSchemaResponse;
   initialCourse?: unknown;
-  initialPullRequest?: unknown;
+  initialPullRequest?: PublicAcademicPr | null;
   initialOfferings?: unknown[];
   previousHref?: string;
   nextHref?: string;
@@ -267,7 +269,7 @@ function emptyOffering(course: CourseRecord): OfferingRecord {
   };
 }
 
-function prBadgeClass(status: AcademicPr['status']) {
+function prBadgeClass(status: PublicAcademicPr['status']) {
   if (status === 'open') {
     return 'border-success-border bg-success-surface text-success-surface-foreground';
   }
@@ -297,7 +299,7 @@ export default function CourseEditor({
   const [user, setUser] = useState<Record<string, unknown> | null>(
     initialUser ?? null
   );
-  const [schema, setSchema] = useState<SchemaResponse | null>(
+  const [schema, setSchema] = useState<PublicCourseSchemaResponse | null>(
     initialSchema ?? null
   );
   const [courses, setCourses] = useState<CourseRecord[]>(() =>
@@ -311,9 +313,7 @@ export default function CourseEditor({
       .filter((item): item is OfferingRecord => Boolean(item))
   );
   const initialPublishedCourse = courseFromRecord(initialCourse);
-  const initialPr = isRecord(initialPullRequest)
-    ? (initialPullRequest as unknown as AcademicPr)
-    : null;
+  const initialPr = initialPullRequest ?? null;
   const initialDraftCourse = courseFromRecord(initialPr?.draftRecord);
   const [editorState, setEditorState] = useState<EditorState<CourseRecord>>(
     () =>
@@ -324,7 +324,7 @@ export default function CourseEditor({
   );
   const course = editorState.draft;
   const publishedCourse = editorState.published;
-  const [pr, setPr] = useState<AcademicPr | null>(initialPr);
+  const [pr, setPr] = useState<PublicAcademicPr | null>(initialPr);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(
     !initialUser || ((Boolean(courseId) || newCourse) && !initialSchema)
@@ -446,8 +446,10 @@ export default function CourseEditor({
     if (!schemaRes.ok) throw new Error((await readApiError(schemaRes)).message);
     if (!prRes.ok) throw new Error((await readApiError(prRes)).message);
 
-    const nextSchema = (await schemaRes.json()) as SchemaResponse;
-    const nextPr = (await prRes.json()) as AcademicPr;
+    const nextSchema = PublicCourseSchemaResponseSchema.parse(
+      await schemaRes.json()
+    );
+    const nextPr = PublicAcademicPrSchema.parse(await prRes.json());
     const publishedValue = courseRes.ok
       ? ((await courseRes.json()) as unknown)
       : null;
@@ -489,7 +491,9 @@ export default function CourseEditor({
                 if (!schemaRes.ok) {
                   throw new Error((await readApiError(schemaRes)).message);
                 }
-                setSchema((await schemaRes.json()) as SchemaResponse);
+                setSchema(
+                  PublicCourseSchemaResponseSchema.parse(await schemaRes.json())
+                );
                 const nextCourse = emptyCourse();
                 setEditorState(createEditorState(nextCourse, null));
                 setPr(null);
@@ -585,7 +589,7 @@ export default function CourseEditor({
 
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Course update is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );
@@ -624,7 +628,9 @@ export default function CourseEditor({
       if (!statusResponse.ok) {
         throw new Error((await readApiError(statusResponse)).message);
       }
-      const offeringPr = (await statusResponse.json()) as AcademicPr;
+      const offeringPr = PublicAcademicPrSchema.parse(
+        await statusResponse.json()
+      );
       const res = await fetch(offeringUrl, {
         method: 'PUT',
         credentials: 'include',
@@ -645,7 +651,7 @@ export default function CourseEditor({
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Course offering update is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );
@@ -685,7 +691,7 @@ export default function CourseEditor({
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Course deletion is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );

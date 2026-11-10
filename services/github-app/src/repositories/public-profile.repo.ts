@@ -4,6 +4,7 @@ import {
   AcademicDepartmentCodeSchema,
   HonoursProgrammeStudentStreamMap,
   StudentStreamSchema,
+  type PublicProfileKind,
   type PublicProfilePr,
 } from '@scs/schemas';
 
@@ -15,10 +16,7 @@ import {
   removeProfileMembership as removeProfile,
   searchEntryForProfile,
 } from '@/domains/profiles/profile.projection';
-import type {
-  ProfileKind as PublicProfileKind,
-  PublicProfile,
-} from '@/domains/profiles/profile.types';
+import type { PublicProfile } from '@/domains/profiles/profile.types';
 import { isGitHubNotFoundError } from '@/utils/github';
 
 export { removeProfileMembership as removeProfile } from '@/domains/profiles/profile.projection';

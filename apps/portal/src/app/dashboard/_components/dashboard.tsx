@@ -1,5 +1,6 @@
 'use client';
 
+import { ACCESS_LEVEL, APP_ROLE } from '@scs/schemas';
 import {
   BookOpen,
   FolderKanban,
@@ -17,8 +18,6 @@ import { DashboardLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { apiHeaders, meApiUrl } from '@/lib/api';
 import {
-  ACCESS_LEVEL,
-  APP_ROLE,
   canEditCoursesRole,
   getUserAccessLevel,
   getUserRole,

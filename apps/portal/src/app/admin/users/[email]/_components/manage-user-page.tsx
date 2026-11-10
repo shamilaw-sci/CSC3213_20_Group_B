@@ -1,3 +1,4 @@
+import { ACCESS_LEVEL } from '@scs/schemas';
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
 import { buttonVariants } from '@scs/ui/components/button';
@@ -17,7 +18,6 @@ import { PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import { emailPathSegment } from '@/lib/email';
 import {
-  ACCESS_LEVEL,
   ACCESS_LEVEL_LABEL,
   getUserAccessLevel,
   getUserRole,

@@ -4,6 +4,7 @@ import type {
   PublicAvatarModeration,
   PublicAvatarReviewStatus,
 } from '@scs/schemas';
+import { PublicAvatarModerationSchema } from '@scs/schemas';
 
 import type { Env } from '@/types/env';
 
@@ -82,19 +83,11 @@ interface AuditRow {
 
 function parseModeration(value: string): PublicAvatarModeration | null {
   try {
-    const parsed: unknown = JSON.parse(value);
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      'status' in parsed &&
-      'checks' in parsed &&
-      Array.isArray(parsed.checks)
-    )
-      return parsed as PublicAvatarModeration;
+    const parsed = PublicAvatarModerationSchema.safeParse(JSON.parse(value));
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
-  return null;
 }
 
 function toReview(row: ReviewRow): PublicAvatarReviewRecord {

@@ -1,3 +1,4 @@
+import type { AppRole } from '@scs/schemas';
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Badge } from '@scs/ui/components/badge';
 import { buttonVariants } from '@scs/ui/components/button';
@@ -5,7 +6,6 @@ import { Card, CardContent } from '@scs/ui/components/card';
 import { IdCard, Mail, Pencil, Settings } from 'lucide-react';
 import Link from 'next/link';
 
-import type { AppRole } from '@/types/role';
 import { getUserRole, ROLE_LABEL } from '@/types/role';
 
 export interface ProfileHeaderProps {

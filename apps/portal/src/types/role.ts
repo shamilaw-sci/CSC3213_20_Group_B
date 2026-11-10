@@ -1,20 +1,11 @@
 import {
   ACCESS_LEVEL,
-  ACCESS_LEVELS,
   type AccessLevel,
+  AccessLevelSchema,
   APP_ROLE,
-  APP_ROLES,
   type AppRole,
+  AppRoleSchema,
 } from '@scs/schemas';
-
-export {
-  ACCESS_LEVEL,
-  ACCESS_LEVELS,
-  type AccessLevel,
-  APP_ROLE,
-  APP_ROLES,
-  type AppRole,
-};
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   [APP_ROLE.USER]: 'User',
@@ -31,24 +22,14 @@ export const ACCESS_LEVEL_LABEL: Record<AccessLevel, string> = {
   [ACCESS_LEVEL.SUPER_ADMIN]: 'Super Admin',
 };
 
-function isAppRole(value: unknown): value is AppRole {
-  return typeof value === 'string' && APP_ROLES.includes(value as AppRole);
-}
-
 function normalizeAppRole(value: unknown): AppRole | null {
-  if (isAppRole(value)) return value;
-  return null;
-}
-
-function isAccessLevel(value: unknown): value is AccessLevel {
-  return (
-    typeof value === 'string' && ACCESS_LEVELS.includes(value as AccessLevel)
-  );
+  const parsed = AppRoleSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 function normalizeAccessLevel(value: unknown): AccessLevel | null {
-  if (isAccessLevel(value)) return value;
-  return null;
+  const parsed = AccessLevelSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 export function getUserRole(user: { role: unknown }): AppRole {

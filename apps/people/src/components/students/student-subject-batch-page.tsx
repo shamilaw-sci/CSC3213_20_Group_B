@@ -1,5 +1,6 @@
 'use client';
 
+import type { Student } from '@scs/schemas';
 import { useEffect, useState } from 'react';
 
 import PageHeader from '@/components/layout/page-header';
@@ -17,7 +18,6 @@ import {
   prefetchPeopleProfiles,
   type StudentSubject,
 } from '@/lib/data/people-data';
-import type { Student } from '@/lib/types';
 
 export default function StudentSubjectBatchPage({
   subject,

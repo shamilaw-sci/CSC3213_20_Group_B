@@ -1,7 +1,6 @@
-import type {
-  ProfileKind,
-  PublicProfile,
-} from '@/domains/profiles/profile.types';
+import type { PublicProfileKind } from '@scs/schemas';
+
+import type { PublicProfile } from '@/domains/profiles/profile.types';
 
 function normalizedStrings(values: Array<string | undefined>): string[] {
   return [
@@ -31,7 +30,7 @@ export function profileIdentity(
 
 export function inferProfileKind(
   profile: Record<string, unknown> | null
-): ProfileKind | undefined {
+): PublicProfileKind | undefined {
   if (profile?.staffType === 'ACADEMIC_TEACHING') return 'academic';
   if (profile?.staffType === 'ACADEMIC_SUPPORT') return 'academic-support';
   if (profile?.staffType === 'NON_ACADEMIC') return 'non-academic';
@@ -40,7 +39,7 @@ export function inferProfileKind(
 }
 
 function searchSubtitle(
-  profileKind: ProfileKind,
+  profileKind: PublicProfileKind,
   profile: Record<string, unknown>
 ): string {
   if (profileKind === 'academic') return 'Academic Staff';

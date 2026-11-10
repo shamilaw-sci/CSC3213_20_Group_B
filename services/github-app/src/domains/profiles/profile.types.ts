@@ -2,11 +2,9 @@ import type {
   AcademicSupportStaff,
   AcademicTeachingStaff,
   NonAcademicStaff,
-  PublicProfileKind as ProfileKind,
+  PublicProfileKind,
   Student,
 } from '@scs/schemas';
-
-export type { ProfileKind };
 
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
@@ -15,13 +13,13 @@ type ProfileByKind = {
   student: Student;
 };
 
-export type PublicProfile = ProfileByKind[ProfileKind];
+export type PublicProfile = ProfileByKind[PublicProfileKind];
 
 export interface ProfileDraftRequest {
   username: string;
   updatedBy: string;
   updatedByType?: 'self' | 'admin';
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   userPath: string;
   aggregatePaths: string[];
   expectedRevision?: string;

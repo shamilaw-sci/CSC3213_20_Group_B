@@ -13,24 +13,25 @@ import {
   HonoursProgrammeDepartmentMap,
   KnownSocialLabels,
   type KnownSocialPlatform,
-  type MutationAccepted,
+  MutationAcceptedSchema,
   NonAcademicPositionSchema,
   NonAcademicStaffSchema,
   normalizeKnownSocialUrl,
   PersonSchema,
   type PostgraduateProgramme,
   PostgraduateProgrammeSchema,
-  type PublicProfileKind as ProfileKind,
+  type PublicProfileKind,
   type PublicProfilePr,
-  type PublicProfileResponse,
-  type PublicProfileSchemaResponse as ProfileSchemaResponse,
+  PublicProfilePrSchema,
+  type PublicProfileSchemaResponse,
+  PublicProfileSchemaResponseSchema,
   ScienceAcademicDepartments,
   ScienceAcademicSubjects,
   ScienceAcademicUnits,
   type SocialIcon,
   type Student,
   StudentLevelSchema,
-  type StudentPlacementResponse,
+  StudentPlacementResponseSchema,
   StudentSchema,
   StudentStatusSchema,
   StudentTrackSchema,
@@ -76,6 +77,7 @@ import type {
   ProfileRecord,
   PublicProfileInitialData,
 } from '@/components/profiles/profile-types';
+import { normalizePublicProfileResponse } from '@/components/profiles/profile-types';
 import { PublicProfileReview } from '@/components/profiles/public-profile-review';
 import { ProfileAboutSection } from '@/components/profiles/sections/profile-about-section';
 import { ProfileLinksSection } from '@/components/profiles/sections/profile-links-section';
@@ -106,17 +108,7 @@ import {
 } from '@/lib/mutation-operation';
 import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 
-function normalizePublicProfileResponse(value: unknown): PublicProfileResponse {
-  if (isRecord(value) && 'profile' in value) {
-    return value as unknown as PublicProfileResponse;
-  }
-
-  return {
-    profile: isRecord(value) ? value : null,
-  };
-}
-
-const PROFILE_LABELS: Record<ProfileKind, string> = {
+const PROFILE_LABELS: Record<PublicProfileKind, string> = {
   academic: 'Academic',
   'academic-support': 'Academic Support',
   'non-academic': 'Non-Academic',
@@ -246,7 +238,7 @@ function enumLabel(value: string) {
     .join(' ');
 }
 
-function emptyProfile(kind: ProfileKind): ProfileRecord {
+function emptyProfile(kind: PublicProfileKind): ProfileRecord {
   if (kind === 'student') {
     return {
       title: 'Mr',
@@ -290,7 +282,7 @@ function emptyProfile(kind: ProfileKind): ProfileRecord {
 
 function inferProfileKind(
   profile: ProfileRecord | null,
-  fallback: ProfileKind
+  fallback: PublicProfileKind
 ) {
   if (!profile) return fallback;
   if (profile.staffType === 'ACADEMIC_TEACHING') return 'academic';
@@ -300,7 +292,7 @@ function inferProfileKind(
   return fallback;
 }
 
-function defaultKindForEmptyProfile(allowedKinds: ProfileKind[]) {
+function defaultKindForEmptyProfile(allowedKinds: PublicProfileKind[]) {
   return allowedKinds.includes('student')
     ? 'student'
     : (allowedKinds[0] ?? 'student');
@@ -383,7 +375,7 @@ function pruneEmpty(value: unknown): unknown {
   return value;
 }
 
-function applyKindDefaults(kind: ProfileKind, current: ProfileRecord) {
+function applyKindDefaults(kind: PublicProfileKind, current: ProfileRecord) {
   const common = {
     title: current.title ?? emptyProfile(kind).title,
     fullName: current.fullName ?? '',
@@ -398,7 +390,7 @@ function applyKindDefaults(kind: ProfileKind, current: ProfileRecord) {
 }
 
 function normalizeStudentProfileFields(
-  profileKind: ProfileKind,
+  profileKind: PublicProfileKind,
   profile: ProfileRecord
 ) {
   if (profileKind !== 'student') return profile;
@@ -454,9 +446,9 @@ function normalizeStudentProfileFields(
 }
 
 function trustedProfileForSchema(input: {
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   profile: ProfileRecord;
-  identity?: ProfileSchemaResponse['identity'];
+  identity?: PublicProfileSchemaResponse['identity'];
   lockedFields: string[];
 }) {
   const nextProfile = normalizeStudentProfileFields(
@@ -497,7 +489,7 @@ function trustedProfileForSchema(input: {
   return nextProfile;
 }
 
-function schemaForKind(kind: ProfileKind) {
+function schemaForKind(kind: PublicProfileKind) {
   return PROFILE_SCHEMAS[kind];
 }
 
@@ -1184,9 +1176,9 @@ function OtherPlatformIconEditor({
 }
 
 interface FormProps {
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   profile: ProfileRecord;
-  identity?: ProfileSchemaResponse['identity'];
+  identity?: PublicProfileSchemaResponse['identity'];
   lockedFields: string[];
   onProfileChange: (profile: ProfileRecord) => void;
 }
@@ -2095,7 +2087,7 @@ export default function PublicProfileEditor({
     initialData.pr.profileKind ??
     initialData.profile.profileKind ??
     inferProfileKind(initialEditableProfile, initialFallbackKind);
-  const [schema, setSchema] = useState<ProfileSchemaResponse>(
+  const [schema, setSchema] = useState<PublicProfileSchemaResponse>(
     initialData.schema
   );
   const [pr, setPr] = useState<PublicProfilePr>(initialData.pr);
@@ -2103,7 +2095,7 @@ export default function PublicProfileEditor({
     initialDraftProfile
   );
   const [profileKind, setProfileKind] =
-    useState<ProfileKind>(initialProfileKind);
+    useState<PublicProfileKind>(initialProfileKind);
   const [editorState, setEditorState] = useState<EditorState<ProfileRecord>>(
     () => createEditorState(initialEditableProfile, initialPublishedProfile)
   );
@@ -2180,12 +2172,14 @@ export default function PublicProfileEditor({
         throw new Error((await readApiError(profileRes)).message);
       if (!prRes.ok) throw new Error((await readApiError(prRes)).message);
 
-      const nextSchema = (await schemaRes.json()) as ProfileSchemaResponse;
+      const nextSchema = PublicProfileSchemaResponseSchema.parse(
+        await schemaRes.json()
+      );
       const profileBody =
         profileRes.status === 404
           ? { profile: null }
           : normalizePublicProfileResponse(await profileRes.json());
-      const nextPr = (await prRes.json()) as PublicProfilePr;
+      const nextPr = PublicProfilePrSchema.parse(await prRes.json());
       const fallbackKind = defaultKindForEmptyProfile(nextSchema.allowedKinds);
       const nextPublishedProfile = profileBody.profile;
       const nextDraftProfile = isRecord(nextPr.draftProfile)
@@ -2212,7 +2206,7 @@ export default function PublicProfileEditor({
     }
   }
 
-  function handleKindChange(kind: ProfileKind) {
+  function handleKindChange(kind: PublicProfileKind) {
     setProfileKind(kind);
     const isCurrentStudent = profileKind === 'student';
     const isNextStudent = kind === 'student';
@@ -2265,7 +2259,7 @@ export default function PublicProfileEditor({
         return;
       }
 
-      const placement = (await res.json()) as StudentPlacementResponse;
+      const placement = StudentPlacementResponseSchema.parse(await res.json());
       setSchema((current) =>
         current
           ? {
@@ -2367,7 +2361,7 @@ export default function PublicProfileEditor({
 
     return {
       success: true as const,
-      data: validation.data as unknown as ProfileRecord,
+      data: { ...validation.data },
     };
   }
 
@@ -2403,10 +2397,7 @@ export default function PublicProfileEditor({
       return;
     }
 
-    const payloadProfile =
-      profileKind === 'student'
-        ? pruned
-        : (validation.data as unknown as ProfileRecord);
+    const payloadProfile = profileKind === 'student' ? pruned : validation.data;
 
     setSaving(true);
     try {
@@ -2447,7 +2438,7 @@ export default function PublicProfileEditor({
       }
 
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Profile update is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );
@@ -2670,7 +2661,9 @@ export default function PublicProfileEditor({
                   label="Profile Type"
                   value={profileKind}
                   options={allowedKinds}
-                  onChange={(value) => handleKindChange(value as ProfileKind)}
+                  onChange={(value) =>
+                    handleKindChange(value as PublicProfileKind)
+                  }
                   required
                   labels={PROFILE_LABELS}
                 />

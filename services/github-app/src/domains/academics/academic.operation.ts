@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type { AcademicDraftRepository } from '@/domains/academics/academic.repository';
 import type {
   OperationCommand,
@@ -23,6 +25,18 @@ interface AcademicOperationPayload {
   request: AcademicOperationRequest;
 }
 
+const AcademicOperationPayloadSchema = z.object({
+  request: z.object({
+    action: z.enum(['upsert', 'delete']),
+    kind: z.enum(['course', 'offering']),
+    id: z.string(),
+    updatedBy: z.string(),
+    recordPath: z.string(),
+    expectedRevision: z.string().optional(),
+    record: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
+
 export function createAcademicOperationCommand(input: {
   request: AcademicOperationRequest;
   actorSubjectId: string;
@@ -46,7 +60,7 @@ export function createAcademicOperationHandlers(
   repository: AcademicDraftRepository
 ): Record<string, OperationHandler> {
   const handler: OperationHandler = async (command, operation) => {
-    const payload = command.payload as AcademicOperationPayload;
+    const payload = AcademicOperationPayloadSchema.parse(command.payload);
     const result = await repository.saveDraft(payload.request, {
       operationId: operation.operationId,
     });

@@ -17,7 +17,7 @@ import {
   type OperationStatusResponse,
   type PostgraduateProgramme,
   type PostgraduateProgrammeDefinition,
-  type PublicProfileKind as ProfileKind,
+  type PublicProfileKind,
   type PublicProfilePr,
   type PublicProfileSchemaResponse,
   type SlqfLevel,
@@ -51,12 +51,6 @@ import {
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
 
-const PROFILE_KINDS = PublicProfileKindSchema.options;
-const SPECIAL_STREAMS = StudentStreamSchema.options;
-const STUDENT_TRACKS = StudentTrackSchema.options;
-const POSTGRADUATE_PROGRAMMES = PostgraduateProgrammeSchema.options;
-const SLQF_LEVELS = SlqfLevelSchema.options;
-
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
   'academic-support': AcademicSupportStaff;
@@ -64,7 +58,7 @@ type ProfileByKind = {
   student: Student;
 };
 
-type PublicProfile = ProfileByKind[ProfileKind];
+type PublicProfile = ProfileByKind[PublicProfileKind];
 
 interface ProfileConcurrency {
   expectedUserFileSha?: string | null;
@@ -72,13 +66,48 @@ interface ProfileConcurrency {
 }
 
 interface ProfilePatchRequest {
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   profile: unknown;
   concurrency?: ProfileConcurrency;
   control?: {
     idempotencyKey?: string;
     expectedRevision?: string;
   };
+}
+
+function hasProfilePatchOptions(
+  value: Record<string, unknown>
+): value is Record<string, unknown> &
+  Pick<ProfilePatchRequest, 'concurrency' | 'control'> {
+  const { concurrency, control } = value;
+  if (concurrency !== undefined) {
+    if (!isRecord(concurrency)) return false;
+    if (
+      concurrency.expectedUserFileSha !== undefined &&
+      concurrency.expectedUserFileSha !== null &&
+      typeof concurrency.expectedUserFileSha !== 'string'
+    )
+      return false;
+    if (
+      concurrency.expectedPrHeadSha !== undefined &&
+      typeof concurrency.expectedPrHeadSha !== 'string'
+    )
+      return false;
+  }
+  if (control !== undefined) {
+    if (!isRecord(control)) return false;
+    if (
+      control.idempotencyKey !== undefined &&
+      typeof control.idempotencyKey !== 'string'
+    )
+      return false;
+    if (
+      control.expectedRevision !== undefined &&
+      typeof control.expectedRevision !== 'string'
+    )
+      return false;
+  }
+  return true;
 }
 
 async function submitProfileOperation(input: {
@@ -109,12 +138,6 @@ interface StudentPlacementRequest {
   postgraduateProgramme?: unknown;
 }
 
-interface DiscardProfilePrRequest {
-  prNumber: number;
-  expectedHeadSha: string;
-  reason?: string;
-}
-
 interface PublicProfileUserContext {
   email: string;
   role: AppRole;
@@ -133,17 +156,12 @@ const schemas = {
   student: StudentSchema,
 };
 
-function isProfileKind(value: unknown): value is ProfileKind {
-  return (
-    typeof value === 'string' && PROFILE_KINDS.includes(value as ProfileKind)
-  );
+function isProfileKind(value: unknown): value is PublicProfileKind {
+  return PublicProfileKindSchema.safeParse(value).success;
 }
 
 function isSpecialStream(value: unknown): value is SpecialStream {
-  return (
-    typeof value === 'string' &&
-    SPECIAL_STREAMS.includes(value as SpecialStream)
-  );
+  return StudentStreamSchema.safeParse(value).success;
 }
 
 function streamFromHonoursProgramme(
@@ -164,22 +182,17 @@ function departmentSlug(value: unknown): string | null {
 }
 
 function isStudentTrack(value: unknown): value is StudentTrack {
-  return (
-    typeof value === 'string' && STUDENT_TRACKS.includes(value as StudentTrack)
-  );
+  return StudentTrackSchema.safeParse(value).success;
 }
 
 function isPostgraduateProgramme(
   value: unknown
 ): value is PostgraduateProgramme {
-  return (
-    typeof value === 'string' &&
-    POSTGRADUATE_PROGRAMMES.includes(value as PostgraduateProgramme)
-  );
+  return PostgraduateProgrammeSchema.safeParse(value).success;
 }
 
 function isSlqfLevel(value: unknown): value is SlqfLevel {
-  return typeof value === 'string' && SLQF_LEVELS.includes(value as SlqfLevel);
+  return SlqfLevelSchema.safeParse(value).success;
 }
 
 function usernameFromEmail(email: string): string {
@@ -191,9 +204,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function departmentFromProfile(profile: PublicProfile): string | null {
-  if (!isRecord(profile)) return null;
-  const record = profile as Record<string, unknown>;
-  return departmentSlug(record.department);
+  return 'department' in profile ? departmentSlug(profile.department) : null;
 }
 
 function batchFromUsername(username: string): string | null {
@@ -218,7 +229,7 @@ function usernameFromProfile(profile: PublicProfile): string | null {
   return null;
 }
 
-function allowedKindsForRole(role: AppRole): ProfileKind[] {
+function allowedKindsForRole(role: AppRole): PublicProfileKind[] {
   switch (role) {
     case APP_ROLE.ACADEMIC:
       return ['academic'];
@@ -233,7 +244,7 @@ function allowedKindsForRole(role: AppRole): ProfileKind[] {
   }
 }
 
-function lockedFieldsForKind(profileKind: ProfileKind): string[] {
+function lockedFieldsForKind(profileKind: PublicProfileKind): string[] {
   if (profileKind === 'student') {
     return ['registrationNo', 'email', 'level', 'status', 'slqfLevel'];
   }
@@ -258,7 +269,7 @@ function schemaDetailsForUser(
 }
 
 function staffTypeForKind(
-  profileKind: ProfileKind
+  profileKind: PublicProfileKind
 ): 'ACADEMIC_TEACHING' | 'ACADEMIC_SUPPORT' | 'NON_ACADEMIC' | null {
   if (profileKind === 'academic') return 'ACADEMIC_TEACHING';
   if (profileKind === 'academic-support') return 'ACADEMIC_SUPPORT';
@@ -267,7 +278,7 @@ function staffTypeForKind(
 }
 
 function trustedProfileForTarget(input: {
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   profile: Record<string, unknown>;
   targetEmail: string;
   studentPlacement?: StudentPlacementResponse;
@@ -308,7 +319,7 @@ function trustedProfileForTarget(input: {
 }
 
 function targetPaths(input: {
-  profileKind: ProfileKind;
+  profileKind: PublicProfileKind;
   profile: PublicProfile;
   username: string;
 }): { userPath: string; aggregatePaths: string[] } | null {
@@ -1073,7 +1084,7 @@ export async function upsertMyPublicProfilePr(
     return createJsonErrorResponse('Invalid JSON body', 400, origin);
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return createJsonErrorResponse(
       'Request body must be an object',
       400,
@@ -1081,8 +1092,14 @@ export async function upsertMyPublicProfilePr(
     );
   }
 
-  const patchRequest = body as ProfilePatchRequest;
-  const { profileKind, profile } = patchRequest;
+  if (!hasProfilePatchOptions(body)) {
+    return createJsonErrorResponse(
+      'Invalid profile request options',
+      400,
+      origin
+    );
+  }
+  const { profileKind, profile } = body;
   if (!isProfileKind(profileKind)) {
     return createJsonErrorResponse('Invalid profile kind', 400, origin);
   }
@@ -1148,10 +1165,10 @@ export async function upsertMyPublicProfilePr(
       origin
     );
   }
-  const validatedProfile = {
-    ...(parseResult.data as Record<string, unknown>),
-    ...(profileKind === 'student' ? trustedProfile : {}),
-  } as PublicProfile;
+  const validatedProfile = parseResult.data;
+  // Keep extra student fields in the submitted record after validating the known fields.
+  const submittedProfile =
+    profileKind === 'student' ? trustedProfile : validatedProfile;
   const username = usernameFromProfile(validatedProfile);
   if (!username) {
     return createJsonErrorResponse(
@@ -1189,9 +1206,9 @@ export async function upsertMyPublicProfilePr(
     profileKind,
     userPath: paths.userPath,
     aggregatePaths: paths.aggregatePaths,
-    expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
-    expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
-    profile: validatedProfile,
+    expectedUserFileSha: body.concurrency?.expectedUserFileSha,
+    expectedPrHeadSha: body.concurrency?.expectedPrHeadSha,
+    profile: submittedProfile,
   };
   if (req.headers.get('Prefer')?.includes('respond-async')) {
     return submitProfileOperation({
@@ -1199,7 +1216,7 @@ export async function upsertMyPublicProfilePr(
       origin,
       actorEmail: user.email,
       request: mutationRequest,
-      control: patchRequest.control,
+      control: body.control,
     });
   }
 
@@ -1231,7 +1248,7 @@ export async function upsertAdminUserPublicProfilePr(
     return createJsonErrorResponse('Invalid JSON body', 400, origin);
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return createJsonErrorResponse(
       'Request body must be an object',
       400,
@@ -1239,8 +1256,14 @@ export async function upsertAdminUserPublicProfilePr(
     );
   }
 
-  const patchRequest = body as ProfilePatchRequest;
-  const { profileKind, profile } = patchRequest;
+  if (!hasProfilePatchOptions(body)) {
+    return createJsonErrorResponse(
+      'Invalid profile request options',
+      400,
+      origin
+    );
+  }
+  const { profileKind, profile } = body;
   if (!isProfileKind(profileKind)) {
     return createJsonErrorResponse('Invalid profile kind', 400, origin);
   }
@@ -1307,10 +1330,10 @@ export async function upsertAdminUserPublicProfilePr(
       origin
     );
   }
-  const validatedProfile = {
-    ...(parseResult.data as Record<string, unknown>),
-    ...(profileKind === 'student' ? trustedProfile : {}),
-  } as PublicProfile;
+  const validatedProfile = parseResult.data;
+  // Keep extra student fields in the submitted record after validating the known fields.
+  const submittedProfile =
+    profileKind === 'student' ? trustedProfile : validatedProfile;
   const username = usernameFromProfile(validatedProfile);
   const targetUsername = usernameFromEmail(verified.target.email);
   if (!username || username !== targetUsername) {
@@ -1341,9 +1364,9 @@ export async function upsertAdminUserPublicProfilePr(
     profileKind,
     userPath: paths.userPath,
     aggregatePaths: paths.aggregatePaths,
-    expectedUserFileSha: patchRequest.concurrency?.expectedUserFileSha,
-    expectedPrHeadSha: patchRequest.concurrency?.expectedPrHeadSha,
-    profile: validatedProfile,
+    expectedUserFileSha: body.concurrency?.expectedUserFileSha,
+    expectedPrHeadSha: body.concurrency?.expectedPrHeadSha,
+    profile: submittedProfile,
   };
   if (req.headers.get('Prefer')?.includes('respond-async')) {
     return submitProfileOperation({
@@ -1351,7 +1374,7 @@ export async function upsertAdminUserPublicProfilePr(
       origin,
       actorEmail: verified.actor.email,
       request: mutationRequest,
-      control: patchRequest.control,
+      control: body.control,
     });
   }
 
@@ -1409,7 +1432,7 @@ export async function discardAdminUserPublicProfilePr(
     return createJsonErrorResponse('Invalid JSON body', 400, origin);
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return createJsonErrorResponse(
       'Request body must be an object',
       400,
@@ -1417,12 +1440,14 @@ export async function discardAdminUserPublicProfilePr(
     );
   }
 
-  const { prNumber, expectedHeadSha, reason } = body as DiscardProfilePrRequest;
+  const { prNumber, expectedHeadSha, reason } = body;
   if (
+    typeof prNumber !== 'number' ||
     !Number.isInteger(prNumber) ||
     prNumber <= 0 ||
     typeof expectedHeadSha !== 'string' ||
-    !/^[a-f0-9]{40}$/i.test(expectedHeadSha)
+    !/^[a-f0-9]{40}$/i.test(expectedHeadSha) ||
+    (reason !== undefined && typeof reason !== 'string')
   ) {
     return createJsonErrorResponse(
       'Invalid draft discard request',

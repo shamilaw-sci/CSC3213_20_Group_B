@@ -214,7 +214,8 @@ export function buildPlan(input: {
   }
   if (
     settings.maxEstimatedCost !== undefined &&
-    (requestBudget / 1000) * settings.requestCostPerThousand! >
+    settings.requestCostPerThousand !== undefined &&
+    (requestBudget / 1000) * settings.requestCostPerThousand >
       settings.maxEstimatedCost
   ) {
     throw new Error('Estimated request cost exceeds budget.');
@@ -227,6 +228,7 @@ export function buildPlan(input: {
     requestBudget > 60000;
   const needsApproval = highLoad || input.target.provider !== 'local';
   const now = input.now ?? new Date();
+  let approvedAuthorization: Authorization | undefined;
   if (needsApproval) {
     const a = input.authorization;
     if (
@@ -257,6 +259,7 @@ export function buildPlan(input: {
       if (caps[key] > a.caps[key])
         throw new Error(`Authorization ${key} cap exceeded.`);
     }
+    approvedAuthorization = a;
   }
   if (
     !/^[a-f0-9]{40}$/.test(input.revision) ||
@@ -288,7 +291,7 @@ export function buildPlan(input: {
     writes,
     authenticated,
     diagnostic,
-    approvalId: needsApproval ? input.authorization!.id : null,
+    approvalId: approvedAuthorization?.id ?? null,
     createdAt: now.toISOString(),
   };
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ProfilePictureMode } from '@scs/schemas';
 import { Avatar, AvatarFallback, AvatarImage } from '@scs/ui/components/avatar';
 import { Button } from '@scs/ui/components/button';
 import { FieldTitle } from '@scs/ui/components/field';
@@ -17,8 +18,6 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-
-import type { ProfilePictureMode } from '@/types/user';
 
 export interface ProfilePictureDraft {
   pictureMode: ProfilePictureMode;

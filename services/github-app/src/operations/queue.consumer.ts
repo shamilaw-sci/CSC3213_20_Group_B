@@ -18,14 +18,15 @@ function createCloudflareOperationExecutor(
   if (!env.OPERATION_STATE || !env.MUTATION_COORDINATOR) {
     throw new Error('Durable operation bindings are unavailable');
   }
+  const operationQueue = env.OPERATION_QUEUE;
   return new OperationExecutor({
     store: new CloudflareOperationStore(env.OPERATION_STATE),
     coordinator: new CloudflareMutationCoordinator(env.MUTATION_COORDINATOR),
     handlers,
     classifyError: classifyGithubError,
-    dispatch: env.OPERATION_QUEUE
+    dispatch: operationQueue
       ? async (operationId) => {
-          await env.OPERATION_QUEUE!.send({ operationId });
+          await operationQueue.send({ operationId });
         }
       : undefined,
   });

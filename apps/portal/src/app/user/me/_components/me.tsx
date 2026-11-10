@@ -1,12 +1,12 @@
 'use client';
 
+import type { AppRole } from '@scs/schemas';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { ProfilePageLoading } from '@/components/feedback/page-loading';
 import ProfilePage from '@/components/profiles/profile-overview';
 import { apiHeaders, meApiUrl } from '@/lib/api';
-import { AppRole } from '@/types/role';
 
 interface ProfileData {
   id: string;

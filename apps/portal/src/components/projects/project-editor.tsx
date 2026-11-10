@@ -2,7 +2,7 @@
 
 import {
   AcademicDepartmentCodeSchema,
-  type MutationAccepted,
+  MutationAcceptedSchema,
   ProjectIndexSchemaUrl,
   type ProjectLinks,
   type ProjectPerson,
@@ -13,9 +13,12 @@ import {
   type ProjectSource,
   ProjectStatusSchema,
   ProjectTypeSchema,
-  type PublicProjectPr as ProjectPr,
-  type PublicProjectResponse as ProjectResponse,
-  type PublicProjectSchemaResponse as ProjectSchemaResponse,
+  type PublicProjectPr,
+  PublicProjectPrSchema,
+  type PublicProjectResponse,
+  PublicProjectResponseSchema,
+  type PublicProjectSchemaResponse,
+  PublicProjectSchemaResponseSchema,
   ScienceAcademicDepartments,
   type Semester,
 } from '@scs/schemas';
@@ -115,7 +118,7 @@ interface ProjectEditorProps {
   projectSlug?: string;
   initialUser?: UserContext;
   initialProjects?: ProjectRecord[];
-  initialSchema?: ProjectSchemaResponse;
+  initialSchema?: PublicProjectSchemaResponse;
   initialProject?: ProjectRecord | null;
   initialCourses?: unknown[];
   initialOfferings?: unknown[];
@@ -156,9 +159,9 @@ interface PeopleDirectoryProfile {
   registrationNo?: string;
 }
 
-function normalizeProjectResponse(value: unknown): ProjectResponse {
+function normalizeProjectResponse(value: unknown): PublicProjectResponse {
   if (isRecord(value) && 'project' in value) {
-    return value as unknown as ProjectResponse;
+    return PublicProjectResponseSchema.parse(value);
   }
 
   return {
@@ -166,19 +169,21 @@ function normalizeProjectResponse(value: unknown): ProjectResponse {
   };
 }
 
-function emptyProjectPr(): ProjectPr {
+function emptyProjectPr(): PublicProjectPr {
   return {
     status: 'none',
     canEdit: false,
   };
 }
 
-async function readProjectPrResponse(response: Response): Promise<ProjectPr> {
+async function readProjectPrResponse(
+  response: Response
+): Promise<PublicProjectPr> {
   if (response.status === 204) {
     return emptyProjectPr();
   }
 
-  return (await response.json()) as ProjectPr;
+  return PublicProjectPrSchema.parse(await response.json());
 }
 
 async function fetchProjectPrStatus(slug: string): Promise<Response> {
@@ -486,7 +491,7 @@ function projectPersonFromProfile(
 }
 
 function emptyProject(
-  identity?: ProjectSchemaResponse['identity']
+  identity?: PublicProjectSchemaResponse['identity']
 ): ProjectRecord {
   const slug = 'new-project';
   return {
@@ -536,7 +541,7 @@ function projectTitle(project: ProjectRecord | null, fallback = 'Project') {
     : fallback;
 }
 
-function statusBadgeClass(status: ProjectPr['status']) {
+function statusBadgeClass(status: PublicProjectPr['status']) {
   if (status === 'open') {
     return 'border-success-border bg-success-surface text-success-surface-foreground';
   }
@@ -1645,7 +1650,7 @@ export default function ProjectEditor({
   const router = useRouter();
   const beginOperationPolling = useOperationPollingSignal();
   const [user, setUser] = useState<UserContext | null>(initialUser ?? null);
-  const [schema, setSchema] = useState<ProjectSchemaResponse | null>(
+  const [schema, setSchema] = useState<PublicProjectSchemaResponse | null>(
     initialSchema ?? null
   );
   const [projects, setProjects] = useState<ProjectRecord[]>(initialProjects);
@@ -1669,7 +1674,7 @@ export default function ProjectEditor({
   const project = editorState.draft;
   const publishedProject = editorState.published;
   const latestProjectRef = useRef(project);
-  const [pr, setPr] = useState<ProjectPr | null>(null);
+  const [pr, setPr] = useState<PublicProjectPr | null>(null);
   const routeProjectSlug = projectSlug ? slugify(projectSlug) : null;
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(
     routeProjectSlug ? 'edit' : 'list'
@@ -1950,7 +1955,9 @@ export default function ProjectEditor({
       if (!schemaRes.ok) {
         throw new Error((await readApiError(schemaRes)).message);
       }
-      const nextSchema = (await schemaRes.json()) as ProjectSchemaResponse;
+      const nextSchema = PublicProjectSchemaResponseSchema.parse(
+        await schemaRes.json()
+      );
       setSchema(nextSchema);
 
       if (!projectRes.ok && projectRes.status !== 404) {
@@ -2049,7 +2056,9 @@ export default function ProjectEditor({
       if (!schemaRes.ok) {
         throw new Error((await readApiError(schemaRes)).message);
       }
-      const nextSchema = (await schemaRes.json()) as ProjectSchemaResponse;
+      const nextSchema = PublicProjectSchemaResponseSchema.parse(
+        await schemaRes.json()
+      );
       const nextProject = emptyProject(nextSchema.identity);
       setSchema(nextSchema);
       setSelectedSlug(null);
@@ -2178,7 +2187,7 @@ export default function ProjectEditor({
       }
 
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Project update is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );
@@ -2282,7 +2291,7 @@ export default function ProjectEditor({
       }
 
       const operation = await waitForMutationOperation(
-        (await res.json()) as MutationAccepted,
+        MutationAcceptedSchema.parse(await res.json()),
         'Project deletion is still queued. Refresh to check its status.',
         { signal: beginOperationPolling() }
       );

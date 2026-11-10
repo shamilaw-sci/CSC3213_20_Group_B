@@ -1,5 +1,12 @@
 'use client';
 
+import type {
+  AcademicTeachingStaff,
+  Publication,
+  SocialLinks,
+  Staff,
+  Student,
+} from '@scs/schemas';
 import { KnownSocialLabels, type SocialIcon } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import {
@@ -84,13 +91,6 @@ import {
   getStudentProgrammeField,
   getStudentSubjectLabels,
 } from '@/lib/student-academic-details';
-import type {
-  AcademicTeachingStaff,
-  Publication,
-  SocialLinks,
-  Staff,
-  Student,
-} from '@/lib/types';
 import {
   ACADEMIC_RANK_LABELS,
   ACADEMIC_SUPPORT_POSITION_LABELS,
@@ -512,34 +512,42 @@ function getProfileLinks(person: Staff | Student): ProfileLink[] {
   const socialLinks = person.socialLinks;
   const links: ProfileLink[] = [];
 
-  if (person.email) {
+  const emailHref = createMailLink(person.email);
+  if (emailHref) {
     links.push({
       label: 'Email',
-      href: createMailLink(person.email)!,
+      href: emailHref,
       icon: Mail,
       priority: 'primary',
     });
   }
-  if (isStudentPerson(person) && person.personalEmail) {
+  const personalEmailHref = isStudentPerson(person)
+    ? createMailLink(person.personalEmail)
+    : undefined;
+  if (personalEmailHref) {
     links.push({
       label: 'Personal Email',
-      href: createMailLink(person.personalEmail)!,
+      href: personalEmailHref,
       icon: Mail,
       priority: 'primary',
     });
   }
-  if (person.mobilePhone) {
+  const mobileHref = createTelLink(person.mobilePhone);
+  if (mobileHref) {
     links.push({
       label: 'Mobile',
-      href: createTelLink(person.mobilePhone)!,
+      href: mobileHref,
       icon: Phone,
       priority: 'primary',
     });
   }
-  if (isStaffPerson(person) && person.officePhone) {
+  const officeHref = isStaffPerson(person)
+    ? createTelLink(person.officePhone)
+    : undefined;
+  if (officeHref) {
     links.push({
       label: 'Office',
-      href: createTelLink(person.officePhone)!,
+      href: officeHref,
       icon: Phone,
       priority: 'primary',
     });

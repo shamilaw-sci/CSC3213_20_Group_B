@@ -5,8 +5,6 @@ import type {
   ProfilePictureMode,
 } from '@scs/schemas';
 
-export type { ProfilePictureMode };
-
 export interface AdminUserData {
   id: string;
   email: string;

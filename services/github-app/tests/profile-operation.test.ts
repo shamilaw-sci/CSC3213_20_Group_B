@@ -31,6 +31,42 @@ const request = {
 } satisfies ProfileDraftRequest;
 
 describe('profile operations', () => {
+  test('validates the queued profile without dropping legacy student fields', async () => {
+    let savedProfile: unknown;
+    const executor = new OperationExecutor({
+      store: new InMemoryOperationStore(),
+      coordinator: new InMemoryMutationCoordinator(),
+      handlers: {
+        'profile.upsert': createProfileOperationHandler({
+          saveDraft: (draft) => {
+            savedProfile = draft.profile;
+            return Promise.resolve({
+              revision: 'new-user-blob',
+              pullRequest: { number: 42, url: 'https://github.test/pull/42' },
+            });
+          },
+        }),
+      },
+      log: () => {},
+    });
+    const draftWithExtra = {
+      ...request,
+      profile: { ...request.profile, legacyField: 'retained' },
+    };
+    const command = createProfileOperationCommand({
+      request: draftWithExtra,
+      actorSubjectId: 'user_1234567890123456',
+      idempotencyKey: 'request-key-00000004',
+      correlationId: 'correlation-0004',
+    });
+
+    const operation = await executor.submit(command);
+    expect((await executor.execute(operation.operationId)).status).toBe(
+      'succeeded'
+    );
+    expect(savedProfile).toMatchObject({ legacyField: 'retained' });
+  });
+
   test('uses the profile identity as its serialized resource', () => {
     const command = createProfileOperationCommand({
       request,
