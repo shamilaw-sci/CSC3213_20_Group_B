@@ -22,15 +22,17 @@
     "@scs/security": "workspace:*",
     "@scs/storage": "workspace:*",
     "better-auth": "^1.7.7",
+    "pg": "^8.23.1",
     "sharp": "^0.35.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260713.1",
     "@scs/eslint-config": "workspace:*",
     "@scs/tsconfig": "workspace:*",
-    "@cloudflare/workers-types": "^5.20260713.1",
     "@types/bun": "^1.4.4",
     "@types/node": "^25.9.9",
+    "@types/pg": "^8.23.1",
     "eslint": "^9.39.5",
     "jiti": "^2.7.0",
     "knip": "^6.41.0",

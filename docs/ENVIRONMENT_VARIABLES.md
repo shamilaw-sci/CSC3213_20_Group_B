@@ -162,6 +162,11 @@ development hosts; do not copy those values into Vercel Production or Preview.
 See [Binary object storage](STORAGE.md) before switching providers. Existing
 objects are not copied by changing these variables.
 
+The Bun/Node PostgreSQL connection for Better Auth is currently an injected
+`AUTH_DATABASE` pool, not a Worker environment variable. See
+[Relational database portability](DATABASE_PORTABILITY.md) for the limited
+scope, test-only `POSTGRES_TEST_URL`, and migration requirements.
+
 ### GitHub App
 
 | Name                              | Kind      | Supply     | Status    | Purpose                             |

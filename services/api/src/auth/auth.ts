@@ -1,5 +1,5 @@
 import { passkey } from '@better-auth/passkey';
-import { betterAuth } from 'better-auth';
+import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 
 import {
@@ -65,14 +65,14 @@ function passkeyRpId(request: Request): string {
   return PASSKEY_RP_IDS[requestOrigin(request)] ?? 'scs-pdn.space';
 }
 
-export function createAuth(request: Request, env: Env) {
+export function authOptions(request: Request, env: Env) {
   const production = env.BETTER_AUTH_URL.startsWith('https://');
 
-  return betterAuth({
+  return {
     appName: 'SCS Portal',
     baseURL: env.BETTER_AUTH_URL,
     basePath: AUTH_BASE_PATH,
-    database: env.AUTH_DB,
+    database: env.AUTH_DATABASE ?? env.AUTH_DB,
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: ALLOWED_ORIGINS,
     user: {
@@ -201,7 +201,11 @@ export function createAuth(request: Request, env: Env) {
         },
       }),
     ],
-  });
+  } satisfies BetterAuthOptions;
+}
+
+export function createAuth(request: Request, env: Env) {
+  return betterAuth(authOptions(request, env));
 }
 
 export function isBetterAuthRequest(request: Request): boolean {

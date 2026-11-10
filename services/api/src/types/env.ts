@@ -1,9 +1,11 @@
 import type { BinaryObjectStore } from '@scs/storage';
+import type { Pool } from 'pg';
 
 import type { AvatarImageProcessor } from '@/services/avatar-image-processor';
 
 export interface Env {
   AUTH_DB: D1Database;
+  AUTH_DATABASE?: Pool;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
 
