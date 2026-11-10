@@ -2,10 +2,12 @@ import type { BinaryObjectStore } from '@scs/storage';
 import type { Pool } from 'pg';
 
 import type { AvatarImageProcessor } from '@/services/avatar-image-processor';
+import type { AvatarRateRepository } from '@/repositories/public-avatar-rate.repo';
 
 export interface Env {
   AUTH_DB: D1Database;
   AUTH_DATABASE?: Pool;
+  AVATAR_RATE_REPOSITORY?: AvatarRateRepository;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
 

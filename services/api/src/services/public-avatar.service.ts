@@ -45,6 +45,7 @@ import {
   type PublicAvatarReviewCursor,
   type PublicAvatarReviewRecord,
 } from '@/repositories/public-avatar.repo';
+import { avatarRateRepository } from '@/repositories/public-avatar-rate.repo';
 import {
   decodePaginationCursor,
   encodePaginationCursor,
@@ -388,11 +389,7 @@ async function readAvatarQuota(
   now = Date.now()
 ): Promise<PublicAvatarQuota> {
   const windowStartedAt = currentWindowStart(now);
-  const row = await env.AUTH_DB.prepare(
-    `SELECT window_start AS windowStart, attempts FROM public_avatar_rate WHERE user_id = ?`
-  )
-    .bind(username)
-    .first<{ windowStart: number; attempts: number }>();
+  const row = await avatarRateRepository(env).read(username);
   const attempts =
     row && row.windowStart === windowStartedAt ? row.attempts : 0;
   return avatarQuota(attempts, now);
@@ -404,12 +401,11 @@ async function consumeAttempt(
   now = Date.now()
 ): Promise<PublicAvatarQuota | null> {
   const windowStartedAt = currentWindowStart(now);
-  const result = await env.AUTH_DB.prepare(
-    `INSERT INTO public_avatar_rate (user_id, window_start, attempts) VALUES (?, ?, 1) ON CONFLICT(user_id) DO UPDATE SET window_start = excluded.window_start, attempts = CASE WHEN window_start = excluded.window_start THEN attempts + 1 ELSE 1 END RETURNING attempts`
-  )
-    .bind(username, windowStartedAt)
-    .first<{ attempts: number }>();
-  return result ? avatarQuota(result.attempts, now) : null;
+  const attempts = await avatarRateRepository(env).consume(
+    username,
+    windowStartedAt
+  );
+  return attempts === null ? null : avatarQuota(attempts, now);
 }
 
 interface AvatarErrorOptions {
@@ -1015,9 +1011,7 @@ export async function resetAdminUserAvatarQuota(
   const normalizedUsername = username.trim().toLowerCase();
   if (!USERNAME.test(normalizedUsername))
     return createJsonErrorResponse('Invalid avatar username', 400, origin);
-  await env.AUTH_DB.prepare('DELETE FROM public_avatar_rate WHERE user_id = ?')
-    .bind(normalizedUsername)
-    .run();
+  await avatarRateRepository(env).reset(normalizedUsername);
   return createJsonResponse({ quota: avatarQuota(0) }, 200, origin);
 }
 
