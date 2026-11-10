@@ -96,10 +96,18 @@ PostgreSQL uses transactions and row-level locks; D1 supports atomic statements
 and batches but not interactive transactions. Avatar review transitions remain
 D1-only and must retain their atomic
 predicates when migrated. Do not emulate them with an unguarded read followed
-by a write. Better Auth's generated `rateLimit.lastRequest` column is `BIGINT`;
-its 1.7.7 schema checker logs a type advisory for that column even when its
-migration planner reports no missing steps.
+by a write. Better Auth's generated `rateLimit.lastRequest` column is `BIGINT`
+and stores Unix epoch **milliseconds**. Node-postgres returns `BIGINT` values
+as strings by default; Better Auth 1.7.7's retry calculation adds the window
+to that value, so a string can produce an incorrect retry interval. The
+PostgreSQL pool configures a per-pool parser that converts safe `BIGINT` values
+to numbers and rejects values outside JavaScript's safe integer range. A live
+test checks the runtime type, stored millisecond value, and 429 retry interval.
+The 1.7.7 schema checker still logs an `int8` type advisory despite the
+migration planner reporting no missing steps; the column remains `BIGINT` to
+avoid timestamp overflow.
 
 References: [Better Auth PostgreSQL adapter](https://better-auth.com/docs/adapters/postgresql),
 [Better Auth D1 transaction handling](https://better-auth.com/blog/1-5),
 [Testcontainers PostgreSQL module](https://node.testcontainers.org/modules/postgresql/).
+[Node-postgres type parsers](https://node-postgres.com/features/types).

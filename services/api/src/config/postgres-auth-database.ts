@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
 import { z } from 'zod';
 
 const PostgresAuthDatabaseConfigSchema = z.object({
@@ -20,5 +20,20 @@ export function createPostgresAuthDatabase(input: unknown): Pool {
     connectionString: config.connectionString,
     max: config.maxConnections,
     ...(config.schema ? { options: `-c search_path=${config.schema}` } : {}),
+    types: {
+      getTypeParser(oid, format) {
+        if (oid === types.builtins.INT8 && format === 'text') {
+          return (value: string) => {
+            const parsed = Number(value);
+            if (!Number.isSafeInteger(parsed))
+              throw new Error(
+                'PostgreSQL BIGINT exceeds JavaScript safe integer range'
+              );
+            return parsed;
+          };
+        }
+        return types.getTypeParser(oid, format) as (value: string) => unknown;
+      },
+    },
   });
 }

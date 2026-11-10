@@ -1,4 +1,5 @@
 import { getMigrations } from 'better-auth/db/migration';
+import { betterAuth } from 'better-auth';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { Pool } from 'pg';
@@ -83,6 +84,34 @@ postgresTest(
       const session =
         await context.internalAdapter.findSession('test-session-token');
       expect(session?.user.email).toBe('test@sci.pdn.ac.lk');
+      const now = Date.now();
+      await database.query(
+        'INSERT INTO "rateLimit" (id, key, count, "lastRequest") VALUES ($1, $2, $3, $4)',
+        ['r1', 'probe', 1, now]
+      );
+      const rateRow = await context.adapter.findOne<{ lastRequest: number }>({
+        model: 'rateLimit',
+        where: [{ field: 'key', value: 'probe' }],
+      });
+      expect(rateRow?.lastRequest).toBe(now);
+      expect(typeof rateRow?.lastRequest).toBe('number');
+      await expect(
+        database.query('SELECT 9007199254740992::bigint AS unsafe_value')
+      ).rejects.toThrow('safe integer range');
+      const limitedAuth = betterAuth({
+        ...options,
+        rateLimit: { enabled: true, storage: 'database', window: 60, max: 1 },
+      });
+      const limitedRequest = () =>
+        new Request('http://localhost:8787/api/auth/ok', {
+          headers: { 'cf-connecting-ip': '127.0.0.1' },
+        });
+      expect((await limitedAuth.handler(limitedRequest())).status).toBe(200);
+      const blocked = await limitedAuth.handler(limitedRequest());
+      expect(blocked.status).toBe(429);
+      const retry = Number(blocked.headers.get('x-retry-after'));
+      expect(retry).toBeGreaterThan(0);
+      expect(retry).toBeLessThanOrEqual(60);
       await database.query(
         'INSERT INTO "account" ("id", "accountId", "providerId", "userId", "updatedAt") VALUES ($1, $2, $3, $4, $5)',
         ['a1', 'github-123', 'github', 'u1', new Date()]
