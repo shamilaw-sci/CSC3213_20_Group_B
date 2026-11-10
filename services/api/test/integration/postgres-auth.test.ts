@@ -5,6 +5,8 @@ import { Pool } from 'pg';
 
 import { authOptions, createAuth } from '@/auth/auth';
 import { createPostgresAuthDatabase } from '@/config/postgres-auth-database';
+import { createPostgresAuthIdentityRepository } from '@/repositories/auth-accounts.postgres';
+import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 import { createTestEnv } from 'test/helpers/create-test-env';
 
 const postgresTest = process.env.POSTGRES_TEST_URL ? test : test.skip;
@@ -91,6 +93,15 @@ postgresTest(
           ['a2', 'github-123', 'github', 'u1', new Date()]
         )
       ).rejects.toMatchObject({ code: '23505' });
+      const identity = await getAuthIdentityByEmail('TEST@SCI.PDN.AC.LK', {
+        ...env,
+        AUTH_IDENTITY_REPOSITORY:
+          createPostgresAuthIdentityRepository(database),
+      });
+      expect(identity).toEqual({
+        userId: 'u1',
+        providers: new Set(['github']),
+      });
     } finally {
       await database.end();
       await admin.query(`DROP SCHEMA "${schema}" CASCADE`);

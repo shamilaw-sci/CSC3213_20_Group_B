@@ -3,11 +3,13 @@ import type { Pool } from 'pg';
 
 import type { AvatarImageProcessor } from '@/services/avatar-image-processor';
 import type { AvatarRateRepository } from '@/repositories/public-avatar-rate.repo';
+import type { AuthIdentityRepository } from '@/repositories/auth-accounts.repo';
 
 export interface Env {
   AUTH_DB: D1Database;
   AUTH_DATABASE?: Pool;
   AVATAR_RATE_REPOSITORY?: AvatarRateRepository;
+  AUTH_IDENTITY_REPOSITORY?: AuthIdentityRepository;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
 

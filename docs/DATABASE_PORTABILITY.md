@@ -30,6 +30,11 @@ the D1 version remains one atomic UPSERT. A live test runs 16 competing updates
 across two PostgreSQL pools, and the same contract runs against the D1 test
 database. Both retain the quota-window and reset semantics.
 
+The read-only auth identity lookup also accepts an injected PostgreSQL
+repository. Its SQL reads Better Auth's already-migrated `user` and `account`
+tables and retains the case-insensitive email, linked-provider, and numeric
+GitHub ID behavior. The Worker continues to use its D1 implementation.
+
 Drizzle ORM supports both [D1](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
 and [PostgreSQL](https://orm.drizzle.team/docs/connect-overview). It was evaluated
 for the rate-window table. Three statements, including a dialect-specific
