@@ -17,6 +17,14 @@ const TERMINAL_STATUSES = new Set([
   'cancelled',
 ]);
 
+function assertCoordination(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new Error('Mutation coordination was lost');
+  }
+}
+
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -136,7 +144,7 @@ export class OperationExecutor {
     return await this.options.coordinator.runExclusive(
       resourceKey,
       operationId,
-      async () => await this.executeExclusive(operationId)
+      async (signal) => await this.executeExclusive(operationId, signal)
     );
   }
 
@@ -162,13 +170,20 @@ export class OperationExecutor {
   }
 
   private async executeExclusive(
-    operationId: string
+    operationId: string,
+    signal?: AbortSignal
   ): Promise<OperationRecord> {
     let operation = await this.requireOperation(operationId);
+    assertCoordination(signal);
     if (TERMINAL_STATUSES.has(operation.status)) return operation;
     const handler = this.options.handlers[operation.action];
     if (!handler) {
-      return await this.fail(operation, 'unknown_action', 'Unknown operation');
+      return await this.fail(
+        operation,
+        'unknown_action',
+        'Unknown operation',
+        signal
+      );
     }
 
     if (!operation.startedAt) {
@@ -178,13 +193,19 @@ export class OperationExecutor {
         startedAt: this.now().toISOString(),
         updatedAt: this.now().toISOString(),
       };
+      assertCoordination(signal);
       await this.options.store.save(operation);
+      assertCoordination(signal);
     }
 
     while (operation.attempt < operation.maxAttempts) {
       const latest = await this.requireOperation(operationId);
+      assertCoordination(signal);
       if (latest.cancellationRequested) {
-        return await this.completeCancellation(latest);
+        assertCoordination(signal);
+        const cancelled = await this.completeCancellation(latest);
+        assertCoordination(signal);
+        return cancelled;
       }
       operation = {
         ...latest,
@@ -193,10 +214,13 @@ export class OperationExecutor {
         updatedAt: this.now().toISOString(),
         lastErrorCategory: undefined,
       };
+      assertCoordination(signal);
       await this.options.store.save(operation);
+      assertCoordination(signal);
       this.writeLog('operation_attempt_started', operation);
 
       try {
+        assertCoordination(signal);
         const outcome = await handler(
           {
             idempotencyKey: operation.idempotencyKey,
@@ -208,6 +232,7 @@ export class OperationExecutor {
           },
           operation
         );
+        assertCoordination(signal);
         const timestamp = this.now().toISOString();
         const succeeded: OperationRecord = {
           ...operation,
@@ -216,17 +241,22 @@ export class OperationExecutor {
           updatedAt: timestamp,
           completedAt: timestamp,
         };
+        assertCoordination(signal);
         await this.options.store.save(succeeded);
+        assertCoordination(signal);
         this.writeLog('operation_succeeded', succeeded);
         return succeeded;
       } catch (error) {
+        assertCoordination(signal);
         const classification = this.classifyError(error);
         operation = {
           ...operation,
           lastErrorCategory: classification.category,
           updatedAt: this.now().toISOString(),
         };
+        assertCoordination(signal);
         await this.options.store.save(operation);
+        assertCoordination(signal);
         this.writeLog('operation_attempt_failed', operation);
 
         if (
@@ -243,17 +273,19 @@ export class OperationExecutor {
               Math.max(exponentialDelay, classification.retryAfterMs ?? 0)
             )
           );
+          assertCoordination(signal);
           continue;
         }
         if (classification.category === 'compare_conflict') {
-          return await this.conflict(operation, error);
+          return await this.conflict(operation, error, signal);
         }
         return await this.fail(
           operation,
           classification.category === 'unknown'
             ? 'operation_failed'
             : classification.category,
-          'Operation could not be completed'
+          'Operation could not be completed',
+          signal
         );
       }
     }
@@ -261,13 +293,15 @@ export class OperationExecutor {
     return await this.fail(
       operation,
       'retry_exhausted',
-      'Operation retry limit was exhausted'
+      'Operation retry limit was exhausted',
+      signal
     );
   }
 
   private async conflict(
     operation: OperationRecord,
-    error: unknown
+    error: unknown,
+    signal?: AbortSignal
   ): Promise<OperationRecord> {
     const timestamp = this.now().toISOString();
     const details =
@@ -311,7 +345,9 @@ export class OperationExecutor {
         },
       },
     };
+    assertCoordination(signal);
     await this.options.store.save(conflicted);
+    assertCoordination(signal);
     this.writeLog('operation_conflicted', conflicted);
     return conflicted;
   }
@@ -319,7 +355,8 @@ export class OperationExecutor {
   private async fail(
     operation: OperationRecord,
     code: string,
-    message: string
+    message: string,
+    signal?: AbortSignal
   ): Promise<OperationRecord> {
     const timestamp = this.now().toISOString();
     const failed: OperationRecord = {
@@ -332,7 +369,9 @@ export class OperationExecutor {
         error: { code, message, correlationId: operation.correlationId },
       },
     };
+    assertCoordination(signal);
     await this.options.store.save(failed);
+    assertCoordination(signal);
     this.writeLog('operation_failed', failed);
     return failed;
   }

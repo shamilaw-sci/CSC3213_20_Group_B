@@ -8,7 +8,7 @@ export interface MutationCoordinator {
   runExclusive<T>(
     resourceKey: string,
     operationId: string,
-    task: () => Promise<T>
+    task: (signal?: AbortSignal) => Promise<T>
   ): Promise<T>;
 }
 
@@ -18,7 +18,7 @@ export class InMemoryMutationCoordinator implements MutationCoordinator {
   async runExclusive<T>(
     resourceKey: string,
     _operationId: string,
-    task: () => Promise<T>
+    task: (signal?: AbortSignal) => Promise<T>
   ): Promise<T> {
     const previous = this.tails.get(resourceKey) ?? Promise.resolve();
     let release = () => {};
@@ -47,6 +47,16 @@ export class MutationResourceBusyError extends Error {
   }
 }
 
+export class MutationCoordinationLostError extends Error {
+  constructor(
+    public readonly resourceKey: string,
+    options?: ErrorOptions
+  ) {
+    super(`Coordination for ${resourceKey} was lost`, options);
+    this.name = 'MutationCoordinationLostError';
+  }
+}
+
 export class CloudflareMutationCoordinator implements MutationCoordinator {
   constructor(
     private readonly namespace: MutationCoordinatorNamespace,
@@ -56,7 +66,7 @@ export class CloudflareMutationCoordinator implements MutationCoordinator {
   async runExclusive<T>(
     resourceKey: string,
     operationId: string,
-    task: () => Promise<T>
+    task: (signal?: AbortSignal) => Promise<T>
   ): Promise<T> {
     const stub = this.namespace.getByName(resourceKey);
     if (!(await stub.acquire(operationId, this.leaseMs))) {

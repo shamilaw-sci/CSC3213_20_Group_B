@@ -70,8 +70,7 @@ locks in transactions. A save also preserves the database's cancellation flag
 in its conflict update, including a race with a previously absent row. Reads
 and writes validate records with the existing `OperationRecordSchema`.
 Operation status, attempts, outcome, timestamps, and metadata persist across
-store and process recreation. The store does not provide resource locking or
-job delivery; those remain separate Phase 4 and Phase 5 responsibilities.
+store and process recreation. Job delivery remains a separate responsibility.
 
 To move existing Cloudflare operations to PostgreSQL, stop new submissions and
 queue consumers, export the validated operation JSON for every operation ID,
@@ -97,6 +96,39 @@ makes the consumer retry shortly; unrelated resource keys proceed in parallel.
 This resource lock complements Git compare-and-swap. The lock orders work
 inside this service, while the Git ref check detects a writer outside the
 service or a stale branch head.
+
+For a future self-hosted profile, `PostgresMutationCoordinator` uses a
+session-level PostgreSQL advisory lock per canonical resource key. It hashes
+the key to a signed 64-bit lock ID. A hash collision can cause unrelated
+resources to contend, but cannot let two writers hold the same lock. The
+coordinator checks out one dedicated `pg` connection for the whole task,
+immediately returns `MutationResourceBusyError` on contention, and unlocks on
+success or an ordinary task error. PostgreSQL releases the lock when a session
+ends, including a process crash. There is no lease expiry during a long task
+and no new schema migration. Use direct database sessions or session pooling;
+transaction pooling cannot preserve a session-level lock across the task.
+
+The coordinator monitors connection errors and sends periodic queries on the
+same connection, by default every five seconds with a five-second query
+timeout. It aborts the task signal and rejects with
+`MutationCoordinationLostError` if the session fails. `OperationExecutor`
+checks that signal before each attempt and before and after state writes, and after a handler
+returns, so it does not record a false success after observed lock loss.
+Pool connection acquisition should have a deployment-specific timeout; a
+held resource lock itself never waits because acquisition uses
+`pg_try_advisory_lock`.
+
+An already-running GitHub request cannot be cancelled or fenced by the current
+`runExclusive()` and handler interfaces. If the database session disappears
+mid-request, PostgreSQL releases the advisory lock and a second process may
+start work while the first request is still in flight. The first coordinator
+reports failure, but the external call may have taken effect. GitHub writes
+therefore retain the existing expected-ref check and non-forced ref update;
+workers must preserve those revision checks and treat a lost lock as a retryable
+delivery failure, not proof that no side effect occurred. A lease table without
+a downstream fencing token would have the same gap and would add expiry races.
+Strict prevention of all overlapping external side effects requires a
+provider-enforced fencing mechanism beyond this phase.
 
 ## Queue and retry behavior
 
