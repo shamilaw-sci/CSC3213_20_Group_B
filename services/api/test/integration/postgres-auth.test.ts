@@ -6,6 +6,7 @@ import { Pool } from 'pg';
 
 import { authOptions, createAuth } from '@/auth/auth';
 import { createPostgresAuthDatabase } from '@/config/postgres-auth-database';
+import { createPostgresRelationalBindings } from '@/config/postgres-relational-bindings';
 import { createPostgresAuthIdentityRepository } from '@/repositories/auth-accounts.postgres';
 import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -26,18 +27,32 @@ postgresTest(
     });
     try {
       const env = createTestEnv({
-        AUTH_DATABASE: database,
+        ...createPostgresRelationalBindings(database),
         BETTER_AUTH_URL: 'http://localhost:8787',
       });
-      for (const file of [
-        '0001_better_auth.sql',
-        '0002_auth_identity_uniqueness.sql',
-      ]) {
-        const sql = await readFile(
-          new URL(`../../migrations/postgres/${file}`, import.meta.url),
-          'utf8'
-        );
-        await database.query(sql);
+      const migrationClient = await database.connect();
+      try {
+        await migrationClient.query('BEGIN');
+        for (const file of [
+          '0001_better_auth.sql',
+          '0002_auth_identity_uniqueness.sql',
+          '0003_public_avatar_rate.sql',
+          '0004_proxy_settings.sql',
+          '0005_permissions.sql',
+          '0006_public_avatar_moderation.sql',
+        ]) {
+          const sql = await readFile(
+            new URL(`../../migrations/postgres/${file}`, import.meta.url),
+            'utf8'
+          );
+          await migrationClient.query(sql);
+        }
+        await migrationClient.query('COMMIT');
+      } catch (error) {
+        await migrationClient.query('ROLLBACK');
+        throw error;
+      } finally {
+        migrationClient.release();
       }
       const options = authOptions(
         new Request('http://localhost:8787/api/auth/ok'),
@@ -56,6 +71,11 @@ postgresTest(
           'verification',
           'passkey',
           'rateLimit',
+          'public_avatar_rate',
+          'proxySettings',
+          'permission',
+          'public_avatar_review',
+          'public_avatar_audit',
         ])
       );
       const after = await getMigrations(options);

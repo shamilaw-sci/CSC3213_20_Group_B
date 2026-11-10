@@ -10,8 +10,14 @@ account, verification, passkey, and rate-limit tables. Most application
 repositories retain D1 as their Worker default. Better Auth and all
 application-owned relational repositories now have PostgreSQL implementations,
 but this is not yet a self-hosted API profile. Do not deploy it until a Bun API
-entry point composes the PostgreSQL repositories and replaces the required D1
-binding in its runtime environment.
+entry point uses the PostgreSQL composition helper and makes the D1 binding
+optional in its runtime environment.
+
+`createPostgresRelationalBindings(pool)` wires Better Auth and every
+application-owned relational repository to one PostgreSQL pool for a future
+Bun/Node composition root. The Cloudflare Worker uses none of these Node-only
+imports. The current `Env` type still requires `AUTH_DB`, so a self-hosted
+entry point must resolve that runtime binding before the profile is usable.
 
 `createAuth` uses the existing `AUTH_DB` binding by default. A Bun/Node
 composition root may inject a `pg.Pool` as `AUTH_DATABASE`, created by
@@ -102,8 +108,8 @@ rather than only restoring configuration.
 ## Local PostgreSQL integration test
 
 `services/api/test/integration/postgres-auth.test.ts` creates a random schema,
-applies the reviewed SQL, tests Better Auth's PostgreSQL session read and
-identity uniqueness, then drops the schema. It runs only when
+applies all six reviewed SQL files in one transaction, tests Better Auth's
+PostgreSQL session read and identity uniqueness, then drops the schema. It runs only when
 `POSTGRES_TEST_URL` points to an isolated disposable database. The ordinary Bun
 test run skips this live test when the variable is absent. Never point it at a
 production database: the test role must have schema creation and drop rights.
