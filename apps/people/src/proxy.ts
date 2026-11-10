@@ -8,7 +8,13 @@ export function proxy(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
-  const canonicalPathname = pathname.toLowerCase();
+  let canonicalPathname = pathname.toLowerCase();
+  // Normalize profile aliases by removing all leading @ characters.
+  const match = canonicalPathname.match(/^\/(?:people\/)?@+([^/]+)$/);
+
+  if (match) {
+    canonicalPathname = `/people/${match[1]}`;
+  }
 
   if (pathname === canonicalPathname) {
     return NextResponse.next();
