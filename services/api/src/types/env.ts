@@ -6,6 +6,7 @@ import type { AvatarRateRepository } from '@/repositories/public-avatar-rate.rep
 import type { AuthIdentityRepository } from '@/repositories/auth-accounts.repo';
 import type { ProxySettingsRepository } from '@/repositories/proxy-settings.repo';
 import type { PermissionRepository } from '@/repositories/permissions.repo';
+import type { AvatarReviewRepository } from '@/repositories/public-avatar.repo';
 
 export interface Env {
   AUTH_DB: D1Database;
@@ -14,6 +15,7 @@ export interface Env {
   AUTH_IDENTITY_REPOSITORY?: AuthIdentityRepository;
   PROXY_SETTINGS_REPOSITORY?: ProxySettingsRepository;
   PERMISSION_REPOSITORY?: PermissionRepository;
+  AVATAR_REVIEW_REPOSITORY?: AvatarReviewRepository;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
 

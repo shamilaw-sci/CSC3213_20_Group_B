@@ -54,7 +54,7 @@ export interface PublicAvatarReviewPage {
   nextCursor: PublicAvatarReviewCursor | null;
 }
 
-interface ReviewRow {
+export interface ReviewRow {
   id: string;
   username: string;
   sha256: string;
@@ -68,7 +68,7 @@ interface ReviewRow {
   note: string | null;
 }
 
-interface AuditRow {
+export interface AuditRow {
   id: string;
   username: string;
   actorEmail: string;
@@ -90,7 +90,7 @@ function parseModeration(value: string): PublicAvatarModeration | null {
   }
 }
 
-function toReview(row: ReviewRow): PublicAvatarReviewRecord {
+export function toReview(row: ReviewRow): PublicAvatarReviewRecord {
   return {
     id: row.id,
     username: row.username,
@@ -106,7 +106,7 @@ function toReview(row: ReviewRow): PublicAvatarReviewRecord {
   };
 }
 
-function toAudit(row: AuditRow): PublicAvatarAuditRecord {
+export function toAudit(row: AuditRow): PublicAvatarAuditRecord {
   return {
     id: row.id,
     username: row.username,
@@ -141,6 +141,8 @@ export async function createAvatarReview(
     submittedAt: number;
   }
 ): Promise<void> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.create(input);
   await env.AUTH_DB.prepare(
     `INSERT INTO public_avatar_review (
       id, username, sha256, object_key, size, moderation_json, status, submitted_at
@@ -162,6 +164,7 @@ export async function getAvatarReview(
   env: Env,
   id: string
 ): Promise<PublicAvatarReviewRecord | null> {
+  if (env.AVATAR_REVIEW_REPOSITORY) return env.AVATAR_REVIEW_REPOSITORY.get(id);
   const row = await env.AUTH_DB.prepare(
     `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review WHERE id = ? LIMIT 1`
   )
@@ -180,6 +183,8 @@ export async function markAvatarReview(
     note?: string | null;
   }
 ): Promise<boolean> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.mark(input);
   const result = await env.AUTH_DB.prepare(
     `UPDATE public_avatar_review
      SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
@@ -201,6 +206,8 @@ export async function reopenAvatarReview(
   id: string,
   reviewedAt: number
 ): Promise<void> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.reopen(id, reviewedAt);
   // Only undo the decision made by the caller whose reviewed_at matches, so a
   // concurrent decision is never reopened by a failed publish attempt.
   await env.AUTH_DB.prepare(
@@ -217,6 +224,8 @@ export async function getPendingAvatarReviewForUser(
   username: string,
   id?: string
 ): Promise<PublicAvatarReviewRecord | null> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.getPendingForUser(username, id);
   const row = id
     ? await env.AUTH_DB.prepare(
         `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
@@ -241,6 +250,8 @@ export async function listPendingAvatarReviewsForUser(
   username: string,
   options: { limit?: number; submittedBefore?: number } = {}
 ): Promise<PublicAvatarReviewRecord[]> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.listPendingForUser(username, options);
   const limit = options.limit ?? 50;
   const rows =
     options.submittedBefore === undefined
@@ -267,6 +278,8 @@ export async function listPendingAvatarReviewPage(
   env: Env,
   input: { cursor?: PublicAvatarReviewCursor; limit: number }
 ): Promise<PublicAvatarReviewPage> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.listPendingPage(input);
   const rows = input.cursor
     ? await env.AUTH_DB.prepare(
         `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
@@ -311,6 +324,8 @@ export async function cancelPendingAvatarReviews(
     submittedBefore: number;
   }
 ): Promise<PublicAvatarReviewRecord[]> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.cancelPending(input);
   // One statement both cancels and returns exactly the rows this call
   // transitioned. This avoids a page-sized limit leaving stale pending rows and
   // never re-audits a decision that raced ahead of us.
@@ -336,6 +351,8 @@ export async function hasPendingAvatarObject(
   username: string,
   sha256: string
 ): Promise<boolean> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.hasPendingObject(username, sha256);
   const row = await env.AUTH_DB.prepare(
     `SELECT 1 AS present FROM public_avatar_review
      WHERE username = ? AND sha256 = ? AND status = 'pending'
@@ -352,6 +369,8 @@ export async function recordAvatarAudit(
     createdAt?: number;
   }
 ): Promise<void> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.recordAudit(input);
   await env.AUTH_DB.prepare(
     `INSERT INTO public_avatar_audit (
       id, username, actor_email, actor_kind, action, previous_sha256, sha256,
@@ -378,6 +397,8 @@ export async function listAvatarAudit(
   username: string,
   limit = 50
 ): Promise<PublicAvatarAuditRecord[]> {
+  if (env.AVATAR_REVIEW_REPOSITORY)
+    return env.AVATAR_REVIEW_REPOSITORY.listAudit(username, limit);
   const bounded = Math.min(Math.max(1, Math.trunc(limit)), 100);
   const rows = await env.AUTH_DB.prepare(
     `SELECT ${AUDIT_COLUMNS} FROM public_avatar_audit
@@ -388,4 +409,32 @@ export async function listAvatarAudit(
     .bind(username, bounded)
     .all<AuditRow>();
   return rows.results.map(toAudit);
+}
+
+export interface AvatarReviewRepository {
+  create(input: Parameters<typeof createAvatarReview>[1]): Promise<void>;
+  get(id: string): Promise<PublicAvatarReviewRecord | null>;
+  mark(input: Parameters<typeof markAvatarReview>[1]): Promise<boolean>;
+  reopen(id: string, reviewedAt: number): Promise<void>;
+  getPendingForUser(
+    username: string,
+    id?: string
+  ): Promise<PublicAvatarReviewRecord | null>;
+  listPendingForUser(
+    username: string,
+    options: { limit?: number; submittedBefore?: number }
+  ): Promise<PublicAvatarReviewRecord[]>;
+  listPendingPage(input: {
+    cursor?: PublicAvatarReviewCursor;
+    limit: number;
+  }): Promise<PublicAvatarReviewPage>;
+  cancelPending(
+    input: Parameters<typeof cancelPendingAvatarReviews>[1]
+  ): Promise<PublicAvatarReviewRecord[]>;
+  hasPendingObject(username: string, sha256: string): Promise<boolean>;
+  recordAudit(input: Parameters<typeof recordAvatarAudit>[1]): Promise<void>;
+  listAudit(
+    username: string,
+    limit: number
+  ): Promise<PublicAvatarAuditRecord[]>;
 }

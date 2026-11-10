@@ -7,11 +7,11 @@ description: Incremental D1 and PostgreSQL migration boundaries.
 
 The API currently runs on Cloudflare D1. Better Auth owns its user, session,
 account, verification, passkey, and rate-limit tables. Most application
-repositories still use D1 directly for avatar review and audit.
-Better Auth, permissions, proxy settings, and the avatar rate-window repository now have
-PostgreSQL implementations, but this is not yet a self-hosted API profile. Do
-not deploy it until the remaining application repositories have PostgreSQL
-implementations and a Bun API entry point exists.
+repositories retain D1 as their Worker default. Better Auth and all
+application-owned relational repositories now have PostgreSQL implementations,
+but this is not yet a self-hosted API profile. Do not deploy it until a Bun API
+entry point composes the PostgreSQL repositories and replaces the required D1
+binding in its runtime environment.
 
 `createAuth` uses the existing `AUTH_DB` binding by default. A Bun/Node
 composition root may inject a `pg.Pool` as `AUTH_DATABASE`, created by
@@ -53,6 +53,16 @@ precheck; it does not provide this cross-request guarantee. Cross-backend
 tests cover metadata and keyset paging; live PostgreSQL tests race a demotion
 against a deletion across two pools.
 
+Avatar review state and audit history accept an injected
+`AVATAR_REVIEW_REPOSITORY`. PostgreSQL migration
+`0006_public_avatar_moderation.sql` preserves status and action constraints,
+JSON moderation reports, and millisecond timestamps. Review claims use one
+conditional `UPDATE`; reopening checks both approved status and the caller's
+review timestamp. Cancellation uses one `UPDATE ... RETURNING` without a page
+limit, so only rows actually transitioned are audited. Cross-backend tests
+cover missing rows, moderation, cursor ordering, cancellation and history; a
+live two-pool test races twelve review claims and verifies one succeeds.
+
 Drizzle ORM supports both [D1](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
 and [PostgreSQL](https://orm.drizzle.team/docs/connect-overview). It was evaluated
 for the rate-window table. Three statements, including a dialect-specific
@@ -67,22 +77,27 @@ The reviewed SQL in `services/api/migrations/postgres` is separate from the D1
 SQLite migrations. `0001_better_auth.sql` is based on Better Auth 1.7.7's
 generated PostgreSQL plan. `0002_auth_identity_uniqueness.sql` preserves the
 extra account and passkey uniqueness rules from D1 migration 0002.
-`0003_public_avatar_rate.sql` through `0005_permissions.sql` add application-owned
-tables. Apply all five
+`0003_public_avatar_rate.sql` through `0006_public_avatar_moderation.sql` add
+application-owned tables. Apply all six
 once, in order, within one transaction to an empty, dedicated schema. The
 database role needs schema creation or ownership and table/index creation
 privileges. Configure that schema as the connection's `search_path`, then
 confirm Better Auth reports no outstanding migration steps. Do not use D1 SQL
 files against PostgreSQL or run automatic schema pushes in production.
 
-Before any real cutover, design and review PostgreSQL migrations for every
-application-owned table and a data export/import procedure. Freeze writes,
-back up D1, copy all auth and application rows while preserving IDs and
-timestamps, verify counts, foreign keys, uniqueness, and representative
-sessions. Include avatar rate-window rows so a cutover cannot reset a member's
-current upload allowance. Switch only after the complete API profile passes
-integration tests. A database URL change does not copy data. Rollback after
-new writes requires reconciliation rather than only restoring configuration.
+Before any real cutover, independently review all six SQL migrations and the
+data export/import procedure. Freeze writes, back up D1, export Better Auth
+and application-owned tables, and import them into a fresh PostgreSQL schema.
+Preserve IDs, epoch-millisecond timestamps, permission/proxy JSON, review
+status and audit rows, and avatar rate-window rows; normalize permission emails
+to lowercase and reject collisions before import. Import auth parent rows
+before dependent sessions, accounts, and passkeys. Verify per-table counts,
+foreign keys, uniqueness, JSON values, representative sessions, pending review
+queues, current quotas, and proxy attempt allowances. Store object-storage keys
+unchanged and separately migrate objects if the storage provider changes.
+Switch only after the complete API profile passes integration tests. A database
+URL change does not copy data. Rollback after new writes requires reconciliation
+rather than only restoring configuration.
 
 ## Local PostgreSQL integration test
 
@@ -103,10 +118,9 @@ installed PostgreSQL server or a CI-provisioned container. The container is a
 test dependency, not an application deployment component.
 
 PostgreSQL uses transactions and row-level locks; D1 supports atomic statements
-and batches but not interactive transactions. Avatar review transitions remain
-D1-only and must retain their atomic
-predicates when migrated. Do not emulate them with an unguarded read followed
-by a write. Better Auth's generated `rateLimit.lastRequest` column is `BIGINT`
+and batches but not interactive transactions. Both avatar review adapters use
+atomic conditional SQL updates rather than a read followed by a write.
+Better Auth's generated `rateLimit.lastRequest` column is `BIGINT`
 and stores Unix epoch **milliseconds**. Node-postgres returns `BIGINT` values
 as strings by default; Better Auth 1.7.7's retry calculation adds the window
 to that value, so a string can produce an incorrect retry interval. The
