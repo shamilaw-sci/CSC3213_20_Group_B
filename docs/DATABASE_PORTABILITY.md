@@ -7,8 +7,8 @@ description: Incremental D1 and PostgreSQL migration boundaries.
 
 The API currently runs on Cloudflare D1. Better Auth owns its user, session,
 account, verification, passkey, and rate-limit tables. Most application
-repositories still use D1 directly for permissions, proxy settings, avatar
-review, and audit. Better Auth and the avatar rate-window repository now have
+repositories still use D1 directly for permissions, avatar review, and audit.
+Better Auth, proxy settings, and the avatar rate-window repository now have
 PostgreSQL implementations, but this is not yet a self-hosted API profile. Do
 not deploy it until the remaining application repositories have PostgreSQL
 implementations and a Bun API entry point exists.
@@ -35,6 +35,14 @@ repository. Its SQL reads Better Auth's already-migrated `user` and `account`
 tables and retains the case-insensitive email, linked-provider, and numeric
 GitHub ID behavior. The Worker continues to use its D1 implementation.
 
+Proxy settings accept an injected `PROXY_SETTINGS_REPOSITORY`; D1 remains the
+Worker default. PostgreSQL migration `0004_proxy_settings.sql` mirrors D1
+migrations 0003 and 0005. User edits consume an attempt in one conditional
+UPSERT; admin edits preserve the remaining allowance. The expiry reset is
+guarded by the previously read window timestamp, and list pages use a
+repeatable-read snapshot for their rows and total. Shared D1/PostgreSQL tests
+cover concurrent attempts, admin edits, reset, username ambiguity, and paging.
+
 Drizzle ORM supports both [D1](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
 and [PostgreSQL](https://orm.drizzle.team/docs/connect-overview). It was evaluated
 for the rate-window table. Three statements, including a dialect-specific
@@ -49,8 +57,8 @@ The reviewed SQL in `services/api/migrations/postgres` is separate from the D1
 SQLite migrations. `0001_better_auth.sql` is based on Better Auth 1.7.7's
 generated PostgreSQL plan. `0002_auth_identity_uniqueness.sql` preserves the
 extra account and passkey uniqueness rules from D1 migration 0002.
-`0003_public_avatar_rate.sql` adds the first application-owned table. Apply all
-three
+`0003_public_avatar_rate.sql` and `0004_proxy_settings.sql` add application-owned
+tables. Apply all four
 once, in order, within one transaction to an empty, dedicated schema. The
 database role needs schema creation or ownership and table/index creation
 privileges. Configure that schema as the connection's `search_path`, then
@@ -85,8 +93,8 @@ installed PostgreSQL server or a CI-provisioned container. The container is a
 test dependency, not an application deployment component.
 
 PostgreSQL uses transactions and row-level locks; D1 supports atomic statements
-and batches but not interactive transactions. The proxy attempt UPSERT and
-avatar review transitions remain D1-only and must retain their atomic
+and batches but not interactive transactions. Avatar review transitions remain
+D1-only and must retain their atomic
 predicates when migrated. Do not emulate them with an unguarded read followed
 by a write. Better Auth's generated `rateLimit.lastRequest` column is `BIGINT`;
 its 1.7.7 schema checker logs a type advisory for that column even when its

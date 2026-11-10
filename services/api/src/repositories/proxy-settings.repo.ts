@@ -15,7 +15,7 @@ export interface ProxySettings {
   revision: number;
 }
 
-interface ProxySettingsRow {
+export interface ProxySettingsRow {
   email: string;
   username: string;
   active: number;
@@ -41,11 +41,33 @@ export interface ActiveProxyResolution {
   url: string;
 }
 
-function emailToUsername(email: string): string {
+export interface ProxySettingsRepository {
+  get(email: string): Promise<ProxySettings>;
+  resolve(username: string): Promise<ActiveProxyResolution | null>;
+  save(
+    input: Omit<SaveProxySettingsInput, 'env'>
+  ): Promise<SaveProxySettingsResult>;
+  reset(email: string, actorEmail: string): Promise<ProxySettings>;
+  listPage(input: {
+    afterEmail?: string;
+    limit: number;
+  }): Promise<ProxySettingsPage>;
+}
+
+export interface SaveProxySettingsInput {
+  env: Env;
+  email: string;
+  actorEmail: string;
+  actorIsAdmin: boolean;
+  active: boolean;
+  url: string;
+}
+
+export function emailToUsername(email: string): string {
   return email.split('@')[0]?.toLowerCase() ?? email.toLowerCase();
 }
 
-function toProxySettings(row: ProxySettingsRow): ProxySettings {
+export function toProxySettings(row: ProxySettingsRow): ProxySettings {
   const availableAttempts =
     row.attemptWindowStartedAt !== null &&
     Date.now() - row.attemptWindowStartedAt > PROXY_ATTEMPTS_RESET_WINDOW_MS
@@ -65,7 +87,7 @@ function toProxySettings(row: ProxySettingsRow): ProxySettings {
   };
 }
 
-function defaultProxySettings(email: string): ProxySettings {
+export function defaultProxySettings(email: string): ProxySettings {
   const normalizedEmail = email.trim().toLowerCase();
   return {
     email: normalizedEmail,
@@ -85,6 +107,8 @@ export async function getProxySettings(
   env: Env,
   email: string
 ): Promise<ProxySettings> {
+  if (env.PROXY_SETTINGS_REPOSITORY)
+    return env.PROXY_SETTINGS_REPOSITORY.get(email);
   const normalizedEmail = email.trim().toLowerCase();
   const row = await env.AUTH_DB.prepare(
     'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email = ? LIMIT 1'
@@ -123,6 +147,8 @@ export async function getActiveProxyByUsername(
   env: Env,
   username: string
 ): Promise<ActiveProxyResolution | null> {
+  if (env.PROXY_SETTINGS_REPOSITORY)
+    return env.PROXY_SETTINGS_REPOSITORY.resolve(username);
   const result = await env.AUTH_DB.prepare(
     'SELECT url FROM proxySettings WHERE username = ? AND active = 1 ORDER BY email LIMIT 2'
   )
@@ -132,19 +158,23 @@ export async function getActiveProxyByUsername(
 }
 
 /**
- * Updates settings and consumes a user's allowance in one D1 statement. Keep
+ * Updates settings and consumes a user's allowance in one statement. Keep
  * the counter predicate inside this UPSERT; a separate read/update sequence
  * would allow concurrent requests to exceed the configured allowance. Admin
  * edits intentionally preserve the target user's remaining attempts.
  */
-export async function saveProxySettings(input: {
-  env: Env;
-  email: string;
-  actorEmail: string;
-  actorIsAdmin: boolean;
-  active: boolean;
-  url: string;
-}): Promise<SaveProxySettingsResult> {
+export async function saveProxySettings(
+  input: SaveProxySettingsInput
+): Promise<SaveProxySettingsResult> {
+  if (input.env.PROXY_SETTINGS_REPOSITORY) {
+    return input.env.PROXY_SETTINGS_REPOSITORY.save({
+      email: input.email,
+      actorEmail: input.actorEmail,
+      actorIsAdmin: input.actorIsAdmin,
+      active: input.active,
+      url: input.url,
+    });
+  }
   const email = input.email.trim().toLowerCase();
   const now = Date.now();
   const windowCutoff = now - PROXY_ATTEMPTS_RESET_WINDOW_MS;
@@ -191,6 +221,8 @@ export async function resetProxyAttempts(
   email: string,
   actorEmail: string
 ): Promise<ProxySettings> {
+  if (env.PROXY_SETTINGS_REPOSITORY)
+    return env.PROXY_SETTINGS_REPOSITORY.reset(email, actorEmail);
   const normalizedEmail = email.trim().toLowerCase();
   const now = Date.now();
   const row = await env.AUTH_DB.prepare(
@@ -213,6 +245,8 @@ export async function listProxySettingsPage(
   env: Env,
   input: { afterEmail?: string; limit: number }
 ): Promise<ProxySettingsPage> {
+  if (env.PROXY_SETTINGS_REPOSITORY)
+    return env.PROXY_SETTINGS_REPOSITORY.listPage(input);
   const pageStatement = input.afterEmail
     ? env.AUTH_DB.prepare(
         'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email > ? ORDER BY email LIMIT ?'
