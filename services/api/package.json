@@ -20,6 +20,7 @@
     "@scs/moderation": "workspace:*",
     "@scs/schemas": "workspace:*",
     "@scs/security": "workspace:*",
+    "@scs/storage": "workspace:*",
     "better-auth": "^1.7.7",
     "zod": "^4.4.3"
   },

@@ -1,0 +1,40 @@
+{
+  "name": "@scs/storage",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./r2": "./src/r2.ts",
+    "./s3": "./src/s3.ts",
+    "./fs": "./src/fs.ts"
+  },
+  "imports": {
+    "#storage/*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "test": "bun test",
+    "knip": "knip"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.920.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@scs/eslint-config": "workspace:*",
+    "@scs/tsconfig": "workspace:*",
+    "@cloudflare/workers-types": "^5.20260713.1",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^25.9.9",
+    "eslint": "^9.39.5",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "jiti": "^2.7.0",
+    "knip": "^6.41.0",
+    "typescript-eslint": "^8.64.0",
+    "typescript": "^6.0.3"
+  }
+}

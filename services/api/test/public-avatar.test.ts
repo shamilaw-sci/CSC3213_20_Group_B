@@ -84,7 +84,7 @@ describe('public avatar validation', () => {
           ? {
               etag: 'pointer',
               json: async () => pointer,
-              body: new Blob(['{}']).stream(),
+              body: new Blob([JSON.stringify(pointer)]).stream(),
             }
           : {
               etag: 'image',

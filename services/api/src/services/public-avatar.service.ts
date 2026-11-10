@@ -8,8 +8,10 @@ import {
   createAvatarModerator,
   createTypeSafeProvider,
 } from '@scs/moderation/avatar';
+import { type BinaryObjectStore } from '@scs/storage';
 import { z } from 'zod';
 
+import { avatarStore } from '@/config/avatar-storage';
 import {
   createCorsHeaders,
   createJsonErrorResponse,
@@ -155,12 +157,14 @@ export function animated(bytes: Uint8Array, format: string): boolean {
 }
 
 async function readPointer(
-  bucket: R2Bucket,
+  bucket: BinaryObjectStore,
   username: string
 ): Promise<{ value: Pointer | null; etag: string | null }> {
   const object = await bucket.get(pointerKey(username));
-  if (!object || !('body' in object)) return { value: null, etag: null };
-  const parsed = PointerSchema.safeParse(await object.json());
+  if (!object) return { value: null, etag: null };
+  const parsed = PointerSchema.safeParse(
+    await new Response(object.body).json()
+  );
   if (!parsed.success) throw new Error('Invalid avatar pointer');
   return { value: parsed.data, etag: object.etag };
 }
@@ -341,11 +345,11 @@ async function deleteReviewObject(
   review: PublicAvatarReviewRecord
 ): Promise<void> {
   try {
-    const current = await readPointer(env.PROFILE_PICTURES, review.username);
+    const current = await readPointer(avatarStore(env), review.username);
     if (current.value?.sha256 === review.sha256) return;
     if (await hasPendingAvatarObject(env, review.username, review.sha256))
       return;
-    await env.PROFILE_PICTURES.delete(review.objectKey);
+    await avatarStore(env).delete(review.objectKey);
   } catch (error) {
     // The review row is authoritative. A failed cleanup must not turn an
     // already-recorded decision into an error response; the private object
@@ -487,7 +491,7 @@ export async function uploadMyAvatar(
     });
   // Snapshot the pointer before processing so a slower earlier upload cannot
   // overwrite a newer successful request after moderation.
-  const before = await readPointer(env.PROFILE_PICTURES, identity.username);
+  const before = await readPointer(avatarStore(env), identity.username);
   const contentLength = Number(req.headers.get('content-length'));
   if (contentLength > MAX_UPLOAD + 16_384)
     return avatarError('Image exceeds 4 MiB', 413, origin, { quota });
@@ -558,8 +562,8 @@ export async function uploadMyAvatar(
   const key = imageKey(identity.username, hash);
   if (decision.status !== 'approved') {
     if (decision.status === 'review_required') {
-      await env.PROFILE_PICTURES.put(key, webp, {
-        httpMetadata: { contentType: 'image/webp' },
+      await avatarStore(env).put(key, webp, {
+        metadata: { contentType: 'image/webp' },
         sha256: hash,
       });
       const reviewId = crypto.randomUUID();
@@ -617,8 +621,8 @@ export async function uploadMyAvatar(
       }
     );
   }
-  await env.PROFILE_PICTURES.put(key, webp, {
-    httpMetadata: { contentType: 'image/webp' },
+  await avatarStore(env).put(key, webp, {
+    metadata: { contentType: 'image/webp' },
     sha256: hash,
   });
   const pointer: Pointer = {
@@ -629,14 +633,14 @@ export async function uploadMyAvatar(
     size: webp.length,
     updatedAt: new Date().toISOString(),
   };
-  const stored = await env.PROFILE_PICTURES.put(
+  const stored = await avatarStore(env).put(
     pointerKey(identity.username),
     JSON.stringify(pointer),
     {
-      onlyIf: before.etag
-        ? { etagMatches: before.etag }
-        : { etagDoesNotMatch: '*' },
-      httpMetadata: { contentType: 'application/json' },
+      condition: before.etag
+        ? { kind: 'match', etag: before.etag }
+        : { kind: 'create' },
+      metadata: { contentType: 'application/json' },
     }
   );
   if (!stored)
@@ -679,7 +683,7 @@ async function tombstoneAvatar(
   | { deleted: true; previousSha256: string | null; conflict: false }
   | { deleted: false; previousSha256: string | null; conflict: true }
 > {
-  const before = await readPointer(env.PROFILE_PICTURES, username);
+  const before = await readPointer(avatarStore(env), username);
   if (!before.value?.key)
     return {
       deleted: false,
@@ -695,12 +699,12 @@ async function tombstoneAvatar(
     size: 0,
     updatedAt: new Date().toISOString(),
   };
-  const stored = await env.PROFILE_PICTURES.put(
+  const stored = await avatarStore(env).put(
     pointerKey(username),
     JSON.stringify(tombstone),
     {
-      onlyIf: { etagMatches: before.etag },
-      httpMetadata: { contentType: 'application/json' },
+      condition: { kind: 'match', etag: before.etag },
+      metadata: { contentType: 'application/json' },
     }
   );
   return stored
@@ -765,7 +769,7 @@ export async function getMyAvatar(req: Request, env: Env): Promise<Response> {
   const identity = await owner(req, env);
   if (identity instanceof Response) return identity;
   const [current, pending, quota] = await Promise.all([
-    readPointer(env.PROFILE_PICTURES, identity.username),
+    readPointer(avatarStore(env), identity.username),
     getPendingAvatarReviewForUser(env, identity.username),
     readAvatarQuota(env, identity.username).catch(() => undefined),
   ]);
@@ -798,17 +802,14 @@ export async function getMyPendingAvatarReviewImage(
   );
   if (!review)
     return createJsonErrorResponse('Review picture not found', 404, origin);
-  const object = await env.PROFILE_PICTURES.get(review.objectKey);
+  const object = await avatarStore(env).get(review.objectKey);
   if (!object)
     return createJsonErrorResponse('Review picture not found', 404, origin);
   const headers = new Headers(createCorsHeaders(origin));
   headers.set('Content-Type', 'image/webp');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('Cache-Control', 'no-store');
-  return new Response(
-    'body' in object ? (object.body as ReadableStream<Uint8Array>) : null,
-    { status: 200, headers }
-  );
+  return new Response(object.body, { status: 200, headers });
 }
 
 export async function deleteMyPendingAvatarReview(
@@ -842,7 +843,7 @@ export async function getPublicAvatar(
   const [username, filename] = path;
   if (!username || !USERNAME.test(username))
     return new Response(null, { status: 404 });
-  const current = await readPointer(env.PROFILE_PICTURES, username);
+  const current = await readPointer(avatarStore(env), username);
   if (!current.value?.key || !current.value.sha256)
     return new Response(null, {
       status: 404,
@@ -868,8 +869,8 @@ export async function getPublicAvatar(
     });
   const object =
     req.method === 'HEAD'
-      ? await env.PROFILE_PICTURES.head(current.value.key)
-      : await env.PROFILE_PICTURES.get(current.value.key);
+      ? await avatarStore(env).head(current.value.key)
+      : await avatarStore(env).get(current.value.key);
   if (!object)
     return new Response(null, {
       status: 404,
@@ -879,9 +880,9 @@ export async function getPublicAvatar(
     'Content-Type': 'image/webp',
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'no-store',
-    ETag: object.httpEtag,
+    ETag: `"${object.etag}"`,
   });
-  if (req.headers.get('if-none-match') === object.httpEtag)
+  if (req.headers.get('if-none-match') === `"${object.etag}"`)
     return new Response(null, { status: 304, headers });
   const body =
     req.method === 'HEAD'
@@ -923,7 +924,7 @@ export async function getAdminUserAvatar(
   if (!username)
     return createJsonErrorResponse('Invalid avatar username', 400, origin);
   const [current, pending, history, quota] = await Promise.all([
-    readPointer(env.PROFILE_PICTURES, username),
+    readPointer(avatarStore(env), username),
     listPendingAvatarReviewsForUser(env, username),
     listAvatarAudit(env, username),
     readAvatarQuota(env, username).catch(() => undefined),
@@ -1105,17 +1106,14 @@ export async function getAdminAvatarReviewImage(
   }
   const review = await getAvatarReview(env, id);
   if (!review) return createJsonErrorResponse('Review not found', 404, origin);
-  const object = await env.PROFILE_PICTURES.get(review.objectKey);
+  const object = await avatarStore(env).get(review.objectKey);
   if (!object)
     return createJsonErrorResponse('Review image not found', 404, origin);
   const headers = new Headers(createCorsHeaders(origin));
   headers.set('Content-Type', 'image/webp');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('Cache-Control', 'no-store');
-  return new Response(
-    'body' in object ? (object.body as ReadableStream<Uint8Array>) : null,
-    { status: 200, headers }
-  );
+  return new Response(object.body, { status: 200, headers });
 }
 
 export async function decideAdminAvatarReview(
@@ -1177,9 +1175,9 @@ export async function decideAdminAvatarReview(
       return createJsonErrorResponse('Review already decided', 409, origin);
     let previousSha256: string | null = null;
     try {
-      if (!(await env.PROFILE_PICTURES.head(review.objectKey)))
+      if (!(await avatarStore(env).head(review.objectKey)))
         throw new Error('Review image is missing');
-      const before = await readPointer(env.PROFILE_PICTURES, review.username);
+      const before = await readPointer(avatarStore(env), review.username);
       previousSha256 = before.value?.sha256 ?? null;
       const pointer: Pointer = {
         version: 1,
@@ -1189,14 +1187,14 @@ export async function decideAdminAvatarReview(
         size: review.size,
         updatedAt: new Date(reviewedAt).toISOString(),
       };
-      const stored = await env.PROFILE_PICTURES.put(
+      const stored = await avatarStore(env).put(
         pointerKey(review.username),
         JSON.stringify(pointer),
         {
-          onlyIf: before.etag
-            ? { etagMatches: before.etag }
-            : { etagDoesNotMatch: '*' },
-          httpMetadata: { contentType: 'application/json' },
+          condition: before.etag
+            ? { kind: 'match', etag: before.etag }
+            : { kind: 'create' },
+          metadata: { contentType: 'application/json' },
         }
       );
       if (!stored) {

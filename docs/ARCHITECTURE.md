@@ -86,6 +86,7 @@ fallback.
 | `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                           |
 | `packages/security`      | RFC 9116 document validation, generation, and discovery redirect policy              | authentication, authorization, or incident data   |
 | `packages/moderation`    | Avatar classification policy and provider adapters                                   | upload handling, storage, or administrator review |
+| `packages/storage`       | Binary objects and atomic conditional write drivers                                  | D1, Durable Objects, repositories, or Queues      |
 | `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration           |
 | `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions            |
 | `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points     |

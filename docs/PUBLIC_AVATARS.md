@@ -53,6 +53,10 @@ re-encodes upload bytes. Apply `0006_public_avatar_rate.sql` and
 the Worker secret `TYPESAFE_API_KEY` to a TypeSafe API key. No S3 credentials or
 second metadata database are used.
 
+The API uses [`@scs/storage`](STORAGE.md) for these objects. Native R2 remains
+the default; an S3-compatible provider can be selected with Worker configuration.
+Provider switching requires an explicit object migration before cutover.
+
 The API requires a published public profile whose email matches the signed-in
 member. Owners can `POST` one multipart field named `image` to
 `/api/people/v2/avatars/me` (JPEG, PNG, WebP, at most 4 MiB), `GET` that route
