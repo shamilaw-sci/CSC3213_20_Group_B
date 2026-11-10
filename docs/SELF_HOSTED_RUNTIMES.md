@@ -63,7 +63,7 @@ The API's `GITHUB_APP_INTERNAL_SECRET` must equal the GitHub App's
 Use an isolated PostgreSQL 17 database and a disposable private S3 bucket with
 test-only credentials. Set `POSTGRES_TEST_URL` and `S3_TEST_BUCKET`,
 `S3_TEST_ENDPOINT`, `S3_TEST_REGION`, `S3_TEST_ACCESS_KEY_ID`, and
-`S3_TEST_SECRET_ACCESS_KEY`, then run the API and storage integration test
+`S3_TEST_SECRET_ACCESS_KEY`, and explicitly set `S3_TEST_ALLOW_WRITES=1`, then run the API and storage integration test
 files without a cache. The tests create random PostgreSQL schemas and object
 keys and remove them afterward. Never point these variables at production.
 The API test mocks only TypeSafe classification, so it exercises actual

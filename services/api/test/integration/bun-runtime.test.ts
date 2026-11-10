@@ -5,7 +5,9 @@ import { Pool } from 'pg';
 import sharp from 'sharp';
 
 const integrationTest =
-  process.env.POSTGRES_TEST_URL && process.env.S3_TEST_BUCKET
+  process.env.POSTGRES_TEST_URL &&
+  process.env.S3_TEST_BUCKET &&
+  process.env.S3_TEST_ALLOW_WRITES === '1'
     ? test
     : test.skip;
 

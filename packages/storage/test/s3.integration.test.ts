@@ -1,7 +1,9 @@
 import { createS3Store } from '@scs/storage/s3';
 import { expect, test } from 'bun:test';
 
-const enabled = process.env.S3_TEST_BUCKET?.startsWith('scs-phase6-test-');
+const enabled =
+  process.env.S3_TEST_ALLOW_WRITES === '1' &&
+  Boolean(process.env.S3_TEST_BUCKET);
 const integrationTest = enabled ? test : test.skip;
 
 integrationTest(
