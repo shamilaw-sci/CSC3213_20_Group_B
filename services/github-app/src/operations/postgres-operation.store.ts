@@ -41,19 +41,35 @@ async function withTransaction<T>(
 
 /** Bun/Node adapter. The Cloudflare Worker does not import this module. */
 export class PostgresOperationStore implements OperationStore {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly options: { dispatchOutbox?: boolean } = {}
+  ) {}
 
   async create(value: OperationRecord): Promise<CreateOperationResult> {
     // Match the Durable Object: an existing ID wins even if the new value is invalid.
     const existing = await this.get(value.operationId);
     if (existing) return { created: false, operation: existing };
     const operation = OperationRecordSchema.parse(value);
-    const inserted = await this.pool.query<StoredRow>(
-      `INSERT INTO operation_state (operation_id, operation_json)
+    const insert = async (client: PoolClient | Pool) => {
+      const inserted = await client.query<StoredRow>(
+        `INSERT INTO operation_state (operation_id, operation_json)
        VALUES ($1, $2::jsonb) ON CONFLICT (operation_id) DO NOTHING
        RETURNING operation_json`,
-      [operation.operationId, JSON.stringify(operation)]
-    );
+        [operation.operationId, JSON.stringify(operation)]
+      );
+      if (inserted.rows[0] && this.options.dispatchOutbox) {
+        await client.query(
+          'INSERT INTO operation_dispatch_outbox (operation_id) VALUES ($1)',
+          [operation.operationId]
+        );
+      }
+      return inserted;
+    };
+    // In the self-hosted profile, operation creation and dispatch intent commit together.
+    const inserted = this.options.dispatchOutbox
+      ? await withTransaction(this.pool, insert)
+      : await insert(this.pool);
     if (inserted.rows[0])
       return { created: true, operation: parseRow(inserted.rows[0])! };
     // A competing insert won; the unique index waits for its commit before returning.

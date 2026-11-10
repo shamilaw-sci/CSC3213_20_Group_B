@@ -56,7 +56,7 @@ Local Bun execution uses the same `OperationStore` interface with an in-memory
 implementation. That mode is for development: process restarts discard status,
 and it is not a durability substitute.
 
-For a future self-hosted profile, `PostgresOperationStore` implements the same
+For a self-hosted profile, `PostgresOperationStore` implements the same
 interface using the existing `pg` driver. The dedicated migration
 `services/github-app/migrations/postgres/0001_operation_state.sql` creates a
 PostgreSQL table with a primary key on operation ID and a JSONB record. Apply
@@ -71,6 +71,11 @@ in its conflict update, including a race with a previously absent row. Reads
 and writes validate records with the existing `OperationRecordSchema`.
 Operation status, attempts, outcome, timestamps, and metadata persist across
 store and process recreation. Job delivery remains a separate responsibility.
+The self-hosted composition must construct the store with
+`{ dispatchOutbox: true }` after applying `0002_operation_dispatch_outbox.sql`.
+Each first creation then inserts one outbox row in the same transaction as
+the operation. Without that option, the store retains the Phase 3
+persistence-only behavior and cannot provide durable dispatch.
 
 To move existing Cloudflare operations to PostgreSQL, stop new submissions and
 queue consumers, export the validated operation JSON for every operation ID,
@@ -97,7 +102,7 @@ This resource lock complements Git compare-and-swap. The lock orders work
 inside this service, while the Git ref check detects a writer outside the
 service or a stale branch head.
 
-For a future self-hosted profile, `PostgresMutationCoordinator` uses a
+For a self-hosted profile, `PostgresMutationCoordinator` uses a
 session-level PostgreSQL advisory lock per canonical resource key. It hashes
 the key to a signed 64-bit lock ID. A hash collision can cause unrelated
 resources to contend, but cannot let two writers hold the same lock. The
@@ -151,6 +156,58 @@ starting at 250 milliseconds, respect a larger provider `Retry-After`, and cap
 the delay at 30 seconds. The executor default is three attempts. Provider queue
 retries and operation attempts are separate layers; the terminal operation
 record prevents already completed work from running again.
+
+### Self-hosted PostgreSQL queue
+
+The self-hosted adapter uses pg-boss 12 and PostgreSQL 17. pg-boss owns job
+claims, retries, retention, heartbeats, dead-letter routing, and its own
+schema. The application owns only `operation_dispatch_outbox`, which closes
+the operation-create/dispatch gap. `OperationDispatcher` remains the only
+producer dependency of the executor; handlers do not import pg-boss. The
+Cloudflare Worker does not import the PostgreSQL queue module.
+
+Apply the two reviewed application migrations in order, then start pg-boss
+and call `preparePostgresOperationQueues` before accepting submissions or
+starting `PostgresOperationWorker`. pg-boss creates and upgrades its separate
+schema during `start`; grant its database role schema/table creation and
+migration rights, or run that step under a deployment role before starting
+restricted workers. Review pg-boss schema upgrades independently of the two
+application migrations. Use direct PostgreSQL sessions or session pooling
+for the operation coordinator. Queue workers need network access to both
+PostgreSQL and GitHub. Phase 6 will compose these pieces into a self-hosted
+runtime; this phase adds no API server or deployment profile.
+
+The producer publishes immediately after an operation is committed. A
+publish failure is returned to the caller and leaves a pending outbox row.
+The worker scans pending rows on startup and every five seconds, up to 100
+per pass. Each row is locked before publishing. A stable UUID for the
+operation prevents a second live job when a publish succeeds but the outbox
+commit fails. If pg-boss has already purged that UUID, a later publish is
+safe because the executor skips terminal operations. Multiple workers may
+scan the outbox concurrently; the row lock serializes each publish. Monitor
+pending outbox age and worker health, since an absent worker means no recovery.
+
+The queue retries thrown execution failures, including resource contention,
+up to 20 times with backoff capped at 30 seconds. Heartbeats are expected
+every 30 seconds and the active job expiration is 15 minutes. Exhausted jobs
+go to `github-operations-dead-letter`; inspect the job and operation record
+before using pg-boss `redrive`. A handler that records a terminal application
+failure completes the queue job, matching Cloudflare behavior. A cancelled
+operation is also a harmless terminal delivery. Job delivery is at least
+once, so operation status checks, PostgreSQL coordination, and GitHub revision
+checks remain required. If a worker dies, pg-boss retries its active job after
+expiration or a missed heartbeat. The operation may have completed a GitHub
+call before the crash; the existing GitHub expected-ref check limits stale
+writes. An in-flight call cannot be strictly fenced after connection loss.
+
+To migrate existing PostgreSQL operations into this delivery path, stop
+producers and old consumers, apply the outbox migration, and review all
+nonterminal operation records. Insert one outbox row for each operation that
+still needs execution, using `ON CONFLICT DO NOTHING`; verify counts and
+statuses before starting workers. Do not backfill terminal records. Retain
+the old queue until all its in-flight deliveries are accounted for. Moving
+Cloudflare Durable Object records or Cloudflare Queue messages requires a
+separate inventory/export process; changing configuration does not move them.
 
 ## Cancellation
 
