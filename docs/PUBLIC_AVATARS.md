@@ -57,6 +57,18 @@ The API uses [`@scs/storage`](STORAGE.md) for these objects. Native R2 remains
 the default; an S3-compatible provider can be selected with Worker configuration.
 Provider switching requires an explicit object migration before cutover.
 
+Image processing is injected through `AvatarImageProcessor`. The Worker composes
+the Cloudflare Images binding by default. A Bun or Node host can inject
+`createSharpAvatarImageProcessor()` through `AVATAR_IMAGE_PROCESSOR`; this
+adapter uses the maintained `sharp` library and is never imported by the Worker
+entry point. Both adapters inspect the decoded format and dimensions, center
+crop to 512×512, and emit WebP for storage plus JPEG for moderation. The same
+upload validation and HTTP error mapping apply to either adapter. Encoded bytes
+and therefore content hashes can differ by provider, even for the same input;
+the object key is derived from the actual WebP bytes produced. Sharp requires
+its native binary and libvips to be installed for the host platform. Replacing
+the processing adapter does not convert existing stored objects.
+
 The API requires a published public profile whose email matches the signed-in
 member. Owners can `POST` one multipart field named `image` to
 `/api/people/v2/avatars/me` (JPEG, PNG, WebP, at most 4 MiB), `GET` that route

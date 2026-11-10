@@ -12,6 +12,7 @@ import { type BinaryObjectStore } from '@scs/storage';
 import { z } from 'zod';
 
 import { avatarStore } from '@/config/avatar-storage';
+import { avatarImageProcessor } from '@/config/avatar-image-processor';
 import {
   createCorsHeaders,
   createJsonErrorResponse,
@@ -75,10 +76,6 @@ const PointerSchema = z.object({
   updatedAt: z.string(),
 });
 type Pointer = z.infer<typeof PointerSchema>;
-
-function bodyStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
-  return new Blob([bytes.slice().buffer]).stream();
-}
 
 function pointerKey(username: string): string {
   return `avatars/${username}/current.json`;
@@ -526,9 +523,9 @@ export async function uploadMyAvatar(
   let webp: Uint8Array;
   let jpeg: Uint8Array;
   try {
-    const info = await env.IMAGES.info(bodyStream(bytes));
+    const processor = avatarImageProcessor(env);
+    const info = await processor.inspect(bytes);
     if (
-      !('width' in info) ||
       info.format !== format ||
       info.width < MIN_SIDE ||
       info.height < MIN_SIDE ||
@@ -537,19 +534,7 @@ export async function uploadMyAvatar(
       info.width * info.height > MAX_PIXELS
     )
       return avatarError('Invalid image dimensions', 422, origin, { quota });
-    const transform = { width: 512, height: 512, fit: 'cover' as const };
-    const webpResponse = (
-      await env.IMAGES.input(bodyStream(bytes))
-        .transform(transform)
-        .output({ format: 'image/webp', anim: false })
-    ).response();
-    const jpegResponse = (
-      await env.IMAGES.input(bodyStream(bytes))
-        .transform(transform)
-        .output({ format: 'image/jpeg', anim: false })
-    ).response();
-    webp = new Uint8Array(await webpResponse.arrayBuffer());
-    jpeg = new Uint8Array(await jpegResponse.arrayBuffer());
+    ({ webp, jpeg } = await processor.normalize(bytes));
     if (!webp.length || !jpeg.length)
       throw new Error('Empty transformed image');
   } catch {

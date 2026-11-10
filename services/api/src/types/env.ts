@@ -1,5 +1,7 @@
 import type { BinaryObjectStore } from '@scs/storage';
 
+import type { AvatarImageProcessor } from '@/services/avatar-image-processor';
+
 export interface Env {
   AUTH_DB: D1Database;
   BETTER_AUTH_SECRET: string;
@@ -30,4 +32,5 @@ export interface Env {
   AVATAR_S3_ACCESS_KEY_ID?: string;
   AVATAR_S3_SECRET_ACCESS_KEY?: string;
   IMAGES: ImagesBinding;
+  AVATAR_IMAGE_PROCESSOR?: AvatarImageProcessor;
 }
