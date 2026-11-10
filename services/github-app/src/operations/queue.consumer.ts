@@ -25,8 +25,10 @@ function createCloudflareOperationExecutor(
     handlers,
     classifyError: classifyGithubError,
     dispatch: operationQueue
-      ? async (operationId) => {
-          await operationQueue.send({ operationId });
+      ? {
+          dispatch: async (operationId) => {
+            await operationQueue.send({ operationId });
+          },
         }
       : undefined,
   });
@@ -45,19 +47,21 @@ export function createOperationExecutor(
     coordinator: localMutationCoordinator,
     handlers,
     classifyError: classifyGithubError,
-    dispatch: (operationId) => {
-      queueMicrotask(() => {
-        void executor.execute(operationId).catch((error: unknown) => {
-          console.error(
-            JSON.stringify({
-              event: 'local_operation_failed',
-              operationId,
-              errorCategory: classifyGithubError(error).category,
-            })
-          );
+    dispatch: {
+      dispatch: (operationId) => {
+        queueMicrotask(() => {
+          void executor.execute(operationId).catch((error: unknown) => {
+            console.error(
+              JSON.stringify({
+                event: 'local_operation_failed',
+                operationId,
+                errorCategory: classifyGithubError(error).category,
+              })
+            );
+          });
         });
-      });
-      return Promise.resolve();
+        return Promise.resolve();
+      },
     },
   });
   return executor;

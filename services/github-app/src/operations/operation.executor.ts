@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
 import type { OperationStore } from '@/operations/operation.store';
+import type { OperationDispatcher } from '@/operations/operation.dispatch';
 import type {
   OperationCommand,
   OperationErrorClassification,
@@ -79,7 +80,7 @@ interface OperationExecutorOptions {
   now?: () => Date;
   sleep?: (delayMs: number) => Promise<void>;
   log?: (entry: OperationLogEntry) => void;
-  dispatch?: (operationId: string) => Promise<void>;
+  dispatch?: OperationDispatcher;
 }
 
 /**
@@ -131,7 +132,7 @@ export class OperationExecutor {
     }
     if (created.created) {
       this.writeLog('operation_queued', created.operation);
-      await this.options.dispatch?.(created.operation.operationId);
+      await this.options.dispatch?.dispatch(created.operation.operationId);
     }
     return created.operation;
   }

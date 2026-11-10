@@ -132,6 +132,10 @@ provider-enforced fencing mechanism beyond this phase.
 
 ## Queue and retry behavior
 
+`OperationDispatcher` is the narrow producer contract used by the executor.
+Cloudflare Queues and the local development microtask retain their existing
+delivery behavior through this contract.
+
 On the first successful create, the executor dispatches the operation ID to
 `OPERATION_QUEUE`. The queue consumer reconstructs the production executor and
 processes a batch concurrently:
