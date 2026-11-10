@@ -27,6 +27,7 @@ flowchart LR
   People["People profile page"]
   API["API Worker<br/>/api/people/v2/avatars/*"]
   Images["Cloudflare Images<br/>validate, crop, re-encode"]
+  Moderation["@scs/moderation<br/>avatar policy and provider adapter"]
   Jev["TypeSafe Jev<br/>safety + portrait checks"]
   R2[("R2 PROFILE_PICTURES<br/>WebP objects + current.json")]
   D1[("API D1<br/>rate window, reviews, audit")]
@@ -35,7 +36,8 @@ flowchart LR
   Admin -->|"approve / reject / remove"| API
   People -->|"GET / HEAD"| API
   API -->|"decode + 512px WebP/JPEG"| Images
-  API -->|"JPEG + two Choice questions"| Jev
+  API -->|"normalized JPEG"| Moderation
+  Moderation -->|"JPEG + two Choice questions"| Jev
   API -->|"read / write pointer"| R2
   API -->|"quota, review, audit"| D1
 ```
@@ -94,6 +96,7 @@ sequenceDiagram
   participant A as API Worker
   participant Q as D1 rate window
   participant I as Cloudflare Images
+  participant M as @scs/moderation
   participant J as TypeSafe Jev
   participant R as R2 PROFILE_PICTURES
   participant D as D1 reviews and audit
@@ -108,9 +111,10 @@ sequenceDiagram
     A->>A: validate size, magic bytes, MIME, animation
     A->>I: decode, bound dimensions, transform
     I-->>A: 512x512 WebP and JPEG
-    A->>J: JPEG + safety and portrait questions
-    J-->>A: choice answers
-    A->>A: classify confidence and outcome
+    A->>M: normalized JPEG
+    M->>J: JPEG + safety and portrait questions
+    J-->>M: choice answers
+    M-->>A: policy decision
     alt approved
       A->>R: put immutable WebP object
       A->>R: conditional write current.json
@@ -135,11 +139,13 @@ sequenceDiagram
 The Worker verifies magic bytes, checks for PNG and WebP animation, uses the
 Images binding to decode, bounds dimensions and pixel count, and re-encodes a
 512 by 512 WebP without source metadata. It sends a JPEG rendering of the same
-image to Jev `jev-latest` with `TypeSafe-Danger-Zone-Images: true`. Separate
+image through `@scs/moderation/avatar` to Jev `jev-latest` with
+`TypeSafe-Danger-Zone-Images: true`. Separate
 Choice questions classify safety and single-person portrait suitability in one
-request. A high-confidence unsafe or unsuitable choice is rejected; uncertain,
-low-confidence, malformed, timed-out, or unavailable moderation is held and
-never published. The API returns structured moderation metadata with a `status`
+request. A high-confidence unsafe or unsuitable choice is rejected; uncertain
+or low-confidence results need review, while malformed, timed-out, or unavailable
+responses fail closed. None are published automatically. The API returns
+structured moderation metadata with a `status`
 of `approved`, `rejected`, `review_required`, or `unavailable`, a stable code,
 a user-facing message, and per-check outcomes for safety and portrait
 suitability. It does not expose raw model probabilities, confidence values, or
@@ -170,6 +176,16 @@ A failed check is a high-confidence negative result. An uncertain or
 low-confidence check needs manual review; a malformed, timed-out, or unavailable
 provider response returns `unavailable` and is neither queued nor published.
 Rejections never change the published pointer.
+
+`@scs/moderation` owns the avatar classification contract, decision policy, and
+TypeSafe HTTP adapter. The API Worker injects the adapter with its
+`TYPESAFE_API_KEY`; the package has no access to Worker bindings, D1, R2, or
+authentication. The API retains upload validation, image transformation,
+publication, audit, and administrator review. A future avatar provider implements
+the exported `AvatarProvider` interface and explicitly maps its evidence to the
+avatar classification contract. Its confidence and probability scores must be
+reviewed against this policy before use. Other moderation domains can add their
+own contracts and policies without changing avatar decisions.
 
 ## Review queue and audit history
 

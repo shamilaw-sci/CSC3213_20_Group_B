@@ -4,6 +4,10 @@ import type {
   PublicAvatarModeration,
   PublicAvatarQuota,
 } from '@scs/schemas';
+import {
+  createAvatarModerator,
+  createTypeSafeProvider,
+} from '@scs/moderation/avatar';
 import { z } from 'zod';
 
 import {
@@ -69,12 +73,6 @@ const PointerSchema = z.object({
   updatedAt: z.string(),
 });
 type Pointer = z.infer<typeof PointerSchema>;
-
-type ChoiceAnswer = {
-  value: string;
-  confidence: number;
-  probability: number;
-};
 
 function bodyStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
   return new Blob([bytes.slice().buffer]).stream();
@@ -165,214 +163,6 @@ async function readPointer(
   const parsed = PointerSchema.safeParse(await object.json());
   if (!parsed.success) throw new Error('Invalid avatar pointer');
   return { value: parsed.data, etag: object.etag };
-}
-
-const NOT_CHECKED_CHECKS: PublicAvatarModeration['checks'] = [
-  { id: 'safety', status: 'not_checked' },
-  { id: 'portrait', status: 'not_checked' },
-];
-
-function unavailableModeration(
-  code: 'moderation_unavailable' | 'moderation_invalid_response',
-  message: string
-): PublicAvatarModeration {
-  return {
-    status: 'unavailable',
-    code,
-    message,
-    checks: NOT_CHECKED_CHECKS,
-  };
-}
-
-function checkOutcome(
-  answer: ChoiceAnswer,
-  positive: string
-): 'passed' | 'failed' | 'needs_review' {
-  if (
-    answer.value !== positive &&
-    answer.value !== 'uncertain' &&
-    answer.probability >= 0.85 &&
-    answer.confidence >= 0.5
-  )
-    return 'failed';
-  if (
-    answer.value === positive &&
-    answer.probability >= 0.9 &&
-    answer.confidence >= 0.65
-  )
-    return 'passed';
-  return 'needs_review';
-}
-
-export function moderationDecision(payload: unknown): PublicAvatarModeration {
-  if (!isRecord(payload) || !isRecord(payload.answers))
-    return unavailableModeration(
-      'moderation_invalid_response',
-      'Moderation response unavailable'
-    );
-  const answers = payload.answers;
-  const choice = (name: string, options: string[]): ChoiceAnswer | null => {
-    const answer = answers[name];
-    if (!isRecord(answer)) return null;
-    const item = answer;
-    if (
-      item.type !== 'choice' ||
-      typeof item.choice !== 'string' ||
-      !options.includes(item.choice) ||
-      typeof item.confidence !== 'number' ||
-      !Number.isFinite(item.confidence) ||
-      item.confidence < 0 ||
-      item.confidence > 1 ||
-      !isRecord(item.probabilities)
-    )
-      return null;
-    const probability = item.probabilities[item.choice];
-    if (
-      typeof probability !== 'number' ||
-      !Number.isFinite(probability) ||
-      probability < 0 ||
-      probability > 1
-    )
-      return null;
-    return { value: item.choice, confidence: item.confidence, probability };
-  };
-  const safety = choice('safety', [
-    'safe',
-    'sexual',
-    'violence',
-    'hate',
-    'gesture',
-    'uncertain',
-  ]);
-  const suitability = choice('suitability', [
-    'portrait',
-    'blurry',
-    'obscured',
-    'non_portrait',
-    'meme_logo',
-    'multiple',
-    'uncertain',
-  ]);
-  if (!safety || !suitability)
-    return unavailableModeration(
-      'moderation_invalid_response',
-      'Moderation response unavailable'
-    );
-  const checks: PublicAvatarModeration['checks'] = [
-    { id: 'safety', status: checkOutcome(safety, 'safe') },
-    { id: 'portrait', status: checkOutcome(suitability, 'portrait') },
-  ];
-  if (checks[0].status === 'failed')
-    return {
-      status: 'rejected',
-      code: 'unsafe_content',
-      message: 'Image does not meet public avatar safety rules',
-      checks,
-    };
-  if (checks[1].status === 'failed')
-    return {
-      status: 'rejected',
-      code: 'unsuitable_portrait',
-      message: 'Image is not a suitable single-person portrait',
-      checks,
-    };
-  if (checks.some((check) => check.status !== 'passed'))
-    return {
-      status: 'review_required',
-      code: 'review_required',
-      message: 'Image needs manual review',
-      checks,
-    };
-  return {
-    status: 'approved',
-    code: 'approved',
-    message: 'Picture approved',
-    checks,
-  };
-}
-
-export async function moderate(
-  jpeg: Uint8Array,
-  env: Env,
-  fetcher: (url: string, init: RequestInit) => Promise<Response> = fetch
-): Promise<PublicAvatarModeration> {
-  if (!env.TYPESAFE_API_KEY)
-    return unavailableModeration(
-      'moderation_unavailable',
-      'Moderation service unavailable'
-    );
-  const form = new FormData();
-  form.append(
-    'request',
-    new Blob(
-      [
-        JSON.stringify({
-          model: 'jev-latest',
-          state: { photo: '<avatar-photo>' },
-          assets: { '<avatar-photo>': { type: 'image', part: 'photo' } },
-          questions: {
-            safety: {
-              type: 'choice',
-              instructions:
-                'Classify the visible safety content in `photo`. Judge only visible content.',
-              criteria: {
-                safe: 'No explicit sexual, graphic violent, hateful or extremist, or clearly inappropriate gesture content',
-                sexual: 'Sexual nudity or explicit sexual content',
-                violence: 'Graphic violence or gore',
-                hate: 'Hateful or extremist symbol or content',
-                gesture: 'Clearly inappropriate gesture',
-                uncertain: 'Cannot reliably determine safety',
-              },
-            },
-            suitability: {
-              type: 'choice',
-              instructions:
-                'Classify `photo` as a public single-person profile portrait. Do not penalize clothing, ethnicity, religion, disability, hairstyle, age, or cultural appearance.',
-              criteria: {
-                portrait:
-                  'One recognizable person with a reasonably visible face, including casual clothing',
-                blurry: 'Portrait too blurry or low resolution',
-                obscured: 'Face obscured or not clearly visible',
-                non_portrait: 'No person or irrelevant scene',
-                meme_logo: 'Screenshot, meme, illustration, or logo',
-                multiple: 'Multiple people',
-                uncertain: 'Cannot reliably determine portrait suitability',
-              },
-            },
-          },
-        }),
-      ],
-      { type: 'application/json' }
-    ),
-    'request'
-  );
-  form.append(
-    'photo',
-    new Blob([jpeg.slice().buffer], { type: 'image/jpeg' }),
-    'avatar.jpg'
-  );
-  try {
-    const response = await fetcher('https://api.typesafe.ai/v1/systemone', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.TYPESAFE_API_KEY}`,
-        'TypeSafe-Danger-Zone-Images': 'true',
-      },
-      body: form,
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!response.ok)
-      return unavailableModeration(
-        'moderation_unavailable',
-        'Moderation service unavailable'
-      );
-    return moderationDecision(await response.json());
-  } catch {
-    return unavailableModeration(
-      'moderation_unavailable',
-      'Moderation service unavailable'
-    );
-  }
 }
 
 async function owner(
@@ -761,7 +551,9 @@ export async function uploadMyAvatar(
   } catch {
     return avatarError('Image could not be decoded', 422, origin, { quota });
   }
-  const decision = await moderate(jpeg, env);
+  const decision = await createAvatarModerator({
+    provider: createTypeSafeProvider({ apiKey: env.TYPESAFE_API_KEY }),
+  }).moderate(jpeg);
   const hash = await sha256Hex(webp);
   const key = imageKey(identity.username, hash);
   if (decision.status !== 'approved') {

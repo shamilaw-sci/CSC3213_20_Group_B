@@ -262,6 +262,24 @@
         "typescript": "^6.0.3",
       },
     },
+    "packages/moderation": {
+      "name": "@scs/moderation",
+      "dependencies": {
+        "@scs/schemas": "workspace:*",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@scs/eslint-config": "workspace:*",
+        "@scs/tsconfig": "workspace:*",
+        "@types/bun": "^1.4.4",
+        "eslint": "^9.39.5",
+        "eslint-plugin-simple-import-sort": "^14.0.0",
+        "jiti": "^2.7.0",
+        "knip": "^6.41.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.64.0",
+      },
+    },
     "packages/performance": {
       "name": "@scs/performance",
       "dependencies": {
@@ -377,6 +395,7 @@
       "name": "@scs/api",
       "dependencies": {
         "@better-auth/passkey": "^1.7.7",
+        "@scs/moderation": "workspace:*",
         "@scs/schemas": "workspace:*",
         "@scs/security": "workspace:*",
         "better-auth": "^1.7.7",
@@ -1121,6 +1140,8 @@
     "@scs/github-app": ["@scs/github-app@workspace:services/github-app"],
 
     "@scs/mailer": ["@scs/mailer@workspace:services/mailer"],
+
+    "@scs/moderation": ["@scs/moderation@workspace:packages/moderation"],
 
     "@scs/people": ["@scs/people@workspace:apps/people"],
 

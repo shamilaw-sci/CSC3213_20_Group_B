@@ -81,6 +81,7 @@ Public People pictures use the separate [avatar API](docs/PUBLIC_AVATARS.md).
 | `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
 | `services/mailer`        | `@scs/mailer`        | Authenticated templated email and SMTP delivery  |
 | `packages/security`      | `@scs/security`      | Shared security.txt validation and generation    |
+| `packages/moderation`    | `@scs/moderation`    | Provider-independent avatar moderation           |
 | `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts               |
 | `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks               |
 | `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                               |
