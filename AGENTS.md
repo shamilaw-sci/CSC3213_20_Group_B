@@ -42,6 +42,9 @@ explicitly includes them.
 ## Implementation Rules
 
 - Preserve behavior unless the task explicitly changes a contract.
+- For nontrivial bugs, record observed behavior and reproduction or equivalent
+  evidence, trace the root cause, then verify the fix with relevant regression
+  checks. Do not present hypotheses as confirmed defects.
 - Validate untrusted data at the boundary with the owning Zod schema.
 - Keep lists bounded and paginated. Avoid N+1 provider or database reads.
 - Make externally retried mutations idempotent and protect updates with entity
@@ -98,6 +101,9 @@ git diff --check
 
 Never describe a missing test script as a passing test. Do not bypass a failing
 gate; diagnose it and document any credential-dependent validation boundary.
+Report passed, failed, skipped, and unavailable checks distinctly, along with
+unverified assumptions and any required human review. Do not claim approval or
+verification that did not occur.
 
 ## Git and Concurrent Work
 
