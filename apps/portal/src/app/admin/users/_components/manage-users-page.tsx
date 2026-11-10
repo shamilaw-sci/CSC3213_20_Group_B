@@ -36,7 +36,7 @@ interface ManageUsersPageProps {
   nextHref?: string;
 }
 
-type FilterStatus = 'all' | 'active' | 'blacklisted' | 'has-access';
+type FilterStatus = 'all' | 'active' | 'blacklisted' | 'admin-access';
 
 export default function ManageUsersPage({
   users,
@@ -82,7 +82,7 @@ export default function ManageUsersPage({
         filter === 'all' ||
         (filter === 'active' && !user.blacklisted) ||
         (filter === 'blacklisted' && user.blacklisted) ||
-        (filter === 'has-access' &&
+        (filter === 'admin-access' &&
           getUserAccessLevel(user) !== ACCESS_LEVEL.NONE);
 
       return matchesSearch && matchesFilter;
@@ -216,7 +216,7 @@ export default function ManageUsersPage({
                   { label: 'All', value: 'all' },
                   { label: 'Active', value: 'active' },
                   { label: 'Blacklisted', value: 'blacklisted' },
-                  { label: 'Has Access', value: 'has-access' },
+                  { label: 'Admin Access', value: 'admin-access' },
                 ] as { label: string; value: FilterStatus }[]
               ).map(({ label, value }) => (
                 <Button
