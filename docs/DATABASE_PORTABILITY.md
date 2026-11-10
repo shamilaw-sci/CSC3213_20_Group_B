@@ -7,8 +7,8 @@ description: Incremental D1 and PostgreSQL migration boundaries.
 
 The API currently runs on Cloudflare D1. Better Auth owns its user, session,
 account, verification, passkey, and rate-limit tables. Most application
-repositories still use D1 directly for permissions, avatar review, and audit.
-Better Auth, proxy settings, and the avatar rate-window repository now have
+repositories still use D1 directly for avatar review and audit.
+Better Auth, permissions, proxy settings, and the avatar rate-window repository now have
 PostgreSQL implementations, but this is not yet a self-hosted API profile. Do
 not deploy it until the remaining application repositories have PostgreSQL
 implementations and a Bun API entry point exists.
@@ -43,6 +43,16 @@ guarded by the previously read window timestamp, and list pages use a
 repeatable-read snapshot for their rows and total. Shared D1/PostgreSQL tests
 cover concurrent attempts, admin edits, reset, username ambiguity, and paging.
 
+Permissions and profile metadata accept an injected `PERMISSION_REPOSITORY`.
+PostgreSQL migration `0005_permissions.sql` preserves role and access-level
+constraints, JSON metadata, case-insensitive email uniqueness, and millisecond
+creation timestamps. The PostgreSQL adapter serializes super-admin mutations
+with a transaction-scoped advisory lock, so concurrent demotions or deletions
+cannot remove the last super-admin. D1 retains its existing service-level
+precheck; it does not provide this cross-request guarantee. Cross-backend
+tests cover metadata and keyset paging; live PostgreSQL tests race a demotion
+against a deletion across two pools.
+
 Drizzle ORM supports both [D1](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
 and [PostgreSQL](https://orm.drizzle.team/docs/connect-overview). It was evaluated
 for the rate-window table. Three statements, including a dialect-specific
@@ -57,8 +67,8 @@ The reviewed SQL in `services/api/migrations/postgres` is separate from the D1
 SQLite migrations. `0001_better_auth.sql` is based on Better Auth 1.7.7's
 generated PostgreSQL plan. `0002_auth_identity_uniqueness.sql` preserves the
 extra account and passkey uniqueness rules from D1 migration 0002.
-`0003_public_avatar_rate.sql` and `0004_proxy_settings.sql` add application-owned
-tables. Apply all four
+`0003_public_avatar_rate.sql` through `0005_permissions.sql` add application-owned
+tables. Apply all five
 once, in order, within one transaction to an empty, dedicated schema. The
 database role needs schema creation or ownership and table/index creation
 privileges. Configure that schema as the connection's `search_path`, then

@@ -67,6 +67,17 @@ function parseStoredPermission(value: unknown): Permission | null {
   return permission;
 }
 
+export function parsePermissionJson(value: unknown): Permission | null {
+  try {
+    const parsed = parseStoredPermission(
+      typeof value === 'string' ? JSON.parse(value) : value
+    );
+    return parsed ? sanitizePermission(parsed) : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Stored in API D1. `role` identifies the person category; `accessLevel` is an
  * independent management grant and must not be inferred from that role.
@@ -193,7 +204,7 @@ export function normalizePermissionPatch(
   return normalized;
 }
 
-function sanitizePermission(permission: Permission): Permission {
+export function sanitizePermission(permission: Permission): Permission {
   const sanitized: Permission = {
     role: getPermissionRole(permission),
     accessLevel: getPermissionAccessLevel(permission),
@@ -218,7 +229,10 @@ function sanitizePermission(permission: Permission): Permission {
   return sanitized;
 }
 
-function permissionUserData(email: string, permission: Permission): UserData {
+export function permissionUserData(
+  email: string,
+  permission: Permission
+): UserData {
   return {
     id: email,
     email,
@@ -235,6 +249,8 @@ export async function hasOtherSuperAdmin(
   email: string,
   env: Env
 ): Promise<boolean> {
+  if (env.PERMISSION_REPOSITORY)
+    return env.PERMISSION_REPOSITORY.hasOtherSuperAdmin(email);
   const result = await env.AUTH_DB.prepare(
     'SELECT 1 AS present FROM permission WHERE accessLevel = ? AND email <> ? LIMIT 1'
   )
@@ -247,6 +263,7 @@ export async function getUserPermission(
   email: string,
   env: Env
 ): Promise<Permission | null> {
+  if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.get(email);
   const sanitizedEmail = email.toLowerCase();
   const row = await env.AUTH_DB.prepare(
     'SELECT permissionJson FROM permission WHERE email = ? LIMIT 1'
@@ -255,12 +272,7 @@ export async function getUserPermission(
     .first<{ permissionJson: string }>();
   if (!row) return null;
 
-  try {
-    const permission = parseStoredPermission(JSON.parse(row.permissionJson));
-    return permission ? sanitizePermission(permission) : null;
-  } catch {
-    return null;
-  }
+  return parsePermissionJson(row.permissionJson);
 }
 
 export async function setUserPermission(
@@ -268,6 +280,8 @@ export async function setUserPermission(
   permission: Permission,
   env: Env
 ): Promise<void> {
+  if (env.PERMISSION_REPOSITORY)
+    return env.PERMISSION_REPOSITORY.set(email, permission);
   const sanitizedEmail = email.toLowerCase();
   const sanitizedPermission = sanitizePermission(permission);
   const user = permissionUserData(sanitizedEmail, sanitizedPermission);
@@ -301,6 +315,7 @@ export async function deleteUserPermission(
   email: string,
   env: Env
 ): Promise<void> {
+  if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.delete(email);
   const sanitizedEmail = email.toLowerCase();
   await env.AUTH_DB.prepare('DELETE FROM permission WHERE email = ?')
     .bind(sanitizedEmail)
@@ -324,6 +339,7 @@ export async function getUserDataPage(
   env: Env,
   input: { cursor?: string; limit: number }
 ): Promise<UserDataPage> {
+  if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.list(input);
   const rows = await env.AUTH_DB.prepare(
     `SELECT email, name, picture, role, accessLevel, blacklisted, createdAt
      FROM permission
@@ -358,4 +374,18 @@ export async function getUserDataPage(
     users,
     nextCursor: hasMore ? (pageRows.at(-1)?.email ?? null) : null,
   };
+}
+
+export interface PermissionRepository {
+  hasOtherSuperAdmin(email: string): Promise<boolean>;
+  get(email: string): Promise<Permission | null>;
+  set(email: string, permission: Permission): Promise<void>;
+  delete(email: string): Promise<void>;
+  list(input: { cursor?: string; limit: number }): Promise<UserDataPage>;
+}
+
+export class LastSuperAdminError extends Error {
+  constructor() {
+    super('Cannot remove the last super-admin account');
+  }
 }

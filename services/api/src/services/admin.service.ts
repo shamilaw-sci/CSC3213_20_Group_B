@@ -1,5 +1,6 @@
 import {
   deleteUserPermission,
+  LastSuperAdminError,
   getUserDataPage,
   getUserPermission,
   hasOtherSuperAdmin,
@@ -262,6 +263,8 @@ export async function updateUserPermissions(
   try {
     await setUserPermission(email, updatedPermission, env);
   } catch (error) {
+    if (error instanceof LastSuperAdminError)
+      return createJsonErrorResponse(error.message, 409, origin);
     console.error('Error updating permission:', error);
     return createTextErrorResponse('Internal Server Error', 500, origin);
   }
@@ -333,6 +336,8 @@ export async function deleteUserPermissions(
   try {
     await deleteUserPermission(email, env);
   } catch (error) {
+    if (error instanceof LastSuperAdminError)
+      return createJsonErrorResponse(error.message, 409, origin);
     console.error('Error deleting permission:', error);
     return createTextErrorResponse('Internal Server Error', 500, origin);
   }
