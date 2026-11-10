@@ -1,6 +1,7 @@
 import {
   AcademicSupportStaffSchema,
   AcademicTeachingStaffSchema,
+  createPullRequestResultSchema,
   HonoursProgrammeStudentStreamMap,
   NonAcademicStaffSchema,
   PostgraduateProgrammeSchema,
@@ -14,21 +15,22 @@ import {
   type AcademicTeachingStaff,
   type AlumniBatch,
   type NonAcademicStaff,
-  type OperationStatusResponse,
+  OperationStatusResponseSchema,
   type PostgraduateProgramme,
   type PostgraduateProgrammeDefinition,
   type PublicProfileKind,
-  type PublicProfilePr,
+  PublicProfilePrSchema,
   type PublicProfileSchemaResponse,
   type SlqfLevel,
   type Student,
   type StudentPlacement,
-  type StudentPlacementPr,
+  StudentPlacementPrSchema,
   type StudentPlacementResponse,
   type StudentStream as SpecialStream,
   type StudentStreamDefinition,
   type StudentTrack,
 } from '@scs/schemas';
+import { z } from 'zod';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import {
@@ -60,6 +62,18 @@ type ProfileByKind = {
 };
 
 type PublicProfile = ProfileByKind[PublicProfileKind];
+
+const StudentPlacementResultSchema = createPullRequestResultSchema(
+  StudentPlacementPrSchema
+);
+const PublicProfileResultSchema = createPullRequestResultSchema(
+  PublicProfilePrSchema
+);
+const StudentPlacementCleanupSchema = z.object({
+  success: z.literal(true),
+  cleanup: z.object({ closed: z.number() }),
+});
+const SuccessResultSchema = z.object({ success: z.literal(true) });
 
 interface ProfileConcurrency {
   expectedUserFileSha?: string | null;
@@ -919,10 +933,13 @@ export async function getAdminStudentPlacementMetadataPr(
     return createJsonErrorResponse('Super admin access required', 403, origin);
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: StudentPlacementPr;
-  }>(env, origin, '/people/student-placement/pr');
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/people/student-placement/pr',
+    undefined,
+    { schema: StudentPlacementResultSchema }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -984,20 +1001,23 @@ export async function upsertAdminStudentPlacementMetadataPr(
     );
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicProfilePr;
-  }>(env, origin, '/people/student-placement/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      updatedBy: user.email,
-      placement,
-      alumni,
-      postgraduateProgrammes,
-      studentStreams,
-    }),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/people/student-placement/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        updatedBy: user.email,
+        placement,
+        alumni,
+        postgraduateProgrammes,
+        studentStreams,
+      }),
+    },
+    { schema: StudentPlacementResultSchema }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -1015,14 +1035,17 @@ export async function discardAdminStudentPlacementMetadataPrs(
     return createJsonErrorResponse('Super admin access required', 403, origin);
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    cleanup: { closed: number };
-  }>(env, origin, '/people/student-placement/pr', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ updatedBy: user.email }),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/people/student-placement/pr',
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updatedBy: user.email }),
+    },
+    { schema: StudentPlacementCleanupSchema }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.cleanup, 200, origin);
@@ -1037,10 +1060,12 @@ export async function getMyPublicProfilePr(
   if (!user.ok) return user.response;
 
   const username = usernameFromEmail(user.email);
-  const response = await callGithubApp<PublicProfilePr>(
+  const response = await callGithubApp(
     env,
     origin,
-    `/people/public-profile/pr?username=${encodeURIComponent(username)}`
+    `/people/public-profile/pr?username=${encodeURIComponent(username)}`,
+    undefined,
+    { schema: PublicProfilePrSchema }
   );
   if (!response.ok) return response.response;
 
@@ -1056,10 +1081,12 @@ export async function getAdminUserPublicProfilePr(
   if (!verified.ok) return verified.response;
 
   const username = usernameFromEmail(verified.target.email);
-  const response = await callGithubApp<PublicProfilePr>(
+  const response = await callGithubApp(
     env,
     origin,
-    `/people/public-profile/pr?username=${encodeURIComponent(username)}`
+    `/people/public-profile/pr?username=${encodeURIComponent(username)}`,
+    undefined,
+    { schema: PublicProfilePrSchema }
   );
   if (!response.ok) return response.response;
 
@@ -1217,14 +1244,17 @@ export async function upsertMyPublicProfilePr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicProfilePr;
-  }>(env, origin, '/people/public-profile/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/people/public-profile/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: PublicProfileResultSchema }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -1375,14 +1405,17 @@ export async function upsertAdminUserPublicProfilePr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicProfilePr;
-  }>(env, origin, '/people/public-profile/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/people/public-profile/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: PublicProfileResultSchema }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -1399,7 +1432,7 @@ export async function getProfileOperation(
   if (!operationId) {
     return createJsonErrorResponse('Operation ID is required', 400, origin);
   }
-  const response = await callGithubApp<OperationStatusResponse>(
+  const response = await callGithubApp(
     env,
     origin,
     `/operations/${encodeURIComponent(operationId)}`,
@@ -1408,7 +1441,8 @@ export async function getProfileOperation(
       headers: {
         'X-Actor-Subject-Id': await actorSubjectId(user.email),
       },
-    }
+    },
+    { schema: OperationStatusResponseSchema }
   );
   if (!response.ok) return response.response;
   return createJsonResponse(response.value, 200, origin);
@@ -1454,7 +1488,7 @@ export async function discardAdminUserPublicProfilePr(
   }
 
   const username = usernameFromEmail(verified.target.email);
-  const response = await callGithubApp<{ success: true }>(
+  const response = await callGithubApp(
     env,
     origin,
     '/people/public-profile/pr',
@@ -1468,7 +1502,8 @@ export async function discardAdminUserPublicProfilePr(
         expectedHeadSha,
         reason: reason?.trim() || 'Superseded by newer public profile data',
       }),
-    }
+    },
+    { schema: SuccessResultSchema }
   );
   if (!response.ok) return response.response;
 

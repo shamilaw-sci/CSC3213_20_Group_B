@@ -1,11 +1,13 @@
 import {
   CourseOfferingSchema,
   CourseSchema,
+  createPullRequestResultSchema,
   ProjectSchema,
   ProjectIndexSchema,
+  ProjectSummarySchema,
   ProjectSlugSchema,
   type Project,
-  type PublicProjectPr,
+  PublicProjectPrSchema,
   type PublicProjectSchemaResponse,
   projectSlugBaseFromTitle,
 } from '@scs/schemas';
@@ -49,21 +51,6 @@ function usernameFromEmail(email: string): string {
 function sNumberFromEmail(email: string): string | null {
   const username = usernameFromEmail(email);
   return /^s\d{2}(sp)?\d{3}$/i.test(username) ? username.toUpperCase() : null;
-}
-
-function parseProjectSummaries(
-  value: unknown
-): Array<Record<string, unknown> & { slug: string }> | null {
-  if (!Array.isArray(value)) return null;
-  const entries = value.filter(
-    (entry): entry is Record<string, unknown> & { slug: string } =>
-      isRecord(entry) &&
-      typeof entry.slug === 'string' &&
-      typeof entry.id === 'string' &&
-      typeof entry.title === 'string' &&
-      typeof entry.shortDescription === 'string'
-  );
-  return entries.length === value.length ? entries : null;
 }
 
 function slugFromProjectPath(req: Request): string | null {
@@ -485,8 +472,8 @@ export async function listPublicProjectsPage(
     }
     const items = user.isSuperAdmin
       ? ProjectSchema.array().safeParse(result.value)
-      : { success: true as const, data: parseProjectSummaries(result.value) };
-    if (!items.success || !items.data) {
+      : ProjectSummarySchema.array().safeParse(result.value);
+    if (!items.success) {
       return createJsonErrorResponse('Project data is invalid', 502, origin);
     }
     const page = paginateByKey({
@@ -538,10 +525,12 @@ export async function getPublicProjectPr(
     return createJsonErrorResponse('Invalid project slug', 400, origin);
   }
 
-  const response = await callGithubApp<PublicProjectPr>(
+  const response = await callGithubApp(
     env,
     origin,
-    `/projects/public-project/pr?slug=${encodeURIComponent(slug)}`
+    `/projects/public-project/pr?slug=${encodeURIComponent(slug)}`,
+    undefined,
+    { schema: PublicProjectPrSchema }
   );
   if (!response.ok) return response.response;
 
@@ -677,10 +666,12 @@ export async function upsertPublicProjectPr(
         );
       }
       if (existingProject.success) {
-        const draft = await callGithubApp<PublicProjectPr>(
+        const draft = await callGithubApp(
           env,
           origin,
-          `/projects/public-project/pr?slug=${encodeURIComponent(slug)}`
+          `/projects/public-project/pr?slug=${encodeURIComponent(slug)}`,
+          undefined,
+          { schema: PublicProjectPrSchema }
         );
         if (!draft.ok) return draft.response;
         const currentDraft = ProjectSchema.safeParse(draft.value.draftProject);
@@ -752,14 +743,17 @@ export async function upsertPublicProjectPr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicProjectPr;
-  }>(env, origin, '/projects/public-project/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/projects/public-project/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicProjectPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -817,14 +811,17 @@ export async function deletePublicProjectPr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicProjectPr;
-  }>(env, origin, '/projects/public-project/pr', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/projects/public-project/pr',
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicProjectPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);

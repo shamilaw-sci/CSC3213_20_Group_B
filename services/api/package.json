@@ -17,9 +17,10 @@
   },
   "dependencies": {
     "@better-auth/passkey": "^1.7.7",
-    "@scs/security": "workspace:*",
     "@scs/schemas": "workspace:*",
-    "better-auth": "^1.7.7"
+    "@scs/security": "workspace:*",
+    "better-auth": "^1.7.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@scs/eslint-config": "workspace:*",

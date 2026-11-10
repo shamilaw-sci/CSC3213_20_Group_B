@@ -5,6 +5,7 @@ import {
   ProjectIndexSchema,
   ProjectSchema,
   projectSlugBaseFromTitle,
+  ProjectSummarySchema,
 } from '#schemas/projects/project.schema';
 
 const baseProject = {
@@ -85,6 +86,20 @@ describe('ProjectSchema', () => {
     ).toBeFalse();
     expect(
       ProjectIndexSchema.safeParse({ id: 'forged-id' }).success
+    ).toBeFalse();
+  });
+  it('validates published project summaries without dropping extra fields', () => {
+    const summary = {
+      id: 'example',
+      slug: 'example',
+      title: 'Example',
+      shortDescription: 'A project summary',
+      status: 'ACTIVE',
+    };
+    expect(ProjectSummarySchema.parse(summary)).toEqual(summary);
+    expect(
+      ProjectSummarySchema.safeParse({ slug: 'example', title: 'Example' })
+        .success
     ).toBeFalse();
   });
   it('accepts a department system with optional course linkage', () => {

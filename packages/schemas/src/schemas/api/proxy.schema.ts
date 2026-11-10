@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import {
+  createPageSchema,
+  PageInfoSchema,
+} from '#schemas/api/pagination.schema';
+
 const INVALID_PROXY_URL_MESSAGE = 'Enter a valid HTTPS proxy URL.';
 const PROXY_USERNAME_PATTERN = /^[a-z0-9_-]{1,64}$/;
 
@@ -65,6 +70,32 @@ export const ProxyUsernameSchema = z
 export const ProxyResolutionResponseSchema = z
   .object({ url: ProxyUrlSchema })
   .strict();
+
+/** Administrative list values include inactive proxies with an empty URL. */
+export const AdminProxySettingsSchema = z.object({
+  username: z.string(),
+  email: z.string(),
+  active: z.boolean(),
+  url: z.string(),
+  availableAttempts: z.number(),
+  updatedBy: z.string().optional(),
+  updatedAt: z.string().optional(),
+  revision: z.number(),
+});
+
+export const ProxySettingsMutationResponseSchema = z.object({
+  success: z.literal(true),
+  proxy: AdminProxySettingsSchema,
+});
+
+export const AdminProxyPageSchema = createPageSchema(
+  AdminProxySettingsSchema
+).safeExtend({
+  page: PageInfoSchema.safeExtend({ total: z.number().int().nonnegative() }),
+});
+
+export type AdminProxySettings = z.infer<typeof AdminProxySettingsSchema>;
+export type AdminProxyPage = z.infer<typeof AdminProxyPageSchema>;
 
 export const ProxyUpdateRequestSchema = z
   .object({

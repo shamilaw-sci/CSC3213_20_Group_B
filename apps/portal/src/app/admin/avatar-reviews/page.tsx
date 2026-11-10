@@ -1,4 +1,4 @@
-import type { AdminAvatarReviewPage } from '@scs/schemas';
+import { AdminAvatarReviewPageSchema } from '@scs/schemas';
 
 import ManageAvatarReviewsPage from '@/app/admin/avatar-reviews/_components/manage-avatar-reviews-page';
 import { adminAvatarReviewsPageApiUrl } from '@/lib/api';
@@ -16,8 +16,9 @@ export default async function Page({
     searchParams: resolvedSearchParams,
     nextCursor: null,
   });
-  const data = await serverApiJson<AdminAvatarReviewPage>(
-    adminAvatarReviewsPageApiUrl(cursor)
+  const data = await serverApiJson(
+    adminAvatarReviewsPageApiUrl(cursor),
+    AdminAvatarReviewPageSchema
   );
   const navigation = getPageNavigation({
     pathname: '/admin/avatar-reviews',

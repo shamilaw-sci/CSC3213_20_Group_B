@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  AdminProxyPageSchema,
   ProxyResolutionResponseSchema,
+  ProxySettingsMutationResponseSchema,
   ProxyUpdateRequestSchema,
   ProxyUrlSchema,
   ProxyUsernameSchema,
@@ -51,6 +53,53 @@ describe('proxy transport contracts', () => {
         active: true,
         url: 'https://proxy.example.com',
         unexpected: true,
+      }).success
+    ).toBe(false);
+  });
+
+  test('allows an inactive admin proxy with an empty URL and requires total', () => {
+    const page = {
+      version: 1 as const,
+      items: [
+        {
+          username: 'student-01',
+          email: 'student@example.com',
+          active: false,
+          url: '',
+          availableAttempts: 2,
+          revision: 1,
+        },
+      ],
+      page: { nextCursor: null, hasMore: false, total: 1 },
+    };
+    expect(AdminProxyPageSchema.parse(page)).toEqual(page);
+    expect(
+      AdminProxyPageSchema.safeParse({
+        ...page,
+        page: { nextCursor: null, hasMore: false },
+      }).success
+    ).toBe(false);
+  });
+
+  test('requires a complete proxy after a successful mutation', () => {
+    const response = {
+      success: true,
+      proxy: {
+        username: 'student-01',
+        email: 'student@example.com',
+        active: false,
+        url: '',
+        availableAttempts: 4,
+        revision: 2,
+      },
+    };
+    expect(
+      ProxySettingsMutationResponseSchema.safeParse(response).success
+    ).toBe(true);
+    expect(
+      ProxySettingsMutationResponseSchema.safeParse({
+        ...response,
+        proxy: { ...response.proxy, availableAttempts: undefined },
       }).success
     ).toBe(false);
   });

@@ -27,7 +27,11 @@ function terminalResponse(status: 'succeeded' | 'failed' | 'conflicted') {
           ? { status: 'succeeded' }
           : {
               status,
-              error: { code: 'operation_failed', message: status },
+              error: {
+                code: 'operation_failed',
+                message: status,
+                correlationId: 'req_01JAA2V8M7X4G9NK2QF6D3P1ZT',
+              },
             },
     }),
     { headers: { 'Content-Type': 'application/json' } }
@@ -85,5 +89,14 @@ describe('mutation operation polling', () => {
 
     await expect(polling).rejects.toMatchObject({ name: 'AbortError' });
     expect(requests).toBe(0);
+  });
+
+  test('rejects a malformed operation status at the polling boundary', async () => {
+    await expect(
+      waitForMutationOperation(accepted, 'pending', {
+        fetcher: async () => Response.json({ status: 'succeeded' }),
+        wait: async () => undefined,
+      })
+    ).rejects.toThrow();
   });
 });

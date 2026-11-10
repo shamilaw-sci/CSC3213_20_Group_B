@@ -4,6 +4,7 @@ import type {
   PublicAvatarModeration,
   PublicAvatarQuota,
 } from '@scs/schemas';
+import { z } from 'zod';
 
 import {
   createCorsHeaders,
@@ -44,6 +45,7 @@ import {
   parsePaginationRequest,
 } from '@/pagination/cursor';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 const ROOT = '/api/people/v2/avatars/';
 const ADMIN_USERS = '/api/admin/users/';
@@ -58,14 +60,15 @@ const MAX_PIXELS = 12_000_000;
 const HOUR = 3_600_000;
 const MAX_ATTEMPTS = 6;
 
-type Pointer = {
-  version: 1;
-  key: string | null;
-  sha256: string | null;
-  contentType: 'image/webp' | null;
-  size: number;
-  updatedAt: string;
-};
+const PointerSchema = z.object({
+  version: z.literal(1),
+  key: z.string().nullable(),
+  sha256: z.string().nullable(),
+  contentType: z.literal('image/webp').nullable(),
+  size: z.number(),
+  updatedAt: z.string(),
+});
+type Pointer = z.infer<typeof PointerSchema>;
 
 type ChoiceAnswer = {
   value: string;
@@ -159,17 +162,9 @@ async function readPointer(
 ): Promise<{ value: Pointer | null; etag: string | null }> {
   const object = await bucket.get(pointerKey(username));
   if (!object || !('body' in object)) return { value: null, etag: null };
-  const value: unknown = await object.json();
-  if (
-    !value ||
-    typeof value !== 'object' ||
-    !('version' in value) ||
-    value.version !== 1 ||
-    !('key' in value) ||
-    (value.key !== null && typeof value.key !== 'string')
-  )
-    throw new Error('Invalid avatar pointer');
-  return { value: value as Pointer, etag: object.etag };
+  const parsed = PointerSchema.safeParse(await object.json());
+  if (!parsed.success) throw new Error('Invalid avatar pointer');
+  return { value: parsed.data, etag: object.etag };
 }
 
 const NOT_CHECKED_CHECKS: PublicAvatarModeration['checks'] = [
@@ -210,22 +205,16 @@ function checkOutcome(
 }
 
 export function moderationDecision(payload: unknown): PublicAvatarModeration {
-  if (
-    !payload ||
-    typeof payload !== 'object' ||
-    !('answers' in payload) ||
-    !payload.answers ||
-    typeof payload.answers !== 'object'
-  )
+  if (!isRecord(payload) || !isRecord(payload.answers))
     return unavailableModeration(
       'moderation_invalid_response',
       'Moderation response unavailable'
     );
-  const answers = payload.answers as Record<string, unknown>;
+  const answers = payload.answers;
   const choice = (name: string, options: string[]): ChoiceAnswer | null => {
     const answer = answers[name];
-    if (!answer || typeof answer !== 'object') return null;
-    const item = answer as Record<string, unknown>;
+    if (!isRecord(answer)) return null;
+    const item = answer;
     if (
       item.type !== 'choice' ||
       typeof item.choice !== 'string' ||
@@ -234,13 +223,10 @@ export function moderationDecision(payload: unknown): PublicAvatarModeration {
       !Number.isFinite(item.confidence) ||
       item.confidence < 0 ||
       item.confidence > 1 ||
-      !item.probabilities ||
-      typeof item.probabilities !== 'object'
+      !isRecord(item.probabilities)
     )
       return null;
-    const probability = (item.probabilities as Record<string, unknown>)[
-      item.choice
-    ];
+    const probability = item.probabilities[item.choice];
     if (
       typeof probability !== 'number' ||
       !Number.isFinite(probability) ||
@@ -908,6 +894,7 @@ async function tombstoneAvatar(
       previousSha256: before.value?.sha256 ?? null,
       conflict: false,
     };
+  if (!before.etag) throw new Error('Invalid avatar pointer etag');
   const tombstone: Pointer = {
     version: 1,
     key: null,
@@ -920,7 +907,7 @@ async function tombstoneAvatar(
     pointerKey(username),
     JSON.stringify(tombstone),
     {
-      onlyIf: { etagMatches: before.etag! },
+      onlyIf: { etagMatches: before.etag },
       httpMetadata: { contentType: 'application/json' },
     }
   );
@@ -1120,9 +1107,8 @@ async function optionalNote(
   if (!text.trim()) return { ok: true, note: null };
   try {
     const body: unknown = JSON.parse(text);
-    if (!body || typeof body !== 'object' || Array.isArray(body))
-      return { ok: false };
-    const note = (body as Record<string, unknown>).note;
+    if (!isRecord(body)) return { ok: false };
+    const note = body.note;
     if (note === undefined || note === null) return { ok: true, note: null };
     if (typeof note !== 'string' || note.trim().length > MAX_NOTE)
       return { ok: false };
@@ -1239,13 +1225,13 @@ export async function resetAdminUserAvatarQuota(
   } catch {
     return createJsonErrorResponse('Invalid JSON body', 400, origin);
   }
-  if (!body || typeof body !== 'object' || Array.isArray(body))
+  if (!isRecord(body))
     return createJsonErrorResponse(
       'Request body must be a JSON object',
       400,
       origin
     );
-  const username = (body as Record<string, unknown>).username;
+  const username = body.username;
   if (typeof username !== 'string')
     return createJsonErrorResponse('Invalid avatar username', 400, origin);
   const normalizedUsername = username.trim().toLowerCase();
@@ -1363,13 +1349,13 @@ export async function decideAdminAvatarReview(
   } catch {
     return createJsonErrorResponse('Invalid JSON body', 400, origin);
   }
-  if (!body || typeof body !== 'object' || Array.isArray(body))
+  if (!isRecord(body))
     return createJsonErrorResponse(
       'Request body must be a JSON object',
       400,
       origin
     );
-  const record = body as Record<string, unknown>;
+  const record = body;
   const action = record.action;
   if (action !== 'approve' && action !== 'reject')
     return createJsonErrorResponse('Invalid review action', 400, origin);

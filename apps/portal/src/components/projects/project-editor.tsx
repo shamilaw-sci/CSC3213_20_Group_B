@@ -2,6 +2,7 @@
 
 import {
   AcademicDepartmentCodeSchema,
+  CurrentUserResponseSchema,
   MutationAcceptedSchema,
   ProjectIndexSchemaUrl,
   type ProjectLinks,
@@ -65,6 +66,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import {
   createEditorState,
@@ -154,11 +156,18 @@ interface CourseOfferingRecord {
   }[];
 }
 
-interface PeopleDirectoryProfile {
-  fullName?: string;
-  email?: string;
-  registrationNo?: string;
-}
+const PeopleDirectoryProfileSchema = z.object({
+  fullName: z.string().optional(),
+  email: z.string().optional(),
+  registrationNo: z.string().optional(),
+});
+type PeopleDirectoryProfile = z.infer<typeof PeopleDirectoryProfileSchema>;
+
+const ProjectSourcePreviewResponseSchema = z.object({
+  indexUrl: z.string(),
+  project: ProjectSchema,
+  changedFields: z.array(z.string()),
+});
 
 function normalizeProjectResponse(value: unknown): PublicProjectResponse {
   if (!isRecord(value)) return { project: null };
@@ -934,11 +943,9 @@ function ProjectForm({
         body: JSON.stringify({ project }),
       });
       if (!response.ok) throw new Error((await readApiError(response)).message);
-      const result = (await response.json()) as {
-        project: ProjectRecord;
-        changedFields: string[];
-        indexUrl: string;
-      };
+      const result = ProjectSourcePreviewResponseSchema.parse(
+        await response.json()
+      );
       setSourcePreview({ ...result, draft: project });
     } catch (error) {
       setSourcePreviewError(
@@ -990,7 +997,7 @@ function ProjectForm({
         return;
       }
 
-      const profile = (await response.json()) as PeopleDirectoryProfile;
+      const profile = PeopleDirectoryProfileSchema.parse(await response.json());
       const next = [...people];
       next[index] = projectPersonFromProfile(username, role, profile);
       setField('people', next);
@@ -1755,8 +1762,9 @@ export default function ProjectEditor({
     if (!projectsRes.ok) {
       throw new Error((await readApiError(projectsRes)).message);
     }
-    const body = (await projectsRes.json()) as { items?: unknown[] };
-    setProjects(Array.isArray(body.items) ? body.items.filter(isRecord) : []);
+    const body: unknown = await projectsRes.json();
+    const items = isRecord(body) ? body.items : undefined;
+    setProjects(Array.isArray(items) ? items.filter(isRecord) : []);
 
     if (nextUser) setUser(nextUser);
   }
@@ -1780,10 +1788,8 @@ export default function ProjectEditor({
     if (!offeringsRes.ok) {
       throw new Error((await readApiError(offeringsRes)).message);
     }
-    const coursesBody = (await coursesRes.json().catch(() => [])) as unknown;
-    const offeringsBody = (await offeringsRes
-      .json()
-      .catch(() => [])) as unknown;
+    const coursesBody: unknown = await coursesRes.json().catch(() => []);
+    const offeringsBody: unknown = await offeringsRes.json().catch(() => []);
     setCourses(
       Array.isArray(coursesBody)
         ? coursesBody
@@ -1814,7 +1820,7 @@ export default function ProjectEditor({
       if (!meRes.ok) {
         throw new Error('Please sign in again to manage projects.');
       }
-      const nextUser = (await meRes.json()) as UserContext;
+      const nextUser = CurrentUserResponseSchema.parse(await meRes.json());
       setUser(nextUser);
       if (admin && !isSuperAdminRole(nextUser)) {
         throw new Error('Only super admins can use the admin projects area.');

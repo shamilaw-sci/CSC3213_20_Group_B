@@ -274,5 +274,9 @@ describe('public avatar validation', () => {
     expect(
       (await getPublicAvatar(new Request(`${base}/${hash}.webp`), env)).status
     ).toBe(404);
+    pointer = { ...pointer, size: Number.NaN };
+    await expect(getPublicAvatar(new Request(base), env)).rejects.toThrow(
+      'Invalid avatar pointer'
+    );
   });
 });

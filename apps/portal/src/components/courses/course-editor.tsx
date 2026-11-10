@@ -5,6 +5,7 @@ import {
   CourseCodeSchema,
   type CourseStaff,
   CourseStaffSchema,
+  CurrentUserResponseSchema,
   MutationAcceptedSchema,
   type PublicAcademicPr,
   PublicAcademicPrSchema,
@@ -371,7 +372,7 @@ export default function CourseEditor({
       headers: apiHeaders(),
     });
     if (!res.ok) throw new Error((await readApiError(res)).message);
-    const nextUser = (await res.json()) as Record<string, unknown>;
+    const nextUser = CurrentUserResponseSchema.parse(await res.json());
     setUser(nextUser);
     return nextUser;
   }
@@ -385,12 +386,11 @@ export default function CourseEditor({
 
     if (!coursesRes.ok)
       throw new Error((await readApiError(coursesRes)).message);
-    const coursesValue = (await coursesRes.json().catch(() => ({}))) as {
-      items?: unknown[];
-    };
+    const coursesValue: unknown = await coursesRes.json().catch(() => ({}));
+    const items = isRecord(coursesValue) ? coursesValue.items : undefined;
     setCourses(
-      Array.isArray(coursesValue.items)
-        ? coursesValue.items
+      Array.isArray(items)
+        ? items
             .map(courseFromRecord)
             .filter((item): item is CourseRecord => Boolean(item))
         : []
@@ -447,9 +447,7 @@ export default function CourseEditor({
       await schemaRes.json()
     );
     const nextPr = PublicAcademicPrSchema.parse(await prRes.json());
-    const publishedValue = courseRes.ok
-      ? ((await courseRes.json()) as unknown)
-      : null;
+    const publishedValue = courseRes.ok ? await courseRes.json() : null;
     const published = courseFromRecord(publishedValue);
     const draft = courseFromRecord(nextPr.draftRecord);
     const nextCourse = draft ??

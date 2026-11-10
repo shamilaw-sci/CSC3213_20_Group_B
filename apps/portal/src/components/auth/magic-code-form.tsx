@@ -34,13 +34,12 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
   );
 
   useEffect(() => {
-    if (expiresAt === null) return;
+    const expiry = expiresAt;
+    if (expiry === null) return;
+    const deadline: number = expiry;
 
     function tick() {
-      const remaining = Math.max(
-        0,
-        Math.floor((expiresAt! - Date.now()) / 1000)
-      );
+      const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
       if (remaining <= 0) {
         setCountdown('');
         setExpiresAt(null);

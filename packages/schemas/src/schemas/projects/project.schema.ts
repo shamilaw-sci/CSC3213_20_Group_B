@@ -206,6 +206,18 @@ export const ProjectIndexJsonSchema = {
     'Optional project fields supplied by .docs/index.json. ID and slug are registry-owned.',
 };
 
+/** Published by-person entries are summaries and may carry additional project fields. */
+export const ProjectSummarySchema = z
+  .object({
+    id: z.string(),
+    slug: z.string(),
+    title: z.string(),
+    shortDescription: z.string(),
+  })
+  .passthrough();
+
+export type ProjectSummary = z.infer<typeof ProjectSummarySchema>;
+
 export const ProjectSchema = ProjectFieldsSchema.refine(
   (project) =>
     project.projectType !== 'COURSE_PROJECT' || !!project.course?.courseId,

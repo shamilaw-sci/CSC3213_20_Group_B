@@ -6,7 +6,9 @@ import {
   StudentLevelSchema,
   type StudentPlacement as PlacementRule,
   type StudentPlacementMetadata as MetadataResponse,
+  StudentPlacementMetadataSchema,
   type StudentPlacementPr,
+  StudentPlacementPrSchema,
   type StudentTrack,
   StudentTrackSchema,
 } from '@scs/schemas';
@@ -65,6 +67,7 @@ import {
   apiHeaders,
   readApiError,
 } from '@/lib/api';
+import { isRecord } from '@/lib/is-record';
 
 const TRACKS: StudentTrack[] = [...StudentTrackSchema.options];
 const LEVELS: StudentLevel[] = [...StudentLevelSchema.options];
@@ -192,7 +195,7 @@ export default function StudentPlacementPage() {
         headers: apiHeaders(),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      setPr((await res.json()) as StudentPlacementPr);
+      setPr(StudentPlacementPrSchema.parse(await res.json()));
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -214,7 +217,7 @@ export default function StudentPlacementPage() {
         headers: apiHeaders(),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const nextData = (await res.json()) as MetadataResponse;
+      const nextData = StudentPlacementMetadataSchema.parse(await res.json());
       setData({
         ...nextData,
         studentStreams: nextData.studentStreams ?? [],
@@ -373,7 +376,7 @@ export default function StudentPlacementPage() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const nextPr = (await res.json()) as StudentPlacementPr;
+      const nextPr = StudentPlacementPrSchema.parse(await res.json());
       setPr(nextPr);
       toast.success(
         nextPr.number ? `PR #${nextPr.number} created` : 'PR created'
@@ -394,10 +397,14 @@ export default function StudentPlacementPage() {
         headers: apiHeaders(),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const cleanup = (await res.json()) as { closed?: number };
+      const cleanup: unknown = await res.json();
+      const closed =
+        isRecord(cleanup) && typeof cleanup.closed === 'number'
+          ? cleanup.closed
+          : undefined;
       toast.success(
-        cleanup.closed
-          ? `Closed ${cleanup.closed} stale placement PR${cleanup.closed === 1 ? '' : 's'}.`
+        closed
+          ? `Closed ${closed} stale placement PR${closed === 1 ? '' : 's'}.`
           : 'No stale placement PRs found.'
       );
       await refreshPrStatus();

@@ -1,6 +1,13 @@
 import 'server-only';
 
+import {
+  CurrentUserResponseSchema,
+  ProjectSchema,
+  type PublicProjectSchemaResponse,
+  PublicProjectSchemaResponseSchema,
+} from '@scs/schemas';
 import { notFound } from 'next/navigation';
+import { z } from 'zod';
 
 import {
   meApiUrl,
@@ -18,21 +25,9 @@ interface ProjectEditorUser {
   accessLevel?: unknown;
 }
 
-interface ProjectEditorSchema {
-  canSubmitOwnedProjects: boolean;
-  canSubmitAnyProject: boolean;
-  identity: {
-    email: string;
-    username: string;
-    sNumber: string | null;
-  };
-  lockedFields: string[];
-  note: string;
-}
-
 export interface ProjectEditorData {
   user: ProjectEditorUser;
-  schema: ProjectEditorSchema;
+  schema: PublicProjectSchemaResponse;
   project: Record<string, unknown> | null;
   courses: unknown[];
   offerings: unknown[];
@@ -42,11 +37,14 @@ export async function loadProjectEditorData(
   slug: string
 ): Promise<ProjectEditorData> {
   const [user, schema, project, courses, offerings] = await Promise.all([
-    serverApiJson<ProjectEditorUser>(meApiUrl()),
-    serverApiJson<ProjectEditorSchema>(publicProjectSchemaApiUrl(slug)),
-    serverApiJsonOrNull<Record<string, unknown>>(publicProjectApiUrl(slug)),
-    serverApiJson<unknown[]>(publicCoursesApiUrl()),
-    serverApiJson<unknown[]>(publicOfferingsApiUrl()),
+    serverApiJson(meApiUrl(), CurrentUserResponseSchema),
+    serverApiJson(
+      publicProjectSchemaApiUrl(slug),
+      PublicProjectSchemaResponseSchema
+    ),
+    serverApiJsonOrNull(publicProjectApiUrl(slug), ProjectSchema),
+    serverApiJson(publicCoursesApiUrl(), z.array(z.unknown())),
+    serverApiJson(publicOfferingsApiUrl(), z.array(z.unknown())),
   ]);
 
   if (!project) notFound();

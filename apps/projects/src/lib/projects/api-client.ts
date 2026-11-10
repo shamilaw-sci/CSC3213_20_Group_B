@@ -17,13 +17,13 @@ export class ProjectDataNotFoundError extends Error {
   }
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
+async function fetchJson(path: string): Promise<unknown> {
   const url = `${publicEnvConfig.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL}/${path}`;
   const now = Date.now();
   const cached = jsonCache.get(url);
 
   if (cached && cached.expiresAt > now) {
-    return cached.promise as Promise<T>;
+    return cached.promise;
   }
 
   const promise = fetch(url)
@@ -36,10 +36,12 @@ async function fetchJson<T>(path: string): Promise<T> {
         throw new Error(`Request failed for ${path}`);
       }
 
-      return response.json() as Promise<T>;
+      return response.json();
     })
     .catch((error: unknown) => {
-      jsonCache.delete(url);
+      if (jsonCache.get(url)?.promise === promise) {
+        jsonCache.delete(url);
+      }
       throw error;
     });
 
@@ -52,7 +54,7 @@ async function fetchJson<T>(path: string): Promise<T> {
 }
 
 async function fetchAllProjectData(_signal?: AbortSignal) {
-  const projects = await fetchJson<unknown>('projects.json');
+  const projects = await fetchJson('projects.json');
 
   return ProjectSchema.array()
     .parse(projects)
@@ -65,7 +67,7 @@ export async function fetchProjects(signal?: AbortSignal) {
 
 export async function fetchProject(projectSlug: string, _signal?: AbortSignal) {
   const path = `projects/${encodeURIComponent(projectSlug)}.json`;
-  const project = await fetchJson<unknown>(path);
+  const project = await fetchJson(path);
 
   return ProjectSchema.parse(project);
 }

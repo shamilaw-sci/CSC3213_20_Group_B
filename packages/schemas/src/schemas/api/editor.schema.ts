@@ -171,6 +171,12 @@ export const PublicAcademicPrSchema = z
   })
   .strict();
 
+export function createPullRequestResultSchema<TPr extends z.ZodType>(
+  pullRequestSchema: TPr
+) {
+  return z.object({ success: z.literal(true), pullRequest: pullRequestSchema });
+}
+
 export type EditorPullRequestStatus = z.infer<
   typeof EditorPullRequestStatusSchema
 >;

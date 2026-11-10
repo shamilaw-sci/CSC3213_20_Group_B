@@ -18,6 +18,7 @@ import {
 } from '@/domains/profiles/profile.projection';
 import type { PublicProfile } from '@/domains/profiles/profile.types';
 import { isGitHubNotFoundError } from '@/utils/github';
+import { JsonRecordSchema } from '@/utils/json-record';
 
 export { removeProfileMembership as removeProfile } from '@/domains/profiles/profile.projection';
 
@@ -464,9 +465,10 @@ async function regenerateSearchIndex(branch: string): Promise<void> {
     if (!file) continue;
 
     const value = parseJson(file.content);
-    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const parsed = JsonRecordSchema.safeParse(value);
+    if (!parsed.success) continue;
 
-    const entry = searchEntryForProfile(value as Record<string, unknown>);
+    const entry = searchEntryForProfile(parsed.data);
     if (entry) entries.push(entry);
   }
 
@@ -646,7 +648,7 @@ export async function getPublicProfile(
   const path = `public/people/v2/users/${normalizedUsername}.json`;
   const entry = await readFile(path);
   if (!entry) return null;
-  const profile = JSON.parse(entry.content) as Record<string, unknown>;
+  const profile = JsonRecordSchema.parse(JSON.parse(entry.content));
   const metadata = publishedProfileMetadataFromProfile({
     username: normalizedUsername,
     profile,
@@ -674,10 +676,8 @@ export async function getPublicProfilePrStatus(
       `public/people/v2/users/${normalizedUsername}.json`;
     const draftEntry = await readFile(targetUserFile, openPull.head.ref);
     const draftValue = draftEntry ? parseJson(draftEntry.content) : null;
-    const draftProfile =
-      draftValue && typeof draftValue === 'object' && !Array.isArray(draftValue)
-        ? (draftValue as Record<string, unknown>)
-        : null;
+    const parsedDraft = JsonRecordSchema.safeParse(draftValue);
+    const draftProfile = parsedDraft.success ? parsedDraft.data : null;
     const profileKind = metadata.profileKind ?? inferProfileKind(draftProfile);
 
     return {

@@ -1,11 +1,11 @@
 import 'server-only';
 
-import { PublicProfilePr, PublicProfileSchemaResponse } from '@scs/schemas';
+import {
+  PublicProfilePrSchema,
+  PublicProfileSchemaResponseSchema,
+} from '@scs/schemas';
 
-import type {
-  ProfileRecord,
-  PublicProfileInitialData,
-} from '@/components/profiles/profile-types';
+import type { PublicProfileInitialData } from '@/components/profiles/profile-types';
 import { normalizePublicProfileResponse } from '@/components/profiles/profile-types';
 import {
   adminPublicProfileApiUrl,
@@ -31,9 +31,9 @@ export async function loadPublicProfileEditorData(
     : publicProfilePrApiUrl();
 
   const [schema, profile, pr] = await Promise.all([
-    serverApiJson<PublicProfileSchemaResponse>(schemaUrl),
-    serverApiJsonOrNull<ProfileRecord>(profileUrl),
-    serverApiJson<PublicProfilePr>(prUrl),
+    serverApiJson(schemaUrl, PublicProfileSchemaResponseSchema),
+    serverApiJsonOrNull(profileUrl),
+    serverApiJson(prUrl, PublicProfilePrSchema),
   ]);
 
   return {

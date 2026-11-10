@@ -1,8 +1,9 @@
+import { AdminProxyPageSchema } from '@scs/schemas';
+
 import ManageProxiesPage from '@/app/admin/proxies/_components/manage-proxies-page';
 import { adminProxiesPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';
-import type { AdminProxyPageResponse } from '@/types/proxy';
 
 export default async function Page({
   searchParams,
@@ -15,8 +16,9 @@ export default async function Page({
     searchParams: resolvedSearchParams,
     nextCursor: null,
   });
-  const data = await serverApiJson<AdminProxyPageResponse>(
-    adminProxiesPageApiUrl(cursor)
+  const data = await serverApiJson(
+    adminProxiesPageApiUrl(cursor),
+    AdminProxyPageSchema
   );
   const navigation = getPageNavigation({
     pathname: '/admin/proxies',

@@ -1,4 +1,8 @@
-import type { Course, Page as PageResponse } from '@scs/schemas';
+import {
+  CourseSchema,
+  createPageSchema,
+  CurrentUserResponseSchema,
+} from '@scs/schemas';
 
 import CourseEditor from '@/components/courses/course-editor';
 import { meApiUrl, publicCoursesPageApiUrl } from '@/lib/api';
@@ -17,8 +21,11 @@ export default async function Page({
     nextCursor: null,
   });
   const [user, data] = await Promise.all([
-    serverApiJson<Record<string, unknown>>(meApiUrl()),
-    serverApiJson<PageResponse<Course>>(publicCoursesPageApiUrl(cursor)),
+    serverApiJson(meApiUrl(), CurrentUserResponseSchema),
+    serverApiJson(
+      publicCoursesPageApiUrl(cursor),
+      createPageSchema(CourseSchema)
+    ),
   ]);
   const navigation = getPageNavigation({
     pathname: '/academic/courses',

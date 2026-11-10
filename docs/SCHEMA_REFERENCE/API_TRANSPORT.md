@@ -38,6 +38,10 @@ sequenceDiagram
 | `PublicCourseSchemaResponseSchema`  | Course editor permission and identity response.                        |
 | `PublicAcademicPrSchema`            | Course or offering pull-request state, revision, paths, and draft.     |
 
+`createPullRequestResultSchema` validates the GitHub App's success and
+pull-request envelope while preserving the specific PR schema supplied by the
+caller.
+
 ## Student placement administration
 
 | Schema                           | Responsibility                                                       |
@@ -48,11 +52,15 @@ sequenceDiagram
 
 ## Shared permissions
 
-| Schema                     | Responsibility                                           |
-| -------------------------- | -------------------------------------------------------- |
-| `AppRoleSchema`            | Person category used by portal authorization.            |
-| `AccessLevelSchema`        | Independent management grant, separate from person role. |
-| `ProfilePictureModeSchema` | Supported profile picture sources.                       |
+| Schema                          | Responsibility                                                        |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `AppRoleSchema`                 | Person category used by portal authorization.                         |
+| `AccessLevelSchema`             | Independent management grant, separate from person role.              |
+| `ProfilePictureModeSchema`      | Supported profile picture sources.                                    |
+| `CurrentUserResponseSchema`     | Authenticated `/api/me` response, including nullable provider fields. |
+| `AdminUserListItemSchema`       | One administrative user list entry.                                   |
+| `AdminUserPageSchema`           | Bounded administrative user list response.                            |
+| `AdminUserDetailResponseSchema` | User permission detail with provider connection flags.                |
 
 ## Errors
 
@@ -116,17 +124,20 @@ stateDiagram-v2
 
 ## Pagination and proxy configuration
 
-| Schema                          | Responsibility                                                          |
-| ------------------------------- | ----------------------------------------------------------------------- |
-| `OpaqueCursorSchema`            | Bounded opaque pagination cursor.                                       |
-| `PageLimitSchema`               | Coerced list limit from 1 through 100.                                  |
-| `PaginationRequestSchema`       | Optional cursor and defaulted page limit.                               |
-| `PageInfoSchema`                | Next cursor, `hasMore`, and optional total with consistency validation. |
-| `createPageSchema`              | Factory for versioned item arrays and page metadata.                    |
-| `ProxyUrlSchema`                | Public-host HTTP(S) URL without embedded credentials.                   |
-| `ProxyUsernameSchema`           | Normalized username accepted by personal-site routes.                   |
-| `ProxyResolutionResponseSchema` | Minimal validated internal resolver response.                           |
-| `ProxyUpdateRequestSchema`      | Strict proxy activation and target configuration request.               |
+| Schema                                | Responsibility                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `OpaqueCursorSchema`                  | Bounded opaque pagination cursor.                                       |
+| `PageLimitSchema`                     | Coerced list limit from 1 through 100.                                  |
+| `PaginationRequestSchema`             | Optional cursor and defaulted page limit.                               |
+| `PageInfoSchema`                      | Next cursor, `hasMore`, and optional total with consistency validation. |
+| `createPageSchema`                    | Factory for versioned item arrays and page metadata.                    |
+| `ProxyUrlSchema`                      | Public-host HTTP(S) URL without embedded credentials.                   |
+| `ProxyUsernameSchema`                 | Normalized username accepted by personal-site routes.                   |
+| `ProxyResolutionResponseSchema`       | Minimal validated internal resolver response.                           |
+| `ProxyUpdateRequestSchema`            | Strict proxy activation and target configuration request.               |
+| `AdminProxySettingsSchema`            | Administrative proxy row, including inactive empty URLs.                |
+| `AdminProxyPageSchema`                | Bounded administrative proxy page with required total.                  |
+| `ProxySettingsMutationResponseSchema` | Updated proxy settings returned by successful mutations.                |
 
 Provider SDK objects, Worker bindings, and Durable Object storage records are
 service-private and are not part of this shared transport surface.

@@ -5,6 +5,7 @@ import {
   type CourseOffering,
   CourseOfferingSchema,
   CourseSchema,
+  CurrentUserResponseSchema,
   type PublicAcademicPr,
   PublicAcademicPrSchema,
   type PublicCourseSchemaResponse,
@@ -33,22 +34,24 @@ export async function loadCourseEditorData(
   courseId: string
 ): Promise<CourseEditorData> {
   const [user, schema, course, pullRequest, offerings] = await Promise.all([
-    serverApiJson<Record<string, unknown>>(meApiUrl()),
-    serverApiJson<unknown>(publicCourseSchemaApiUrl(courseId)),
-    serverApiJsonOrNull<unknown>(publicCourseApiUrl(courseId)),
-    serverApiJsonOrNull<unknown>(publicCoursePrApiUrl(courseId)),
-    serverApiJson<unknown>(publicOfferingsApiUrl()),
+    serverApiJson(meApiUrl(), CurrentUserResponseSchema),
+    serverApiJson(
+      publicCourseSchemaApiUrl(courseId),
+      PublicCourseSchemaResponseSchema
+    ),
+    serverApiJsonOrNull(publicCourseApiUrl(courseId), CourseSchema),
+    serverApiJsonOrNull(publicCoursePrApiUrl(courseId), PublicAcademicPrSchema),
+    serverApiJson(publicOfferingsApiUrl(), CourseOfferingSchema.array()),
   ]);
 
   if (!course) notFound();
 
   return {
     user,
-    schema: PublicCourseSchemaResponseSchema.parse(schema),
-    course: CourseSchema.parse(course),
-    pullRequest:
-      pullRequest === null ? null : PublicAcademicPrSchema.parse(pullRequest),
-    offerings: CourseOfferingSchema.array().parse(offerings),
+    schema,
+    course,
+    pullRequest,
+    offerings,
   };
 }
 
@@ -56,14 +59,17 @@ export async function loadNewCourseEditorData(): Promise<
   Pick<CourseEditorData, 'user' | 'schema' | 'offerings'>
 > {
   const [user, schema, offerings] = await Promise.all([
-    serverApiJson<Record<string, unknown>>(meApiUrl()),
-    serverApiJson<unknown>(publicCourseSchemaApiUrl('new-course')),
-    serverApiJson<unknown>(publicOfferingsApiUrl()),
+    serverApiJson(meApiUrl(), CurrentUserResponseSchema),
+    serverApiJson(
+      publicCourseSchemaApiUrl('new-course'),
+      PublicCourseSchemaResponseSchema
+    ),
+    serverApiJson(publicOfferingsApiUrl(), CourseOfferingSchema.array()),
   ]);
 
   return {
     user,
-    schema: PublicCourseSchemaResponseSchema.parse(schema),
-    offerings: CourseOfferingSchema.array().parse(offerings),
+    schema,
+    offerings,
   };
 }

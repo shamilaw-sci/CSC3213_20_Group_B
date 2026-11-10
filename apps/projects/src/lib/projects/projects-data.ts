@@ -3,38 +3,23 @@ import { type Project, ProjectSchema } from '@scs/schemas';
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
 
-type Schema<T> = {
-  parse(input: unknown): T;
-};
-
-type CacheEntry<T> = {
+type CacheEntry = {
   expiresAt: number;
-  promise: Promise<T>;
+  promise: Promise<Project[]>;
 };
 
-const projectDataCache = new Map<string, CacheEntry<unknown>>();
+const projectDataCache = new Map<string, CacheEntry>();
+const ProjectListSchema = ProjectSchema.array();
 
-const ProjectListSchema = {
-  parse(input: unknown): Project[] {
-    return ProjectSchema.array().parse(input);
-  },
-};
-
-async function fetchProjectData<T>(
-  path: string,
-  schema: Schema<T>,
-  emptyValue: T
-): Promise<T> {
+async function fetchProjectData(path: string): Promise<Project[]> {
   const now = Date.now();
   const cached = projectDataCache.get(path);
 
   if (cached && cached.expiresAt > now) {
-    return cached.promise as Promise<T>;
+    return cached.promise;
   }
 
-  const promise = fetchProjectDataUncached(path, schema, emptyValue).catch(() =>
-    schema.parse(emptyValue)
-  );
+  const promise = fetchProjectDataUncached(path).catch((): Project[] => []);
 
   projectDataCache.set(path, {
     expiresAt: now + dataConfig.cacheTtlMs,
@@ -44,13 +29,9 @@ async function fetchProjectData<T>(
   return promise;
 }
 
-async function fetchProjectDataUncached<T>(
-  path: string,
-  schema: Schema<T>,
-  emptyValue: T
-): Promise<T> {
+async function fetchProjectDataUncached(path: string): Promise<Project[]> {
   if (publicEnvConfig.NEXT_PUBLIC_PROJECTS_DATA_BASE_URL === 'local') {
-    return schema.parse(emptyValue);
+    return [];
   }
 
   const response = await fetch(
@@ -61,7 +42,7 @@ async function fetchProjectDataUncached<T>(
   );
 
   if (response.status === 404) {
-    return schema.parse(emptyValue);
+    return [];
   }
 
   if (!response.ok) {
@@ -70,9 +51,9 @@ async function fetchProjectDataUncached<T>(
     );
   }
 
-  return schema.parse(await response.json());
+  return ProjectListSchema.parse(await response.json());
 }
 
 export function getAllProjectData(): Promise<Project[]> {
-  return fetchProjectData('projects.json', ProjectListSchema, []);
+  return fetchProjectData('projects.json');
 }

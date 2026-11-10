@@ -1,11 +1,21 @@
 'use client';
 
+import { AdminProxySettingsSchema } from '@scs/schemas';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { z } from 'zod';
 
 import ProxySettingsPage from '@/app/user/proxy/_components/proxy-settings-form';
 import { SettingsPageLoading } from '@/components/feedback/page-loading';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
+
+const UserProxyResponseSchema = z.object({
+  proxy: AdminProxySettingsSchema.pick({
+    active: true,
+    url: true,
+    availableAttempts: true,
+  }).partial({ availableAttempts: true }),
+});
 
 export default function ProxySettings() {
   const router = useRouter();
@@ -32,13 +42,7 @@ export default function ProxySettings() {
         const error = await readApiError(response);
         throw new Error(error.message ?? 'Failed to fetch redirect settings');
       }
-      const data = (await response.json()) as {
-        proxy: {
-          active: boolean;
-          url: string;
-          availableAttempts: number;
-        };
-      };
+      const data = UserProxyResponseSchema.parse(await response.json());
       const proxyData = data.proxy;
 
       if (mounted) {

@@ -1,11 +1,15 @@
+import type { z } from 'zod';
+
 import { createJsonErrorResponse, createJsonResponse } from '@/http/responses';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const INTERNAL_ORIGIN = 'https://github-app.internal';
 
 interface GithubAppClientOptions {
   timeoutMs?: number;
+  emptyBody?: 'null';
 }
 
 type GithubAppResult<T> =
@@ -25,23 +29,11 @@ function boundedString(value: unknown, maxLength: number): string | undefined {
 }
 
 function errorDetails(value: unknown): GithubAppErrorDetails {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  if (!isRecord(value)) return {};
 
-  const body = value as {
-    code?: unknown;
-    error?: unknown;
-    field?: unknown;
-    message?: unknown;
-    reason?: unknown;
-    version?: unknown;
-  };
-  if (
-    body.version === 1 &&
-    body.error &&
-    typeof body.error === 'object' &&
-    !Array.isArray(body.error)
-  ) {
-    const error = body.error as { code?: unknown; message?: unknown };
+  const body = value;
+  if (body.version === 1 && isRecord(body.error)) {
+    const error = body.error;
     return {
       code: typeof error.code === 'string' ? error.code : undefined,
       message: typeof error.message === 'string' ? error.message : undefined,
@@ -56,13 +48,27 @@ function errorDetails(value: unknown): GithubAppErrorDetails {
   };
 }
 
-export async function callGithubApp<T>(
+export async function callGithubApp<TSchema extends z.ZodType>(
+  env: Env,
+  origin: string,
+  path: string,
+  init: RequestInit | undefined,
+  options: GithubAppClientOptions & { schema: TSchema }
+): Promise<GithubAppResult<z.output<TSchema>>>;
+export async function callGithubApp(
   env: Env,
   origin: string,
   path: string,
   init?: RequestInit,
-  options: GithubAppClientOptions = {}
-): Promise<GithubAppResult<T>> {
+  options?: GithubAppClientOptions
+): Promise<GithubAppResult<unknown>>;
+export async function callGithubApp(
+  env: Env,
+  origin: string,
+  path: string,
+  init?: RequestInit,
+  options: GithubAppClientOptions & { schema?: z.ZodType } = {}
+): Promise<GithubAppResult<unknown>> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -125,7 +131,23 @@ export async function callGithubApp<T>(
     }
 
     try {
-      return { ok: true, value: (await response.json()) as T };
+      const value: unknown =
+        response.status === 204 && options.emptyBody === 'null'
+          ? null
+          : await response.json();
+      if (!options.schema) return { ok: true, value };
+      const parsed = options.schema.safeParse(value);
+      if (parsed.success) return { ok: true, value: parsed.data };
+      const issue = parsed.error.issues[0];
+      return {
+        ok: false,
+        response: createJsonErrorResponse(
+          `GitHub App response failed validation at ${issue?.path.join('.') || 'response'}`,
+          502,
+          origin,
+          'github_app_invalid_response'
+        ),
+      };
     } catch {
       return {
         ok: false,

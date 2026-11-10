@@ -7,8 +7,8 @@ export default async function Page() {
   return (
     <ProfileEditPage
       email={user.email}
-      name={user.name}
-      picture={user.picture}
+      name={user.name ?? ''}
+      picture={user.picture ?? ''}
       pictureMode={user.pictureMode}
       gravatarMail={user.gravatarMail}
       googleOAuth={user.googleOAuth}

@@ -1,8 +1,9 @@
-import type { MutationAccepted } from '@scs/schemas';
+import { MutationAcceptedSchema } from '@scs/schemas';
 
 import { callGithubApp } from '@/clients/github-app.client';
 import { createJsonResponse } from '@/http/responses';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 export interface MutationControlInput {
   idempotencyKey?: string;
@@ -20,8 +21,8 @@ export async function actorSubjectId(email: string): Promise<string> {
 }
 
 export function mutationControl(value: unknown): MutationControlInput {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  const candidate = value as Record<string, unknown>;
+  if (!isRecord(value)) return {};
+  const candidate = value;
   return {
     ...(typeof candidate.idempotencyKey === 'string'
       ? { idempotencyKey: candidate.idempotencyKey }
@@ -40,7 +41,7 @@ export async function submitMutationOperation(input: {
   envelope: Record<string, unknown>;
   control?: MutationControlInput;
 }): Promise<Response> {
-  const response = await callGithubApp<MutationAccepted>(
+  const response = await callGithubApp(
     input.env,
     input.origin,
     input.path,
@@ -53,7 +54,8 @@ export async function submitMutationOperation(input: {
         idempotencyKey: input.control?.idempotencyKey ?? crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
       }),
-    }
+    },
+    { schema: MutationAcceptedSchema }
   );
   if (!response.ok) return response.response;
   return createJsonResponse(response.value, 202, input.origin);

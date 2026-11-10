@@ -1,5 +1,3 @@
-import type { Page, PageInfo } from '@scs/schemas';
-
 export interface AdminProxyEntry {
   username: string;
   email: string;
@@ -10,7 +8,3 @@ export interface AdminProxyEntry {
   updatedAt?: string;
   revision: number;
 }
-
-export type AdminProxyPageResponse = Page<AdminProxyEntry> & {
-  page: PageInfo & { total: number };
-};

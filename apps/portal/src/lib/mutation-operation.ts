@@ -1,4 +1,8 @@
-import type { MutationAccepted, OperationStatusResponse } from '@scs/schemas';
+import {
+  type MutationAccepted,
+  type OperationStatusResponse,
+  OperationStatusResponseSchema,
+} from '@scs/schemas';
 
 import { apiHeaders, apiUrl, readApiError } from '@/lib/api';
 
@@ -56,9 +60,11 @@ export async function waitForMutationOperation(
       signal: options.signal,
     });
     if (!response.ok) throw new Error((await readApiError(response)).message);
-    const operation = (await response.json()) as OperationStatusResponse;
+    const operation = OperationStatusResponseSchema.parse(
+      await response.json()
+    );
     if (operation.status !== 'queued' && operation.status !== 'running') {
-      return operation as TerminalOperationStatus;
+      return operation;
     }
   }
   throw new Error(pendingMessage);

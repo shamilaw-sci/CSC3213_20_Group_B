@@ -6,6 +6,7 @@ import {
   type NonAcademicStaff,
   NonAcademicStaffSchema,
   type PeopleSearchEntry,
+  ProjectSummarySchema,
   type Staff,
   StaffSchema,
   type Student,
@@ -13,6 +14,7 @@ import {
   type StudentStatus,
   type StudentStreamDefinition,
 } from '@scs/schemas';
+import { z } from 'zod';
 
 import { dataConfig } from '@/config/data.config';
 import publicEnvConfig from '@/config/public.env.config';
@@ -90,27 +92,20 @@ const PersonProfileSchema = {
   },
 };
 
+const PersonProjectSchema = ProjectSummarySchema.safeExtend({
+  status: z.string(),
+  role: z.string(),
+});
+
 const PersonProjectsSchema = {
   parse(input: unknown): PersonProject[] {
     if (!Array.isArray(input)) return [];
 
     return input
       .map((entry) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-          return null;
-        }
-
-        const record = entry as Partial<PersonProject>;
-        if (
-          typeof record.id !== 'string' ||
-          typeof record.slug !== 'string' ||
-          typeof record.title !== 'string' ||
-          typeof record.shortDescription !== 'string' ||
-          typeof record.status !== 'string' ||
-          typeof record.role !== 'string'
-        ) {
-          return null;
-        }
+        const parsed = PersonProjectSchema.safeParse(entry);
+        if (!parsed.success) return null;
+        const record = parsed.data;
 
         return {
           id: record.id,
@@ -251,12 +246,15 @@ async function fetchPeopleData<T>(
   const cached = peopleDataCache.get(path);
 
   if (cached && cached.expiresAt > now) {
+    // Every path has one schema at all get/prefetch call sites; the cached promise was parsed before storage.
     return cached.promise as Promise<T>;
   }
 
   const promise = fetchPeopleDataUncached(path, schema, notFoundValue).catch(
     (error) => {
-      peopleDataCache.delete(path);
+      if (peopleDataCache.get(path)?.promise === promise) {
+        peopleDataCache.delete(path);
+      }
       throw error;
     }
   );

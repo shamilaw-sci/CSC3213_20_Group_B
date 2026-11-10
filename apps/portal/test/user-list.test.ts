@@ -13,7 +13,7 @@ const componentSource = await Bun.file(
 describe('admin user list loading', () => {
   test('requests one bounded page from the server component', () => {
     expect(pageSource).toContain('adminUsersPageApiUrl(cursor)');
-    expect(pageSource).toContain('serverApiJson<AdminUserPageResponse>');
+    expect(pageSource).toContain('AdminUserPageSchema');
     expect(pageSource).toContain('searchParams: Promise<PageSearchParams>');
   });
 

@@ -1,6 +1,9 @@
 'use client';
 
-import { ProxyUrlSchema } from '@scs/schemas';
+import {
+  ProxySettingsMutationResponseSchema,
+  ProxyUrlSchema,
+} from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
 import {
@@ -153,7 +156,9 @@ export default function ManageProxiesPage({
         await toastApiError(res, 'Failed to update redirect settings');
         return;
       }
-      const result = (await res.json()) as { proxy: AdminProxyEntry };
+      const result = ProxySettingsMutationResponseSchema.parse(
+        await res.json()
+      );
       setProxies((prev) =>
         prev.map((proxy) =>
           proxy.email === editing.email ? result.proxy : proxy
@@ -181,7 +186,9 @@ export default function ManageProxiesPage({
         await toastApiError(res, 'Failed to reset attempts');
         return;
       }
-      const result = (await res.json()) as { proxy: AdminProxyEntry };
+      const result = ProxySettingsMutationResponseSchema.parse(
+        await res.json()
+      );
       setProxies((prev) =>
         prev.map((proxy) => (proxy.email === email ? result.proxy : proxy))
       );

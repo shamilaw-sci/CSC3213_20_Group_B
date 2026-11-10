@@ -6,6 +6,7 @@ import {
   upsertAcademicRecord,
 } from '@/domains/academics/academic.projection';
 import { isGitHubMissingRefError, isGitHubNotFoundError } from '@/utils/github';
+import { JsonRecordSchema } from '@/utils/json-record';
 
 type AcademicRegistryKind = 'course' | 'offering';
 
@@ -406,7 +407,7 @@ export async function getPublicAcademicRecord(
   const recordPath = recordPathForKind(kind, normalizedId);
   const entry = await readFile(recordPath);
   if (!entry) return null;
-  const record = parseJson(entry.content) as Record<string, unknown>;
+  const record = JsonRecordSchema.parse(parseJson(entry.content));
 
   return {
     record,
@@ -428,10 +429,8 @@ export async function getPublicAcademicPrStatus(
       metadata.targetRecordFile ?? recordPathForKind(kind, normalizedId);
     const draftEntry = await readFile(targetRecordFile, openPull.head.ref);
     const draftValue = draftEntry ? parseJson(draftEntry.content) : null;
-    const draftRecord =
-      draftValue && typeof draftValue === 'object' && !Array.isArray(draftValue)
-        ? (draftValue as Record<string, unknown>)
-        : null;
+    const parsedDraft = JsonRecordSchema.safeParse(draftValue);
+    const draftRecord = parsedDraft.success ? parsedDraft.data : null;
 
     return {
       status: 'open',

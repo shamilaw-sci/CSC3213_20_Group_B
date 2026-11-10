@@ -1,4 +1,5 @@
 import publicEnvConfig from '@/config/public.env.config';
+import { isRecord } from '@/lib/is-record';
 
 export function apiUrl(path: string) {
   return new URL(path, publicEnvConfig.NEXT_PUBLIC_BASE_API_URL);
@@ -37,11 +38,8 @@ export async function readApiError(response: Response): Promise<ApiErrorBody> {
   ).toLowerCase();
 
   if (contentType.includes('application/json')) {
-    const body = (await response.json().catch(() => null)) as Record<
-      string,
-      unknown
-    > | null;
-    if (!body || Array.isArray(body)) return fallbackApiError(response);
+    const body: unknown = await response.json().catch(() => null);
+    if (!isRecord(body)) return fallbackApiError(response);
 
     const error = boundedString(body.error, MAX_ERROR_MESSAGE_LENGTH);
     const message =

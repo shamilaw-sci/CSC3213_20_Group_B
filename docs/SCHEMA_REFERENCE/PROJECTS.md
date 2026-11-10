@@ -18,21 +18,22 @@ flowchart TD
   Project --> Source
 ```
 
-| Schema                        | Responsibility                                                                      |
-| ----------------------------- | ----------------------------------------------------------------------------------- |
-| `ProjectSlugSchema`           | Stable kebab-case project identifier reused by project and automation requests.     |
-| `ProjectTypeSchema`           | Showcase classification such as course, research, open-source, or collaboration.    |
-| `ProjectStatusSchema`         | Planned, active, completed, or archived lifecycle state.                            |
-| `ProjectPersonRoleSchema`     | A person's project-specific role.                                                   |
-| `ProjectPersonSchema`         | Contributor identity with one explicit project role.                                |
-| `ProjectLinksSchema`          | Optional repository, site, documentation, demo, data, publication, and video links. |
-| `ProjectSourceSchema`         | Manual, GitHub repository, or template-index provenance.                            |
-| `ProjectMediaSchema`          | Default icon and optional cover image.                                              |
-| `ProjectDatesSchema`          | Start, completion, and last-update dates with ordering validation.                  |
-| `ProjectCourseSchema`         | Denormalized course context displayed with a project.                               |
-| `ProjectCourseOfferingSchema` | Reference to a canonical course offering.                                           |
-| `ProjectSchema`               | Complete showcase record and cross-field rules.                                     |
-| `ProjectIndexJsonSchema`      | JSON Schema published for repository index editor validation.                       |
+| Schema                        | Responsibility                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| `ProjectSlugSchema`           | Stable kebab-case project identifier reused by project and automation requests.       |
+| `ProjectTypeSchema`           | Showcase classification such as course, research, open-source, or collaboration.      |
+| `ProjectStatusSchema`         | Planned, active, completed, or archived lifecycle state.                              |
+| `ProjectPersonRoleSchema`     | A person's project-specific role.                                                     |
+| `ProjectPersonSchema`         | Contributor identity with one explicit project role.                                  |
+| `ProjectLinksSchema`          | Optional repository, site, documentation, demo, data, publication, and video links.   |
+| `ProjectSourceSchema`         | Manual, GitHub repository, or template-index provenance.                              |
+| `ProjectMediaSchema`          | Default icon and optional cover image.                                                |
+| `ProjectDatesSchema`          | Start, completion, and last-update dates with ordering validation.                    |
+| `ProjectCourseSchema`         | Denormalized course context displayed with a project.                                 |
+| `ProjectCourseOfferingSchema` | Reference to a canonical course offering.                                             |
+| `ProjectSchema`               | Complete showcase record and cross-field rules.                                       |
+| `ProjectSummarySchema`        | Published project summary shared by API, Portal, and People, preserving extra fields. |
+| `ProjectIndexJsonSchema`      | JSON Schema published for repository index editor validation.                         |
 
 A course project must reference a stable catalog course. It may also reference
 one offering when it belongs to a particular academic year and semester. The

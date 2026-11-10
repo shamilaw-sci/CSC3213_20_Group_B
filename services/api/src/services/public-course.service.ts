@@ -3,7 +3,8 @@ import {
   CourseOfferingIdSchema,
   CourseOfferingSchema,
   CourseSchema,
-  type PublicAcademicPr,
+  createPullRequestResultSchema,
+  PublicAcademicPrSchema,
   type PublicCourseSchemaResponse,
 } from '@scs/schemas';
 
@@ -317,10 +318,12 @@ export async function getPublicCoursePr(
     return createJsonErrorResponse('Invalid course id', 400, origin);
   }
 
-  const response = await callGithubApp<PublicAcademicPr>(
+  const response = await callGithubApp(
     env,
     origin,
-    `/academic/public-course/pr?id=${encodeURIComponent(id)}`
+    `/academic/public-course/pr?id=${encodeURIComponent(id)}`,
+    undefined,
+    { schema: PublicAcademicPrSchema }
   );
   if (!response.ok) return response.response;
 
@@ -340,10 +343,12 @@ export async function getPublicOfferingPr(
     return createJsonErrorResponse('Invalid offering id', 400, origin);
   }
 
-  const response = await callGithubApp<PublicAcademicPr>(
+  const response = await callGithubApp(
     env,
     origin,
-    `/academic/public-course-offering/pr?id=${encodeURIComponent(id)}`
+    `/academic/public-course-offering/pr?id=${encodeURIComponent(id)}`,
+    undefined,
+    { schema: PublicAcademicPrSchema }
   );
   if (!response.ok) return response.response;
 
@@ -427,14 +432,17 @@ export async function upsertPublicCoursePr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicAcademicPr;
-  }>(env, origin, '/academic/public-course/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/academic/public-course/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicAcademicPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -521,14 +529,17 @@ export async function upsertPublicOfferingPr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicAcademicPr;
-  }>(env, origin, '/academic/public-course-offering/pr', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/academic/public-course-offering/pr',
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicAcademicPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -555,7 +566,8 @@ export async function deletePublicCoursePr(
     return createJsonErrorResponse('Invalid course id', 400, origin);
   }
 
-  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const parsedBody: unknown = await req.json().catch(() => ({}));
+  const body = isRecord(parsedBody) ? parsedBody : {};
   const paths = targetPathsForCourse(id);
   const control = mutationControl(body.control);
   const mutationRequest = {
@@ -577,14 +589,17 @@ export async function deletePublicCoursePr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicAcademicPr;
-  }>(env, origin, '/academic/public-course/pr', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/academic/public-course/pr',
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicAcademicPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);
@@ -611,7 +626,8 @@ export async function deletePublicOfferingPr(
     return createJsonErrorResponse('Invalid offering id', 400, origin);
   }
 
-  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const parsedBody: unknown = await req.json().catch(() => ({}));
+  const body = isRecord(parsedBody) ? parsedBody : {};
   const paths = targetPathsForOffering(id);
   const control = mutationControl(body.control);
   const mutationRequest = {
@@ -633,14 +649,17 @@ export async function deletePublicOfferingPr(
     });
   }
 
-  const response = await callGithubApp<{
-    success: boolean;
-    pullRequest: PublicAcademicPr;
-  }>(env, origin, '/academic/public-course-offering/pr', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mutationRequest),
-  });
+  const response = await callGithubApp(
+    env,
+    origin,
+    '/academic/public-course-offering/pr',
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mutationRequest),
+    },
+    { schema: createPullRequestResultSchema(PublicAcademicPrSchema) }
+  );
   if (!response.ok) return response.response;
 
   return createJsonResponse(response.value.pullRequest, 200, origin);

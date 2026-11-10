@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+import { z } from 'zod';
 
 import { callGithubApp } from '@/clients/github-app.client';
 
@@ -14,10 +15,12 @@ describe('GitHub App client', () => {
       Response.json({ status: 'open' })
     );
 
-    const result = await callGithubApp<{ status: string }>(
+    const result = await callGithubApp(
       createTestEnv(),
       'https://portal.scs-pdn.space',
-      '/projects/public-project/pr?slug=example'
+      '/projects/public-project/pr?slug=example',
+      undefined,
+      { schema: z.object({ status: z.string() }) }
     );
 
     expect(result).toEqual({ ok: true, value: { status: 'open' } });
@@ -136,5 +139,72 @@ describe('GitHub App client', () => {
         error: 'GitHub App request timed out',
       });
     }
+  });
+
+  test('returns transformed schema output for a valid upstream body', async () => {
+    spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ count: '3' }));
+    const result = await callGithubApp(
+      createTestEnv(),
+      'https://portal.scs-pdn.space',
+      '/count',
+      undefined,
+      { schema: z.object({ count: z.coerce.number() }) }
+    );
+    expect(result).toEqual({ ok: true, value: { count: 3 } });
+  });
+
+  test('rejects invalid and malformed upstream success bodies', async () => {
+    const fetchMock = spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(Response.json({ count: 'invalid' }))
+      .mockResolvedValueOnce(
+        new Response('{', {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    for (const expectedMessage of [
+      'GitHub App response failed validation at count',
+      'GitHub App returned an invalid response',
+    ]) {
+      const result = await callGithubApp(
+        createTestEnv(),
+        'https://portal.scs-pdn.space',
+        '/count',
+        undefined,
+        { schema: z.object({ count: z.number() }) }
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.response.status).toBe(502);
+        expect(await result.response.json()).toEqual({
+          code: 'github_app_invalid_response',
+          error: expectedMessage,
+        });
+      }
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('accepts an empty success body only for an explicit nullable contract', async () => {
+    spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 204 })
+    );
+    const schema = z.null();
+    const accepted = await callGithubApp(
+      createTestEnv(),
+      'https://portal.scs-pdn.space',
+      '/empty',
+      undefined,
+      { schema, emptyBody: 'null' }
+    );
+    expect(accepted).toEqual({ ok: true, value: null });
+    const rejected = await callGithubApp(
+      createTestEnv(),
+      'https://portal.scs-pdn.space',
+      '/empty',
+      undefined,
+      { schema }
+    );
+    expect(rejected.ok).toBe(false);
+    if (!rejected.ok) expect(rejected.response.status).toBe(502);
   });
 });

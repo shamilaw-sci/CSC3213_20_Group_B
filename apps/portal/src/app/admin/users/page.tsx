@@ -1,8 +1,9 @@
+import { AdminUserPageSchema } from '@scs/schemas';
+
 import ManageUsersPage from '@/app/admin/users/_components/manage-users-page';
 import { adminUsersPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';
-import type { AdminUserPageResponse } from '@/types/user';
 
 export default async function Page({
   searchParams,
@@ -15,8 +16,9 @@ export default async function Page({
     searchParams: resolvedSearchParams,
     nextCursor: null,
   });
-  const data = await serverApiJson<AdminUserPageResponse>(
-    adminUsersPageApiUrl(cursor)
+  const data = await serverApiJson(
+    adminUsersPageApiUrl(cursor),
+    AdminUserPageSchema
   );
   const navigation = getPageNavigation({
     pathname: '/admin/users',

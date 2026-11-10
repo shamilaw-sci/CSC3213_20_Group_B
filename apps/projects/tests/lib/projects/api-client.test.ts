@@ -1,3 +1,4 @@
+import { dataConfig } from '@/config/data.config';
 import {
   clearProjectDataCacheForTests,
   fetchProjects,
@@ -62,5 +63,34 @@ describe('project API client cache', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'https://data.scs-pdn.space/projects/v2/projects.json'
     );
+  });
+
+  test('an expired rejection does not evict a newer response', async () => {
+    const started = Date.now();
+    const now = vi.spyOn(Date, 'now').mockReturnValue(started);
+    let resolveFirst: ((response: Response) => void) | undefined;
+    const fetchMock = vi.fn(async () => {
+      if (fetchMock.mock.calls.length === 1) {
+        return new Promise<Response>((resolve) => {
+          resolveFirst = resolve;
+        });
+      }
+      return Response.json([project]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const first = fetchProjects();
+      now.mockReturnValue(started + dataConfig.cacheTtlMs + 1);
+      expect(await fetchProjects()).toHaveLength(1);
+      if (!resolveFirst) throw new Error('The first fetch was not started');
+      resolveFirst(new Response(null, { status: 500 }));
+      await expect(first).rejects.toThrow('Request failed');
+      expect(await fetchProjects()).toHaveLength(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 });

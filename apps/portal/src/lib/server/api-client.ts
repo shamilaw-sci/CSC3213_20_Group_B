@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { z } from 'zod';
 
 import { apiHeaders, readApiError } from '@/lib/api';
 
@@ -42,7 +43,49 @@ async function serverApiRequest(
   return response;
 }
 
-export async function serverApiJson<T>(input: URL): Promise<T> {
+async function readJsonResponse<TSchema extends z.ZodType>(
+  response: Response,
+  input: URL,
+  schema: TSchema,
+  emptyBody?: 'null'
+): Promise<z.output<TSchema>> {
+  let value: unknown;
+  if (response.status === 204 && emptyBody === 'null') {
+    value = null;
+  } else {
+    try {
+      value = await response.json();
+    } catch (error) {
+      throw new Error(`Invalid JSON response from ${input.pathname}`, {
+        cause: error,
+      });
+    }
+  }
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid API response from ${input.pathname}: ${parsed.error.issues
+        .map(
+          (issue) => `${issue.path.join('.') || 'response'}: ${issue.message}`
+        )
+        .join('; ')}`,
+      { cause: parsed.error }
+    );
+  }
+  return parsed.data;
+}
+
+export async function serverApiJson<TSchema extends z.ZodType>(
+  input: URL,
+  schema: TSchema,
+  options?: { emptyBody?: 'null' }
+): Promise<z.output<TSchema>>;
+export async function serverApiJson(input: URL): Promise<unknown>;
+export async function serverApiJson(
+  input: URL,
+  schema?: z.ZodType,
+  options?: { emptyBody?: 'null' }
+): Promise<unknown> {
   const response = await serverApiRequest(input);
 
   if (!response.ok) {
@@ -53,10 +96,22 @@ export async function serverApiJson<T>(input: URL): Promise<T> {
     );
   }
 
-  return (await response.json()) as T;
+  return schema
+    ? readJsonResponse(response, input, schema, options?.emptyBody)
+    : response.json();
 }
 
-export async function serverApiJsonOrNull<T>(input: URL): Promise<T | null> {
+export async function serverApiJsonOrNull<TSchema extends z.ZodType>(
+  input: URL,
+  schema: TSchema,
+  options?: { emptyBody?: 'null' }
+): Promise<z.output<TSchema> | null>;
+export async function serverApiJsonOrNull(input: URL): Promise<unknown | null>;
+export async function serverApiJsonOrNull(
+  input: URL,
+  schema?: z.ZodType,
+  options?: { emptyBody?: 'null' }
+): Promise<unknown | null> {
   const response = await serverApiRequest(input);
   if (response.status === 404) return null;
 
@@ -68,5 +123,7 @@ export async function serverApiJsonOrNull<T>(input: URL): Promise<T | null> {
     );
   }
 
-  return (await response.json()) as T;
+  return schema
+    ? readJsonResponse(response, input, schema, options?.emptyBody)
+    : response.json();
 }

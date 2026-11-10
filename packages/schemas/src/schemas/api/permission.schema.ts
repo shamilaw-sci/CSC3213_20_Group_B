@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { createPageSchema } from '#schemas/api/pagination.schema';
+
 export const AppRoleSchema = z.enum([
   'USER',
   'OTHER',
@@ -17,6 +19,67 @@ export const ProfilePictureModeSchema = z.enum([
   'manual',
   'gravatar',
 ]);
+
+/** Response from the authenticated /api/me endpoint. */
+export const CurrentUserResponseSchema = z.object({
+  email: z.string(),
+  name: z.string().optional(),
+  picture: z.string().optional(),
+  role: AppRoleSchema,
+  accessLevel: AccessLevelSchema,
+  blacklisted: z.boolean(),
+  googleOAuth: z.boolean(),
+  githubOAuth: z.boolean(),
+  githubUserID: z.number().nullable(),
+  pictureMode: ProfilePictureModeSchema.nullable(),
+  gravatarMail: z.string().nullable(),
+  isEmailNotificationEnabled: z.boolean(),
+  isPushNotificationEnabled: z.boolean(),
+});
+
+export const AdminUserListItemSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  name: z.string(),
+  picture: z.string(),
+  role: AppRoleSchema,
+  accessLevel: AccessLevelSchema,
+  blacklisted: z.boolean(),
+  createdAt: z.number().optional(),
+});
+
+export const AdminUserPageSchema = createPageSchema(AdminUserListItemSchema);
+
+/** Detail response combines stored permission fields with auth-provider flags. */
+export const AdminUserDetailResponseSchema = z.object({
+  id: z.string().optional(),
+  email: z.string().optional(),
+  name: z.string().optional(),
+  picture: z.string().optional(),
+  role: AppRoleSchema,
+  accessLevel: AccessLevelSchema,
+  blacklisted: z.boolean().optional(),
+  pictureMode: ProfilePictureModeSchema.nullable().optional(),
+  gravatarMail: z.string().nullable().optional(),
+  createdAt: z.number().optional(),
+  include: z
+    .record(z.string(), z.enum(['ADMIN', 'EDITOR', 'VIEWER']))
+    .optional(),
+  exclude: z.array(z.string()).optional(),
+  notifications: z
+    .object({ email: z.boolean().optional(), push: z.boolean().optional() })
+    .optional(),
+  googleOAuth: z.boolean(),
+  githubOAuth: z.boolean(),
+  githubUserID: z.number().nullable(),
+});
+
+export type CurrentUserResponse = z.infer<typeof CurrentUserResponseSchema>;
+export type AdminUserListItem = z.infer<typeof AdminUserListItemSchema>;
+export type AdminUserPage = z.infer<typeof AdminUserPageSchema>;
+export type AdminUserDetailResponse = z.infer<
+  typeof AdminUserDetailResponseSchema
+>;
 
 export type AppRole = z.infer<typeof AppRoleSchema>;
 export type AccessLevel = z.infer<typeof AccessLevelSchema>;

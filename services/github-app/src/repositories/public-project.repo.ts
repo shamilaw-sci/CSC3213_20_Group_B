@@ -15,6 +15,7 @@ import {
   usernamesForProject,
 } from '@/domains/projects/project.projection';
 import { isGitHubMissingRefError, isGitHubNotFoundError } from '@/utils/github';
+import { JsonRecordSchema } from '@/utils/json-record';
 
 export interface PublicProjectPrStatus {
   status: 'none' | 'open' | 'merged' | 'closed';
@@ -521,7 +522,7 @@ export async function getPublicProject(
   const path = projectPathForSlug(normalizedSlug);
   const entry = await readFile(path);
   if (!entry) return null;
-  const project = parseJson(entry.content) as Record<string, unknown>;
+  const project = JsonRecordSchema.parse(parseJson(entry.content));
 
   return {
     project,
@@ -543,10 +544,8 @@ export async function getPublicProjectPrStatus(
       metadata.targetProjectFile ?? projectPathForSlug(normalizedSlug);
     const draftEntry = await readFile(targetProjectFile, openPull.head.ref);
     const draftValue = draftEntry ? parseJson(draftEntry.content) : null;
-    const draftProject =
-      draftValue && typeof draftValue === 'object' && !Array.isArray(draftValue)
-        ? (draftValue as Record<string, unknown>)
-        : null;
+    const parsedDraft = JsonRecordSchema.safeParse(draftValue);
+    const draftProject = parsedDraft.success ? parsedDraft.data : null;
 
     return {
       status: 'open',

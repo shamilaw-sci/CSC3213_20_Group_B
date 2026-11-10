@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 
-import { PublicProfilePrSchema, StudentPlacementResponseSchema } from '#index';
+import {
+  createPullRequestResultSchema,
+  PublicProfilePrSchema,
+  StudentPlacementResponseSchema,
+} from '#index';
 
 describe('editor transport contracts', () => {
   test('accepts an undergraduate placement response', () => {
@@ -39,5 +43,14 @@ describe('editor transport contracts', () => {
         targetAggregateFiles: ['public/people/v2/students/s21.json'],
       }).success
     ).toBeTrue();
+  });
+
+  test('requires a successful pull-request envelope', () => {
+    const schema = createPullRequestResultSchema(PublicProfilePrSchema);
+    const pullRequest = { status: 'open', canEdit: true };
+    expect(schema.safeParse({ success: true, pullRequest }).success).toBeTrue();
+    expect(
+      schema.safeParse({ success: false, pullRequest }).success
+    ).toBeFalse();
   });
 });

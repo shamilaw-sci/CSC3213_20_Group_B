@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
 import { apiHeaders, meApiUrl } from '@/lib/api';
+import { isRecord } from '@/lib/is-record';
 import { isSuperAdminRole } from '@/types/role';
 
 interface AdminLayoutProps {
@@ -25,11 +26,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     redirect('/?error=fetch_failed');
   }
 
-  const user = (await response.json().catch(() => null)) as {
-    accessLevel?: unknown;
-  } | null;
+  const user: unknown = await response.json().catch(() => null);
 
-  if (!user || !isSuperAdminRole(user)) {
+  if (!isRecord(user) || !isSuperAdminRole(user)) {
     redirect('/dashboard');
   }
 
