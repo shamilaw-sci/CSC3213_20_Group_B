@@ -1,3 +1,4 @@
+import { requireD1 } from '@/types/env';
 import type { Env } from '@/types/env';
 
 function toBase64(bytes: Uint8Array): string {
@@ -34,22 +35,23 @@ export async function createTestSessionCookie(
   const now = Date.now();
   const expiresAt = new Date().getTime() + 24 * 60 * 60 * 1000;
 
-  const existing = await env.AUTH_DB.prepare(
-    'SELECT id FROM "user" WHERE email = ? LIMIT 1'
-  )
+  const existing = await requireD1(env)
+    .prepare('SELECT id FROM "user" WHERE email = ? LIMIT 1')
     .bind(normalizedEmail)
     .first<{ id: string }>();
   const resolvedUserId = existing?.id ?? userId;
   if (!existing) {
-    await env.AUTH_DB.prepare(
-      'INSERT INTO "user" (id, name, email, emailVerified, image, createdAt, updatedAt) VALUES (?, ?, ?, 1, NULL, ?, ?)'
-    )
+    await requireD1(env)
+      .prepare(
+        'INSERT INTO "user" (id, name, email, emailVerified, image, createdAt, updatedAt) VALUES (?, ?, ?, 1, NULL, ?, ?)'
+      )
       .bind(resolvedUserId, name, normalizedEmail, now, now)
       .run();
   }
-  await env.AUTH_DB.prepare(
-    'INSERT INTO "session" (id, expiresAt, token, createdAt, updatedAt, ipAddress, userAgent, userId) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?)'
-  )
+  await requireD1(env)
+    .prepare(
+      'INSERT INTO "session" (id, expiresAt, token, createdAt, updatedAt, ipAddress, userAgent, userId) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?)'
+    )
     .bind(sessionId, expiresAt, token, now, now, resolvedUserId)
     .run();
 

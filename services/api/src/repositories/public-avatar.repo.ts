@@ -7,6 +7,7 @@ import type {
 import { PublicAvatarModerationSchema } from '@scs/schemas';
 
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 
 export const PUBLIC_AVATAR_AUDIT_ACTION = {
   UPLOAD: 'upload',
@@ -143,11 +144,12 @@ export async function createAvatarReview(
 ): Promise<void> {
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.create(input);
-  await env.AUTH_DB.prepare(
-    `INSERT INTO public_avatar_review (
+  await requireD1(env)
+    .prepare(
+      `INSERT INTO public_avatar_review (
       id, username, sha256, object_key, size, moderation_json, status, submitted_at
     ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
-  )
+    )
     .bind(
       input.id,
       input.username,
@@ -165,9 +167,10 @@ export async function getAvatarReview(
   id: string
 ): Promise<PublicAvatarReviewRecord | null> {
   if (env.AVATAR_REVIEW_REPOSITORY) return env.AVATAR_REVIEW_REPOSITORY.get(id);
-  const row = await env.AUTH_DB.prepare(
-    `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review WHERE id = ? LIMIT 1`
-  )
+  const row = await requireD1(env)
+    .prepare(
+      `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review WHERE id = ? LIMIT 1`
+    )
     .bind(id)
     .first<ReviewRow>();
   return row ? toReview(row) : null;
@@ -185,11 +188,12 @@ export async function markAvatarReview(
 ): Promise<boolean> {
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.mark(input);
-  const result = await env.AUTH_DB.prepare(
-    `UPDATE public_avatar_review
+  const result = await requireD1(env)
+    .prepare(
+      `UPDATE public_avatar_review
      SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
      WHERE id = ? AND status = 'pending'`
-  )
+    )
     .bind(
       input.status,
       input.reviewedAt,
@@ -210,11 +214,12 @@ export async function reopenAvatarReview(
     return env.AVATAR_REVIEW_REPOSITORY.reopen(id, reviewedAt);
   // Only undo the decision made by the caller whose reviewed_at matches, so a
   // concurrent decision is never reopened by a failed publish attempt.
-  await env.AUTH_DB.prepare(
-    `UPDATE public_avatar_review
+  await requireD1(env)
+    .prepare(
+      `UPDATE public_avatar_review
      SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL, review_note = NULL
      WHERE id = ? AND status = 'approved' AND reviewed_at = ?`
-  )
+    )
     .bind(id, reviewedAt)
     .run();
 }
@@ -227,19 +232,21 @@ export async function getPendingAvatarReviewForUser(
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.getPendingForUser(username, id);
   const row = id
-    ? await env.AUTH_DB.prepare(
-        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+    ? await requireD1(env)
+        .prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
          WHERE username = ? AND id = ? AND status = 'pending'
          LIMIT 1`
-      )
+        )
         .bind(username, id)
         .first<ReviewRow>()
-    : await env.AUTH_DB.prepare(
-        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+    : await requireD1(env)
+        .prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
          WHERE username = ? AND status = 'pending'
          ORDER BY submitted_at DESC, id DESC
          LIMIT 1`
-      )
+        )
         .bind(username)
         .first<ReviewRow>();
   return row ? toReview(row) : null;
@@ -255,20 +262,22 @@ export async function listPendingAvatarReviewsForUser(
   const limit = options.limit ?? 50;
   const rows =
     options.submittedBefore === undefined
-      ? await env.AUTH_DB.prepare(
-          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+      ? await requireD1(env)
+          .prepare(
+            `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
            WHERE username = ? AND status = 'pending'
            ORDER BY submitted_at DESC, id DESC
            LIMIT ?`
-        )
+          )
           .bind(username, limit)
           .all<ReviewRow>()
-      : await env.AUTH_DB.prepare(
-          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+      : await requireD1(env)
+          .prepare(
+            `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
            WHERE username = ? AND status = 'pending' AND submitted_at <= ?
            ORDER BY submitted_at DESC, id DESC
            LIMIT ?`
-        )
+          )
           .bind(username, options.submittedBefore, limit)
           .all<ReviewRow>();
   return rows.results.map(toReview);
@@ -281,13 +290,14 @@ export async function listPendingAvatarReviewPage(
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.listPendingPage(input);
   const rows = input.cursor
-    ? await env.AUTH_DB.prepare(
-        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+    ? await requireD1(env)
+        .prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
          WHERE status = 'pending'
            AND (submitted_at < ? OR (submitted_at = ? AND id < ?))
          ORDER BY submitted_at DESC, id DESC
          LIMIT ?`
-      )
+        )
         .bind(
           input.cursor.submittedAt,
           input.cursor.submittedAt,
@@ -295,12 +305,13 @@ export async function listPendingAvatarReviewPage(
           input.limit + 1
         )
         .all<ReviewRow>()
-    : await env.AUTH_DB.prepare(
-        `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
+    : await requireD1(env)
+        .prepare(
+          `SELECT ${REVIEW_COLUMNS} FROM public_avatar_review
          WHERE status = 'pending'
          ORDER BY submitted_at DESC, id DESC
          LIMIT ?`
-      )
+        )
         .bind(input.limit + 1)
         .all<ReviewRow>();
 
@@ -329,12 +340,13 @@ export async function cancelPendingAvatarReviews(
   // One statement both cancels and returns exactly the rows this call
   // transitioned. This avoids a page-sized limit leaving stale pending rows and
   // never re-audits a decision that raced ahead of us.
-  const rows = await env.AUTH_DB.prepare(
-    `UPDATE public_avatar_review
+  const rows = await requireD1(env)
+    .prepare(
+      `UPDATE public_avatar_review
      SET status = 'rejected', reviewed_at = ?, reviewed_by = ?, review_note = ?
      WHERE username = ? AND status = 'pending' AND submitted_at < ?
      RETURNING ${REVIEW_COLUMNS}`
-  )
+    )
     .bind(
       input.reviewedAt,
       input.reviewedBy,
@@ -353,11 +365,12 @@ export async function hasPendingAvatarObject(
 ): Promise<boolean> {
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.hasPendingObject(username, sha256);
-  const row = await env.AUTH_DB.prepare(
-    `SELECT 1 AS present FROM public_avatar_review
+  const row = await requireD1(env)
+    .prepare(
+      `SELECT 1 AS present FROM public_avatar_review
      WHERE username = ? AND sha256 = ? AND status = 'pending'
      LIMIT 1`
-  )
+    )
     .bind(username, sha256)
     .first<{ present: number }>();
   return row !== null;
@@ -371,12 +384,13 @@ export async function recordAvatarAudit(
 ): Promise<void> {
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.recordAudit(input);
-  await env.AUTH_DB.prepare(
-    `INSERT INTO public_avatar_audit (
+  await requireD1(env)
+    .prepare(
+      `INSERT INTO public_avatar_audit (
       id, username, actor_email, actor_kind, action, previous_sha256, sha256,
       review_id, note, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  )
+    )
     .bind(
       crypto.randomUUID(),
       input.username,
@@ -400,12 +414,13 @@ export async function listAvatarAudit(
   if (env.AVATAR_REVIEW_REPOSITORY)
     return env.AVATAR_REVIEW_REPOSITORY.listAudit(username, limit);
   const bounded = Math.min(Math.max(1, Math.trunc(limit)), 100);
-  const rows = await env.AUTH_DB.prepare(
-    `SELECT ${AUDIT_COLUMNS} FROM public_avatar_audit
+  const rows = await requireD1(env)
+    .prepare(
+      `SELECT ${AUDIT_COLUMNS} FROM public_avatar_audit
      WHERE username = ?
      ORDER BY created_at DESC, id DESC
      LIMIT ?`
-  )
+    )
     .bind(username, bounded)
     .all<AuditRow>();
   return rows.results.map(toAudit);

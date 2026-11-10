@@ -162,10 +162,15 @@ development hosts; do not copy those values into Vercel Production or Preview.
 See [Binary object storage](STORAGE.md) before switching providers. Existing
 objects are not copied by changing these variables.
 
-The Bun/Node PostgreSQL connection for Better Auth is currently an injected
-`AUTH_DATABASE` pool, not a Worker environment variable. See
-[Relational database portability](DATABASE_PORTABILITY.md) for the limited
-scope, test-only `POSTGRES_TEST_URL`, and migration requirements.
+### API Bun runtime
+
+The Bun API uses the shared API secrets and URLs above as process environment
+variables. It additionally requires `POSTGRES_URL` and `POSTGRES_SCHEMA` for
+its migrated PostgreSQL database and all five `AVATAR_S3_*` values above for
+its private object store. `API_PORT` defaults to 3001. D1, R2, and Images
+bindings are not used by this entry point; it injects PostgreSQL, S3, and
+Sharp. See [self-hosted runtimes](SELF_HOSTED_RUNTIMES.md) for startup and
+deployment requirements.
 
 ### GitHub App
 
@@ -179,6 +184,9 @@ scope, test-only `POSTGRES_TEST_URL`, and migration requirements.
 | `GITHUB_PROJECTS_DATA_REPOSITORY` | `server`  | `template` | `runtime` | projects data repository            |
 | `X_INTERNAL_SECRET`               | `secret`  | `template` | `runtime` | internal request authentication     |
 | `PORT`                            | `adapter` | `template` | `runtime` | local Bun listener                  |
+| `POSTGRES_URL`                    | `secret`  | `template` | Bun only  | PostgreSQL connection URL           |
+| `POSTGRES_SCHEMA`                 | `server`  | `template` | Bun only  | migrated operation schema           |
+| `PGBOSS_SCHEMA`                   | `server`  | `template` | Bun only  | distinct pg-boss schema             |
 | `OPERATION_STATE`                 | `binding` | `wrangler` | `binding` | durable operation state             |
 | `MUTATION_COORDINATOR`            | `binding` | `wrangler` | `binding` | per-resource mutation serialization |
 | `OPERATION_QUEUE`                 | `binding` | `wrangler` | `binding` | durable operation dispatch          |

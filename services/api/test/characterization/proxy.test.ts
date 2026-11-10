@@ -1,3 +1,4 @@
+import { requireD1 } from '@/types/env';
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 
 import { PROXY_ATTEMPTS_RESET_WINDOW_MS } from '@/config/client.config';
@@ -44,9 +45,10 @@ async function seedProxy(
     updatedBy?: string | null;
   }
 ): Promise<void> {
-  await env.AUTH_DB.prepare(
-    'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
-  )
+  await requireD1(env)
+    .prepare(
+      'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
+    )
     .bind(
       input.email,
       input.email.split('@')[0],
@@ -186,9 +188,9 @@ describe('D1-backed proxy settings', () => {
     const body = (await response.json()) as {
       proxy: { email: string; active: boolean; availableAttempts: number };
     };
-    const count = await env.AUTH_DB.prepare(
-      'SELECT count(*) AS total FROM proxySettings'
-    ).first<{ total: number }>();
+    const count = await requireD1(env)
+      .prepare('SELECT count(*) AS total FROM proxySettings')
+      .first<{ total: number }>();
 
     expect(response.status).toBe(200);
     expect(body.proxy).toMatchObject({
@@ -235,9 +237,8 @@ describe('D1-backed proxy settings', () => {
       )
     );
     const statuses = responses.map((response) => response.status).sort();
-    const row = await env.AUTH_DB.prepare(
-      'SELECT availableAttempts FROM proxySettings WHERE email = ?'
-    )
+    const row = await requireD1(env)
+      .prepare('SELECT availableAttempts FROM proxySettings WHERE email = ?')
       .bind(USER_EMAIL)
       .first<{ availableAttempts: number }>();
 

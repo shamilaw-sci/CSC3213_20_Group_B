@@ -9,7 +9,7 @@ import type { PermissionRepository } from '@/repositories/permissions.repo';
 import type { AvatarReviewRepository } from '@/repositories/public-avatar.repo';
 
 export interface Env {
-  AUTH_DB: D1Database;
+  AUTH_DB?: D1Database;
   AUTH_DATABASE?: Pool;
   AVATAR_RATE_REPOSITORY?: AvatarRateRepository;
   AUTH_IDENTITY_REPOSITORY?: AuthIdentityRepository;
@@ -35,7 +35,7 @@ export interface Env {
   DATA_PUBLIC_BASE_URL: string;
   WEB_PROXY_INTERNAL_SECRET: string;
   TYPESAFE_API_KEY: string;
-  PROFILE_PICTURES: R2Bucket;
+  PROFILE_PICTURES?: R2Bucket;
   AVATAR_STORAGE?: BinaryObjectStore;
   AVATAR_STORAGE_DRIVER?: 'r2' | 's3';
   AVATAR_S3_BUCKET?: string;
@@ -43,6 +43,11 @@ export interface Env {
   AVATAR_S3_ENDPOINT?: string;
   AVATAR_S3_ACCESS_KEY_ID?: string;
   AVATAR_S3_SECRET_ACCESS_KEY?: string;
-  IMAGES: ImagesBinding;
+  IMAGES?: ImagesBinding;
   AVATAR_IMAGE_PROCESSOR?: AvatarImageProcessor;
+}
+
+export function requireD1(env: Env): D1Database {
+  if (!env.AUTH_DB) throw new Error('D1 database binding is unavailable');
+  return env.AUTH_DB;
 }

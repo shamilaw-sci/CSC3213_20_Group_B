@@ -12,20 +12,27 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    const securityTxtRedirect = getSecurityTxtRedirectTarget(req);
-    if (securityTxtRedirect) {
-      return new Response(null, {
-        status: 308,
-        headers: { Location: securityTxtRedirect },
-      });
-    }
-
     bindExecutionContext(req, ctx);
-    return handleWorkerRequest(req, env, async (request, workerEnv) => {
-      if (isBetterAuthRequest(request)) {
-        return createAuth(request, workerEnv).handler(request);
-      }
-      return dispatchRoute(request, workerEnv);
-    });
+    return handleApiRequest(req, env);
   },
 };
+
+export async function handleApiRequest(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const securityTxtRedirect = getSecurityTxtRedirectTarget(req);
+  if (securityTxtRedirect) {
+    return new Response(null, {
+      status: 308,
+      headers: { Location: securityTxtRedirect },
+    });
+  }
+
+  return handleWorkerRequest(req, env, async (request, workerEnv) => {
+    if (isBetterAuthRequest(request)) {
+      return createAuth(request, workerEnv).handler(request);
+    }
+    return dispatchRoute(request, workerEnv);
+  });
+}

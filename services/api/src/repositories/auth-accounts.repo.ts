@@ -1,4 +1,5 @@
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 
 export interface AuthIdentity {
   userId: string;
@@ -65,6 +66,7 @@ export async function getAuthIdentityByEmail(
   env: Env
 ): Promise<AuthIdentity | null> {
   return (
-    env.AUTH_IDENTITY_REPOSITORY ?? createD1AuthIdentityRepository(env.AUTH_DB)
+    env.AUTH_IDENTITY_REPOSITORY ??
+    createD1AuthIdentityRepository(requireD1(env))
   ).getByEmail(email);
 }

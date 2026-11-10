@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
+    "start:bun": "bun src/server.ts",
     "build": "wrangler build",
     "deploy": "wrangler deploy",
     "test": "bun test",

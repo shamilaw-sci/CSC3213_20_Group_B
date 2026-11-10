@@ -97,9 +97,10 @@ function createTestD1Database(): D1Database {
   } as unknown as D1Database;
 }
 
-export function createTestEnv(overrides: Partial<Env> = {}): Env {
+export function createTestEnv(
+  overrides: Partial<Env> = {}
+): Env & { AUTH_DB: D1Database } {
   return {
-    AUTH_DB: createTestD1Database(),
     BETTER_AUTH_SECRET: 'test-better-auth-secret-at-least-32-characters',
     BETTER_AUTH_URL: 'https://test.scs-pdn.space',
     GOOGLE_CLIENT_ID: 'test-google-client-id',
@@ -116,5 +117,6 @@ export function createTestEnv(overrides: Partial<Env> = {}): Env {
     PROFILE_PICTURES: {} as R2Bucket,
     IMAGES: {} as ImagesBinding,
     ...overrides,
+    AUTH_DB: overrides.AUTH_DB ?? createTestD1Database(),
   };
 }

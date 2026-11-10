@@ -10,6 +10,7 @@ import {
 } from '@scs/schemas';
 
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 import { isRecord } from '@/utils/is-record';
 
 export {
@@ -251,9 +252,10 @@ export async function hasOtherSuperAdmin(
 ): Promise<boolean> {
   if (env.PERMISSION_REPOSITORY)
     return env.PERMISSION_REPOSITORY.hasOtherSuperAdmin(email);
-  const result = await env.AUTH_DB.prepare(
-    'SELECT 1 AS present FROM permission WHERE accessLevel = ? AND email <> ? LIMIT 1'
-  )
+  const result = await requireD1(env)
+    .prepare(
+      'SELECT 1 AS present FROM permission WHERE accessLevel = ? AND email <> ? LIMIT 1'
+    )
     .bind(ACCESS_LEVEL.SUPER_ADMIN, email.toLowerCase())
     .first<{ present: number }>();
   return result !== null;
@@ -265,9 +267,8 @@ export async function getUserPermission(
 ): Promise<Permission | null> {
   if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.get(email);
   const sanitizedEmail = email.toLowerCase();
-  const row = await env.AUTH_DB.prepare(
-    'SELECT permissionJson FROM permission WHERE email = ? LIMIT 1'
-  )
+  const row = await requireD1(env)
+    .prepare('SELECT permissionJson FROM permission WHERE email = ? LIMIT 1')
     .bind(sanitizedEmail)
     .first<{ permissionJson: string }>();
   if (!row) return null;
@@ -285,8 +286,9 @@ export async function setUserPermission(
   const sanitizedEmail = email.toLowerCase();
   const sanitizedPermission = sanitizePermission(permission);
   const user = permissionUserData(sanitizedEmail, sanitizedPermission);
-  await env.AUTH_DB.prepare(
-    `INSERT INTO permission (
+  await requireD1(env)
+    .prepare(
+      `INSERT INTO permission (
       email, permissionJson, role, accessLevel, name, picture, blacklisted, createdAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(email) DO UPDATE SET
@@ -297,7 +299,7 @@ export async function setUserPermission(
       picture = excluded.picture,
       blacklisted = excluded.blacklisted,
       createdAt = excluded.createdAt`
-  )
+    )
     .bind(
       sanitizedEmail,
       JSON.stringify(sanitizedPermission),
@@ -317,7 +319,8 @@ export async function deleteUserPermission(
 ): Promise<void> {
   if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.delete(email);
   const sanitizedEmail = email.toLowerCase();
-  await env.AUTH_DB.prepare('DELETE FROM permission WHERE email = ?')
+  await requireD1(env)
+    .prepare('DELETE FROM permission WHERE email = ?')
     .bind(sanitizedEmail)
     .run();
 }
@@ -340,13 +343,14 @@ export async function getUserDataPage(
   input: { cursor?: string; limit: number }
 ): Promise<UserDataPage> {
   if (env.PERMISSION_REPOSITORY) return env.PERMISSION_REPOSITORY.list(input);
-  const rows = await env.AUTH_DB.prepare(
-    `SELECT email, name, picture, role, accessLevel, blacklisted, createdAt
+  const rows = await requireD1(env)
+    .prepare(
+      `SELECT email, name, picture, role, accessLevel, blacklisted, createdAt
      FROM permission
      WHERE email > ?
      ORDER BY email
      LIMIT ?`
-  )
+    )
     .bind(input.cursor ?? '', input.limit + 1)
     .all<{
       email: string;

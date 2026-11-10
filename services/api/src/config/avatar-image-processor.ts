@@ -8,6 +8,7 @@ export function avatarImageProcessor(env: Env): AvatarImageProcessor {
   if (env.AVATAR_IMAGE_PROCESSOR) return env.AVATAR_IMAGE_PROCESSOR;
   const cached = processors.get(env);
   if (cached) return cached;
+  if (!env.IMAGES) throw new Error('Images binding is unavailable');
   const processor = createCloudflareAvatarImageProcessor(env.IMAGES);
   processors.set(env, processor);
   return processor;

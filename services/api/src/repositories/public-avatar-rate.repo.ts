@@ -1,4 +1,5 @@
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 
 interface AvatarRateRow {
   windowStart: number;
@@ -43,6 +44,6 @@ export function createD1AvatarRateRepository(
 
 export function avatarRateRepository(env: Env): AvatarRateRepository {
   return (
-    env.AVATAR_RATE_REPOSITORY ?? createD1AvatarRateRepository(env.AUTH_DB)
+    env.AVATAR_RATE_REPOSITORY ?? createD1AvatarRateRepository(requireD1(env))
   );
 }

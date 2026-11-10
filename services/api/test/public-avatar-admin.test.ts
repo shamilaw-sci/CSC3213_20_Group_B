@@ -1,3 +1,4 @@
+import { requireD1 } from '@/types/env';
 import { afterEach, describe, expect, test } from 'bun:test';
 
 import type { PublicAvatarModeration } from '@scs/schemas';
@@ -397,9 +398,10 @@ describe('admin public avatar controls', () => {
     const { env, bucket } = await createAdminEnv();
     await seedCurrentAvatar(env, bucket);
     const windowStartedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
-    await env.AUTH_DB.prepare(
-      `INSERT INTO public_avatar_rate (user_id, window_start, attempts) VALUES (?, ?, ?)`
-    )
+    await requireD1(env)
+      .prepare(
+        `INSERT INTO public_avatar_rate (user_id, window_start, attempts) VALUES (?, ?, ?)`
+      )
       .bind(USERNAME, windowStartedAt, 4)
       .run();
     const cookie = await adminCookie(env);

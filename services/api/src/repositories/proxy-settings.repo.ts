@@ -3,6 +3,7 @@ import {
   PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
 } from '@/config/client.config';
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 
 export interface ProxySettings {
   email: string;
@@ -110,9 +111,10 @@ export async function getProxySettings(
   if (env.PROXY_SETTINGS_REPOSITORY)
     return env.PROXY_SETTINGS_REPOSITORY.get(email);
   const normalizedEmail = email.trim().toLowerCase();
-  const row = await env.AUTH_DB.prepare(
-    'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email = ? LIMIT 1'
-  )
+  const row = await requireD1(env)
+    .prepare(
+      'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email = ? LIMIT 1'
+    )
     .bind(normalizedEmail)
     .first<ProxySettingsRow>();
   if (!row) return defaultProxySettings(normalizedEmail);
@@ -122,9 +124,10 @@ export async function getProxySettings(
     Date.now() - row.attemptWindowStartedAt > PROXY_ATTEMPTS_RESET_WINDOW_MS &&
     row.availableAttempts !== PROXY_DEFAULT_AVAILABLE_ATTEMPTS
   ) {
-    const reset = await env.AUTH_DB.prepare(
-      'UPDATE proxySettings SET availableAttempts = ?, attemptWindowStartedAt = NULL, revision = revision + 1 WHERE email = ? AND attemptWindowStartedAt = ? RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
-    )
+    const reset = await requireD1(env)
+      .prepare(
+        'UPDATE proxySettings SET availableAttempts = ?, attemptWindowStartedAt = NULL, revision = revision + 1 WHERE email = ? AND attemptWindowStartedAt = ? RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
+      )
       .bind(
         PROXY_DEFAULT_AVAILABLE_ATTEMPTS,
         normalizedEmail,
@@ -132,9 +135,10 @@ export async function getProxySettings(
       )
       .first<ProxySettingsRow>();
     if (reset) return toProxySettings(reset);
-    const current = await env.AUTH_DB.prepare(
-      'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email = ? LIMIT 1'
-    )
+    const current = await requireD1(env)
+      .prepare(
+        'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email = ? LIMIT 1'
+      )
       .bind(normalizedEmail)
       .first<ProxySettingsRow>();
     if (current) return toProxySettings(current);
@@ -149,9 +153,10 @@ export async function getActiveProxyByUsername(
 ): Promise<ActiveProxyResolution | null> {
   if (env.PROXY_SETTINGS_REPOSITORY)
     return env.PROXY_SETTINGS_REPOSITORY.resolve(username);
-  const result = await env.AUTH_DB.prepare(
-    'SELECT url FROM proxySettings WHERE username = ? AND active = 1 ORDER BY email LIMIT 2'
-  )
+  const result = await requireD1(env)
+    .prepare(
+      'SELECT url FROM proxySettings WHERE username = ? AND active = 1 ORDER BY email LIMIT 2'
+    )
     .bind(username)
     .all<ActiveProxyResolution>();
   return result.results.length === 1 ? result.results[0] : null;
@@ -179,9 +184,10 @@ export async function saveProxySettings(
   const now = Date.now();
   const windowCutoff = now - PROXY_ATTEMPTS_RESET_WINDOW_MS;
   const row = input.actorIsAdmin
-    ? await input.env.AUTH_DB.prepare(
-        'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET active = excluded.active, url = excluded.url, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
-      )
+    ? await requireD1(input.env)
+        .prepare(
+          'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET active = excluded.active, url = excluded.url, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
+        )
         .bind(
           email,
           emailToUsername(email),
@@ -192,9 +198,10 @@ export async function saveProxySettings(
           input.actorEmail
         )
         .first<ProxySettingsRow>()
-    : await input.env.AUTH_DB.prepare(
-        'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET active = excluded.active, url = excluded.url, availableAttempts = CASE WHEN proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? THEN ? ELSE proxySettings.availableAttempts - 1 END, attemptWindowStartedAt = CASE WHEN proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? THEN excluded.attemptWindowStartedAt ELSE proxySettings.attemptWindowStartedAt END, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 WHERE proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? OR proxySettings.availableAttempts > 0 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
-      )
+    : await requireD1(input.env)
+        .prepare(
+          'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET active = excluded.active, url = excluded.url, availableAttempts = CASE WHEN proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? THEN ? ELSE proxySettings.availableAttempts - 1 END, attemptWindowStartedAt = CASE WHEN proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? THEN excluded.attemptWindowStartedAt ELSE proxySettings.attemptWindowStartedAt END, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 WHERE proxySettings.attemptWindowStartedAt IS NULL OR proxySettings.attemptWindowStartedAt <= ? OR proxySettings.availableAttempts > 0 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
+        )
         .bind(
           email,
           emailToUsername(email),
@@ -225,9 +232,10 @@ export async function resetProxyAttempts(
     return env.PROXY_SETTINGS_REPOSITORY.reset(email, actorEmail);
   const normalizedEmail = email.trim().toLowerCase();
   const now = Date.now();
-  const row = await env.AUTH_DB.prepare(
-    'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, 0, ?, ?, NULL, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET availableAttempts = excluded.availableAttempts, attemptWindowStartedAt = NULL, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
-  )
+  const row = await requireD1(env)
+    .prepare(
+      'INSERT INTO proxySettings (email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision) VALUES (?, ?, 0, ?, ?, NULL, ?, ?, 1) ON CONFLICT(email) DO UPDATE SET availableAttempts = excluded.availableAttempts, attemptWindowStartedAt = NULL, updatedAt = excluded.updatedAt, updatedBy = excluded.updatedBy, revision = proxySettings.revision + 1 RETURNING email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision'
+    )
     .bind(
       normalizedEmail,
       emailToUsername(normalizedEmail),
@@ -248,16 +256,20 @@ export async function listProxySettingsPage(
   if (env.PROXY_SETTINGS_REPOSITORY)
     return env.PROXY_SETTINGS_REPOSITORY.listPage(input);
   const pageStatement = input.afterEmail
-    ? env.AUTH_DB.prepare(
-        'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email > ? ORDER BY email LIMIT ?'
-      ).bind(input.afterEmail, input.limit + 1)
-    : env.AUTH_DB.prepare(
-        'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings ORDER BY email LIMIT ?'
-      ).bind(input.limit + 1);
-  const countStatement = env.AUTH_DB.prepare(
+    ? requireD1(env)
+        .prepare(
+          'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings WHERE email > ? ORDER BY email LIMIT ?'
+        )
+        .bind(input.afterEmail, input.limit + 1)
+    : requireD1(env)
+        .prepare(
+          'SELECT email, username, active, url, availableAttempts, attemptWindowStartedAt, updatedAt, updatedBy, revision FROM proxySettings ORDER BY email LIMIT ?'
+        )
+        .bind(input.limit + 1);
+  const countStatement = requireD1(env).prepare(
     'SELECT count(*) AS total FROM proxySettings'
   );
-  const [pageResult, countResult] = await env.AUTH_DB.batch<
+  const [pageResult, countResult] = await requireD1(env).batch<
     ProxySettingsRow | { total: number }
   >([pageStatement, countStatement]);
   const rows = pageResult.results as ProxySettingsRow[];

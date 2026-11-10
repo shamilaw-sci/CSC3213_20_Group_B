@@ -18,6 +18,7 @@ import {
 } from '@/repositories/permissions.repo';
 import { waitUntil } from '@/runtime/request-context';
 import type { Env } from '@/types/env';
+import { requireD1 } from '@/types/env';
 import { isAllowedEmailDomain } from '@/utils/email-domains';
 
 const AUTH_BASE_PATH = '/api/auth';
@@ -72,7 +73,7 @@ export function authOptions(request: Request, env: Env) {
     appName: 'SCS Portal',
     baseURL: env.BETTER_AUTH_URL,
     basePath: AUTH_BASE_PATH,
-    database: env.AUTH_DATABASE ?? env.AUTH_DB,
+    database: env.AUTH_DATABASE ?? requireD1(env),
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: ALLOWED_ORIGINS,
     user: {

@@ -29,7 +29,12 @@ export function avatarStore(env: Env): BinaryObjectStore {
   );
   const store =
     config.driver === 'r2'
-      ? createR2Store(env.PROFILE_PICTURES)
+      ? createR2Store(
+          env.PROFILE_PICTURES ??
+            (() => {
+              throw new Error('R2 binding is unavailable');
+            })()
+        )
       : config.driver === 's3'
         ? createS3Store(config)
         : (() => {

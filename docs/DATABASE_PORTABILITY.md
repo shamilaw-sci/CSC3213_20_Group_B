@@ -5,22 +5,19 @@ description: Incremental D1 and PostgreSQL migration boundaries.
 
 # Relational database portability
 
-The API currently runs on Cloudflare D1. Better Auth owns its user, session,
-account, verification, passkey, and rate-limit tables. Most application
-repositories retain D1 as their Worker default. Better Auth and all
-application-owned relational repositories now have PostgreSQL implementations,
-but this is not yet a self-hosted API profile. Do not deploy it until a Bun API
-entry point uses the PostgreSQL composition helper and makes the D1 binding
-optional in its runtime environment.
+The Cloudflare API runs on D1. Better Auth owns its user, session, account,
+verification, passkey, and rate-limit tables. Application repositories retain
+D1 as their Worker default. The Bun API entry point composes PostgreSQL for
+Better Auth and every application-owned relational repository. Its startup
+readiness check requires all six reviewed PostgreSQL migrations.
 
 `createPostgresRelationalBindings(pool)` wires Better Auth and every
-application-owned relational repository to one PostgreSQL pool for a future
-Bun/Node composition root. The Cloudflare Worker uses none of these Node-only
-imports. The current `Env` type still requires `AUTH_DB`, so a self-hosted
-entry point must resolve that runtime binding before the profile is usable.
+application-owned relational repository to one PostgreSQL pool. The Worker
+imports none of these Node-only modules. The Bun entry point injects the pool
+as `AUTH_DATABASE`; the Worker continues to require its `AUTH_DB` binding.
 
-`createAuth` uses the existing `AUTH_DB` binding by default. A Bun/Node
-composition root may inject a `pg.Pool` as `AUTH_DATABASE`, created by
+`createAuth` uses the existing `AUTH_DB` binding by default. The Bun
+composition root injects a `pg.Pool` as `AUTH_DATABASE`, created by
 `createPostgresAuthDatabase({ connectionString, schema, maxConnections })`.
 The factory validates a PostgreSQL URL, a simple schema identifier, and a pool
 size from 1 to 50. The Worker never imports this Node-only factory. Better Auth
@@ -104,6 +101,13 @@ unchanged and separately migrate objects if the storage provider changes.
 Switch only after the complete API profile passes integration tests. A database
 URL change does not copy data. Rollback after new writes requires reconciliation
 rather than only restoring configuration.
+
+The Bun API starts with `bun --filter '@scs/api' start:bun`. It validates
+configuration, checks the migrated tables and object-store access, then serves
+the same route dispatcher and Better Auth configuration as the Worker.
+`/healthz` reports process health; `/readyz` becomes ready only after startup.
+See [Self-hosted runtimes](SELF_HOSTED_RUNTIMES.md) for configuration and
+shutdown behavior. This phase does not perform a live D1 data cutover.
 
 ## Local PostgreSQL integration test
 
