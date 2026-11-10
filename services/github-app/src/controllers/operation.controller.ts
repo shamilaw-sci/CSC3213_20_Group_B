@@ -10,6 +10,7 @@ import {
 import type { GithubAppEnv } from '@/types/env';
 
 function operationStore(env: GithubAppEnv): OperationStore {
+  if (env.OPERATION_STORE) return env.OPERATION_STORE;
   return env.OPERATION_STATE
     ? new CloudflareOperationStore(env.OPERATION_STATE)
     : localOperationStore;

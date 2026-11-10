@@ -3,6 +3,8 @@ import type {
   OperationQueue,
   OperationStateNamespace,
 } from '@/operations/cloudflare.types';
+import type { OperationStore } from '@/operations/operation.store';
+import type { OperationExecutor } from '@/operations/operation.executor';
 
 export interface GithubAppEnv {
   GITHUB_APP_ID: string;
@@ -16,6 +18,8 @@ export interface GithubAppEnv {
   OPERATION_STATE?: OperationStateNamespace;
   MUTATION_COORDINATOR?: MutationCoordinatorNamespace;
   OPERATION_QUEUE?: OperationQueue;
+  OPERATION_STORE?: OperationStore;
+  OPERATION_EXECUTOR?: OperationExecutor;
 }
 
 export interface GithubAppRuntimeConfig extends Omit<

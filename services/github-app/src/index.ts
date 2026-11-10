@@ -11,28 +11,9 @@ import type { OperationQueueBatch } from '@/operations/cloudflare.types';
 import { MutationCoordinatorDurableObject } from '@/operations/mutation-coordinator.object';
 import { OperationStateDurableObject } from '@/operations/operation-state.object';
 import { consumeOperationBatch } from '@/operations/queue.consumer';
-import type { OperationHandler } from '@/operations/operation.types';
-import {
-  createProfileOperationHandler,
-  PROFILE_UPSERT_ACTION,
-} from '@/domains/profiles/profile.operation';
-import { createProfileDraftRepository } from '@/domains/profiles/profile.repository';
-import { createProjectOperationHandlers } from '@/domains/projects/project.operation';
-import { createProjectDraftRepository } from '@/domains/projects/project.repository';
-import { createAcademicOperationHandlers } from '@/domains/academics/academic.operation';
-import { createAcademicDraftRepository } from '@/domains/academics/academic.repository';
+import { operationHandlers } from '@/operations/operation.handlers';
 
 type AppExecutionContext = Parameters<typeof app.fetch>[2];
-
-function operationHandlers(): Record<string, OperationHandler> {
-  return {
-    ...createAcademicOperationHandlers(createAcademicDraftRepository()),
-    ...createProjectOperationHandlers(createProjectDraftRepository()),
-    [PROFILE_UPSERT_ACTION]: createProfileOperationHandler(
-      createProfileDraftRepository()
-    ),
-  };
-}
 
 const worker = {
   async fetch(

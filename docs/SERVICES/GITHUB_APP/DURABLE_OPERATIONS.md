@@ -174,8 +174,10 @@ migration rights, or run that step under a deployment role before starting
 restricted workers. Review pg-boss schema upgrades independently of the two
 application migrations. Use direct PostgreSQL sessions or session pooling
 for the operation coordinator. Queue workers need network access to both
-PostgreSQL and GitHub. Phase 6 will compose these pieces into a self-hosted
-runtime; this phase adds no API server or deployment profile.
+PostgreSQL and GitHub. The Bun entry point now composes the PostgreSQL store,
+session advisory-lock coordinator, pg-boss producer and worker, and outbox
+recovery. It checks the two reviewed operation migrations before marking
+`/readyz` ready.
 
 The producer publishes immediately after an operation is committed. A
 publish failure is returned to the caller and leaves a pending outbox row.

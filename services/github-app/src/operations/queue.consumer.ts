@@ -38,6 +38,7 @@ export function createOperationExecutor(
   env: GithubAppEnv,
   handlers: Record<string, OperationHandler>
 ): OperationExecutor {
+  if (env.OPERATION_EXECUTOR) return env.OPERATION_EXECUTOR;
   if (env.OPERATION_STATE && env.MUTATION_COORDINATOR) {
     return createCloudflareOperationExecutor(env, handlers);
   }
