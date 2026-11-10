@@ -1,3 +1,4 @@
+import type { Page as PageResponse } from '@scs/schemas';
 import { redirect } from 'next/navigation';
 
 import ProjectEditor from '@/components/projects/project-editor';
@@ -13,16 +14,6 @@ interface UserContext {
   accessLevel?: unknown;
 }
 
-interface ProjectPageResponse {
-  version: 1;
-  items: Array<Record<string, unknown>>;
-  page: {
-    nextCursor: string | null;
-    hasMore: boolean;
-    total: number;
-  };
-}
-
 export default async function Page({
   searchParams,
 }: {
@@ -36,7 +27,9 @@ export default async function Page({
   });
   const [user, data] = await Promise.all([
     serverApiJson<UserContext>(meApiUrl()),
-    serverApiJson<ProjectPageResponse>(publicProjectsPageApiUrl(cursor)),
+    serverApiJson<PageResponse<Record<string, unknown>>>(
+      publicProjectsPageApiUrl(cursor)
+    ),
   ]);
   if (!isSuperAdminRole(user)) redirect('/dashboard');
 

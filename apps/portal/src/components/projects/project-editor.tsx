@@ -17,6 +17,7 @@ import {
   type PublicProjectResponse as ProjectResponse,
   type PublicProjectSchemaResponse as ProjectSchemaResponse,
   ScienceAcademicDepartments,
+  type Semester,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button, buttonVariants } from '@scs/ui/components/button';
@@ -142,7 +143,7 @@ interface CourseOfferingRecord {
   id: string;
   courseId: string;
   academicYear: string;
-  semester: 'SEM1' | 'SEM2';
+  semester: Semester;
   staff: {
     staff: string;
     role: string;

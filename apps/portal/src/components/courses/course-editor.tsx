@@ -3,10 +3,14 @@
 import {
   AcademicDepartmentCodeSchema,
   CourseCodeSchema,
+  type CourseStaff,
+  CourseStaffSchema,
   type MutationAccepted,
   type PublicAcademicPr as AcademicPr,
   type PublicCourseSchemaResponse as SchemaResponse,
   ScienceAcademicDepartments,
+  type Semester,
+  SemesterSchema,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button, buttonVariants } from '@scs/ui/components/button';
@@ -88,11 +92,10 @@ interface OfferingRecord {
   id: string;
   courseId: string;
   academicYear: string;
-  semester: 'SEM1' | 'SEM2';
+  semester: Semester;
   staff: {
     staff: string;
-    role:
-      'COURSE_COORDINATOR' | 'LECTURER' | 'INSTRUCTOR' | 'TEACHING_ASSISTANT';
+    role: CourseStaff['role'];
   }[];
 }
 
@@ -105,12 +108,7 @@ const ACADEMIC_DEPARTMENT_LABELS = Object.fromEntries(
   ])
 ) as Record<(typeof ACADEMIC_DEPARTMENTS)[number], string>;
 const CREDIT_OPTIONS = [1, 2, 3, 6] as const;
-const STAFF_ROLES = [
-  'COURSE_COORDINATOR',
-  'LECTURER',
-  'INSTRUCTOR',
-  'TEACHING_ASSISTANT',
-] as const;
+const STAFF_ROLES = CourseStaffSchema.shape.role.options;
 
 const COURSE_EDITOR_SECTIONS = [
   { id: 'course-details', label: 'Details' },
@@ -228,20 +226,15 @@ function offeringFromRecord(value: unknown): OfferingRecord | null {
   const courseId = typeof value.courseId === 'string' ? value.courseId : '';
   const academicYear =
     typeof value.academicYear === 'string' ? value.academicYear : '';
-  const semester =
-    value.semester === 'SEM1' || value.semester === 'SEM2'
-      ? value.semester
-      : 'SEM1';
+  const parsedSemester = SemesterSchema.safeParse(value.semester);
+  const semester = parsedSemester.success ? parsedSemester.data : 'SEM1';
   const staff = Array.isArray(value.staff)
     ? value.staff
         .map((item) => {
           if (!isRecord(item)) return null;
           const staffId = typeof item.staff === 'string' ? item.staff : '';
-          const role = STAFF_ROLES.includes(
-            item.role as (typeof STAFF_ROLES)[number]
-          )
-            ? (item.role as (typeof STAFF_ROLES)[number])
-            : 'LECTURER';
+          const parsedRole = CourseStaffSchema.shape.role.safeParse(item.role);
+          const role = parsedRole.success ? parsedRole.data : 'LECTURER';
           return staffId ? { staff: staffId, role } : null;
         })
         .filter((item): item is OfferingRecord['staff'][number] =>
@@ -1248,9 +1241,8 @@ function OfferingForm({
               { value: 'SEM2', label: 'Semester 2' },
             ]}
             onValueChange={(value) => {
-              if (value !== null) {
-                setField('semester', value as 'SEM1' | 'SEM2');
-              }
+              const parsed = SemesterSchema.safeParse(value);
+              if (parsed.success) setField('semester', parsed.data);
             }}
           >
             <SelectTrigger id={`${formId}-semester`} className="w-full">

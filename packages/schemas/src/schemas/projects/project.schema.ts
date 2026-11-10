@@ -1,11 +1,20 @@
 import { z } from 'zod';
 
 import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
+import { SemesterSchema } from '#schemas/academics/academic-period.schema';
 import { AcademicYearSchema } from '#schemas/academics/academic-year.schema';
+import { CourseIdSchema } from '#schemas/courses/course.schema';
 import { CourseCodeSchema } from '#schemas/courses/course-code.schema';
 import { CourseOfferingIdSchema } from '#schemas/courses/course-offering.schema';
+import { createKebabCaseIdSchema } from '#schemas/identifiers/kebab-case-id.schema';
 import { AcademicUsernameSchema } from '#schemas/people/identifiers/academic-username.schema';
 import { SNumberSchema } from '#schemas/people/identifiers/s-number.schema';
+
+export const ProjectSlugSchema = createKebabCaseIdSchema(
+  'Invalid project slug'
+);
+
+export type ProjectSlug = z.infer<typeof ProjectSlugSchema>;
 
 export const ProjectTypeSchema = z.enum([
   'COURSE_PROJECT',
@@ -110,17 +119,12 @@ export const ProjectDatesSchema = z
 export type ProjectDates = z.infer<typeof ProjectDatesSchema>;
 
 export const ProjectCourseSchema = z.object({
-  courseId: z
-    .string()
-    .trim()
-    .min(1)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid course id')
-    .optional(),
+  courseId: CourseIdSchema.optional(),
   offeringId: CourseOfferingIdSchema.optional(),
   code: CourseCodeSchema,
   title: z.string().trim().min(1),
   academicYear: AcademicYearSchema.optional(),
-  semester: z.enum(['SEM1', 'SEM2']).optional(),
+  semester: SemesterSchema.optional(),
   departments: z
     .array(AcademicDepartmentCodeSchema)
     .default([])
@@ -140,11 +144,7 @@ export type ProjectCourseOffering = z.infer<typeof ProjectCourseOfferingSchema>;
 
 const ProjectFieldsSchema = z.object({
   id: z.string().trim().min(1),
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid project slug'),
+  slug: ProjectSlugSchema,
   title: z.string().trim().min(1),
   shortDescription: z.string().trim().min(1),
   description: z.string().trim().min(1),

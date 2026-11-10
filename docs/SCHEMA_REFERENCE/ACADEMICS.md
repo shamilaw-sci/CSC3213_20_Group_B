@@ -35,6 +35,7 @@ flowchart TD
 | `HonoursStreamSchema`            | Public alias for an honours programme code.                                              |
 | `ProgramSchema`                  | Discriminated general, honours, applied-sciences, and SOR programmes with subject rules. |
 | `AcademicYearSchema`             | A numeric year or consecutive `YYYY/YYYY` range.                                         |
+| `SemesterSchema`                 | First or second semester identifier reused by periods and offerings.                     |
 | `AcademicPeriodSchema`           | Academic year plus first or second semester.                                             |
 
 The organization module also exports canonical maps for programme ownership,

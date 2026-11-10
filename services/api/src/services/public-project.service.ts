@@ -3,6 +3,7 @@ import {
   CourseSchema,
   ProjectSchema,
   ProjectIndexSchema,
+  ProjectSlugSchema,
   type Project,
   type PublicProjectPr,
   type PublicProjectSchemaResponse,
@@ -79,7 +80,8 @@ function slugFromProjectPath(req: Request): string | null {
 
   try {
     const slug = decodeURIComponent(encodedSlug).toLowerCase();
-    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null;
+    const parsed = ProjectSlugSchema.safeParse(slug);
+    return parsed.success && parsed.data === slug ? parsed.data : null;
   } catch {
     return null;
   }

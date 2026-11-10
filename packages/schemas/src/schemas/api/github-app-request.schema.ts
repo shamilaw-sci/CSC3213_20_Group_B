@@ -1,12 +1,17 @@
 import { z } from 'zod';
 
 import { HonoursProgrammeStudentStreamMap } from '#schemas/academics/academic-organization.schema';
+import { CorrelationIdSchema } from '#schemas/api/error.schema';
 import {
   EntityRevisionSchema,
   IdempotencyKeySchema,
 } from '#schemas/api/mutation.schema';
-import { CourseSchema } from '#schemas/courses/course.schema';
-import { CourseOfferingSchema } from '#schemas/courses/course-offering.schema';
+import { CourseIdSchema, CourseSchema } from '#schemas/courses/course.schema';
+import {
+  CourseOfferingIdSchema,
+  CourseOfferingSchema,
+} from '#schemas/courses/course-offering.schema';
+import { createKebabCaseIdSchema } from '#schemas/identifiers/kebab-case-id.schema';
 import { AcademicSupportStaffSchema } from '#schemas/people/staff/academic-support/academic-support-staff.schema';
 import { AcademicTeachingStaffSchema } from '#schemas/people/staff/academic-teaching/academic-teaching-staff.schema';
 import { NonAcademicStaffSchema } from '#schemas/people/staff/non-academic/non-academic-staff.schema';
@@ -17,7 +22,10 @@ import {
   StudentSchema,
   StudentStreamDefinitionSchema,
 } from '#schemas/people/students/student.schema';
-import { ProjectSchema } from '#schemas/projects/project.schema';
+import {
+  ProjectSchema,
+  ProjectSlugSchema,
+} from '#schemas/projects/project.schema';
 
 const usernameSchema = z
   .string()
@@ -51,18 +59,12 @@ export const getPublicProfileQuerySchema = z.object({
 });
 
 export const getPublicProjectQuerySchema = z.object({
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  slug: ProjectSlugSchema,
 });
 
-const academicRegistryIdSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const academicRegistryIdSchema = createKebabCaseIdSchema(
+  'Invalid academic record id'
+);
 
 export const getPublicAcademicRecordQuerySchema = z.object({
   id: academicRegistryIdSchema,
@@ -237,18 +239,19 @@ export const updatePublicProfileRequestSchema = z
     }
   });
 
-export const submitPublicProfileOperationRequestSchema = z
-  .object({
-    request: updatePublicProfileRequestSchema,
-    actorSubjectId: z
-      .string()
-      .trim()
-      .min(16)
-      .max(128)
-      .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
-    idempotencyKey: IdempotencyKeySchema,
-    correlationId: z.string().trim().min(8).max(128),
-  })
+const operationEnvelopeSchema = z.object({
+  actorSubjectId: z
+    .string()
+    .trim()
+    .min(16)
+    .max(128)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
+  idempotencyKey: IdempotencyKeySchema,
+  correlationId: CorrelationIdSchema,
+});
+
+export const submitPublicProfileOperationRequestSchema = operationEnvelopeSchema
+  .extend({ request: updatePublicProfileRequestSchema })
   .strict();
 
 export const discardPublicProfilePrRequestSchema = z.object({
@@ -261,11 +264,7 @@ export const discardPublicProfilePrRequestSchema = z.object({
 
 export const updatePublicProjectRequestSchema = z
   .object({
-    slug: z
-      .string()
-      .trim()
-      .min(1)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    slug: ProjectSlugSchema,
     updatedBy: actorSchema,
     updatedByType: z.enum(['owner', 'admin']).optional(),
     projectPath: projectDataRepoPathSchema,
@@ -297,11 +296,7 @@ export const updatePublicProjectRequestSchema = z
 
 export const deletePublicProjectRequestSchema = z
   .object({
-    slug: z
-      .string()
-      .trim()
-      .min(1)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    slug: ProjectSlugSchema,
     updatedBy: actorSchema,
     updatedByType: z.literal('admin').optional(),
     projectPath: projectDataRepoPathSchema,
@@ -322,25 +317,14 @@ export const deletePublicProjectRequestSchema = z
     }
   });
 
-const projectOperationEnvelopeSchema = z.object({
-  actorSubjectId: z
-    .string()
-    .trim()
-    .min(16)
-    .max(128)
-    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
-  idempotencyKey: IdempotencyKeySchema,
-  correlationId: z.string().trim().min(8).max(128),
-});
-
 export const submitPublicProjectOperationRequestSchema = z.discriminatedUnion(
   'action',
   [
-    projectOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       action: z.literal('upsert'),
       request: updatePublicProjectRequestSchema,
     }),
-    projectOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       action: z.literal('delete'),
       request: deletePublicProjectRequestSchema,
     }),
@@ -349,7 +333,7 @@ export const submitPublicProjectOperationRequestSchema = z.discriminatedUnion(
 
 export const updatePublicCourseRequestSchema = z
   .object({
-    id: academicRegistryIdSchema,
+    id: CourseIdSchema,
     updatedBy: actorSchema,
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/courses.json'),
@@ -379,7 +363,7 @@ export const updatePublicCourseRequestSchema = z
 
 export const deletePublicCourseRequestSchema = z
   .object({
-    id: academicRegistryIdSchema,
+    id: CourseIdSchema,
     updatedBy: actorSchema,
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/courses.json'),
@@ -400,7 +384,7 @@ export const deletePublicCourseRequestSchema = z
 
 export const updatePublicCourseOfferingRequestSchema = z
   .object({
-    id: academicRegistryIdSchema,
+    id: CourseOfferingIdSchema,
     updatedBy: actorSchema,
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/offerings.json'),
@@ -430,7 +414,7 @@ export const updatePublicCourseOfferingRequestSchema = z
 
 export const deletePublicCourseOfferingRequestSchema = z
   .object({
-    id: academicRegistryIdSchema,
+    id: CourseOfferingIdSchema,
     updatedBy: actorSchema,
     recordPath: academicDataRepoPathSchema,
     aggregatePath: z.literal('public/academic/v2/offerings.json'),
@@ -449,33 +433,22 @@ export const deletePublicCourseOfferingRequestSchema = z
     }
   });
 
-const academicOperationEnvelopeSchema = z.object({
-  actorSubjectId: z
-    .string()
-    .trim()
-    .min(16)
-    .max(128)
-    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
-  idempotencyKey: IdempotencyKeySchema,
-  correlationId: z.string().trim().min(8).max(128),
-});
-
 export const submitPublicAcademicOperationRequestSchema = z.discriminatedUnion(
   'operation',
   [
-    academicOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       operation: z.literal('course.upsert'),
       request: updatePublicCourseRequestSchema,
     }),
-    academicOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       operation: z.literal('course.delete'),
       request: deletePublicCourseRequestSchema,
     }),
-    academicOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       operation: z.literal('offering.upsert'),
       request: updatePublicCourseOfferingRequestSchema,
     }),
-    academicOperationEnvelopeSchema.extend({
+    operationEnvelopeSchema.extend({
       operation: z.literal('offering.delete'),
       request: deletePublicCourseOfferingRequestSchema,
     }),

@@ -37,6 +37,30 @@ function project(slug: string) {
 }
 
 describe('paginated list endpoint contracts', () => {
+  test('record routes reject encoded whitespace in identifiers', async () => {
+    const env = createTestEnv();
+    await setUserPermission(
+      ADMIN_EMAIL,
+      { role: APP_ROLE.ACADEMIC, accessLevel: ACCESS_LEVEL.SUPER_ADMIN },
+      env
+    );
+    const cookie = await createTestSessionCookie(env, ADMIN_EMAIL);
+    const headers = {
+      Cookie: cookie,
+      Origin: ORIGIN,
+      'X-Client-Id': 'portal',
+    };
+
+    for (const path of [
+      '/api/projects/v2/projects/%20example-project',
+      '/api/academic/v2/courses/%20example-course',
+      '/api/academic/v2/offerings/%20example-offering',
+    ]) {
+      const response = await invokeWorker(path, { headers }, env);
+      expect(response.status).toBe(400);
+    }
+  });
+
   test('retired compatibility routes remain unavailable', async () => {
     const env = createTestEnv();
     const cookie = await createTestSessionCookie(env, ADMIN_EMAIL);

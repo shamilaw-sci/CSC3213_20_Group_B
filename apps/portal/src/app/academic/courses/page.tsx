@@ -1,17 +1,9 @@
+import type { Course, Page as PageResponse } from '@scs/schemas';
+
 import CourseEditor from '@/components/courses/course-editor';
 import { meApiUrl, publicCoursesPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
 import { serverApiJson } from '@/lib/server/api-client';
-
-interface CoursePageResponse {
-  version: 1;
-  items: unknown[];
-  page: {
-    nextCursor: string | null;
-    hasMore: boolean;
-    total: number;
-  };
-}
 
 export default async function Page({
   searchParams,
@@ -26,7 +18,7 @@ export default async function Page({
   });
   const [user, data] = await Promise.all([
     serverApiJson<Record<string, unknown>>(meApiUrl()),
-    serverApiJson<CoursePageResponse>(publicCoursesPageApiUrl(cursor)),
+    serverApiJson<PageResponse<Course>>(publicCoursesPageApiUrl(cursor)),
   ]);
   const navigation = getPageNavigation({
     pathname: '/academic/courses',

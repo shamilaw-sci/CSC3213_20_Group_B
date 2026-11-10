@@ -1,4 +1,6 @@
 import {
+  CourseIdSchema,
+  CourseOfferingIdSchema,
   CourseOfferingSchema,
   CourseSchema,
   type PublicAcademicPr,
@@ -60,7 +62,9 @@ function idFromPath(req: Request, kind: AcademicRegistryKind): string | null {
 
   try {
     const id = decodeURIComponent(encodedId).toLowerCase();
-    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ? id : null;
+    const schema = kind === 'course' ? CourseIdSchema : CourseOfferingIdSchema;
+    const parsed = schema.safeParse(id);
+    return parsed.success && parsed.data === id ? parsed.data : null;
   } catch {
     return null;
   }

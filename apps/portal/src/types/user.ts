@@ -1,4 +1,9 @@
-import type { AccessLevel, AppRole, ProfilePictureMode } from '@scs/schemas';
+import type {
+  AccessLevel,
+  AppRole,
+  Page,
+  ProfilePictureMode,
+} from '@scs/schemas';
 
 export type { ProfilePictureMode };
 
@@ -18,14 +23,7 @@ export interface AdminUserData {
   githubOAuth?: boolean;
 }
 
-export interface AdminUserPageResponse {
-  version: 1;
-  items: AdminUserData[];
-  page: {
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
+export type AdminUserPageResponse = Page<AdminUserData>;
 
 export interface CurrentUserProfile {
   email: string;

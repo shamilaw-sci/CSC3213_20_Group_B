@@ -1,3 +1,5 @@
+import type { Page as PageResponse } from '@scs/schemas';
+
 import ProjectEditor from '@/components/projects/project-editor';
 import { meApiUrl, publicProjectsPageApiUrl } from '@/lib/api';
 import { getPageNavigation, type PageSearchParams } from '@/lib/pagination';
@@ -8,16 +10,6 @@ interface UserContext {
   name?: string;
   role?: string;
   accessLevel?: unknown;
-}
-
-interface ProjectPageResponse {
-  version: 1;
-  items: Array<Record<string, unknown>>;
-  page: {
-    nextCursor: string | null;
-    hasMore: boolean;
-    total: number;
-  };
 }
 
 export default async function Page({
@@ -33,7 +25,9 @@ export default async function Page({
   });
   const [user, data] = await Promise.all([
     serverApiJson<UserContext>(meApiUrl()),
-    serverApiJson<ProjectPageResponse>(publicProjectsPageApiUrl(cursor)),
+    serverApiJson<PageResponse<Record<string, unknown>>>(
+      publicProjectsPageApiUrl(cursor)
+    ),
   ]);
   const navigation = getPageNavigation({
     pathname: '/user/projects',

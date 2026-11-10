@@ -43,8 +43,10 @@ export function createPageSchema<TItem extends z.ZodType>(itemSchema: TItem) {
 export type OpaqueCursor = z.infer<typeof OpaqueCursorSchema>;
 export type PaginationRequest = z.infer<typeof PaginationRequestSchema>;
 export type PageInfo = z.infer<typeof PageInfoSchema>;
-export type Page<TItem> = {
-  version: 1;
-  items: TItem[];
-  page: PageInfo;
-};
+
+/**
+ * Derive the page type from the factory so schema and type cannot drift apart.
+ */
+export type Page<TItem> = z.infer<
+  ReturnType<typeof createPageSchema<z.ZodType<TItem>>>
+>;

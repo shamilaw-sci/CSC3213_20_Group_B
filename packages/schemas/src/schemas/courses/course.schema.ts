@@ -2,12 +2,9 @@ import { z } from 'zod';
 
 import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
 import { CourseCodeSchema } from '#schemas/courses/course-code.schema';
+import { createKebabCaseIdSchema } from '#schemas/identifiers/kebab-case-id.schema';
 
-export const CourseIdSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Invalid course id');
+export const CourseIdSchema = createKebabCaseIdSchema('Invalid course id');
 
 export type CourseId = z.infer<typeof CourseIdSchema>;
 

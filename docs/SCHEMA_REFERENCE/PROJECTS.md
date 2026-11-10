@@ -20,6 +20,7 @@ flowchart TD
 
 | Schema                        | Responsibility                                                                      |
 | ----------------------------- | ----------------------------------------------------------------------------------- |
+| `ProjectSlugSchema`           | Stable kebab-case project identifier reused by project and automation requests.     |
 | `ProjectTypeSchema`           | Showcase classification such as course, research, open-source, or collaboration.    |
 | `ProjectStatusSchema`         | Planned, active, completed, or archived lifecycle state.                            |
 | `ProjectPersonRoleSchema`     | A person's project-specific role.                                                   |

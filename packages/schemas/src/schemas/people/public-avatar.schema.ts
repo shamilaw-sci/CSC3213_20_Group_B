@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { createPageSchema } from '#schemas/api/pagination.schema';
+
 export const PublicAvatarCheckIdSchema = z.enum(['safety', 'portrait']);
 
 export const PublicAvatarCheckStatusSchema = z.enum([
@@ -140,14 +142,9 @@ export const AdminAvatarQuotaResetResultSchema = z.object({
   quota: PublicAvatarQuotaSchema,
 });
 
-export const AdminAvatarReviewPageSchema = z.object({
-  version: z.literal(1),
-  items: z.array(PublicAvatarReviewSchema),
-  page: z.object({
-    nextCursor: z.string().nullable(),
-    hasMore: z.boolean(),
-  }),
-});
+export const AdminAvatarReviewPageSchema = createPageSchema(
+  PublicAvatarReviewSchema
+);
 
 export const AdminAvatarReviewDecisionSchema = z.object({
   review: PublicAvatarReviewSchema,
