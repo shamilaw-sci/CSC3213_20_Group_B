@@ -101,6 +101,7 @@ import {
   type ProfileToolSource,
 } from '@/lib/back-routes';
 import { emailPathSegment } from '@/lib/email';
+import { isRecord } from '@/lib/is-record';
 import {
   assertMutationSucceeded,
   isOperationPollingAbort,
@@ -348,10 +349,6 @@ function asString(value: unknown) {
 
 function asArray<T extends ProfileRecord>(value: unknown): T[] {
   return Array.isArray(value) ? (value.filter(isRecord) as T[]) : [];
-}
-
-function isRecord(value: unknown): value is ProfileRecord {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function pruneEmpty(value: unknown): unknown {
@@ -1967,85 +1964,88 @@ function PublicationArray({ label, value, onChange }: PublicationArrayProps) {
         icon: '',
       }}
       onChange={onChange}
-      renderItem={(item, update) => (
-        <>
-          <Field
-            label="Title"
-            value={asString(item.title)}
-            onChange={(fieldValue) => update('title', fieldValue)}
-            required
-          />
-          <Field
-            label="Journal"
-            value={asString(item.journal)}
-            onChange={(fieldValue) => update('journal', fieldValue)}
-            placeholder="Journal or venue name"
-          />
-          <Field
-            label="Publication Date"
-            value={asString(item.publicationDate)}
-            onChange={(fieldValue) => update('publicationDate', fieldValue)}
-            placeholder="2024 or 2024-07-01"
-          />
-          <Field
-            label="DOI ID"
-            value={asString(isRecord(item.doi) ? item.doi.doiId : undefined)}
-            onChange={(fieldValue) =>
-              update('doi', {
-                ...(isRecord(item.doi) ? item.doi : {}),
-                doiId: fieldValue,
-              })
-            }
-            placeholder="10.1234/example"
-          />
-          <Field
-            label="DOI URL"
-            value={asString(isRecord(item.doi) ? item.doi.doiUrl : undefined)}
-            onChange={(fieldValue) =>
-              update('doi', {
-                ...(isRecord(item.doi) ? item.doi : {}),
-                doiUrl: fieldValue,
-              })
-            }
-            type="url"
-            placeholder="https://doi.org/10.1234/example"
-          />
-          <Field
-            label="URL"
-            value={asString(item.url)}
-            onChange={(fieldValue) => update('url', fieldValue)}
-            type="url"
-            placeholder="https://example.com/paper"
-          />
-          <Field
-            label="Icon URL"
-            value={asString(item.icon)}
-            onChange={(fieldValue) => update('icon', fieldValue)}
-            type="url"
-            placeholder="https://example.com/icon.svg"
-          />
-          <StringArrayEditor
-            label="Co-Authors"
-            value={
-              Array.isArray(item.coAuthors)
-                ? item.coAuthors.filter(
-                    (author): author is string => typeof author === 'string'
-                  )
-                : []
-            }
-            onChange={(fieldValue) => update('coAuthors', fieldValue)}
-            placeholder="Co-author"
-          />
-          <div className="md:col-span-2">
-            <TextAreaField
-              label="Description"
-              value={asString(item.description)}
-              onChange={(fieldValue) => update('description', fieldValue)}
-              placeholder="Short optional description"
+      renderItem={(item, update) => {
+        const doi = isRecord(item.doi) ? item.doi : {};
+        return (
+          <>
+            <Field
+              label="Title"
+              value={asString(item.title)}
+              onChange={(fieldValue) => update('title', fieldValue)}
+              required
             />
-          </div>
-        </>
-      )}
+            <Field
+              label="Journal"
+              value={asString(item.journal)}
+              onChange={(fieldValue) => update('journal', fieldValue)}
+              placeholder="Journal or venue name"
+            />
+            <Field
+              label="Publication Date"
+              value={asString(item.publicationDate)}
+              onChange={(fieldValue) => update('publicationDate', fieldValue)}
+              placeholder="2024 or 2024-07-01"
+            />
+            <Field
+              label="DOI ID"
+              value={asString(doi.doiId)}
+              onChange={(fieldValue) =>
+                update('doi', {
+                  ...doi,
+                  doiId: fieldValue,
+                })
+              }
+              placeholder="10.1234/example"
+            />
+            <Field
+              label="DOI URL"
+              value={asString(doi.doiUrl)}
+              onChange={(fieldValue) =>
+                update('doi', {
+                  ...doi,
+                  doiUrl: fieldValue,
+                })
+              }
+              type="url"
+              placeholder="https://doi.org/10.1234/example"
+            />
+            <Field
+              label="URL"
+              value={asString(item.url)}
+              onChange={(fieldValue) => update('url', fieldValue)}
+              type="url"
+              placeholder="https://example.com/paper"
+            />
+            <Field
+              label="Icon URL"
+              value={asString(item.icon)}
+              onChange={(fieldValue) => update('icon', fieldValue)}
+              type="url"
+              placeholder="https://example.com/icon.svg"
+            />
+            <StringArrayEditor
+              label="Co-Authors"
+              value={
+                Array.isArray(item.coAuthors)
+                  ? item.coAuthors.filter(
+                      (author): author is string => typeof author === 'string'
+                    )
+                  : []
+              }
+              onChange={(fieldValue) => update('coAuthors', fieldValue)}
+              placeholder="Co-author"
+            />
+            <div className="md:col-span-2">
+              <TextAreaField
+                label="Description"
+                value={asString(item.description)}
+                onChange={(fieldValue) => update('description', fieldValue)}
+                placeholder="Short optional description"
+              />
+            </div>
+          </>
+        );
+      }}
     />
   );
 }
@@ -2076,9 +2076,7 @@ export default function PublicProfileEditor({
     initialData.schema.allowedKinds
   );
   const initialPublishedProfile = initialData.profile.profile;
-  const initialDraftProfile = isRecord(initialData.pr.draftProfile)
-    ? initialData.pr.draftProfile
-    : null;
+  const initialDraftProfile = initialData.pr.draftProfile ?? null;
   const initialEditableProfile =
     initialDraftProfile ??
     initialPublishedProfile ??
@@ -2182,9 +2180,7 @@ export default function PublicProfileEditor({
       const nextPr = PublicProfilePrSchema.parse(await prRes.json());
       const fallbackKind = defaultKindForEmptyProfile(nextSchema.allowedKinds);
       const nextPublishedProfile = profileBody.profile;
-      const nextDraftProfile = isRecord(nextPr.draftProfile)
-        ? nextPr.draftProfile
-        : null;
+      const nextDraftProfile = nextPr.draftProfile ?? null;
       const editableProfile =
         nextDraftProfile ??
         nextPublishedProfile ??

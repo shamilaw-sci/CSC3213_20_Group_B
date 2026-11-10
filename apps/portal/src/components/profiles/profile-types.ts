@@ -5,11 +5,9 @@ import {
   type PublicProfileSchemaResponse,
 } from '@scs/schemas';
 
-export type ProfileRecord = Record<string, unknown>;
+import { isRecord } from '@/lib/is-record';
 
-function isRecord(value: unknown): value is ProfileRecord {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
+export type ProfileRecord = Record<string, unknown>;
 
 /** Accept the legacy bare profile response at the HTTP boundary. */
 export function normalizePublicProfileResponse(

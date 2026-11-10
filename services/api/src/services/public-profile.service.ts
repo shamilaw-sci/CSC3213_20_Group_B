@@ -50,6 +50,7 @@ import {
   submitMutationOperation,
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 type ProfileByKind = {
   academic: AcademicTeachingStaff;
@@ -197,10 +198,6 @@ function isSlqfLevel(value: unknown): value is SlqfLevel {
 
 function usernameFromEmail(email: string): string {
   return email.split('@')[0].toLowerCase();
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function departmentFromProfile(profile: PublicProfile): string | null {

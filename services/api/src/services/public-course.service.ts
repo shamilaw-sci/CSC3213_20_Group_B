@@ -32,6 +32,7 @@ import {
   submitMutationOperation,
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 type AcademicRegistryKind = 'course' | 'offering';
 interface PublicAcademicUserContext {
@@ -42,10 +43,6 @@ interface PublicAcademicUserContext {
 
 function usernameFromEmail(email: string): string {
   return email.split('@')[0].toLowerCase();
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function idFromPath(req: Request, kind: AcademicRegistryKind): string | null {

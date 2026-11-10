@@ -103,6 +103,7 @@ import {
   publicProjectsPageApiUrl,
   readApiError,
 } from '@/lib/api';
+import { isRecord } from '@/lib/is-record';
 import {
   assertMutationSucceeded,
   isOperationPollingAbort,
@@ -160,13 +161,12 @@ interface PeopleDirectoryProfile {
 }
 
 function normalizeProjectResponse(value: unknown): PublicProjectResponse {
-  if (isRecord(value) && 'project' in value) {
+  if (!isRecord(value)) return { project: null };
+  if ('project' in value) {
     return PublicProjectResponseSchema.parse(value);
   }
 
-  return {
-    project: isRecord(value) ? value : null,
-  };
+  return { project: value };
 }
 
 function emptyProjectPr(): PublicProjectPr {
@@ -307,10 +307,6 @@ function githubRepositorySource(value: string): ProjectSource | null {
   } catch {
     return null;
   }
-}
-
-function isRecord(value: unknown): value is ProjectRecord {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function projectIssueField(path: PropertyKey[]) {
@@ -1884,7 +1880,7 @@ export default function ProjectEditor({
       const nextPr = await readProjectPrResponse(prRes);
       setPr(nextPr);
 
-      const draft = isRecord(nextPr.draftProject) ? nextPr.draftProject : null;
+      const draft = nextPr.draftProject ?? null;
       if (options.applyDraft && draft) {
         const currentProjectJson = JSON.stringify(latestProjectRef.current);
         const baseProjectJson = JSON.stringify(options.draftBaseProject);
@@ -1973,9 +1969,7 @@ export default function ProjectEditor({
         const nextPr = await loadProjectPr(normalizedSlug, {
           applyDraft: true,
         });
-        const draft = isRecord(nextPr?.draftProject)
-          ? nextPr.draftProject
-          : null;
+        const draft = nextPr?.draftProject ?? null;
         if (draft && nextPr?.status === 'open') {
           setSelectedSlug(normalizedSlug);
           resetEditor(draft, null);
@@ -2023,7 +2017,7 @@ export default function ProjectEditor({
           });
           if (
             !initialProject &&
-            (!isRecord(nextPr?.draftProject) || nextPr.status !== 'open')
+            (!nextPr?.draftProject || nextPr.status !== 'open')
           ) {
             toast.info('Project is no longer available.');
             returnToProjectList();

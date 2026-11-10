@@ -69,6 +69,7 @@ import {
   publicOfferingsApiUrl,
   readApiError,
 } from '@/lib/api';
+import { isRecord } from '@/lib/is-record';
 import {
   assertMutationSucceeded,
   isOperationPollingAbort,
@@ -157,10 +158,6 @@ function enumLabel(value: string) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function courseFromRecord(value: unknown): CourseRecord | null {

@@ -34,6 +34,7 @@ import {
   submitMutationOperation,
 } from '@/services/mutation-operation.service';
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 interface PublicProjectUserContext {
   email: string;
@@ -48,10 +49,6 @@ function usernameFromEmail(email: string): string {
 function sNumberFromEmail(email: string): string | null {
   const username = usernameFromEmail(email);
   return /^s\d{2}(sp)?\d{3}$/i.test(username) ? username.toUpperCase() : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseProjectSummaries(
@@ -112,15 +109,11 @@ async function fetchPublicJson(
 
 async function validateCourseProjectReferences(
   env: Env,
-  project: Record<string, unknown>
+  project: Project
 ): Promise<string | null> {
   if (project.projectType !== 'COURSE_PROJECT') return null;
 
-  const course = project.course;
-  const courseId =
-    isRecord(course) && typeof course.courseId === 'string'
-      ? course.courseId
-      : null;
+  const courseId = project.course?.courseId ?? null;
   if (!courseId) return 'course.courseId is required for course projects';
 
   const coursesResponse = await fetch(
@@ -139,11 +132,7 @@ async function validateCourseProjectReferences(
     return 'course.courseId must reference an existing course';
   }
 
-  const courseOffering = project.courseOffering;
-  const offeringId =
-    isRecord(courseOffering) && typeof courseOffering.id === 'string'
-      ? courseOffering.id
-      : null;
+  const offeringId = project.courseOffering?.id ?? null;
   if (!offeringId) return null;
 
   const offeringsResponse = await fetch(
@@ -386,17 +375,17 @@ export async function previewPublicProjectSource(
       ...metadata,
       links: {
         ...parsed.data.links,
-        ...(isRecord(metadata.links) ? metadata.links : {}),
+        ...metadata.links,
       },
       media: {
         ...parsed.data.media,
-        ...(isRecord(metadata.media) ? metadata.media : {}),
+        ...metadata.media,
       },
       dates: {
         ...parsed.data.dates,
-        ...(isRecord(metadata.dates) ? metadata.dates : {}),
+        ...metadata.dates,
       },
-      ...(parsed.data.course && isRecord(metadata.course)
+      ...(parsed.data.course && metadata.course
         ? { course: { ...parsed.data.course, ...metadata.course } }
         : {}),
       id: parsed.data.id,
@@ -714,7 +703,7 @@ export async function upsertPublicProjectPr(
 
   const courseReferenceError = await validateCourseProjectReferences(
     env,
-    project as Record<string, unknown>
+    parseResult.data
   );
   if (courseReferenceError) {
     return createJsonErrorResponse(courseReferenceError, 400, origin);
@@ -805,12 +794,13 @@ export async function deletePublicProjectPr(
   }
 
   const paths = targetPathsForProject(slug);
-  const control = mutationControl(isRecord(body) ? body.control : undefined);
+  const requestBody = isRecord(body) ? body : null;
+  const control = mutationControl(requestBody?.control);
   const mutationRequest = {
     slug,
     updatedBy: user.email,
     updatedByType: 'admin' as const,
-    expectedHeadSha: isRecord(body) ? body.expectedHeadSha : undefined,
+    expectedHeadSha: requestBody?.expectedHeadSha,
     expectedRevision: control.expectedRevision,
     projectPath: paths.projectPath,
     aggregatePath: paths.aggregatePath,

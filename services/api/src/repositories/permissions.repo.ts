@@ -10,6 +10,7 @@ import {
 } from '@scs/schemas';
 
 import type { Env } from '@/types/env';
+import { isRecord } from '@/utils/is-record';
 
 export {
   ACCESS_LEVEL,
@@ -20,10 +21,6 @@ export {
 };
 
 type RepoRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function isRepoRoleMap(value: unknown): value is Record<string, RepoRole> {
   return (
