@@ -57,7 +57,7 @@ describe('documentation navigation shell', () => {
   test('links directly to the main repository without a selector', () => {
     expect(baseOptions().nav?.children).toBeUndefined();
     expect(baseOptions().githubUrl).toBe(
-      'https://github.com/csc3213-2026-group-b/scs-pdn-monorepo'
+      'https://github.com/csc3213-2026-group-b'
     );
   });
 });

@@ -5,7 +5,7 @@ import { siteConfig } from '@/config/site.config';
 
 export function baseOptions(): BaseLayoutProps {
   return {
-    githubUrl: siteConfig.repositoryUrl,
+    githubUrl: siteConfig.orgUrl,
     links: [
       {
         text: 'Department website',
