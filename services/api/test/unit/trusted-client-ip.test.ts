@@ -25,3 +25,17 @@ test('only the configured reverse proxy can forward a valid client address', () 
   headers.delete('x-scs-client-ip');
   expect(trustedClientHeaders(headers, '192.0.2.3', '192.0.2.3')).toBeNull();
 });
+
+test('Bun IPv4-mapped socket addresses match the configured IPv4 proxy', () => {
+  const headers = new Headers({ 'x-scs-client-ip': '198.51.100.2' });
+  expect(
+    trustedClientHeaders(headers, '::ffff:192.0.2.3', '192.0.2.3')?.get(
+      'cf-connecting-ip'
+    )
+  ).toBe('198.51.100.2');
+  expect(
+    trustedClientHeaders(new Headers(), '::ffff:192.0.2.3', undefined)?.get(
+      'cf-connecting-ip'
+    )
+  ).toBe('192.0.2.3');
+});

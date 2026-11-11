@@ -7,14 +7,19 @@ export function trustedClientHeaders(
   trustedProxyIp: string | undefined
 ): Headers | null {
   if (!peerAddress || isIP(peerAddress) === 0) return null;
-  if (trustedProxyIp && peerAddress !== trustedProxyIp) return null;
+  const peer =
+    peerAddress.startsWith('::ffff:') &&
+    isIP(peerAddress.slice('::ffff:'.length)) === 4
+      ? peerAddress.slice('::ffff:'.length)
+      : peerAddress;
+  if (trustedProxyIp && peer !== trustedProxyIp) return null;
 
   const headers = new Headers(incoming);
   const forwarded = headers.get('x-scs-client-ip');
   headers.delete('cf-connecting-ip');
   headers.delete('x-scs-client-ip');
 
-  const clientIp = trustedProxyIp ? forwarded : peerAddress;
+  const clientIp = trustedProxyIp ? forwarded : peer;
   if (!clientIp || isIP(clientIp) === 0) return null;
   headers.set('cf-connecting-ip', clientIp);
   return headers;
