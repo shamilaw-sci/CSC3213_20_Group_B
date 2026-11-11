@@ -194,6 +194,7 @@ workflow. Skills do not affect runtime behavior.
 | [Architecture](docs/ARCHITECTURE.md)                       | understand boundaries, data ownership, and request flows              |
 | [Authentication](docs/AUTHENTICATION.md)                   | change sessions, OAuth, permissions, or service trust                 |
 | [Public data](docs/PUBLIC_DATA.md)                         | understand published data reads and Git-backed writes                 |
+| [Public data repository](docs/PUBLIC_DATA_REPOSITORY.md)   | validate and operate the separate public-data repository              |
 | [API Contracts](docs/API_CONTRACTS.md)                     | call or change HTTP endpoints and durable operations                  |
 | [Schemas](docs/SCHEMAS.md)                                 | add or evolve shared domain contracts                                 |
 | [UI system](docs/UI_SYSTEM.md)                             | build consistent, accessible application interfaces                   |

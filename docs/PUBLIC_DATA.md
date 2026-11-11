@@ -8,6 +8,8 @@ description: How validated people, project, course, and research records move fr
 Published records live in a separate Git repository and are served as public
 JSON. This monorepo owns the schemas, readers, editing UI, API orchestration,
 and GitHub automation, but not the data repository checkout itself.
+See [Public data repository](PUBLIC_DATA_REPOSITORY.md) for that repository's
+layout, validation, GitHub workflows, and recovery procedures.
 
 ## Read path
 

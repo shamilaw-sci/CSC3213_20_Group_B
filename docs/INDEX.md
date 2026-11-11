@@ -27,7 +27,9 @@ Markdown files are readable on GitHub and published by the documentation site.
 ## Browse the handbook
 
 - System design: [Authentication](AUTHENTICATION.md),
-  [Public data](PUBLIC_DATA.md), [API contracts](API_CONTRACTS.md),
+  [Public data](PUBLIC_DATA.md),
+  [Public data repository](PUBLIC_DATA_REPOSITORY.md),
+  [API contracts](API_CONTRACTS.md),
   [Schemas](SCHEMAS.md), and [UI system](UI_SYSTEM.md).
 - Applications: [Web](APPLICATION_WEB.md), [People](APPLICATION_PEOPLE.md),
   [Projects](APPLICATION_PROJECTS.md), and [Portal](APPLICATION_PORTAL.md).
