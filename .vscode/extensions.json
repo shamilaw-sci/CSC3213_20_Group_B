@@ -20,6 +20,7 @@
     "foxundermoon.shell-format",
     "bradlc.vscode-tailwindcss",
     "redhat.vscode-yaml",
-    "openai.chatgpt"
+    "openai.chatgpt",
+    "rhevorn.confetti"
   ]
 }
