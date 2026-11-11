@@ -1,0 +1,53 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+portal.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy portal:3000
+}
+
+people.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy people:3000
+}
+
+projects.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy projects:3000
+}
+
+docs.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy docs:3000
+}
+
+api.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3001 {
+		header_up X-SCS-Client-IP {client_ip}
+		header_up -CF-Connecting-IP
+	}
+}
+
+data.{$SITE_DOMAIN} {
+	root * /srv/public-data
+	@withOrigin header Origin *
+	@withoutOrigin {
+		not header Origin *
+	}
+	header @withOrigin Access-Control-Allow-Origin {http.request.header.Origin}
+	header @withOrigin Access-Control-Allow-Credentials "true"
+	header @withOrigin Vary Origin
+	header @withoutOrigin Access-Control-Allow-Origin "*"
+	header Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+	header Access-Control-Allow-Headers "Content-Type, Authorization, X-Client-Id"
+	@preflight method OPTIONS
+	respond @preflight 204
+	file_server
+}

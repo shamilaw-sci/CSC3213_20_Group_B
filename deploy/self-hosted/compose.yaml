@@ -1,0 +1,341 @@
+name: scs-pdn
+
+x-next-health: &next-health
+  test:
+    [
+      CMD,
+      bun,
+      -e,
+      "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))",
+    ]
+  interval: 15s
+  timeout: 10s
+  retries: 10
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scs
+      POSTGRES_USER: scs_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?}
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?}
+      GITHUB_DB_PASSWORD: ${GITHUB_DB_PASSWORD:?}
+      MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/01-roles.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U scs_admin -d scs']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [data]
+
+  storage:
+    image: chrislusf/seaweedfs:4.53@sha256:ccad23e18639c8b98cee17e7100b95830a06077b56d8e5b006d6dcf8ec5e94a0
+    restart: unless-stopped
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?}
+      S3_BUCKET: scs-avatars
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test:
+        [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [data]
+
+  migrate:
+    profiles: [ops]
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: backend
+    environment:
+      POSTGRES_MIGRATION_URL: ${POSTGRES_MIGRATION_URL:?}
+      API_POSTGRES_SCHEMA: scs_api
+      OPERATIONS_POSTGRES_SCHEMA: scs_operations
+      PGBOSS_SCHEMA: scs_jobs
+      API_RUNTIME_ROLE: scs_api
+      OPERATIONS_RUNTIME_ROLE: scs_worker
+    command: [bun, services/github-app/scripts/migrate-postgres.ts]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [data]
+
+  github-app:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_URL: ${GITHUB_POSTGRES_URL:?}
+      POSTGRES_SCHEMA: scs_operations
+      PGBOSS_SCHEMA: scs_jobs
+      PORT: 3000
+      GITHUB_APP_ID: ${GITHUB_APP_ID:?}
+      GITHUB_PRIVATE_KEY: ${GITHUB_PRIVATE_KEY:?}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:?}
+      GITHUB_OWNER: ${GITHUB_OWNER:?}
+      GITHUB_PEOPLE_DATA_REPOSITORY: ${GITHUB_PEOPLE_DATA_REPOSITORY:?}
+      GITHUB_PROJECTS_DATA_REPOSITORY: ${GITHUB_PROJECTS_DATA_REPOSITORY:?}
+      X_INTERNAL_SECRET: ${GITHUB_APP_INTERNAL_SECRET:?}
+    working_dir: /app/services/github-app
+    command: [bun, src/server.ts]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          CMD,
+          bun,
+          -e,
+          "fetch('http://127.0.0.1:3000/readyz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [data, egress]
+    stop_grace_period: 60s
+
+  mailer:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      MAILER_API_KEY: ${MAILER_API_KEY:?}
+      SMTP_HOST: ${SMTP_HOST:?}
+      SMTP_SECURE: ${SMTP_SECURE:?}
+      SMTP_USER: ${SMTP_USER:?}
+      SMTP_PASS: ${SMTP_PASS:?}
+      SMTP_FROM: ${SMTP_FROM:?}
+    working_dir: /app/services/mailer
+    command: [bun, src/index.ts]
+    healthcheck:
+      test:
+        [
+          CMD,
+          bun,
+          -e,
+          "fetch('http://127.0.0.1:3000/readyz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [data, egress]
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_URL: ${API_POSTGRES_URL:?}
+      POSTGRES_SCHEMA: scs_api
+      API_PORT: 3001
+      BETTER_AUTH_URL: https://api.${SITE_DOMAIN:?}
+      PORTAL_ORIGIN: https://portal.${SITE_DOMAIN:?}
+      AUTH_COOKIE_DOMAIN: .${SITE_DOMAIN:?}
+      TRUSTED_PROXY_IP: 172.30.${APP_NETWORK_OCTET:?}.2
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:?}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:?}
+      MAILER_API_URL: http://mailer:3000
+      MAILER_API_KEY: ${MAILER_API_KEY:?}
+      GITHUB_APP_API_URL: http://github-app:3000
+      GITHUB_APP_INTERNAL_SECRET: ${GITHUB_APP_INTERNAL_SECRET:?}
+      DATA_PUBLIC_BASE_URL: https://data.${SITE_DOMAIN:?}
+      WEB_PROXY_INTERNAL_SECRET: ${WEB_PROXY_INTERNAL_SECRET:?}
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:?}
+      AVATAR_S3_BUCKET: scs-avatars
+      AVATAR_S3_REGION: us-east-1
+      AVATAR_S3_ENDPOINT: http://storage:8333
+      AVATAR_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?}
+      AVATAR_S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?}
+    working_dir: /app/services/api
+    command: [bun, src/server.ts]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+      github-app:
+        condition: service_healthy
+      mailer:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          CMD,
+          bun,
+          -e,
+          "fetch('http://127.0.0.1:3001/readyz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.3
+      data:
+      egress:
+    stop_grace_period: 60s
+
+  portal:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: next
+      args: { APP: portal, SITE_DOMAIN: '${SITE_DOMAIN:?}' }
+    restart: unless-stopped
+    environment:
+      COOKIE_DOMAIN: .${SITE_DOMAIN:?}
+      NEXT_PUBLIC_SITE_URL: https://portal.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_BASE_API_URL: https://api.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_PEOPLE_DATA_BASE_URL: https://data.${SITE_DOMAIN:?}/people/v2
+      NEXT_PUBLIC_API_CLIENT_ID: portal
+      NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH: 6
+    working_dir: /app/apps/portal
+    command: [bun, node_modules/next/dist/bin/next, start]
+    healthcheck: *next-health
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.4
+
+  people:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: next
+      args: { APP: people, SITE_DOMAIN: '${SITE_DOMAIN:?}' }
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SITE_URL: https://people.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_API_BASE_URL: https://api.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_PEOPLE_DATA_BASE_URL: https://data.${SITE_DOMAIN:?}/people/v2
+      NEXT_PUBLIC_PROJECTS_DATA_BASE_URL: https://data.${SITE_DOMAIN:?}/projects/v2
+      NEXT_PUBLIC_PROJECTS_SITE_URL: https://projects.${SITE_DOMAIN:?}
+    working_dir: /app/apps/people
+    command: [bun, node_modules/next/dist/bin/next, start]
+    healthcheck: *next-health
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.5
+
+  projects:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: next
+      args: { APP: projects, SITE_DOMAIN: '${SITE_DOMAIN:?}' }
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SITE_URL: https://projects.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_PROJECTS_DATA_BASE_URL: https://data.${SITE_DOMAIN:?}/projects/v2
+      NEXT_PUBLIC_PEOPLE_SITE_URL: https://people.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_DEPARTMENT_SITE_URL: https://${SITE_DOMAIN:?}
+    working_dir: /app/apps/projects
+    command: [bun, node_modules/next/dist/bin/next, start]
+    healthcheck: *next-health
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.6
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: next
+      args:
+        APP: web
+        SITE_DOMAIN: ${SITE_DOMAIN:?}
+        MOODLE_URL: ${MOODLE_URL:-https://scilms.pdn.ac.lk}
+    restart: unless-stopped
+    environment:
+      BASE_DOMAIN: ${SITE_DOMAIN:?}
+      PROXY_API_URL: https://api.${SITE_DOMAIN:?}
+      WEB_PROXY_INTERNAL_SECRET: ${WEB_PROXY_INTERNAL_SECRET:?}
+      NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN:?}
+      NEXT_PUBLIC_PEOPLE_SITE_URL: https://people.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_PROJECTS_SITE_URL: https://projects.${SITE_DOMAIN:?}
+      NEXT_PUBLIC_MOODLE_URL: ${MOODLE_URL:-https://scilms.pdn.ac.lk}
+    working_dir: /app/apps/web
+    command: [bun, node_modules/next/dist/bin/next, start]
+    healthcheck: *next-health
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.7
+
+  docs:
+    build:
+      context: ../..
+      dockerfile: deploy/self-hosted/Dockerfile
+      target: next
+      args: { APP: docs, SITE_DOMAIN: '${SITE_DOMAIN:?}' }
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_DOCS_SITE_URL: https://docs.${SITE_DOMAIN:?}
+    working_dir: /app/apps/docs
+    command: [bun, node_modules/next/dist/bin/next, start]
+    healthcheck: *next-health
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.8
+
+  proxy:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?}
+      ACME_EMAIL: ${ACME_EMAIL:?}
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${PUBLIC_DATA_DIR:?}:/srv/public-data:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      portal:
+        condition: service_healthy
+      people:
+        condition: service_healthy
+      projects:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+      docs:
+        condition: service_healthy
+    networks:
+      app:
+        ipv4_address: 172.30.${APP_NETWORK_OCTET:?}.2
+
+networks:
+  app:
+    ipam:
+      config:
+        - subnet: 172.30.${APP_NETWORK_OCTET:?}.0/24
+  data:
+    internal: true
+  egress: {}
+
+volumes:
+  postgres_data:
+  storage_data:
+  caddy_data:
+  caddy_config:

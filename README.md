@@ -136,6 +136,8 @@ Use [Operations](docs/OPERATIONS.md) for deployment, migration, recovery, and
 the remaining provider-side checks. Use
 [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) for the complete
 configuration inventory.
+The [departmental deployment guide](docs/DEPARTMENTAL_DEPLOYMENT.md) describes
+the self-hosted Docker Compose profile and its staging verification boundary.
 
 ## Repository Rules
 
@@ -151,7 +153,8 @@ configuration inventory.
 - Use `@/` or package aliases for cross-directory imports when the workspace
   supports them.
 - Use Conventional Commits. Husky validates staged files and commit messages.
-- Docker is not part of the current development or verification workflow.
+- Docker Compose is used for the optional self-hosted deployment profile; it
+  does not replace the repository's Bun verification gate.
 
 ## Contributor Guidance
 
@@ -203,6 +206,7 @@ workflow. Skills do not affect runtime behavior.
 | [ESLint config](docs/PACKAGE_ESLINT_CONFIG.md)             | change shared lint and Tailwind policy                                |
 | [Shared package internals](docs/PACKAGES/INDEX.md)         | maintain schema, UI, TypeScript, and ESLint package contracts         |
 | [Testing](docs/TESTING.md)                                 | select and run the correct verification layers                        |
+| [Departmental deployment](docs/DEPARTMENTAL_DEPLOYMENT.md) | install and operate the self-hosted Compose profile                   |
 | [Performance testing](docs/PERFORMANCE_TESTING.md)         | configure safe k6/browser workloads and interpret capacity evidence   |
 | [Dependency management](docs/DEPENDENCY_MANAGEMENT.md)     | add, update, audit, or remove dependencies                            |
 | [AI agent skills](docs/AI_AGENT_SKILLS.md)                 | manage shared, project-local skills for compatible coding agents      |

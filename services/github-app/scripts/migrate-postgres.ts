@@ -15,6 +15,8 @@ const config = z
     API_POSTGRES_SCHEMA: schemaName,
     OPERATIONS_POSTGRES_SCHEMA: schemaName,
     PGBOSS_SCHEMA: schemaName,
+    API_RUNTIME_ROLE: schemaName,
+    OPERATIONS_RUNTIME_ROLE: schemaName,
   })
   .refine(
     (value) =>
@@ -30,6 +32,7 @@ const config = z
 const migrations = [
   {
     schema: config.API_POSTGRES_SCHEMA,
+    runtimeRole: config.API_RUNTIME_ROLE,
     directory: new URL('../../api/migrations/postgres/', import.meta.url),
     filenames: [
       '0001_better_auth.sql',
@@ -42,6 +45,7 @@ const migrations = [
   },
   {
     schema: config.OPERATIONS_POSTGRES_SCHEMA,
+    runtimeRole: config.OPERATIONS_RUNTIME_ROLE,
     directory: new URL('../migrations/postgres/', import.meta.url),
     filenames: [
       '0001_operation_state.sql',
@@ -62,7 +66,12 @@ async function applyMigrations(
 
   await client.query('BEGIN');
   try {
-    await client.query(`CREATE SCHEMA IF NOT EXISTS "${target.schema}"`);
+    const schema = await client.query(
+      'SELECT 1 FROM pg_namespace WHERE nspname = $1',
+      [target.schema]
+    );
+    if (schema.rowCount !== 1)
+      throw new Error(`Bootstrap schema ${target.schema} before migration`);
     await client.query('SELECT set_config($1, quote_ident($2), true)', [
       'search_path',
       target.schema,
@@ -110,6 +119,9 @@ async function applyMigrations(
       );
       console.log(`Applied ${target.schema}/${filename}`);
     }
+    await client.query(
+      `REVOKE ALL ON TABLE schema_migrations FROM "${target.runtimeRole}"`
+    );
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

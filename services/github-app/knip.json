@@ -1,5 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip/schema.json",
-  "entry": ["tests/**/*.test.ts"],
+  "entry": ["scripts/*.ts", "tests/**/*.test.ts"],
   "ignoreDependencies": ["cloudflare"]
 }

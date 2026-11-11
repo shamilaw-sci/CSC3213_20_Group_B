@@ -1,0 +1,13 @@
+.git
+**/node_modules
+**/.next
+**/.turbo
+**/.cache
+**/dist
+**/.env
+**/.env.*
+**/.dev.vars*
+**/*.pem
+**/keys
+packages/performance/results
+output

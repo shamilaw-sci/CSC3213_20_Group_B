@@ -46,7 +46,8 @@ JavaScript signal handler; Linux signal tests are required to verify shutdown.
 Before either service starts, set `POSTGRES_MIGRATION_URL` to a dedicated
 deployment credential, set `API_POSTGRES_SCHEMA`,
 `OPERATIONS_POSTGRES_SCHEMA`, and `PGBOSS_SCHEMA` to three distinct schema
-names, and run `bun services/github-app/scripts/migrate-postgres.ts` from the
+names. Set `API_RUNTIME_ROLE` and `OPERATIONS_RUNTIME_ROLE` to the respective
+runtime database roles, then run `bun services/github-app/scripts/migrate-postgres.ts` from the
 repository root. The script serializes runners with a PostgreSQL session
 advisory lock, applies the reviewed API and operation SQL in transactions,
 records SHA-256 checksums, and invokes pg-boss's official migration CLI.

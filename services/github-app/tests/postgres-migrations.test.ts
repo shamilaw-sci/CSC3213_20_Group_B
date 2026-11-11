@@ -12,6 +12,7 @@ postgresTest(
     const api = `phase7_api_${suffix}`;
     const operations = `phase7_operations_${suffix}`;
     const jobs = `phase7_jobs_${suffix}`;
+    const runtimeRole = `phase7_runtime_${suffix}`;
     const admin = new Pool({ connectionString });
     const run = async () => {
       const child = Bun.spawn(['bun', 'scripts/migrate-postgres.ts'], {
@@ -22,6 +23,8 @@ postgresTest(
           API_POSTGRES_SCHEMA: api,
           OPERATIONS_POSTGRES_SCHEMA: operations,
           PGBOSS_SCHEMA: jobs,
+          API_RUNTIME_ROLE: runtimeRole,
+          OPERATIONS_RUNTIME_ROLE: runtimeRole,
         },
         stdout: 'pipe',
         stderr: 'pipe',
@@ -34,6 +37,10 @@ postgresTest(
       return { code, output: `${stdout}${stderr}` };
     };
     try {
+      await admin.query(`CREATE ROLE "${runtimeRole}"`);
+      await admin.query(`CREATE SCHEMA "${api}"`);
+      await admin.query(`CREATE SCHEMA "${operations}"`);
+      await admin.query(`CREATE SCHEMA "${jobs}"`);
       const concurrent = await Promise.all([run(), run()]);
       expect(concurrent.map((result) => result.code)).toEqual([0, 0]);
       expect(
@@ -47,6 +54,15 @@ postgresTest(
       );
       expect(rows.rows[0]?.count).toBe('6');
       await admin.query(
+        `GRANT ALL ON TABLE "${api}".schema_migrations TO "${runtimeRole}"`
+      );
+      expect((await run()).code).toBe(0);
+      const grant = await admin.query<{ granted: boolean }>(
+        'SELECT has_table_privilege($1, $2, $3) AS granted',
+        [runtimeRole, `${api}.schema_migrations`, 'UPDATE']
+      );
+      expect(grant.rows[0]?.granted).toBe(false);
+      await admin.query(
         `UPDATE "${api}".schema_migrations SET sha256 = $1 WHERE filename = $2`,
         ['invalid', '0001_better_auth.sql']
       );
@@ -57,6 +73,7 @@ postgresTest(
       await admin.query(`DROP SCHEMA IF EXISTS "${jobs}" CASCADE`);
       await admin.query(`DROP SCHEMA IF EXISTS "${operations}" CASCADE`);
       await admin.query(`DROP SCHEMA IF EXISTS "${api}" CASCADE`);
+      await admin.query(`DROP ROLE IF EXISTS "${runtimeRole}"`);
       await admin.end();
     }
   },
