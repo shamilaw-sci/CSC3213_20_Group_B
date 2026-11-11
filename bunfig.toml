@@ -1,10 +1,4 @@
 [install]
-# Vercel's Next.js function packager resolves the deployment adapter launcher
-# from the application's node_modules tree and does not follow the isolated
-# linker's .bun store symlinks. Next 16.4 emits `next/setup-node-env` as a
-# virtual adapter asset at the real package path, so the hoisted layout is
-# required for that file to stay resolvable after deployment.
-linker = "hoisted"
 # Only install package versions published at least seven days ago.
 minimumReleaseAge = 604800
 minimumReleaseAgeExcludes = ["@types/bun", "bun-types"]

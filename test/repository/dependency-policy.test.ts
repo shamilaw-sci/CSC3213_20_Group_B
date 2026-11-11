@@ -99,15 +99,6 @@ describe('workspace dependency policy', () => {
     expect(versionedPackages).toEqual([]);
   });
 
-  test('uses a node_modules layout that deployment packagers can resolve', () => {
-    const bunfig = readFileSync('bunfig.toml', 'utf8');
-
-    // The isolated linker stores packages under node_modules/.bun and links
-    // them from each workspace. Vercel's Next.js packager does not follow those
-    // links, which breaks the adapter's `next/setup-node-env` stub.
-    expect(bunfig).toContain('linker = "hoisted"');
-  });
-
   test('holds new releases for seven days with narrow compatibility exceptions', () => {
     const bunfig = readFileSync('bunfig.toml', 'utf8');
 
