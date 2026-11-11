@@ -12,9 +12,14 @@ export type WorkerHandler = (req: Request, env: Env) => Promise<Response>;
 
 function applyCorsHeadersToResponse(
   response: Response,
-  req: Request
+  req: Request,
+  env: Env
 ): Response {
-  return attachCorsHeaders(response, getRequestOrigin(req));
+  return attachCorsHeaders(
+    response,
+    getRequestOrigin(req),
+    env.ALLOWED_ORIGINS
+  );
 }
 
 export async function handleWorkerRequest(
@@ -25,11 +30,15 @@ export async function handleWorkerRequest(
   const origin = getRequestOrigin(req);
 
   if (req.method === 'OPTIONS') {
-    if (isAllowedOrigin(origin)) {
+    if (isAllowedOrigin(origin, env.ALLOWED_ORIGINS)) {
       return createCorsPreflightResponse(origin);
     }
 
-    return createJsonErrorResponse('Forbidden', 403, origin);
+    return attachCorsHeaders(
+      createJsonErrorResponse('Forbidden', 403, origin),
+      origin,
+      env.ALLOWED_ORIGINS
+    );
   }
 
   try {
@@ -37,9 +46,13 @@ export async function handleWorkerRequest(
     if (response.status === 405) {
       return response;
     }
-    return applyCorsHeadersToResponse(response, req);
+    return applyCorsHeadersToResponse(response, req, env);
   } catch (error: unknown) {
     console.error('Error handling request:', error);
-    return createInternalServerErrorResponse(origin);
+    return attachCorsHeaders(
+      createInternalServerErrorResponse(origin),
+      origin,
+      env.ALLOWED_ORIGINS
+    );
   }
 }

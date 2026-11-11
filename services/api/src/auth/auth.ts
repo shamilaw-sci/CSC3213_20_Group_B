@@ -58,12 +58,20 @@ export function validateAuthUserInfo({
   }
 }
 
-function requestOrigin(request: Request): string {
-  return request.headers.get('origin') ?? 'https://portal.scs-pdn.space';
+function requestOrigin(request: Request, env: Env): string {
+  return (
+    request.headers.get('origin') ??
+    env.ALLOWED_ORIGINS?.[0] ??
+    'https://portal.scs-pdn.space'
+  );
 }
 
-function passkeyRpId(request: Request): string {
-  return PASSKEY_RP_IDS[requestOrigin(request)] ?? 'scs-pdn.space';
+function passkeyRpId(request: Request, env: Env): string {
+  return (
+    env.PASSKEY_RP_ID ??
+    PASSKEY_RP_IDS[requestOrigin(request, env)] ??
+    'scs-pdn.space'
+  );
 }
 
 export function authOptions(request: Request, env: Env) {
@@ -75,7 +83,7 @@ export function authOptions(request: Request, env: Env) {
     basePath: AUTH_BASE_PATH,
     database: env.AUTH_DATABASE ?? requireD1(env),
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: ALLOWED_ORIGINS,
+    trustedOrigins: [...(env.ALLOWED_ORIGINS ?? ALLOWED_ORIGINS)],
     user: {
       validateUserInfo: validateAuthUserInfo,
     },
@@ -161,7 +169,7 @@ export function authOptions(request: Request, env: Env) {
         path: '/',
       },
       crossSubDomainCookies: production
-        ? { enabled: true, domain: COOKIE_DOMAIN }
+        ? { enabled: true, domain: env.AUTH_COOKIE_DOMAIN ?? COOKIE_DOMAIN }
         : { enabled: false },
       ipAddress: {
         ipAddressHeaders: ['cf-connecting-ip'],
@@ -194,9 +202,9 @@ export function authOptions(request: Request, env: Env) {
         },
       }),
       passkey({
-        rpID: passkeyRpId(request),
+        rpID: passkeyRpId(request, env),
         rpName: PASSKEY_RP_NAME,
-        origin: ALLOWED_ORIGINS,
+        origin: [...(env.ALLOWED_ORIGINS ?? ALLOWED_ORIGINS)],
         registration: {
           requireSession: true,
         },

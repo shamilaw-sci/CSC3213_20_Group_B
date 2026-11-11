@@ -45,6 +45,9 @@ export interface Env {
   AVATAR_S3_SECRET_ACCESS_KEY?: string;
   IMAGES?: ImagesBinding;
   AVATAR_IMAGE_PROCESSOR?: AvatarImageProcessor;
+  ALLOWED_ORIGINS?: readonly string[];
+  PASSKEY_RP_ID?: string;
+  AUTH_COOKIE_DOMAIN?: string;
 }
 
 export function requireD1(env: Env): D1Database {

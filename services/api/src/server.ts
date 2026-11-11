@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createPostgresAuthDatabase } from '@/config/postgres-auth-database';
 import { createPostgresRelationalBindings } from '@/config/postgres-relational-bindings';
 import { handleApiRequest } from '@/index';
+import { trustedClientHeaders } from '@/runtime/bun/client-ip';
 import { bindBackgroundTaskHandler } from '@/runtime/request-context';
 import { createSharpAvatarImageProcessor } from '@/services/avatar-image-processor-sharp';
 import type { Env } from '@/types/env';
@@ -16,6 +17,15 @@ const databaseUrl = z
       ['postgres:', 'postgresql:'].includes(new URL(value).protocol)
   );
 const schema = z.string().regex(/^[a-z][a-z0-9_]*$/);
+const httpsOrigin = z.url().refine((value) => {
+  const url = new URL(value);
+  return (
+    url.protocol === 'https:' &&
+    url.pathname === '/' &&
+    !url.search &&
+    !url.hash
+  );
+});
 const config = z
   .object({
     POSTGRES_URL: databaseUrl,
@@ -23,6 +33,9 @@ const config = z
     API_PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.url(),
+    PORTAL_ORIGIN: httpsOrigin,
+    AUTH_COOKIE_DOMAIN: z.string().regex(/^\.[a-z0-9.-]+$/),
+    TRUSTED_PROXY_IP: z.union([z.ipv4(), z.ipv6()]).optional(),
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GITHUB_CLIENT_ID: z.string().min(1),
@@ -39,6 +52,26 @@ const config = z
     AVATAR_S3_ENDPOINT: z.url(),
     AVATAR_S3_ACCESS_KEY_ID: z.string().min(1),
     AVATAR_S3_SECRET_ACCESS_KEY: z.string().min(1),
+  })
+  .superRefine((value, ctx) => {
+    const portalHost = new URL(value.PORTAL_ORIGIN).hostname;
+    const apiHost = new URL(value.BETTER_AUTH_URL).hostname;
+    const expectedDomain = portalHost.replace(/^portal\./, '.');
+    const localTestApi =
+      new URL(value.BETTER_AUTH_URL).protocol === 'http:' &&
+      ['127.0.0.1', 'localhost', '[::1]'].includes(apiHost);
+    if (
+      !portalHost.startsWith('portal.') ||
+      value.AUTH_COOKIE_DOMAIN !== expectedDomain ||
+      (apiHost !== `api.${expectedDomain.slice(1)}` && !localTestApi)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['AUTH_COOKIE_DOMAIN'],
+        message:
+          'Portal and API origins must share the configured cookie domain',
+      });
+    }
   })
   .parse(process.env);
 
@@ -60,6 +93,9 @@ const env: Env = {
   ...createPostgresRelationalBindings(pool),
   AVATAR_STORAGE: storage,
   AVATAR_IMAGE_PROCESSOR: createSharpAvatarImageProcessor(),
+  ALLOWED_ORIGINS: [config.PORTAL_ORIGIN],
+  PASSKEY_RP_ID: new URL(config.PORTAL_ORIGIN).hostname,
+  AUTH_COOKIE_DOMAIN: config.AUTH_COOKIE_DOMAIN,
 };
 
 const backgroundTasks = new Set<Promise<unknown>>();
@@ -107,11 +143,17 @@ try {
       if (!ready)
         return Response.json({ error: 'Service unavailable' }, { status: 503 });
 
-      // Never trust a client-supplied Cloudflare IP header on a direct Bun listener.
-      const headers = new Headers(request.headers);
-      headers.delete('cf-connecting-ip');
       const address = serverInstance.requestIP(request)?.address;
-      if (address) headers.set('cf-connecting-ip', address);
+      const headers = trustedClientHeaders(
+        request.headers,
+        address,
+        config.TRUSTED_PROXY_IP
+      );
+      if (!headers)
+        return Response.json(
+          { error: 'Invalid client address' },
+          { status: 400 }
+        );
       const trustedRequest = new Request(request, { headers });
       bindBackgroundTaskHandler(trustedRequest, (promise) => {
         const tracked = promise.catch((error: unknown) =>

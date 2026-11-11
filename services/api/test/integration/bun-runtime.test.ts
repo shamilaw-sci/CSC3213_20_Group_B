@@ -102,6 +102,8 @@ integrationTest(
             POSTGRES_SCHEMA: schema,
             API_PORT: String(port),
             BETTER_AUTH_URL: base,
+            PORTAL_ORIGIN: 'https://portal.example.test',
+            AUTH_COOKIE_DOMAIN: '.example.test',
             BETTER_AUTH_SECRET: authSecret,
             GOOGLE_CLIENT_ID: 'test',
             GOOGLE_CLIENT_SECRET: 'test',

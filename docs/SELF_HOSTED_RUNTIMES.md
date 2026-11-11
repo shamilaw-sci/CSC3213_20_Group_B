@@ -12,8 +12,10 @@ target platform. Sharp needs its matching native binary and libvips. Keep both
 services behind HTTPS and restrict GitHub App access to the API; use distinct,
 strong internal secrets. The API derives the client IP from its direct socket
 and replaces any incoming `cf-connecting-ip` header. If deployed behind a
-reverse proxy, configure and test an explicit trusted-proxy policy before
-depending on client-IP rate limits.
+reverse proxy, set `TRUSTED_PROXY_IP` to its exact socket address. The API
+then requires a valid `X-SCS-Client-IP` supplied by that proxy and rejects
+other peers. The proxy must overwrite that header with its observed client
+address. Health endpoints remain available for private container checks.
 
 ## Required infrastructure
 
@@ -43,12 +45,15 @@ JavaScript signal handler; Linux signal tests are required to verify shutdown.
 ## Configuration
 
 The API requires `POSTGRES_URL`, `POSTGRES_SCHEMA`, `BETTER_AUTH_SECRET`,
-`BETTER_AUTH_URL`, both OAuth client IDs and secrets, `MAILER_API_URL`,
+`BETTER_AUTH_URL`, `PORTAL_ORIGIN`, `AUTH_COOKIE_DOMAIN`, both OAuth client IDs and secrets, `MAILER_API_URL`,
 `MAILER_API_KEY`, `GITHUB_APP_API_URL`, `GITHUB_APP_INTERNAL_SECRET`,
 `DATA_PUBLIC_BASE_URL`, `WEB_PROXY_INTERNAL_SECRET`, `TYPESAFE_API_KEY`, and
 `AVATAR_S3_BUCKET`, `AVATAR_S3_REGION`, `AVATAR_S3_ENDPOINT`,
 `AVATAR_S3_ACCESS_KEY_ID`, `AVATAR_S3_SECRET_ACCESS_KEY`. `API_PORT` defaults
-to 3001. The Bun API uses Sharp and the S3 adapter. It has no production
+to 3001. `PORTAL_ORIGIN` is the HTTPS Portal origin and sets the allowed
+origin and passkey RP ID. `AUTH_COOKIE_DOMAIN` is the shared parent domain
+with a leading dot, such as `.example.edu`; Portal and API must use its
+`portal` and `api` subdomains. The Bun API uses Sharp and the S3 adapter. It has no production
 in-memory or D1 fallback.
 
 The GitHub App requires `POSTGRES_URL`, `POSTGRES_SCHEMA`, `PGBOSS_SCHEMA`,

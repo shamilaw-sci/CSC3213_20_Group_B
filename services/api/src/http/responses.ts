@@ -23,11 +23,15 @@ export function createJsonResponse(
 
 export function attachCorsHeaders(
   response: Response,
-  origin: string
+  origin: string,
+  allowedOrigins?: readonly string[]
 ): Response {
-  if (!ALLOWED_ORIGINS.includes(origin)) return response;
-
   const clonedResponse = new Response(response.body, response);
+  if (allowedOrigins && !allowedOrigins.includes(origin)) {
+    for (const name of Object.keys(createCorsHeaders(origin)))
+      clonedResponse.headers.delete(name);
+    return clonedResponse;
+  }
   const corsHeaderEntries = createCorsHeaders(origin);
   for (const [headerName, headerValue] of Object.entries(corsHeaderEntries)) {
     clonedResponse.headers.set(headerName, headerValue);
@@ -83,6 +87,9 @@ export function getRequestOrigin(req: Request): string {
   return req.headers.get('Origin') || req.headers.get('origin') || '';
 }
 
-export function isAllowedOrigin(origin: string): boolean {
-  return ALLOWED_ORIGINS.includes(origin);
+export function isAllowedOrigin(
+  origin: string,
+  allowedOrigins: readonly string[] = ALLOWED_ORIGINS
+): boolean {
+  return allowedOrigins.includes(origin);
 }
