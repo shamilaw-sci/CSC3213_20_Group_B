@@ -6,7 +6,7 @@
     "types": ["bun"],
     "rootDir": "."
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
   "exclude": [
     "dist",
     "node_modules",

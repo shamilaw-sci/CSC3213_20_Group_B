@@ -21,8 +21,9 @@ address. Health endpoints remain available for private container checks.
 
 - PostgreSQL 17 with a dedicated API schema containing all six reviewed API
   migrations, a distinct operation schema containing both reviewed GitHub App
-  migrations, and a distinct schema for pg-boss. The GitHub App role needs
-  pg-boss schema migration privileges at startup. See
+  migrations, and a distinct schema for pg-boss. Apply migrations with a
+  deployment role before startup; the GitHub App never migrates pg-boss at
+  startup. See
   [database portability](DATABASE_PORTABILITY.md) and
   [durable operations](SERVICES/GITHUB_APP/DURABLE_OPERATIONS.md).
 - A private S3-compatible bucket with get, put, head, delete, and atomic
@@ -41,6 +42,17 @@ the owned resources. The API waits for tracked Better Auth background tasks
 and closes its PostgreSQL pool. The GitHub App stops the worker and pg-boss,
 then closes its pool. A Windows Bun child process may terminate before its
 JavaScript signal handler; Linux signal tests are required to verify shutdown.
+
+Before either service starts, set `POSTGRES_MIGRATION_URL` to a dedicated
+deployment credential, set `API_POSTGRES_SCHEMA`,
+`OPERATIONS_POSTGRES_SCHEMA`, and `PGBOSS_SCHEMA` to three distinct schema
+names, and run `bun services/github-app/scripts/migrate-postgres.ts` from the
+repository root. The script serializes runners with a PostgreSQL session
+advisory lock, applies the reviewed API and operation SQL in transactions,
+records SHA-256 checksums, and invokes pg-boss's official migration CLI.
+It refuses untracked existing tables or changed migration files. Back up the
+database and independently review new SQL and pg-boss plans before an update.
+Do not grant the runtime roles schema migration privileges.
 
 ## Configuration
 

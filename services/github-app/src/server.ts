@@ -59,6 +59,8 @@ const pool = new Pool({
 const boss = new PgBoss({
   connectionString: processEnv.POSTGRES_URL,
   schema: processEnv.PGBOSS_SCHEMA,
+  migrate: false,
+  createSchema: false,
   connectionTimeoutMillis: 5_000,
 });
 const store = new PostgresOperationStore(pool, { dispatchOutbox: true });

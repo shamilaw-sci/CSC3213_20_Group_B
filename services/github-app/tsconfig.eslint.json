@@ -6,7 +6,12 @@
     "types": ["bun"],
     "rootDir": "."
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "eslint.config.ts"
+  ],
   "exclude": [
     "dist",
     "node_modules",

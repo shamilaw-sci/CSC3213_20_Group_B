@@ -166,13 +166,13 @@ the operation-create/dispatch gap. `OperationDispatcher` remains the only
 producer dependency of the executor; handlers do not import pg-boss. The
 Cloudflare Worker does not import the PostgreSQL queue module.
 
-Apply the two reviewed application migrations in order, then start pg-boss
-and call `preparePostgresOperationQueues` before accepting submissions or
-starting `PostgresOperationWorker`. pg-boss creates and upgrades its separate
-schema during `start`; grant its database role schema/table creation and
-migration rights, or run that step under a deployment role before starting
-restricted workers. Review pg-boss schema upgrades independently of the two
-application migrations. Use direct PostgreSQL sessions or session pooling
+Apply the two reviewed application migrations and the pg-boss schema before
+starting the runtime. The deployment migration command applies the two SQL
+files and invokes pg-boss's official migration CLI. Grant its database role
+schema migration privileges; runtime workers need only operational rights.
+The runtime calls `preparePostgresOperationQueues` before accepting submissions
+or starting `PostgresOperationWorker`. Review pg-boss schema upgrades
+independently of the two application migrations. Use direct PostgreSQL sessions or session pooling
 for the operation coordinator. Queue workers need network access to both
 PostgreSQL and GitHub. The Bun entry point now composes the PostgreSQL store,
 session advisory-lock coordinator, pg-boss producer and worker, and outbox

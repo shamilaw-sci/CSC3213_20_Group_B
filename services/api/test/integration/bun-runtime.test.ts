@@ -174,6 +174,19 @@ integrationTest(
           )
         );
       }
+      const migrate = Bun.spawnSync(
+        ['bun', 'node_modules/pg-boss/dist/cli.js', 'migrate'],
+        {
+          cwd: fileURLToPath(new URL('../../../github-app/', import.meta.url)),
+          env: {
+            ...process.env,
+            PGBOSS_DATABASE_URL: connectionString,
+            PGBOSS_SCHEMA: queueSchema,
+          },
+        }
+      );
+      if (migrate.exitCode !== 0)
+        throw new Error(new TextDecoder().decode(migrate.stderr));
       githubChild = Bun.spawn(['bun', 'src/server.ts'], {
         cwd: fileURLToPath(new URL('../../../github-app/', import.meta.url)),
         env: {
