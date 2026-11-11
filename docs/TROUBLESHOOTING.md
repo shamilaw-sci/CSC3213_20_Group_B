@@ -22,14 +22,13 @@ against a working sibling before changing code.
 | Mail request is rejected                               | Check bearer authentication and the shared mail request schema before SMTP                   |
 | Dark theme text is unreadable                          | Replace literal colors with semantic tokens and verify hover/focus states                    |
 
-## Vercel Web function cannot find `next/setup-node-env`
+## Vercel Next.js function cannot find `next/setup-node-env`
 
-Check whether `@scs/web:build` actually ran in the Vercel build log. Next's
-Vercel adapter emits this virtual asset during `onBuildComplete`; a Turbo cache
-hit only replays the build log and `.next` output, so the adapter callback does
-not run. Web's package-level Turbo configuration disables caching for this build
-task. Confirm the next deployment reports `cache bypass` for `@scs/web:build`,
-then exercise a dynamic Web route.
+This error can occur when Turborepo restores a cached Next.js build, skipping the Vercel adapter's `onBuildComplete` callback that registers the virtual `next/setup-node-env` asset. As a result, the deployed function may fail at runtime.
+
+**Fix:** Disable Turbo caching for the `build` task in affected Next.js applications using their package-level `turbo.json`, while preserving other caching behavior.
+
+**Verification:** Confirm `cache bypass` in Vercel build logs and test a dynamic route to ensure the deployed function starts successfully.
 
 ## Escalation evidence
 

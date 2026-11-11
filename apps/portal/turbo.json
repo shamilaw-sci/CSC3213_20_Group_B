@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "cache": false,
       "env": [
         "COOKIE_DOMAIN",
         "NEXT_PUBLIC_API_CLIENT_ID",
