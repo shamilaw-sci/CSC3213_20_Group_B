@@ -1,8 +1,11 @@
 import { expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
 
+const resolveFromService = createRequire(import.meta.url);
+const pgBossCli = resolveFromService.resolve('pg-boss/dist/cli.js');
 const postgresTest = process.env.POSTGRES_TEST_URL ? test : test.skip;
 
 postgresTest(
@@ -31,17 +34,14 @@ postgresTest(
           )
         );
       }
-      const migrate = Bun.spawnSync(
-        ['bun', 'node_modules/pg-boss/dist/cli.js', 'migrate'],
-        {
-          cwd: fileURLToPath(new URL('../', import.meta.url)),
-          env: {
-            ...process.env,
-            PGBOSS_DATABASE_URL: connectionString,
-            PGBOSS_SCHEMA: queueSchema,
-          },
-        }
-      );
+      const migrate = Bun.spawnSync(['bun', pgBossCli, 'migrate'], {
+        cwd: fileURLToPath(new URL('../', import.meta.url)),
+        env: {
+          ...process.env,
+          PGBOSS_DATABASE_URL: connectionString,
+          PGBOSS_SCHEMA: queueSchema,
+        },
+      });
       if (migrate.exitCode !== 0)
         throw new Error(new TextDecoder().decode(migrate.stderr));
       child = Bun.spawn(['bun', 'src/server.ts'], {

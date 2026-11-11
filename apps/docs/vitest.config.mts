@@ -1,7 +1,10 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import mdx from 'fumadocs-mdx/vite';
 import { defineConfig } from 'vitest/config';
+
+const resolveFromDocs = createRequire(import.meta.url);
 
 export default defineConfig({
   plugins: mdx(undefined, {
@@ -13,10 +16,7 @@ export default defineConfig({
     alias: [
       {
         find: 'react/jsx-dev-runtime',
-        replacement: path.resolve(
-          import.meta.dirname,
-          'node_modules/react/jsx-dev-runtime.js'
-        ),
+        replacement: resolveFromDocs.resolve('react/jsx-dev-runtime'),
       },
       { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
       {

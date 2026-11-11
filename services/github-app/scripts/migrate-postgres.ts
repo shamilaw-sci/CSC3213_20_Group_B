@@ -1,8 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { Pool, type PoolClient } from 'pg';
 import { z } from 'zod';
+
+const resolveFromService = createRequire(import.meta.url);
+const pgBossCli = resolveFromService.resolve('pg-boss/dist/cli.js');
 
 const schemaName = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const config = z
@@ -140,19 +144,16 @@ try {
   await client.query('SELECT pg_advisory_lock(1048573, 7)');
   for (const target of migrations) await applyMigrations(client, target);
 
-  const child = Bun.spawn(
-    ['bun', 'node_modules/pg-boss/dist/cli.js', 'migrate'],
-    {
-      cwd: fileURLToPath(new URL('../', import.meta.url)),
-      env: {
-        ...process.env,
-        PGBOSS_DATABASE_URL: config.POSTGRES_MIGRATION_URL,
-        PGBOSS_SCHEMA: config.PGBOSS_SCHEMA,
-      },
-      stdout: 'inherit',
-      stderr: 'inherit',
-    }
-  );
+  const child = Bun.spawn(['bun', pgBossCli, 'migrate'], {
+    cwd: fileURLToPath(new URL('../', import.meta.url)),
+    env: {
+      ...process.env,
+      PGBOSS_DATABASE_URL: config.POSTGRES_MIGRATION_URL,
+      PGBOSS_SCHEMA: config.PGBOSS_SCHEMA,
+    },
+    stdout: 'inherit',
+    stderr: 'inherit',
+  });
   if ((await child.exited) !== 0) throw new Error('pg-boss migration failed');
   console.log('PostgreSQL schemas are current');
 } finally {

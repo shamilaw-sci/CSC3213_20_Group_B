@@ -1,8 +1,14 @@
 import { expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
 import sharp from 'sharp';
+
+const resolveFromGithubApp = createRequire(
+  new URL('../../../github-app/package.json', import.meta.url)
+);
+const pgBossCli = resolveFromGithubApp.resolve('pg-boss/dist/cli.js');
 
 const integrationTest =
   process.env.POSTGRES_TEST_URL &&
@@ -176,17 +182,14 @@ integrationTest(
           )
         );
       }
-      const migrate = Bun.spawnSync(
-        ['bun', 'node_modules/pg-boss/dist/cli.js', 'migrate'],
-        {
-          cwd: fileURLToPath(new URL('../../../github-app/', import.meta.url)),
-          env: {
-            ...process.env,
-            PGBOSS_DATABASE_URL: connectionString,
-            PGBOSS_SCHEMA: queueSchema,
-          },
-        }
-      );
+      const migrate = Bun.spawnSync(['bun', pgBossCli, 'migrate'], {
+        cwd: fileURLToPath(new URL('../../../github-app/', import.meta.url)),
+        env: {
+          ...process.env,
+          PGBOSS_DATABASE_URL: connectionString,
+          PGBOSS_SCHEMA: queueSchema,
+        },
+      });
       if (migrate.exitCode !== 0)
         throw new Error(new TextDecoder().decode(migrate.stderr));
       githubChild = Bun.spawn(['bun', 'src/server.ts'], {
