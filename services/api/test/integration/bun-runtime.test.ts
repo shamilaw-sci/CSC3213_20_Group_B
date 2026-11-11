@@ -92,12 +92,14 @@ integrationTest(
     });
     const imageKeys = new Set([`avatars/${username}/${hash}.webp`]);
     const start = async (mode: 'approved' | 'review' = 'approved') => {
+      const testEnvironment = { ...process.env };
+      delete testEnvironment.TRUSTED_PROXY_IP;
       child = Bun.spawn(
         ['bun', '--preload', 'test/helpers/mock-typesafe.ts', 'src/server.ts'],
         {
           cwd: fileURLToPath(new URL('../../', import.meta.url)),
           env: {
-            ...process.env,
+            ...testEnvironment,
             POSTGRES_URL: connectionString,
             POSTGRES_SCHEMA: schema,
             API_PORT: String(port),
