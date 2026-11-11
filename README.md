@@ -138,6 +138,8 @@ the remaining provider-side checks. Use
 configuration inventory.
 The [departmental deployment guide](docs/DEPARTMENTAL_DEPLOYMENT.md) describes
 the self-hosted Docker Compose profile and its staging verification boundary.
+The [staging acceptance checklist](docs/STAGING_ACCEPTANCE.md) records the
+evidence and recovery actions required before production sign-off.
 
 ## Repository Rules
 

@@ -18,7 +18,8 @@ Markdown files are readable on GitHub and published by the documentation site.
   [Environment variables](ENVIRONMENT_VARIABLES.md).
 - Release and incident work starts in [CI](CI.md),
   [Operations](OPERATIONS.md),
-  [Departmental deployment](DEPARTMENTAL_DEPLOYMENT.md), and [Security](SECURITY.md).
+  [Departmental deployment](DEPARTMENTAL_DEPLOYMENT.md),
+  [Staging acceptance](STAGING_ACCEPTANCE.md), and [Security](SECURITY.md).
 - Interface changes should follow
   [UI quality assurance](UI_QUALITY_ASSURANCE.md).
 - Browser agent tools are documented in [Browser WebMCP](WEBMCP.md).
