@@ -10,6 +10,9 @@ import sendRoute from '@/routes/send.route';
 
 const app = new Hono();
 
+app.get('/healthz', (c) => c.json({ status: 'ok' }));
+app.get('/readyz', (c) => c.json({ ready: true }));
+
 app.use('*', async (c, next) => {
   const securityTxtRedirect = getSecurityTxtRedirectTarget(c.req.raw);
   if (securityTxtRedirect) return c.redirect(securityTxtRedirect, 308);

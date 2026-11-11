@@ -1,9 +1,21 @@
 import app from '@/app';
 import { env } from '@/config/env';
 
-console.log(`Mailer API listening on http://localhost:${env.PORT}`);
+const server = Bun.serve({ port: env.PORT, fetch: app.fetch });
+let stopping = false;
 
-export default {
-  port: env.PORT,
-  fetch: app.fetch,
-};
+function handleSignal(): void {
+  if (stopping) return;
+  stopping = true;
+  void server.stop().then(
+    () => process.exit(0),
+    (error: unknown) => {
+      console.error('Mailer shutdown failed', error);
+      process.exit(1);
+    }
+  );
+}
+
+process.once('SIGINT', handleSignal);
+process.once('SIGTERM', handleSignal);
+console.log(`Mailer API listening on port ${env.PORT}`);

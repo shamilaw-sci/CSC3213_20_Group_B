@@ -75,6 +75,12 @@ The GitHub App requires `POSTGRES_URL`, `POSTGRES_SCHEMA`, `PGBOSS_SCHEMA`,
 The API's `GITHUB_APP_INTERNAL_SECRET` must equal the GitHub App's
 `X_INTERNAL_SECRET`. Keep the services on independently managed listeners.
 
+The Mailer Bun entry point exposes `/healthz` and `/readyz` for private
+container checks and stops its HTTP listener on `SIGINT` or `SIGTERM`.
+Readiness confirms that the configured process is serving; it does not prove
+that the external SMTP server can accept mail. Keep `/send` reachable only
+from the API and require its bearer token.
+
 ## Live verification
 
 Use an isolated PostgreSQL 17 database and a disposable private S3 bucket with
