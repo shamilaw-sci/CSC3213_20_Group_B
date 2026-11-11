@@ -58,8 +58,9 @@ Some features require credentials from external services. You only need to confi
 
 Refer to the [Environment Variables](ENVIRONMENT_VARIABLES.md) instructions for the relevant application or service.
 
-Docker is not part of the current setup. Do not install dependencies with npm,
-pnpm, or Yarn inside a workspace.
+Docker is optional for ordinary local development; the
+[departmental deployment](DEPARTMENTAL_DEPLOYMENT.md) uses Docker Compose.
+Do not install dependencies with npm, pnpm, or Yarn inside a workspace.
 
 ## First Setup
 

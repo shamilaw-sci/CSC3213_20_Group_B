@@ -1,14 +1,16 @@
 ---
 title: Self-hosted Bun runtimes
-description: Phase 6 API and GitHub App composition, requirements, and verification.
+description: API and GitHub App Bun composition, requirements, and verification.
 ---
 
 # Self-hosted Bun runtimes
 
 The API and GitHub App have Bun entry points that reuse their Cloudflare route
-handlers and business services. This is runtime composition, not deployment
-packaging. Install the pinned Bun version and workspace dependencies on the
-target platform. Sharp needs its matching native binary and libvips. Keep both
+handlers and business services. The optional
+[departmental Compose profile](DEPARTMENTAL_DEPLOYMENT.md) packages these
+runtimes. For a direct Bun deployment, install the pinned Bun version and
+workspace dependencies on the target platform. Sharp needs its matching native
+binary and libvips. Keep both
 services behind HTTPS and restrict GitHub App access to the API; use distinct,
 strong internal secrets. The API derives the client IP from its direct socket
 and replaces any incoming `cf-connecting-ip` header. If deployed behind a

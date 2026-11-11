@@ -62,7 +62,8 @@ interface using the existing `pg` driver. The dedicated migration
 PostgreSQL table with a primary key on operation ID and a JSONB record. Apply
 it once to a dedicated schema before starting workers; the application does
 not create tables at runtime. The PostgreSQL adapter is not imported by the
-Cloudflare Worker or the current local Bun entry point.
+Cloudflare Worker. The self-hosted Bun entry point composes it with the pg-boss
+queue and outbox recovery.
 
 PostgreSQL creation uses `INSERT ... ON CONFLICT DO NOTHING`; the unique index
 decides the winner across processes. Saves and cancellation requests use row

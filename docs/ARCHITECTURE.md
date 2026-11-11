@@ -12,9 +12,12 @@ and dependency sections.
 
 ## System Context
 
-The repository contains five Next.js applications, two Cloudflare Workers, one
-Bun mail service, and shared packages. Public records are published from a
-separate Git repository.
+The repository contains five Next.js applications, two services with both
+Cloudflare Worker and Bun entry points, one Bun mail service, and shared
+packages. Public records are published from a separate Git repository. The
+diagram below shows the Cloudflare deployment; the
+[departmental profile](DEPARTMENTAL_DEPLOYMENT.md) substitutes PostgreSQL for
+D1, Durable Objects, and Queue state and SeaweedFS for private avatar storage.
 
 ```mermaid
 flowchart TB
@@ -68,9 +71,8 @@ flowchart TB
 ```
 
 The key trust boundary is deliberate: browser applications never receive
-GitHub App credentials. Portal calls the API Worker, and the API calls the
-private GitHub App Worker through a service binding or authenticated HTTP
-fallback.
+GitHub App credentials. Portal calls the API, and the API calls the private
+GitHub App through a Cloudflare service binding or authenticated HTTP.
 
 ## Workspace Responsibilities
 
@@ -81,7 +83,7 @@ fallback.
 | `apps/projects`          | project collections, search, and public project details                              | project write workflows                           |
 | `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes      |
 | `apps/docs`              | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source            |
-| `services/api`           | Better Auth, sessions, authorization, D1 state, public API contracts                 | GitHub installation credentials                   |
+| `services/api`           | Better Auth, sessions, authorization, relational state, public API contracts         | GitHub installation credentials                   |
 | `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state        |
 | `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                           |
 | `packages/security`      | RFC 9116 document validation, generation, and discovery redirect policy              | authentication, authorization, or incident data   |
@@ -91,6 +93,8 @@ fallback.
 | `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions            |
 | `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points     |
 | `packages/eslint-config` | shared lint policy                                                                   | product-specific exceptions without evidence      |
+| `packages/performance`   | guarded load tests and local reports                                                 | hosted traffic without operator authorization     |
+| `packages/webmcp`        | browser tool registration and validation                                             | privileged service credentials                    |
 
 ## Read and Write Paths
 
@@ -137,6 +141,13 @@ sequenceDiagram
 ```
 
 ## State Ownership
+
+The table describes the Cloudflare deployment. In the departmental profile,
+PostgreSQL owns API relational, operation, and pg-boss job state; SeaweedFS owns
+private avatar objects. GitHub remains authoritative for public records, and
+the validated public JSON snapshot is promoted manually. See
+[self-hosted runtimes](SELF_HOSTED_RUNTIMES.md) and
+[departmental deployment](DEPARTMENTAL_DEPLOYMENT.md).
 
 | State                                                                 | Authoritative owner        | Notes                                           |
 | --------------------------------------------------------------------- | -------------------------- | ----------------------------------------------- |

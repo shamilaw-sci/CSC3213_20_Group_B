@@ -42,6 +42,11 @@ environment files described in
 
 ## What Runs Where
 
+This diagram shows the Cloudflare deployment. The optional
+[departmental profile](docs/DEPARTMENTAL_DEPLOYMENT.md) runs the same apps and
+services behind Caddy, with PostgreSQL for API and operation state and SeaweedFS
+for private avatars.
+
 ```mermaid
 flowchart LR
   Visitor[Browser] --> Web[Department website]
@@ -77,7 +82,7 @@ Public People pictures use the separate [avatar API](docs/PUBLIC_AVATARS.md).
 | `apps/people`            | `@scs/people`        | Public staff, student, alumni, and profile pages |
 | `apps/projects`          | `@scs/projects`      | Public project discovery and project details     |
 | `apps/portal`            | `@scs/portal`        | Authentication and management workflows          |
-| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and D1 state    |
+| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and state       |
 | `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests   |
 | `services/mailer`        | `@scs/mailer`        | Authenticated templated email and SMTP delivery  |
 | `packages/security`      | `@scs/security`      | Shared security.txt validation and generation    |
@@ -197,7 +202,7 @@ workflow. Skills do not affect runtime behavior.
 | [Projects application](docs/APPLICATION_PROJECTS.md)       | change showcase discovery or project details                          |
 | [Portal application](docs/APPLICATION_PORTAL.md)           | change authenticated editing and administration                       |
 | [Application internals](docs/APPLICATIONS/INDEX.md)        | trace application routing, state, rendering, and failure behavior     |
-| [API service](docs/SERVICE_API.md)                         | change browser API, auth, D1 state, or orchestration                  |
+| [API service](docs/SERVICE_API.md)                         | change browser API, auth, relational state, or orchestration          |
 | [GitHub App service](docs/SERVICE_GITHUB_APP.md)           | change durable Git-backed automation                                  |
 | [Mailer service](docs/SERVICE_MAILER.md)                   | change email templates, validation, or SMTP delivery                  |
 | [Service internals](docs/SERVICES/INDEX.md)                | trace backend request lifecycles, state, integrations, and failures   |

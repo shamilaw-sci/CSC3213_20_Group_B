@@ -22,6 +22,9 @@ Portal submissions are validated by the API and sent to the GitHub App. The
 automation service reads current repository state, checks revisions, writes the
 canonical record layout, and creates or updates a pull request. Durable
 operations expose progress without holding a browser request open.
+For the departmental profile, an operator promotes a validated public-data
+commit to the Caddy snapshot; merging a pull request alone does not update that
+snapshot. See [departmental deployment](DEPARTMENTAL_DEPLOYMENT.md).
 
 ```mermaid
 flowchart LR

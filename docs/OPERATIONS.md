@@ -9,7 +9,7 @@ This runbook covers verification, deployment boundaries, migrations,
 observability, and recovery. Commands are examples; production actions still
 require the target provider credentials and repository/environment approvals.
 
-## Deployment Topology
+## Cloudflare deployment topology
 
 ```mermaid
 flowchart LR
@@ -43,9 +43,11 @@ flowchart LR
 ```
 
 Root commands verify the repository; they do not deploy all units together.
-Docker is not part of the current build or deployment process.
+The optional [departmental Compose profile](DEPARTMENTAL_DEPLOYMENT.md) has a
+separate deployment and recovery procedure, with
+[staging acceptance](STAGING_ACCEPTANCE.md) required before cutover.
 
-## Deployment Units
+## Cloudflare deployment units
 
 | Unit              | Runtime           | Local production check         | Deployment owner         |
 | ----------------- | ----------------- | ------------------------------ | ------------------------ |

@@ -55,8 +55,9 @@ the complete gate against the integrated repository state.
 | `bun run test`                  | declared workspace behavior suites                                 |
 | `bun run build`                 | Next.js, schema, and Worker production compilation                 |
 
-`typecheck:test` currently exists in API, GitHub App, Mailer, Projects, and
-Schemas. Add it when another workspace gains test-only compiler requirements.
+Run `typecheck:test` only where the workspace declares it. The root Turbo task
+selects those workspaces from their current package scripts; it does not imply
+that every workspace has a test suite.
 
 ## Caching and Concurrency
 

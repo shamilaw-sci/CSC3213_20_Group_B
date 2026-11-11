@@ -1,18 +1,20 @@
 ---
 title: API service
-description: Browser-facing API ownership, Better Auth, D1 state, route families, downstream services, and verification.
+description: Browser-facing API ownership, Better Auth, relational state, route families, downstream services, and verification.
 ---
 
 # API service
 
-`services/api` (`@scs/api`) is the Cloudflare Worker boundary for Portal. It
-owns Better Auth, D1-backed auth/proxy/permission state, authorization, request
-validation, pagination, and orchestration of mail and Git-backed mutations.
+`services/api` (`@scs/api`) is the browser-facing boundary for Portal. It owns
+Better Auth, auth/proxy/permission state, authorization, request validation,
+pagination, and orchestration of mail and Git-backed mutations. The Cloudflare
+entry point uses D1 and R2; the [Bun entry point](SELF_HOSTED_RUNTIMES.md) uses
+PostgreSQL, S3, and Sharp.
 
 ## Structure
 
 `src/routes` dispatches HTTP routes. `src/services` implements use cases;
-`src/repositories` owns D1/provider persistence; `src/clients` calls Mailer and
+`src/repositories` owns persistence; `src/clients` calls Mailer and
 GitHub App; `src/auth` configures Better Auth; middleware handles CORS and
 security boundaries. Request and response contracts come directly from
 `@scs/schemas`.
@@ -20,16 +22,18 @@ security boundaries. Request and response contracts come directly from
 Route families include `/api/me`, proxy and admin-user management, the
 server-only `/api/internal/proxies/:username` Web resolver,
 `/api/people/v2`, `/api/projects/v2`, `/api/academic/v2`, and durable operation
-status. Better Auth routes are mounted by the Worker entry point. List routes
+status. Better Auth routes are mounted by both entry points. List routes
 are bounded and page-based.
 
 ## Runtime state and integrations
 
-`AUTH_DB` is the D1 binding. The Worker calls Mailer with an internal bearer
+In Cloudflare, `AUTH_DB` is the D1 binding. The Worker calls Mailer with an internal bearer
 token and prefers the `GITHUB_APP` service binding for automation, with the
 configured URL as the deployment boundary where applicable. Secrets remain
 server-side. Database changes use checked-in D1 migrations and must be applied
-through the documented operations process.
+through the documented operations process. The Bun runtime requires reviewed
+PostgreSQL migrations before startup; see
+[database portability](DATABASE_PORTABILITY.md).
 
 ## Change and verify
 

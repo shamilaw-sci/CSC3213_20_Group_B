@@ -11,10 +11,12 @@ data.
 
 ## User authentication
 
-Better Auth runs in the API Worker and persists its state in the `AUTH_DB` D1
-binding. Google and GitHub OAuth are configured server-side. The Portal calls
-the API origin configured by `NEXT_PUBLIC_BASE_API_URL`; it does not handle
-provider client secrets.
+Better Auth runs in `services/api`. The Cloudflare Worker persists its state in
+the `AUTH_DB` D1 binding; the departmental Bun entry point uses PostgreSQL.
+Google and GitHub OAuth are configured server-side in either runtime. The Portal
+calls the API origin configured by `NEXT_PUBLIC_BASE_API_URL`; it does not handle
+provider client secrets. See [database portability](DATABASE_PORTABILITY.md)
+before moving state between runtimes.
 
 Sessions identify a user, but identity alone is not authorization. API route
 handlers enforce the permission required for profile, project, academic, proxy,

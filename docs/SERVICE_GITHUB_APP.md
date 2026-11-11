@@ -5,18 +5,20 @@ description: Internal automation routes, durable operations, repository mutation
 
 # GitHub App service
 
-`services/github-app` (`@scs/github-app`) is the internal Cloudflare Worker that
-turns validated API requests into durable, reviewable changes in the public-data
-repository.
+`services/github-app` (`@scs/github-app`) is the internal service that turns
+validated API requests into durable, reviewable changes in the public-data
+repository. It has Cloudflare Worker and
+[self-hosted Bun](SELF_HOSTED_RUNTIMES.md) entry points.
 
 ## Responsibilities
 
 The service reads and writes public profiles, student placement metadata,
 projects, courses, and course offerings. Controllers validate transport input;
 domain repositories calculate canonical file changes; GitHub gateways handle
-provider APIs. Operation and mutation-coordinator Durable Objects persist
-status and serialize work by resource. A Cloudflare Queue runs asynchronous
-operations with retry and dead-letter behavior.
+provider APIs. In Cloudflare, Durable Objects persist operation status and
+serialize work by resource; a Queue runs asynchronous operations. The Bun
+runtime uses PostgreSQL for state and coordination and pg-boss for delivery,
+retries, and dead-letter handling.
 
 Internal routes expose health, operation status/cancellation, and resource
 read/update/discard/submit actions. They require the shared internal secret;
