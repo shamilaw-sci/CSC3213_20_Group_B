@@ -22,6 +22,15 @@ against a working sibling before changing code.
 | Mail request is rejected                               | Check bearer authentication and the shared mail request schema before SMTP                   |
 | Dark theme text is unreadable                          | Replace literal colors with semantic tokens and verify hover/focus states                    |
 
+## Vercel Web function cannot find `next/setup-node-env`
+
+Check whether `@scs/web:build` actually ran in the Vercel build log. Next's
+Vercel adapter emits this virtual asset during `onBuildComplete`; a Turbo cache
+hit only replays the build log and `.next` output, so the adapter callback does
+not run. Web's package-level Turbo configuration disables caching for this build
+task. Confirm the next deployment reports `cache bypass` for `@scs/web:build`,
+then exercise a dynamic Web route.
+
 ## Escalation evidence
 
 Include the workspace, exact command or URL, commit SHA, environment category

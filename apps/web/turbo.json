@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "cache": false,
       "env": [
         "BASE_DOMAIN",
         "NEXT_PUBLIC_MOODLE_URL",
