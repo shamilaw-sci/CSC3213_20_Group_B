@@ -28,6 +28,7 @@ import {
   getMyPublicProfileSchema,
   getMyStudentPlacement,
   getProfileOperation,
+  cleanupProfileOperation,
   upsertAdminStudentPlacementMetadataPr,
   upsertAdminUserPublicProfilePr,
   upsertMyPublicProfilePr,
@@ -152,6 +153,11 @@ const routes: RegisteredRoute[] = [
     method: 'DELETE',
     match: { kind: 'prefix', path: '/api/operations/' },
     handler: getProfileOperation,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'prefix', path: '/api/operations/' },
+    handler: cleanupProfileOperation,
   },
   {
     method: 'GET',

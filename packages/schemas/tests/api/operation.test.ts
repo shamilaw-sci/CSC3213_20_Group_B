@@ -51,6 +51,35 @@ describe('durable operation contracts', () => {
     ).toBe(false);
   });
 
+  test('keeps PR creation distinct from verified publication', () => {
+    const base = {
+      ...operationBase,
+      status: 'succeeded',
+      completedAt: '2026-10-19T08:00:01.000Z',
+      outcome: {
+        status: 'succeeded',
+        pullRequest: {
+          number: 42,
+          url: 'https://github.com/scs-pdn/data/pull/42',
+        },
+      },
+    };
+    expect(OperationStatusResponseSchema.parse(base)).not.toHaveProperty(
+      'publication'
+    );
+    expect(
+      OperationStatusResponseSchema.parse({
+        ...base,
+        publication: 'checks_failed',
+        cleanupEligible: true,
+      })
+    ).toMatchObject({
+      status: 'succeeded',
+      publication: 'checks_failed',
+      cleanupEligible: true,
+    });
+  });
+
   test('requires idempotency and returns a pollable accepted response', () => {
     expect(
       MutationControlSchema.parse({

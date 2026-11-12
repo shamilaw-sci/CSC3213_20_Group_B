@@ -13,13 +13,15 @@ const operationSource = await Bun.file(
 describe('registry operation clients', () => {
   test('submits project mutations through the asynchronous operation contract', () => {
     expect(projectSource).toContain("Prefer: 'respond-async'");
-    expect(projectSource).toContain('waitForMutationOperation');
+    expect(projectSource).toContain('rememberAcceptedMutation');
+    expect(projectSource).toContain('stableMutationKey');
     expect(projectSource).toContain('expectedRevision:');
   });
 
   test('submits course and offering mutations through the same contract', () => {
     expect(courseSource).toContain("Prefer: 'respond-async'");
-    expect(courseSource).toContain('waitForMutationOperation');
+    expect(courseSource).toContain('rememberAcceptedMutation');
+    expect(courseSource).toContain('stableMutationKey');
     expect(courseSource).toContain('expectedRevision:');
   });
 

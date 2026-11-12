@@ -130,14 +130,15 @@ sequenceDiagram
   User->>Portal: Submit validated edit
   Portal->>API: Mutation + idempotency key + revision
   API->>Worker: Submit operation
-  Worker->>Queue: Enqueue by resource identity
+  Worker->>Worker: Persist command and dispatch alarm
   Worker-->>API: 202 Accepted + operation ID
   API-->>Portal: Pollable operation resource
+  Worker->>Queue: Alarm enqueues operation ID
   Queue->>Worker: Execute mutation
   Worker->>GitHub: Compare revision, commit, open/update PR
   GitHub-->>Worker: Repository result
   Portal->>API: Poll operation status
-  API-->>Portal: succeeded, failed, or conflicted
+  API-->>Portal: PR outcome and reconciled publication state
 ```
 
 ## State Ownership
@@ -198,6 +199,19 @@ stateDiagram-v2
 Operations for the same logical resource are serialized. Unrelated resources
 may proceed concurrently. Reusing an idempotency key with different input is a
 contract error, not a second mutation.
+
+On Cloudflare, the operation Durable Object schedules an alarm before it stores
+the command. The alarm sends the operation ID to Cloudflare Queues and
+reschedules itself after dispatch failures. This closes the persistence to
+enqueue failure window without relying on a browser connection. The
+PostgreSQL profile uses its existing transactional dispatch outbox and worker
+recovery loop instead.
+
+`succeeded` means the repository mutation completed, usually by creating or
+updating a PR. It does not mean the public record was deployed. The operation
+status endpoint reconciles the trusted PR, its validation check, merge state,
+and successful deployment workflow on demand. When evidence is unavailable it
+reports an unknown or earlier state rather than claiming publication.
 
 ## Dependency Direction
 

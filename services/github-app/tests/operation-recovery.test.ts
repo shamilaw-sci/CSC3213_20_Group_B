@@ -5,6 +5,47 @@ import { InMemoryMutationCoordinator } from '@/operations/mutation-coordinator';
 import { OperationExecutor } from '@/operations/operation.executor';
 
 describe('operation recovery', () => {
+  test('acknowledges a persisted command before any GitHub handler runs', async () => {
+    const store = new InMemoryOperationStore();
+    let githubCalls = 0;
+    const executor = new OperationExecutor({
+      store,
+      coordinator: new InMemoryMutationCoordinator(),
+      handlers: {
+        mutate: async () => {
+          githubCalls += 1;
+          return {
+            status: 'succeeded',
+            pullRequest: {
+              number: 12,
+              url: 'https://github.com/example/repo/pull/12',
+            },
+          };
+        },
+      },
+      log: () => {},
+    });
+    const accepted = await executor.submit({
+      idempotencyKey: 'request-key-00000002',
+      actor: { type: 'service', subjectId: 'service-00000001' },
+      resource: { type: 'project', id: 'example' },
+      action: 'mutate',
+      payload: {},
+      correlationId: 'correlation-0002',
+    });
+
+    expect(accepted.status).toBe('queued');
+    expect(await store.get(accepted.operationId)).toMatchObject({
+      status: 'queued',
+    });
+    expect(githubCalls).toBe(0);
+
+    const completed = await executor.execute(accepted.operationId);
+    expect(githubCalls).toBe(1);
+    expect(completed.status).toBe('succeeded');
+    expect(completed.outcome).toMatchObject({ pullRequest: { number: 12 } });
+  });
+
   test('persists bounded retry attempts and provider-aware delays', async () => {
     const delays: number[] = [];
     let calls = 0;

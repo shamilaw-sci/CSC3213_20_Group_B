@@ -65,18 +65,19 @@ const boss = new PgBoss({
 });
 const store = new PostgresOperationStore(pool, { dispatchOutbox: true });
 const dispatcher = new PostgresOperationDispatcher(pool, boss);
+const coordinator = new PostgresMutationCoordinator(pool);
 const executor = new OperationExecutor({
   store,
-  coordinator: new PostgresMutationCoordinator(pool),
+  coordinator,
   handlers: runWithRuntimeConfig(runtimeConfig, operationHandlers),
   classifyError: classifyGithubError,
-  dispatch: dispatcher,
 });
 const worker = new PostgresOperationWorker(boss, dispatcher, executor);
 const bindings: GithubAppEnv = {
   ...runtimeConfig,
   OPERATION_STORE: store,
   OPERATION_EXECUTOR: executor,
+  OPERATION_COORDINATOR: coordinator,
 };
 
 let ready = false;

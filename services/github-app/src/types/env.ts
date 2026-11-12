@@ -5,6 +5,7 @@ import type {
 } from '@/operations/cloudflare.types';
 import type { OperationStore } from '@/operations/operation.store';
 import type { OperationExecutor } from '@/operations/operation.executor';
+import type { MutationCoordinator } from '@/operations/mutation-coordinator';
 
 export interface GithubAppEnv {
   GITHUB_APP_ID: string;
@@ -20,6 +21,7 @@ export interface GithubAppEnv {
   OPERATION_QUEUE?: OperationQueue;
   OPERATION_STORE?: OperationStore;
   OPERATION_EXECUTOR?: OperationExecutor;
+  OPERATION_COORDINATOR?: MutationCoordinator;
 }
 
 export interface GithubAppRuntimeConfig extends Omit<

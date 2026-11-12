@@ -56,6 +56,7 @@ import {
   type EditorState,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
@@ -72,11 +73,9 @@ import {
 } from '@/lib/api';
 import { isRecord } from '@/lib/is-record';
 import {
-  assertMutationSucceeded,
-  isOperationPollingAbort,
-  waitForMutationOperation,
+  rememberAcceptedMutation,
+  stableMutationKey,
 } from '@/lib/mutation-operation';
-import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { canEditCoursesRole } from '@/types/role';
 
 interface CourseEditorProps {
@@ -293,7 +292,6 @@ export default function CourseEditor({
   nextHref,
 }: CourseEditorProps) {
   const router = useRouter();
-  const beginOperationPolling = useOperationPollingSignal();
   const [user, setUser] = useState<Record<string, unknown> | null>(
     initialUser ?? null
   );
@@ -565,6 +563,14 @@ export default function CourseEditor({
 
     setSaving(true);
     try {
+      const mutationPayload = {
+        course: validatedCourse,
+        ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+      };
+      const idempotencyKey = await stableMutationKey('courses', {
+        action: 'course-upsert',
+        ...mutationPayload,
+      });
       const res = await fetch(publicCoursePrApiUrl(normalizedId), {
         method: 'PUT',
         credentials: 'include',
@@ -573,31 +579,24 @@ export default function CourseEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          course: validatedCourse,
-          ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision: pr?.revision ?? 'missing',
           },
         }),
       });
 
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const operation = await waitForMutationOperation(
-        MutationAcceptedSchema.parse(await res.json()),
-        'Course update is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
+      rememberAcceptedMutation(
+        'courses',
+        MutationAcceptedSchema.parse(await res.json())
       );
-      assertMutationSucceeded(operation);
-      setEditorState((current) =>
-        createEditorState(validatedCourse, current.published)
+      toast.success(
+        'Course submitted for processing. You can close this page.'
       );
-      await loadCourse(normalizedId);
-      router.refresh();
-      toast.success('Course PR submitted.');
       if (newCourse) router.push(`/academic/courses/${validatedCourse.id}`);
     } catch (saveError) {
-      if (isOperationPollingAbort(saveError)) return;
       toast.error(
         saveError instanceof Error ? saveError.message : 'Course save failed.'
       );
@@ -626,6 +625,14 @@ export default function CourseEditor({
       const offeringPr = PublicAcademicPrSchema.parse(
         await statusResponse.json()
       );
+      const mutationPayload = {
+        offering,
+        ...(offeringPr.headSha ? { expectedHeadSha: offeringPr.headSha } : {}),
+      };
+      const idempotencyKey = await stableMutationKey('courses', {
+        action: 'offering-upsert',
+        ...mutationPayload,
+      });
       const res = await fetch(offeringUrl, {
         method: 'PUT',
         credentials: 'include',
@@ -634,27 +641,20 @@ export default function CourseEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          offering,
-          ...(offeringPr.headSha
-            ? { expectedHeadSha: offeringPr.headSha }
-            : {}),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision: offeringPr.revision ?? 'missing',
           },
         }),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const operation = await waitForMutationOperation(
-        MutationAcceptedSchema.parse(await res.json()),
-        'Course offering update is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
+      rememberAcceptedMutation(
+        'courses',
+        MutationAcceptedSchema.parse(await res.json())
       );
-      assertMutationSucceeded(operation);
-      await loadOfferings();
-      toast.success('Course offering PR submitted.');
+      toast.success('Course offering submitted for processing.');
     } catch (operationError) {
-      if (isOperationPollingAbort(operationError)) return;
       toast.error(
         operationError instanceof Error
           ? operationError.message
@@ -669,6 +669,14 @@ export default function CourseEditor({
     if (!courseId || !canEdit) return;
     setSaving(true);
     try {
+      const mutationPayload = {
+        ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+      };
+      const idempotencyKey = await stableMutationKey('courses', {
+        action: 'course-delete',
+        courseId,
+        ...mutationPayload,
+      });
       const res = await fetch(publicCoursePrApiUrl(slugify(courseId)), {
         method: 'DELETE',
         credentials: 'include',
@@ -677,24 +685,21 @@ export default function CourseEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          ...(pr?.headSha ? { expectedHeadSha: pr.headSha } : {}),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision: pr?.revision ?? 'missing',
           },
         }),
       });
       if (!res.ok) throw new Error((await readApiError(res)).message);
-      const operation = await waitForMutationOperation(
+      rememberAcceptedMutation(
+        'courses',
         MutationAcceptedSchema.parse(await res.json()),
-        'Course deletion is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
+        courseId
       );
-      assertMutationSucceeded(operation);
-      toast.success('Course deletion PR submitted.');
-      router.push('/academic/courses');
+      toast.success('Course deletion requested. Publication is pending.');
     } catch (deleteError) {
-      if (isOperationPollingAbort(deleteError)) return;
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
@@ -790,6 +795,8 @@ export default function CourseEditor({
           </div>
         }
       />
+
+      <PublicationNotice scope="courses" />
 
       {pr ? (
         <div className="flex flex-wrap items-center gap-2">

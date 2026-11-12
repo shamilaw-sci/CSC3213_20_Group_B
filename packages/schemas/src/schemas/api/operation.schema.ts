@@ -67,6 +67,21 @@ const SucceededOperationOutcomeSchema = z
   })
   .strict();
 
+export const PublicationStateSchema = z.enum([
+  'pr_open',
+  'checks_pending',
+  'checks_passed',
+  'auto_merge_queued',
+  'checks_failed',
+  'merged',
+  'published',
+  'closed',
+  'superseded',
+  'cleanup_partial',
+  'cleaned_up',
+  'unknown',
+]);
+
 const FailedOperationOutcomeSchema = z
   .object({
     status: z.literal('failed'),
@@ -116,6 +131,8 @@ export const OperationStatusResponseSchema = z.discriminatedUnion('status', [
     status: z.literal('succeeded'),
     completedAt: z.iso.datetime({ offset: true }),
     outcome: SucceededOperationOutcomeSchema,
+    publication: PublicationStateSchema.optional(),
+    cleanupEligible: z.boolean().optional(),
   }).strict(),
   OperationResponseBaseSchema.extend({
     status: z.literal('failed'),
@@ -140,6 +157,7 @@ export type OperationResource = z.infer<typeof OperationResourceSchema>;
 export type OperationActor = z.infer<typeof OperationActorSchema>;
 export type OperationStatus = z.infer<typeof OperationStatusSchema>;
 export type OperationOutcome = z.infer<typeof OperationOutcomeSchema>;
+export type PublicationState = z.infer<typeof PublicationStateSchema>;
 export type OperationStatusResponse = z.infer<
   typeof OperationStatusResponseSchema
 >;

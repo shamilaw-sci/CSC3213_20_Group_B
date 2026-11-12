@@ -88,6 +88,7 @@ const expectedRuntimeExports = [
   'OperationResourceSchema',
   'OperationResourceTypeSchema',
   'OperationStatusResponseSchema',
+  'PublicationStateSchema',
   'OperationStatusSchema',
   'PROFILE_PICTURE_MODES',
   'PageInfoSchema',

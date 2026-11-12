@@ -75,6 +75,7 @@ import {
   type EditorValidationIssue,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { PublicationNotice } from '@/components/editor/publication-notice';
 import {
   EditorPageLoading,
   PageLoadingPanel,
@@ -107,11 +108,9 @@ import {
 } from '@/lib/api';
 import { isRecord } from '@/lib/is-record';
 import {
-  assertMutationSucceeded,
-  isOperationPollingAbort,
-  waitForMutationOperation,
+  rememberAcceptedMutation,
+  stableMutationKey,
 } from '@/lib/mutation-operation';
-import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 import { isSuperAdminRole } from '@/types/role';
 
 type WorkspaceMode = 'list' | 'edit' | 'new';
@@ -1651,7 +1650,6 @@ export default function ProjectEditor({
   nextHref,
 }: ProjectEditorProps) {
   const router = useRouter();
-  const beginOperationPolling = useOperationPollingSignal();
   const [user, setUser] = useState<UserContext | null>(initialUser ?? null);
   const [schema, setSchema] = useState<PublicProjectSchemaResponse | null>(
     initialSchema ?? null
@@ -2163,6 +2161,17 @@ export default function ProjectEditor({
           (!isNew && selectedSlug === mutationSlug && !pr)
         )
       );
+      const mutationPayload = {
+        project: validation.data,
+        ...(mutationPr?.status === 'open' && mutationPr.headSha
+          ? { expectedHeadSha: mutationPr.headSha }
+          : {}),
+      };
+      const idempotencyKey = await stableMutationKey('projects', {
+        action: 'upsert',
+        slug: mutationSlug,
+        ...mutationPayload,
+      });
       const res = await fetch(publicProjectPrApiUrl(mutationSlug), {
         method: 'PUT',
         credentials: 'include',
@@ -2171,12 +2180,9 @@ export default function ProjectEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          project: validation.data,
-          ...(mutationPr?.status === 'open' && mutationPr.headSha
-            ? { expectedHeadSha: mutationPr.headSha }
-            : {}),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision: mutationPr?.revision ?? 'missing',
           },
         }),
@@ -2186,22 +2192,15 @@ export default function ProjectEditor({
         throw new Error((await readApiError(res)).message);
       }
 
-      const operation = await waitForMutationOperation(
-        MutationAcceptedSchema.parse(await res.json()),
-        'Project update is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
-      );
-      assertMutationSucceeded(operation);
-      const nextPr = await loadProjectPr(mutationSlug, { throwOnError: true });
-      if (!nextPr) throw new Error('Project PR status is unavailable.');
+      const accepted = MutationAcceptedSchema.parse(await res.json());
+      rememberAcceptedMutation('projects', accepted);
       setPrError(null);
       setSelectedSlug(mutationSlug);
-      resetEditor(validation.data, publishedProject);
       setWorkspaceMode('edit');
-      router.refresh();
-      toast.success('Project PR submitted.');
+      toast.success(
+        'Project submitted for processing. You can close this page.'
+      );
     } catch (saveError) {
-      if (isOperationPollingAbort(saveError)) return;
       setError(
         saveError instanceof Error
           ? saveError.message
@@ -2268,6 +2267,16 @@ export default function ProjectEditor({
         slugToDelete,
         Boolean(prError || prLoading || !pr)
       );
+      const mutationPayload = {
+        ...(mutationPr?.status === 'open' && mutationPr.headSha
+          ? { expectedHeadSha: mutationPr.headSha }
+          : {}),
+      };
+      const idempotencyKey = await stableMutationKey('projects', {
+        action: 'delete',
+        slug: slugToDelete,
+        ...mutationPayload,
+      });
       const res = await fetch(publicProjectPrApiUrl(slugToDelete), {
         method: 'DELETE',
         credentials: 'include',
@@ -2276,11 +2285,9 @@ export default function ProjectEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          ...(mutationPr?.status === 'open' && mutationPr.headSha
-            ? { expectedHeadSha: mutationPr.headSha }
-            : {}),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision: mutationPr?.revision ?? 'missing',
           },
         }),
@@ -2290,28 +2297,13 @@ export default function ProjectEditor({
         throw new Error((await readApiError(res)).message);
       }
 
-      const operation = await waitForMutationOperation(
-        MutationAcceptedSchema.parse(await res.json()),
-        'Project deletion is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
-      );
-      assertMutationSucceeded(operation);
-      const nextPr = await loadProjectPr(slugToDelete, {
-        throwOnError: true,
-      });
-      if (!nextPr) throw new Error('Project PR status is unavailable.');
+      const accepted = MutationAcceptedSchema.parse(await res.json());
+      rememberAcceptedMutation('projects', accepted, slugToDelete);
       setPrError(null);
       setDeleteDialogOpen(false);
       setDeleteConfirmation('');
-      router.refresh();
-      toast.success(
-        nextPr.status === 'none'
-          ? 'Project is already removed.'
-          : 'Delete PR submitted.'
-      );
-      returnToProjectList();
+      toast.success('Project deletion requested. Publication is pending.');
     } catch (deleteError) {
-      if (isOperationPollingAbort(deleteError)) return;
       setError(
         deleteError instanceof Error
           ? deleteError.message
@@ -2413,6 +2405,8 @@ export default function ProjectEditor({
           </div>
         }
       />
+
+      <PublicationNotice scope="projects" />
 
       {error ? (
         <pre

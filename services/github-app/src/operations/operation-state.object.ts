@@ -7,16 +7,19 @@ import {
   requestOperationCancellation,
 } from '@/operations/operation.types';
 import type { OperationRecord } from '@/operations/operation.types';
+import type { GithubAppEnv } from '@/types/env';
 
 const TimestampSchema = z.iso.datetime({ offset: true });
+const INITIAL_DISPATCH_DELAY_MS = 1_000;
+const DISPATCH_RETRY_MS = 30_000;
 
 interface StoredOperationRow {
   [key: string]: string;
   operation_json: string;
 }
 
-export class OperationStateDurableObject extends DurableObject<unknown> {
-  constructor(ctx: DurableObjectState, env: unknown) {
+export class OperationStateDurableObject extends DurableObject<GithubAppEnv> {
+  constructor(ctx: DurableObjectState, env: GithubAppEnv) {
     super(ctx, env);
     this.ctx.storage.sql.exec(`
       CREATE TABLE IF NOT EXISTS operation_state (
@@ -26,13 +29,45 @@ export class OperationStateDurableObject extends DurableObject<unknown> {
     `);
   }
 
-  create(value: OperationRecord): CreateOperationResult {
+  async create(value: OperationRecord): Promise<CreateOperationResult> {
     const existing = this.read();
-    if (existing) return { created: false, operation: existing };
+    if (existing) {
+      if (
+        existing.status === 'queued' &&
+        (await this.ctx.storage.getAlarm()) === null
+      ) {
+        await this.ctx.storage.setAlarm(Date.now() + INITIAL_DISPATCH_DELAY_MS);
+      }
+      return { created: false, operation: existing };
+    }
 
     const operation = OperationRecordSchema.parse(value);
+    // Schedule recovery before persisting the command so an acknowledged
+    // operation cannot be stranded if the request dies before Queue.send.
+    await this.ctx.storage.setAlarm(Date.now() + INITIAL_DISPATCH_DELAY_MS);
     this.write(operation);
     return { created: true, operation };
+  }
+
+  async alarm(): Promise<void> {
+    const operation = this.read();
+    if (!operation || operation.status !== 'queued') return;
+    try {
+      if (!this.env.OPERATION_QUEUE)
+        throw new Error('Operation queue unavailable');
+      await this.env.OPERATION_QUEUE.send({
+        operationId: operation.operationId,
+      });
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: 'operation_dispatch_retry',
+          operationId: operation.operationId,
+          errorCategory: error instanceof Error ? error.name : 'unknown',
+        })
+      );
+      await this.ctx.storage.setAlarm(Date.now() + DISPATCH_RETRY_MS);
+    }
   }
 
   get(): OperationRecord | null {

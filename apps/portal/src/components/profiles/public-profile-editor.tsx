@@ -70,6 +70,7 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
@@ -103,11 +104,9 @@ import {
 import { emailPathSegment } from '@/lib/email';
 import { isRecord } from '@/lib/is-record';
 import {
-  assertMutationSucceeded,
-  isOperationPollingAbort,
-  waitForMutationOperation,
+  rememberAcceptedMutation,
+  stableMutationKey,
 } from '@/lib/mutation-operation';
-import { useOperationPollingSignal } from '@/lib/use-operation-polling';
 
 const PROFILE_LABELS: Record<PublicProfileKind, string> = {
   academic: 'Academic',
@@ -2068,7 +2067,6 @@ export default function PublicProfileEditor({
   backLabel,
 }: PublicProfileEditorProps) {
   const router = useRouter();
-  const beginOperationPolling = useOperationPollingSignal();
   const fallbackBackRoute = profileToolBackRoute(from);
   const resolvedBackHref = backHref ?? fallbackBackRoute.href;
   const resolvedBackLabel = backLabel ?? fallbackBackRoute.label;
@@ -2397,6 +2395,19 @@ export default function PublicProfileEditor({
 
     setSaving(true);
     try {
+      const mutationPayload = {
+        profileKind,
+        ...(pr?.headSha
+          ? { concurrency: { expectedPrHeadSha: pr.headSha } }
+          : {
+              concurrency: {
+                expectedUserFileSha: pr?.currentUserFileSha ?? null,
+              },
+            }),
+        profile: payloadProfile,
+      };
+      const scope = `profile:${targetEmail ?? 'self'}`;
+      const idempotencyKey = await stableMutationKey(scope, mutationPayload);
       const res = await fetch(profilePrUrl(), {
         method: 'PUT',
         credentials: 'include',
@@ -2405,20 +2416,12 @@ export default function PublicProfileEditor({
           Prefer: 'respond-async',
         }),
         body: JSON.stringify({
-          profileKind,
-          ...(pr?.headSha
-            ? { concurrency: { expectedPrHeadSha: pr.headSha } }
-            : {
-                concurrency: {
-                  expectedUserFileSha: pr?.currentUserFileSha ?? null,
-                },
-              }),
+          ...mutationPayload,
           control: {
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
             expectedRevision:
               pr?.revision ?? pr?.currentUserFileSha ?? 'missing',
           },
-          profile: payloadProfile,
         }),
       });
 
@@ -2433,20 +2436,12 @@ export default function PublicProfileEditor({
         return;
       }
 
-      const operation = await waitForMutationOperation(
-        MutationAcceptedSchema.parse(await res.json()),
-        'Profile update is still queued. Refresh to check its status.',
-        { signal: beginOperationPolling() }
-      );
-      assertMutationSucceeded(operation);
-      await refresh();
+      const accepted = MutationAcceptedSchema.parse(await res.json());
+      rememberAcceptedMutation(scope, accepted);
       toast.success(
-        operation.outcome.pullRequest?.number
-          ? `Profile PR #${operation.outcome.pullRequest.number} is ready`
-          : 'Profile PR is ready'
+        'Profile submitted for processing. You can close this page.'
       );
     } catch (error) {
-      if (isOperationPollingAbort(error)) return;
       toast.error(
         error instanceof Error ? error.message : 'Failed to submit profile PR'
       );
@@ -2528,6 +2523,8 @@ export default function PublicProfileEditor({
           </Button>
         }
       />
+
+      <PublicationNotice scope={`profile:${targetEmail ?? 'self'}`} />
 
       <Card>
         <CardHeader>

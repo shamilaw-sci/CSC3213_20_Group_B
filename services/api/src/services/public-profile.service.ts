@@ -1440,6 +1440,36 @@ export async function getProfileOperation(
       method: req.method,
       headers: {
         'X-Actor-Subject-Id': await actorSubjectId(user.email),
+        ...(user.isSuperAdmin ? { 'X-Actor-Admin': 'true' } : {}),
+      },
+    },
+    { schema: OperationStatusResponseSchema }
+  );
+  if (!response.ok) return response.response;
+  return createJsonResponse(response.value, 200, origin);
+}
+
+export async function cleanupProfileOperation(
+  req: Request,
+  env: Env
+): Promise<Response> {
+  const origin = getRequestOrigin(req);
+  const user = await verifiedUser(req, env);
+  if (!user.ok) return user.response;
+  const segments = new URL(req.url).pathname.split('/');
+  const operationId = segments.at(-2);
+  if (!operationId || segments.at(-1) !== 'cleanup') {
+    return createJsonErrorResponse('Operation ID is required', 400, origin);
+  }
+  const response = await callGithubApp(
+    env,
+    origin,
+    `/operations/${encodeURIComponent(operationId)}/cleanup`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Actor-Subject-Id': await actorSubjectId(user.email),
+        ...(user.isSuperAdmin ? { 'X-Actor-Admin': 'true' } : {}),
       },
     },
     { schema: OperationStatusResponseSchema }

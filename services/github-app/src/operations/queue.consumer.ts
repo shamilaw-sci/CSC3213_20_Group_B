@@ -18,19 +18,14 @@ function createCloudflareOperationExecutor(
   if (!env.OPERATION_STATE || !env.MUTATION_COORDINATOR) {
     throw new Error('Durable operation bindings are unavailable');
   }
-  const operationQueue = env.OPERATION_QUEUE;
+  if (!env.OPERATION_QUEUE) {
+    throw new Error('Operation queue binding is unavailable');
+  }
   return new OperationExecutor({
     store: new CloudflareOperationStore(env.OPERATION_STATE),
     coordinator: new CloudflareMutationCoordinator(env.MUTATION_COORDINATOR),
     handlers,
     classifyError: classifyGithubError,
-    dispatch: operationQueue
-      ? {
-          dispatch: async (operationId) => {
-            await operationQueue.send({ operationId });
-          },
-        }
-      : undefined,
   });
 }
 

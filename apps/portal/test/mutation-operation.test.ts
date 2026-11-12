@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import type { MutationAccepted } from '@scs/schemas';
 
-import { waitForMutationOperation } from '@/lib/mutation-operation';
+import {
+  readAcceptedMutation,
+  stableMutationKey,
+  waitForMutationOperation,
+} from '@/lib/mutation-operation';
 
 const accepted: MutationAccepted = {
   version: 1,
@@ -39,6 +43,48 @@ function terminalResponse(status: 'succeeded' | 'failed' | 'conflicted') {
 }
 
 describe('mutation operation polling', () => {
+  test('reuses a key after network uncertainty and restores an accepted operation', async () => {
+    const previousWindow = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'window'
+    );
+    const values = new Map<string, string>();
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        localStorage: {
+          getItem: (key: string) => values.get(key) ?? null,
+          setItem: (key: string, value: string) => values.set(key, value),
+          removeItem: (key: string) => values.delete(key),
+        },
+      },
+    });
+    try {
+      const first = await stableMutationKey('projects', { slug: 'example' });
+      const retry = await stableMutationKey('projects', { slug: 'example' });
+      const changed = await stableMutationKey('projects', { slug: 'other' });
+      expect(retry).toBe(first);
+      expect(changed).not.toBe(first);
+
+      values.set('scs-public-mutation:projects', JSON.stringify(accepted));
+      expect(readAcceptedMutation('projects')).toEqual({ accepted });
+      values.set(
+        'scs-public-mutation:projects',
+        JSON.stringify({ accepted, pendingDeletionResourceId: 'example' })
+      );
+      expect(readAcceptedMutation('projects')).toEqual({
+        accepted,
+        pendingDeletionResourceId: 'example',
+      });
+    } finally {
+      if (previousWindow) {
+        Object.defineProperty(globalThis, 'window', previousWindow);
+      } else {
+        Reflect.deleteProperty(globalThis, 'window');
+      }
+    }
+  });
+
   test('polls relative operation paths on the API origin', async () => {
     let requestedUrl: RequestInfo | URL | undefined;
 

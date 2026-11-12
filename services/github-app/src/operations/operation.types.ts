@@ -50,6 +50,15 @@ export const OperationRecordSchema = z
     outcome: OperationOutcomeSchema.optional(),
     lastErrorCategory: z.string().trim().min(1).max(64).optional(),
     cancellationRequested: z.boolean().optional(),
+    cleanup: z
+      .object({
+        status: z.enum(['started', 'partial', 'complete']),
+        branch: z.string().trim().min(1).max(200),
+        headSha: z.string().regex(/^[a-f0-9]{40}$/iu),
+        updatedAt: z.iso.datetime({ offset: true }),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 

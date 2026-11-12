@@ -153,7 +153,10 @@ apply it through the serialized workflow.
 ## GitHub App Worker
 
 The GitHub App requires minimum repository permissions for contents, branches,
-pull requests, and controlled labels/comments in the data repository. Do not
+pull requests, controlled labels/comments, Checks read, and Actions read in the
+data repository. Checks read enables failed-validation detection; Actions read
+enables verified deployment status. Without either read permission, operation
+status remains conservative and failed-PR cleanup is unavailable. Do not
 grant organization-wide administration for convenience.
 
 From `services/github-app`:
@@ -185,7 +188,9 @@ sequenceDiagram
 
   API->>Worker: Submit idempotent operation
   Worker->>State: Create or reuse operation
-  Worker->>Queue: Enqueue
+  Worker->>State: Schedule dispatch alarm
+  Worker-->>API: 202 Accepted
+  State->>Queue: Alarm enqueues operation ID
   Queue->>Executor: Deliver attempt
   Executor->>GitHub: Compare and mutate
   alt success
@@ -201,6 +206,16 @@ sequenceDiagram
 Same-resource mutations are serialized; different resources can run in
 parallel. Each Durable Object persists its own SQLite data, separate from API
 D1. Never edit Durable Object state manually.
+
+For a failed validation check, the operation status endpoint exposes cleanup
+only after confirming the PR number from operation metadata, its automation
+branch and repository, its GitHub App bot author, and its unmerged state. The
+Portal action calls `POST /api/operations/{operationId}/cleanup`; the API
+authenticates the actor and the GitHub App serializes cleanup with mutations of
+that resource. Cleanup closes the PR, then deletes only its unchanged
+automation branch. The stored cleanup record supports retry after a partial
+failure. Operators should inspect the PR before using the action; recoverable
+validation failures need not be discarded.
 
 ## Mailer
 

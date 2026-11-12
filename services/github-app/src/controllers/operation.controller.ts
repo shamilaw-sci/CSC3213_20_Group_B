@@ -1,8 +1,17 @@
-import { OperationIdSchema } from '@scs/schemas';
+import { OperationIdSchema, OperationStatusResponseSchema } from '@scs/schemas';
 
 import { CloudflareOperationStore } from '@/operations/cloudflare-operation.store';
+import {
+  cleanupFailedPullRequest,
+  OperationCleanupConflictError,
+} from '@/operations/operation.cleanup';
+import {
+  CloudflareMutationCoordinator,
+  MutationResourceBusyError,
+} from '@/operations/mutation-coordinator';
 import { localOperationStore } from '@/operations/in-memory-operation.store';
 import type { OperationStore } from '@/operations/operation.store';
+import { inspectPublication } from '@/operations/publication';
 import {
   toOperationStatusResponse,
   type OperationRecord,
@@ -83,7 +92,28 @@ export async function handleGetOperation(
 ): Promise<Response> {
   const authorized = await authorizedOperation(request, env, operationId);
   if (!authorized.ok) return authorized.response;
-  return Response.json(toOperationStatusResponse(authorized.operation));
+  const response = toOperationStatusResponse(authorized.operation);
+  if (response.status !== 'succeeded' || !response.outcome.pullRequest) {
+    return Response.json(response);
+  }
+  try {
+    const publication = await inspectPublication(authorized.operation);
+    return Response.json(
+      OperationStatusResponseSchema.parse({
+        ...response,
+        publication: publication.state,
+        cleanupEligible: publication.cleanupEligible,
+      })
+    );
+  } catch {
+    return Response.json(
+      OperationStatusResponseSchema.parse({
+        ...response,
+        publication: 'unknown',
+        cleanupEligible: false,
+      })
+    );
+  }
 }
 
 export async function handleCancelOperation(
@@ -101,4 +131,64 @@ export async function handleCancelOperation(
     return Response.json({ error: 'Operation not found' }, { status: 404 });
   }
   return Response.json(toOperationStatusResponse(operation));
+}
+
+export async function handleCleanupOperation(
+  request: Request,
+  env: GithubAppEnv,
+  operationId: string
+): Promise<Response> {
+  const authorized = await authorizedOperation(request, env, operationId);
+  if (!authorized.ok) return authorized.response;
+  const operation = authorized.operation;
+  if (
+    operation.status !== 'succeeded' ||
+    operation.outcome?.status !== 'succeeded' ||
+    !operation.outcome.pullRequest
+  ) {
+    return Response.json(
+      { error: 'Operation has no PR to clean up' },
+      { status: 409 }
+    );
+  }
+  const coordinator =
+    env.OPERATION_COORDINATOR ??
+    (env.MUTATION_COORDINATOR
+      ? new CloudflareMutationCoordinator(env.MUTATION_COORDINATOR)
+      : null);
+  if (!coordinator) {
+    return Response.json(
+      { error: 'Mutation coordinator unavailable' },
+      { status: 503 }
+    );
+  }
+  try {
+    const updated = await coordinator.runExclusive(
+      `${operation.resource.type}:${operation.resource.id}`,
+      `cleanup:${operation.operationId}`,
+      async () =>
+        cleanupFailedPullRequest(
+          (await authorized.store.get(operation.operationId)) ?? operation,
+          authorized.store
+        )
+    );
+    return Response.json(
+      OperationStatusResponseSchema.parse({
+        ...toOperationStatusResponse(updated),
+        publication: 'cleaned_up',
+        cleanupEligible: false,
+      })
+    );
+  } catch (error) {
+    if (error instanceof MutationResourceBusyError) {
+      return Response.json(
+        { error: 'A mutation is still active' },
+        { status: 409 }
+      );
+    }
+    if (error instanceof OperationCleanupConflictError) {
+      return Response.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 }

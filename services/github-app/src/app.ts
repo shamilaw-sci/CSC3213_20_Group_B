@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 
 import {
   handleCancelOperation,
+  handleCleanupOperation,
   handleGetOperation,
 } from '@/controllers/operation.controller';
 import {
@@ -59,6 +60,9 @@ app.get('/operations/:operationId', async (c) =>
 );
 app.delete('/operations/:operationId', async (c) =>
   handleCancelOperation(c.req.raw, c.env, c.req.param('operationId'))
+);
+app.post('/operations/:operationId/cleanup', async (c) =>
+  handleCleanupOperation(c.req.raw, c.env, c.req.param('operationId'))
 );
 
 app.get('/people/public-profile', async (c) =>
