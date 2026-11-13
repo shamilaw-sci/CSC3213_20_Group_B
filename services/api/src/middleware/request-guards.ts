@@ -1,4 +1,5 @@
 import type { Env } from '@/types/env';
+import { isIdentityMigrationMissing } from '@/repositories/migration-error';
 import {
   attachCorsHeaders,
   createCorsPreflightResponse,
@@ -49,6 +50,18 @@ export async function handleWorkerRequest(
     return applyCorsHeadersToResponse(response, req, env);
   } catch (error: unknown) {
     console.error('Error handling request:', error);
+    if (isIdentityMigrationMissing(error)) {
+      return attachCorsHeaders(
+        createJsonErrorResponse(
+          'API database migration required; contact an operator',
+          503,
+          origin,
+          'DATABASE_MIGRATION_REQUIRED'
+        ),
+        origin,
+        env.ALLOWED_ORIGINS
+      );
+    }
     return attachCorsHeaders(
       createInternalServerErrorResponse(origin),
       origin,

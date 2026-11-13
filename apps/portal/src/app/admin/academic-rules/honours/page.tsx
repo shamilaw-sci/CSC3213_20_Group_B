@@ -110,6 +110,7 @@ export default function HonoursPage() {
   >([]);
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState('');
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [batch, setBatch] = useState('s21');
   const [singleIdentifier, setSingleIdentifier] = useState('');
@@ -154,6 +155,7 @@ export default function HonoursPage() {
         if (!controller.signal.aborted) {
           setHistoryItems(result.items);
           setHistoryCursor(result.nextCursor);
+          setHistoryLoading(false);
         }
       })
       .catch((error) => {
@@ -161,11 +163,13 @@ export default function HonoursPage() {
           setHistoryError(
             error instanceof Error ? error.message : 'History unavailable'
           );
+        if (!controller.signal.aborted) setHistoryLoading(false);
       });
     return () => controller.abort();
   }, []);
 
   async function loadHistory(cursor?: string) {
+    setHistoryLoading(true);
     const url = apiUrl('/api/admin/academic-rules/honours/history');
     if (cursor) url.searchParams.set('cursor', cursor);
     try {
@@ -191,6 +195,8 @@ export default function HonoursPage() {
       setHistoryError(
         error instanceof Error ? error.message : 'History unavailable'
       );
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -261,27 +267,29 @@ export default function HonoursPage() {
 
   async function refreshOperation(id = operationId) {
     if (!id) return;
-    const response = await fetch(
-      apiUrl(`/api/operations/${encodeURIComponent(id)}`),
-      {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: apiHeaders(),
-      }
-    );
-    if (!response.ok) {
-      setParseError(
-        (await readApiError(response)).message ?? 'Unable to load operation'
+    try {
+      const response = await fetch(
+        apiUrl(`/api/operations/${encodeURIComponent(id)}`),
+        {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: apiHeaders(),
+        }
       );
-      return;
+      if (!response.ok) throw new Error((await readApiError(response)).message);
+      setOperationStatus(
+        OperationStatusResponseSchema.parse(await response.json())
+      );
+      setParseError('');
+    } catch (error) {
+      setParseError(
+        error instanceof Error ? error.message : 'Unable to load operation'
+      );
     }
-    setOperationStatus(
-      OperationStatusResponseSchema.parse(await response.json())
-    );
   }
 
   async function applyChanges() {
-    if (!preview) return;
+    if (!preview || applying || operationId) return;
     const planned =
       (preview.counts.planned_assign ?? 0) +
       (preview.counts.planned_revoke ?? 0) +
@@ -657,11 +665,22 @@ export default function HonoursPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {historyError && (
-            <p role="alert" className="text-destructive">
-              {historyError}
-            </p>
+            <div
+              role="alert"
+              className="text-destructive flex flex-wrap items-center gap-2"
+            >
+              <p>{historyError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void loadHistory()}
+              >
+                Retry
+              </Button>
+            </div>
           )}
-          {historyItems.length === 0 && !historyError && (
+          {historyLoading && <p role="status">Loading operations…</p>}
+          {historyItems.length === 0 && !historyError && !historyLoading && (
             <p>No Honours operations have been submitted yet.</p>
           )}
           {historyItems.map((entry) => (

@@ -9,8 +9,10 @@ import {
   type IdentityAudit,
   IdentityHistoryResponseSchema,
   type IdentityReviewStatus,
+  IdentityReviewStatusSchema,
   IdentitySuggestionResponseSchema,
 } from '@scs/schemas';
+import { Badge } from '@scs/ui/components/badge';
 import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
@@ -18,12 +20,36 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@scs/ui/components/dialog';
 import { Input } from '@scs/ui/components/input';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@scs/ui/components/popover';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@scs/ui/components/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@scs/ui/components/table';
 import { Info, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,13 +62,7 @@ import { apiHeaders, apiUrl, readApiError } from '@/lib/api';
 type ReviewStatus = IdentityReviewStatus;
 type Account = IdentityAccount;
 type Audit = IdentityAudit;
-const statuses: ReviewStatus[] = [
-  'PENDING',
-  'NEEDS_EVIDENCE',
-  'APPROVED',
-  'RETAINED_OTHER',
-  'CONFLICT',
-];
+const statuses = IdentityReviewStatusSchema.options;
 const labels: Record<ReviewStatus, string> = {
   PENDING: 'Pending',
   NEEDS_EVIDENCE: 'Needs evidence',
@@ -100,8 +120,10 @@ export default function IdentityAdminPage({
   const [status, setStatus] = useState<ReviewStatus>('PENDING');
   const [note, setNote] = useState('');
   const [history, setHistory] = useState<Audit[]>([]);
+  const [historyError, setHistoryError] = useState('');
   const [evidence, setEvidence] = useState('');
   const [suggestion, setSuggestion] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState('');
@@ -134,6 +156,8 @@ export default function IdentityAdminPage({
         setNextCursor(data.nextCursor);
       } catch (error) {
         if (signal?.aborted) return;
+        setItems([]);
+        setNextCursor(null);
         setFailure(
           error instanceof Error ? error.message : 'Unable to load accounts'
         );
@@ -156,23 +180,29 @@ export default function IdentityAdminPage({
     setStatus(account.status);
     setNote(account.note);
     setHistory([]);
+    setHistoryError('');
     setEvidence('');
     setSuggestion('');
     const url = apiUrl('/api/admin/identity/history');
     url.searchParams.set('email', account.email);
-    const response = await fetch(url, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: apiHeaders(),
-    });
-    if (response.ok) {
+    try {
+      const response = await fetch(url, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: apiHeaders(),
+      });
+      if (!response.ok) throw new Error((await readApiError(response)).message);
       const data = IdentityHistoryResponseSchema.parse(await response.json());
       setHistory(data.items);
+    } catch (error) {
+      setHistoryError(
+        error instanceof Error ? error.message : 'History unavailable'
+      );
     }
   }
 
   async function save() {
-    if (!selected) return;
+    if (!selected || saving) return;
     setSaving(true);
     try {
       const response = await fetch(apiUrl('/api/admin/identity/decisions'), {
@@ -202,29 +232,32 @@ export default function IdentityAdminPage({
   }
 
   async function analyzeEvidence() {
+    if (analyzing || evidence.trim().length < 50) return;
+    setAnalyzing(true);
     setSuggestion('Analyzing supplied evidence…');
-    const response = await fetch(apiUrl('/api/admin/identity/suggestion'), {
-      method: 'POST',
-      credentials: 'include',
-      headers: apiHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ evidence }),
-    });
-    if (!response.ok) {
-      setSuggestion(
-        (await readApiError(response)).message ?? 'Analysis failed'
+    try {
+      const response = await fetch(apiUrl('/api/admin/identity/suggestion'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ evidence }),
+      });
+      if (!response.ok) throw new Error((await readApiError(response)).message);
+      const result = IdentitySuggestionResponseSchema.parse(
+        await response.json()
       );
-      return;
+      setSuggestion(
+        result.kind === 'suggested'
+          ? `Jev suggests ${result.role} (${Math.round(result.confidence * 100)}% confidence). Review the evidence yourself before saving.`
+          : result.kind === 'unavailable'
+            ? 'Jev is unavailable; manual review remains available.'
+            : result.kind.replaceAll('_', ' ')
+      );
+    } catch (error) {
+      setSuggestion(error instanceof Error ? error.message : 'Analysis failed');
+    } finally {
+      setAnalyzing(false);
     }
-    const result = IdentitySuggestionResponseSchema.parse(
-      await response.json()
-    );
-    setSuggestion(
-      result.kind === 'suggested'
-        ? `Jev suggests ${result.role} (${Math.round((result.confidence ?? 0) * 100)}% confidence). Review the evidence yourself before saving.`
-        : result.kind === 'unavailable'
-          ? 'Jev is unavailable; manual review remains available.'
-          : result.kind.replaceAll('_', ' ')
-    );
   }
 
   return (
@@ -300,95 +333,150 @@ export default function IdentityAdminPage({
             </Button>
           </form>
           <div className="flex flex-wrap gap-2">
-            <label className="text-sm">
-              Role{' '}
-              <select
-                name="role-filter"
-                className="bg-background ml-2 rounded-md border p-2"
-                value={roleFilter}
-                onChange={(event) => {
+            <div className="flex flex-col gap-1 text-sm">
+              <span id="role-filter-label">Role</span>
+              <Select
+                value={roleFilter || 'all'}
+                onValueChange={(value) => {
+                  if (value === null) return;
                   setCursor('');
-                  setRoleFilter(event.target.value);
+                  setRoleFilter(value === 'all' ? '' : value);
                 }}
               >
-                <option value="">All roles</option>
-                {APP_ROLES.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm">
-              Review status{' '}
-              <select
-                name="review-status-filter"
-                className="bg-background ml-2 rounded-md border p-2"
-                value={statusFilter}
-                onChange={(event) => {
+                <SelectTrigger aria-labelledby="role-filter-label">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All roles</SelectItem>
+                    {APP_ROLES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 text-sm">
+              <span id="status-filter-label">Review status</span>
+              <Select
+                value={statusFilter || 'all'}
+                onValueChange={(value) => {
+                  if (value === null) return;
                   setCursor('');
-                  setStatusFilter(event.target.value);
+                  setStatusFilter(value === 'all' ? '' : value);
                 }}
               >
-                <option value="">All statuses</option>
-                {statuses.map((value) => (
-                  <option key={value} value={value}>
-                    {labels[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm">
-              Verification{' '}
-              <select
-                name="verification-filter"
-                className="bg-background ml-2 rounded-md border p-2"
+                <SelectTrigger aria-labelledby="status-filter-label">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    {statuses.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {labels[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 text-sm">
+              <span id="verified-filter-label">Verification</span>
+              <Select
                 value={verifiedFilter}
-                onChange={(event) => {
+                onValueChange={(value) => {
+                  if (value === null) return;
                   setCursor('');
-                  setVerifiedFilter(event.target.value);
+                  setVerifiedFilter(value);
                 }}
               >
-                <option value="all">All</option>
-                <option value="verified">Verified</option>
-                <option value="unverified">Unverified</option>
-              </select>
-            </label>
+                <SelectTrigger aria-labelledby="verified-filter-label">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="verified">Verified</SelectItem>
+                    <SelectItem value="unverified">Unverified</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {loading ? (
             <p role="status">Loading accounts…</p>
           ) : failure ? (
-            <p role="alert" className="text-destructive">
-              {failure}
-            </p>
+            <div
+              role="alert"
+              className="text-destructive flex flex-wrap items-center gap-2"
+            >
+              <p>{failure}</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRevision((value) => value + 1)}
+              >
+                Retry
+              </Button>
+            </div>
           ) : items.length === 0 ? (
             <p>No matching registered accounts.</p>
           ) : (
-            <div className="space-y-2">
-              {items.map((account) => (
-                <div
-                  key={account.email}
-                  className="flex flex-wrap items-center justify-between gap-2
-                    rounded-md border p-3"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {account.name || account.email}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      {account.email} · {account.role} ·{' '}
-                      {labels[account.status]} ·{' '}
-                      {account.emailVerified ? 'Verified' : 'Unverified'}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void inspect(account)}
-                  >
-                    Review
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Account</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Action</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((account) => (
+                  <TableRow key={account.email}>
+                    <TableCell>
+                      <span className="block font-medium">
+                        {account.name || account.email}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {account.email} ·{' '}
+                        {account.emailVerified ? 'Verified' : 'Unverified'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{account.role}</Badge>
+                    </TableCell>
+                    <TableCell>{account.source.replaceAll('_', ' ')}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          account.status === 'CONFLICT'
+                            ? 'destructive'
+                            : 'outline'
+                        }
+                      >
+                        {labels[account.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void inspect(account)}
+                      >
+                        {mode === 'review' ? 'Review' : 'Edit mapping'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
           <div className="flex gap-2">
             {cursor && (
@@ -404,156 +492,185 @@ export default function IdentityAdminPage({
           </div>
         </CardContent>
       </Card>
-      {selected && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{selected.name || selected.email}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground text-sm">
-              {selected.email} · Registered{' '}
-              {selected.createdAt
-                ? new Date(selected.createdAt).toLocaleString()
-                : 'date unavailable'}{' '}
-              · Access: {selected.accessLevel} · Source: {selected.source}
-            </p>
-            <p className="text-sm">
-              {selected.reviewedBy
-                ? `Last reviewed by ${selected.reviewedBy} on ${new Date(selected.reviewedAt ?? 0).toLocaleString()}`
-                : 'No review recorded yet.'}
-            </p>
-            {parseStudentIdentifier(selected.email) ? (
-              <p className="rounded-md border p-3 text-sm">
-                Student role locked by the institutional identifier.
+      <Dialog
+        open={selected !== null}
+        onOpenChange={(open) => {
+          if (!open && !saving) setSelected(null);
+        }}
+      >
+        {selected && (
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{selected.name || selected.email}</DialogTitle>
+              <DialogDescription>
+                Review the account and save an academic role decision.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <p className="text-muted-foreground text-sm">
+                {selected.email} · Registered{' '}
+                {selected.createdAt
+                  ? new Date(selected.createdAt).toLocaleString()
+                  : 'date unavailable'}{' '}
+                · Access: {selected.accessLevel} · Source: {selected.source}
               </p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Academic role</p>
-                <div className="flex flex-wrap gap-2">
-                  {APP_ROLES.filter(
-                    (value) => value !== 'USER' && value !== 'STUDENT'
-                  ).map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      variant={role === value ? 'default' : 'outline'}
-                      onClick={() => {
-                        setRole(value);
-                        setStatus(
-                          value === 'OTHER' ? 'RETAINED_OTHER' : 'APPROVED'
-                        );
-                      }}
-                    >
-                      {value}
-                    </Button>
-                  ))}
+              <p className="text-sm">
+                {selected.reviewedBy
+                  ? `Last reviewed by ${selected.reviewedBy} on ${new Date(selected.reviewedAt ?? 0).toLocaleString()}`
+                  : 'No review recorded yet.'}
+              </p>
+              {parseStudentIdentifier(selected.email) ? (
+                <p className="rounded-md border p-3 text-sm">
+                  Student role locked by the institutional identifier.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Academic role</p>
+                  <div className="flex flex-wrap gap-2">
+                    {APP_ROLES.filter(
+                      (value) => value !== 'USER' && value !== 'STUDENT'
+                    ).map((value) => (
+                      <Button
+                        key={value}
+                        type="button"
+                        variant={role === value ? 'default' : 'outline'}
+                        onClick={() => {
+                          setRole(value);
+                          setStatus(
+                            value === 'OTHER' ? 'RETAINED_OTHER' : 'APPROVED'
+                          );
+                        }}
+                      >
+                        {value}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            <label className="block text-sm font-medium">
-              Review status{' '}
-              <select
-                name="decision-status"
-                className="bg-background mt-2 block w-full rounded-md border
-                  p-2"
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as ReviewStatus)
-                }
-              >
-                {statuses.map((value) => (
-                  <option key={value} value={value}>
-                    {labels[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              Reviewer note{' '}
-              <textarea
-                name="reviewer-note"
-                className="bg-background mt-2 min-h-24 w-full rounded-md border
-                  p-2"
-                value={note}
-                maxLength={1000}
-                placeholder="Evidence, decision, or reason to retain OTHER"
-                onChange={(event) => setNote(event.target.value)}
-              />
-            </label>
-            {mode === 'review' && (
-              <div className="space-y-2 rounded-md border p-3">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">
-                    Optional Jev evidence analysis
-                  </p>
-                  <Help title="Jev assistance">
-                    Paste only evidence you are authorized to share externally,
-                    such as a public appointment notice. A suggestion never
-                    changes roles automatically.
-                  </Help>
-                </div>
-                <textarea
-                  name="evidence"
-                  className="bg-background min-h-24 w-full rounded-md border p-2
-                    text-sm"
-                  value={evidence}
-                  maxLength={4000}
-                  placeholder="Official appointment notice or other explicit institutional evidence"
-                  onChange={(event) => setEvidence(event.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={evidence.trim().length < 50}
-                  onClick={() => void analyzeEvidence()}
+              )}
+              <div className="flex flex-col gap-1 text-sm font-medium">
+                <span id="decision-status-label">Review status</span>
+                <Select
+                  value={status}
+                  onValueChange={(value) =>
+                    setStatus(IdentityReviewStatusSchema.parse(value))
+                  }
                 >
-                  Analyze evidence
-                </Button>
-                {suggestion && (
-                  <p role="status" className="text-sm">
-                    {suggestion}
-                  </p>
-                )}
+                  <SelectTrigger
+                    aria-labelledby="decision-status-label"
+                    className="w-full"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {statuses.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {labels[value]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => void save()}
-                disabled={
-                  saving ||
-                  !selected.emailVerified ||
-                  Boolean(parseStudentIdentifier(selected.email))
-                }
-              >
-                {saving ? 'Saving…' : 'Save decision'}
-              </Button>
-              <Button variant="outline" onClick={() => setSelected(null)}>
-                Cancel
-              </Button>
-            </div>
-            <details>
-              <summary className="cursor-pointer font-medium">
-                Decision history ({history.length})
-              </summary>
-              <div className="mt-2 space-y-2">
-                {history.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    No decisions recorded.
-                  </p>
-                ) : (
-                  history.map((item) => (
-                    <p key={item.id} className="rounded-md border p-2 text-sm">
-                      {new Date(item.reviewedAt).toLocaleString()} ·{' '}
-                      {item.reviewedBy}: {item.oldRole} → {item.newRole} (
-                      {labels[item.status]}){item.note ? ` · ${item.note}` : ''}
+              <label className="block text-sm font-medium">
+                Reviewer note{' '}
+                <textarea
+                  name="reviewer-note"
+                  className="bg-background mt-2 min-h-24 w-full rounded-md
+                    border p-2"
+                  value={note}
+                  maxLength={1000}
+                  placeholder="Evidence, decision, or reason to retain OTHER"
+                  onChange={(event) => setNote(event.target.value)}
+                />
+              </label>
+              {mode === 'review' && (
+                <div className="space-y-2 rounded-md border p-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">
+                      Optional Jev evidence analysis
                     </p>
-                  ))
-                )}
-              </div>
-            </details>
-          </CardContent>
-        </Card>
-      )}
+                    <Help title="Jev assistance">
+                      Paste only evidence you are authorized to share
+                      externally, such as a public appointment notice. A
+                      suggestion never changes roles automatically.
+                    </Help>
+                  </div>
+                  <textarea
+                    name="evidence"
+                    className="bg-background min-h-24 w-full rounded-md border
+                      p-2 text-sm"
+                    value={evidence}
+                    maxLength={4000}
+                    placeholder="Official appointment notice or other explicit institutional evidence"
+                    onChange={(event) => setEvidence(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={analyzing || evidence.trim().length < 50}
+                    onClick={() => void analyzeEvidence()}
+                  >
+                    Analyze evidence
+                  </Button>
+                  {suggestion && (
+                    <p role="status" className="text-sm">
+                      {suggestion}
+                    </p>
+                  )}
+                </div>
+              )}
+              <DialogFooter>
+                <Button
+                  onClick={() => void save()}
+                  disabled={
+                    saving ||
+                    !selected.emailVerified ||
+                    Boolean(parseStudentIdentifier(selected.email))
+                  }
+                >
+                  {saving ? 'Saving…' : 'Save decision'}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={saving}
+                  onClick={() => setSelected(null)}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+              <details>
+                <summary className="cursor-pointer font-medium">
+                  Decision history ({history.length})
+                </summary>
+                <div className="mt-2 space-y-2">
+                  {historyError ? (
+                    <p role="alert" className="text-destructive text-sm">
+                      {historyError}
+                    </p>
+                  ) : history.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">
+                      No decisions recorded.
+                    </p>
+                  ) : (
+                    history.map((item) => (
+                      <p
+                        key={item.id}
+                        className="rounded-md border p-2 text-sm"
+                      >
+                        {new Date(item.reviewedAt).toLocaleString()} ·{' '}
+                        {item.reviewedBy}: {item.oldRole} → {item.newRole} (
+                        {labels[item.status]})
+                        {item.note ? ` · ${item.note}` : ''}
+                      </p>
+                    ))
+                  )}
+                </div>
+              </details>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </PageShell>
   );
 }

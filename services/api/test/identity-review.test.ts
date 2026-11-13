@@ -93,6 +93,146 @@ test('verified OTHER account can be approved with audit and no access grant', as
   ]);
 });
 
+test('missing identity migration reports an actionable service error', async () => {
+  const env = createTestEnv();
+  const adminEmail = 'admin@sci.pdn.ac.lk';
+  await setUserPermission(
+    adminEmail,
+    {
+      role: APP_ROLE.OTHER,
+      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+    },
+    env
+  );
+  await env.AUTH_DB.exec('DROP TABLE identity_review');
+  const response = await invokeWorker(
+    '/api/admin/identity/accounts',
+    {
+      headers: {
+        Origin: 'https://portal.scs-pdn.space',
+        'X-Client-Id': 'portal',
+        Cookie: await createTestSessionCookie(env, adminEmail),
+      },
+    },
+    env
+  );
+  expect(response.status).toBe(503);
+  expect(await response.json()).toMatchObject({
+    code: 'DATABASE_MIGRATION_REQUIRED',
+  });
+});
+
+test('missing Honours history migration reports an actionable service error', async () => {
+  const env = createTestEnv();
+  const adminEmail = 'admin@sci.pdn.ac.lk';
+  await setUserPermission(
+    adminEmail,
+    {
+      role: APP_ROLE.OTHER,
+      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+    },
+    env
+  );
+  await env.AUTH_DB.exec('DROP TABLE honours_operation_history');
+  const response = await invokeWorker(
+    '/api/admin/academic-rules/honours/history',
+    {
+      headers: {
+        Origin: 'https://portal.scs-pdn.space',
+        'X-Client-Id': 'portal',
+        Cookie: await createTestSessionCookie(env, adminEmail),
+      },
+    },
+    env
+  );
+  expect(response.status).toBe(503);
+  expect(await response.json()).toMatchObject({
+    code: 'DATABASE_MIGRATION_REQUIRED',
+  });
+});
+
+test('identity search paginates and a review may retain OTHER', async () => {
+  const env = createTestEnv();
+  const adminEmail = 'reviewer@sci.pdn.ac.lk';
+  const now = Date.now();
+  for (const [id, email] of [
+    ['staff-a', 'a@sci.pdn.ac.lk'],
+    ['staff-b', 'b@sci.pdn.ac.lk'],
+  ]) {
+    await env.AUTH_DB.prepare(
+      `INSERT INTO "user" (id, name, email, emailVerified, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(id, id, email, 1, now, now)
+      .run();
+    await setUserPermission(email, { role: APP_ROLE.OTHER, name: id }, env);
+  }
+  await setUserPermission(
+    adminEmail,
+    {
+      role: APP_ROLE.OTHER,
+      accessLevel: ACCESS_LEVEL.SUPER_ADMIN,
+    },
+    env
+  );
+  const headers = {
+    Origin: 'https://portal.scs-pdn.space',
+    'X-Client-Id': 'portal',
+    Cookie: await createTestSessionCookie(env, adminEmail),
+  };
+  const first = await invokeWorker(
+    '/api/admin/identity/accounts?role=OTHER&limit=1',
+    { headers },
+    env
+  );
+  expect(first.status).toBe(200);
+  const firstPage = (await first.json()) as {
+    items: Array<{ email: string }>;
+    nextCursor: string | null;
+  };
+  expect(firstPage.items.map((item) => item.email)).toEqual([
+    'a@sci.pdn.ac.lk',
+  ]);
+  expect(firstPage.nextCursor).toBe('a@sci.pdn.ac.lk');
+  const second = await invokeWorker(
+    `/api/admin/identity/accounts?role=OTHER&limit=1&cursor=${encodeURIComponent(firstPage.nextCursor!)}`,
+    { headers },
+    env
+  );
+  expect(second.status).toBe(200);
+  expect(
+    ((await second.json()) as { items: Array<{ email: string }> }).items[0]
+      ?.email
+  ).toBe('b@sci.pdn.ac.lk');
+  const decision = await invokeWorker(
+    '/api/admin/identity/decisions',
+    {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'a@sci.pdn.ac.lk',
+        expectedRole: 'OTHER',
+        role: 'OTHER',
+        status: 'RETAINED_OTHER',
+        source: 'REVIEW',
+        note: 'Evidence insufficient',
+      }),
+    },
+    env
+  );
+  expect(decision.status).toBe(200);
+  expect(await getUserPermission('a@sci.pdn.ac.lk', env)).toMatchObject({
+    role: 'OTHER',
+  });
+  expect(
+    (await listIdentityAccounts(env, { query: 'a@', limit: 25 })).items[0]
+  ).toMatchObject({
+    status: 'RETAINED_OTHER',
+    source: 'REVIEW',
+    note: 'Evidence insufficient',
+  });
+});
+
 test('identity decision cannot invent an account or change a student role', async () => {
   const env = createTestEnv();
   const adminEmail = 'admin@sci.pdn.ac.lk';

@@ -17,6 +17,7 @@ import {
   listIdentityAccounts,
   saveIdentityDecision,
 } from '@/repositories/identity.repo';
+import { isIdentityMigrationMissing } from '@/repositories/migration-error';
 import {
   getUserPermission,
   isSuperAdmin,
@@ -152,10 +153,18 @@ export async function decideAdminIdentity(
       note: decision.note,
       actorEmail,
     });
-  } catch {
+  } catch (error) {
+    if (isIdentityMigrationMissing(error)) throw error;
+    if (
+      error instanceof Error &&
+      (error.message === 'Account role changed; refresh before reviewing' ||
+        error.message === 'Account permissions changed; refresh before editing')
+    )
+      return createJsonErrorResponse(error.message, 409, origin);
+    console.error('Identity decision storage failed', error);
     return createJsonErrorResponse(
-      'Identity decision could not be saved; refresh',
-      409,
+      'Identity decision unavailable',
+      503,
       origin
     );
   }

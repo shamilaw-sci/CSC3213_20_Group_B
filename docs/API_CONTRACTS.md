@@ -29,6 +29,11 @@ Identity endpoints under `/api/admin/identity` use shared account, decision,
 history, and suggestion schemas. Only super-admins may classify an existing
 verified account. A decision includes the expected current role and returns
 `409` when that role changed or the immutable student role is challenged.
+If an identity or Honours history table from the required API migration is
+absent, the API returns `503` with `code: DATABASE_MIGRATION_REQUIRED`. The
+operator must verify the target database and apply the pending D1 or PostgreSQL
+migration through the documented workflow; the client must not treat this as an
+empty result.
 Honours preview and apply use shared schemas under
 `/api/admin/academic-rules/honours`. Preview reads published profiles and
 verified student accounts without mutating them. Apply requires the matching

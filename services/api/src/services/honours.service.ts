@@ -35,6 +35,7 @@ import {
 } from '@/repositories/honours-history.repo';
 import { actorSubjectId } from '@/services/mutation-operation.service';
 import { getVerifiedStudentEmails } from '@/repositories/identity.repo';
+import { isIdentityMigrationMissing } from '@/repositories/migration-error';
 import {
   getUserPermission,
   isSuperAdmin,
@@ -391,19 +392,26 @@ export async function previewHonours(
       origin
     );
   try {
+    parseHonoursSelection(parsed.data);
+  } catch {
+    return createJsonErrorResponse('Invalid Honours selection', 400, origin);
+  }
+  try {
     return createJsonResponse(
       await calculatePreview(env, parsed.data, actor),
       200,
       origin
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Preview unavailable';
-    return createJsonErrorResponse(
-      message,
-      message.startsWith('Published') ? 502 : 400,
-      origin
-    );
+    if (isIdentityMigrationMissing(error)) throw error;
+    const message = error instanceof Error ? error.message : '';
+    if (
+      message === 'Published batch unavailable' ||
+      message === 'Published batch is invalid'
+    )
+      return createJsonErrorResponse(message, 502, origin);
+    console.error('Honours preview failed', error);
+    return createJsonErrorResponse('Honours preview unavailable', 503, origin);
   }
 }
 
@@ -460,7 +468,8 @@ export async function applyHonours(req: Request, env: Env): Promise<Response> {
         origin
       );
     }
-  } catch {
+  } catch (error) {
+    if (isIdentityMigrationMissing(error)) throw error;
     return createJsonErrorResponse(
       'Honours intent store unavailable',
       502,
@@ -470,7 +479,8 @@ export async function applyHonours(req: Request, env: Env): Promise<Response> {
   let current: HonoursPreviewResponse;
   try {
     current = await calculatePreview(env, input, actor);
-  } catch {
+  } catch (error) {
+    if (isIdentityMigrationMissing(error)) throw error;
     return createJsonErrorResponse(
       'Unable to revalidate Honours selection',
       502,
@@ -527,7 +537,8 @@ export async function applyHonours(req: Request, env: Env): Promise<Response> {
       attemptCount: 0,
       createdAt: Date.now(),
     });
-  } catch {
+  } catch (error) {
+    if (isIdentityMigrationMissing(error)) throw error;
     return createJsonErrorResponse(
       'Unable to persist Honours intent',
       502,
@@ -602,7 +613,8 @@ export async function getHonoursHistory(
       200,
       origin
     );
-  } catch {
+  } catch (error) {
+    if (isIdentityMigrationMissing(error)) throw error;
     return createJsonErrorResponse(
       'Unable to list Honours history',
       502,
