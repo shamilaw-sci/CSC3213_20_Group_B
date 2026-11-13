@@ -352,14 +352,6 @@ export default function IdentityAdminPage({
           Portal editing stays available.
         </Help>
       </div>
-      <p className="text-muted-foreground text-sm">
-        A student email such as S21513@sci.pdn.ac.lk is classified
-        automatically. “Pending” means a role decision is still needed; it does
-        not mean an account, student record, or admission is awaiting approval.
-        This list contains registered Portal accounts, not every student in the
-        public directory. Email verification only confirms control of the email
-        address.
-      </p>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -535,9 +527,7 @@ export default function IdentityAdminPage({
                             : statusColors.PENDING
                         }
                       >
-                        {account.emailVerified
-                          ? 'Email verified'
-                          : 'Email not verified'}
+                        {account.emailVerified ? 'Verified' : 'Unverified'}
                       </Badge>
                     </TableCell>
                     <TableCell>
