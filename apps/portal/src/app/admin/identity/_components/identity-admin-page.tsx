@@ -90,31 +90,26 @@ const sourceLabels: Record<Account['source'], string> = {
   MIGRATION: 'Earlier migration',
 };
 const roleColors: Record<AppRole, string> = {
-  USER: 'border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
-  STUDENT:
-    'border-blue-300 bg-blue-100 text-blue-900 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100',
-  ACADEMIC:
-    'border-violet-300 bg-violet-100 text-violet-900 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-100',
-  NON_ACADEMIC:
-    'border-cyan-300 bg-cyan-100 text-cyan-900 dark:border-cyan-700 dark:bg-cyan-950 dark:text-cyan-100',
-  ACADEMIC_SUPPORT:
-    'border-indigo-300 bg-indigo-100 text-indigo-900 dark:border-indigo-700 dark:bg-indigo-950 dark:text-indigo-100',
+  USER: 'border-border bg-muted text-muted-foreground',
+  STUDENT: 'border-info-border bg-info-surface text-info-surface-foreground',
+  ACADEMIC: 'border-primary bg-primary/10 text-primary',
+  NON_ACADEMIC: 'border-border bg-secondary text-secondary-foreground',
+  ACADEMIC_SUPPORT: 'border-border bg-accent text-accent-foreground',
   OTHER:
-    'border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100',
+    'border-warning-border bg-warning-surface text-warning-surface-foreground',
 };
 const statusColors: Record<ReviewStatus, string> = {
   PENDING:
-    'border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100',
+    'border-warning-border bg-warning-surface text-warning-surface-foreground',
   NEEDS_EVIDENCE:
-    'border-orange-300 bg-orange-100 text-orange-900 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-100',
+    'border-warning-border bg-warning-surface text-warning-surface-foreground',
   APPROVED:
-    'border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100',
-  RETAINED_OTHER:
-    'border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+    'border-success-border bg-success-surface text-success-surface-foreground',
+  RETAINED_OTHER: 'border-border bg-muted text-muted-foreground',
   CONFLICT:
-    'border-red-300 bg-red-100 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100',
+    'border-destructive-border bg-destructive-surface text-destructive-surface-foreground',
   NOT_REQUIRED:
-    'border-blue-300 bg-blue-100 text-blue-900 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100',
+    'border-info-border bg-info-surface text-info-surface-foreground',
 };
 
 function Help({
