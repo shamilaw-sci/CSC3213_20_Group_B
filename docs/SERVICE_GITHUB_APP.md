@@ -20,6 +20,17 @@ serialize work by resource; a Queue runs asynchronous operations. The Bun
 runtime uses PostgreSQL for state and coordination and pg-boss for delivery,
 retries, and dead-letter handling.
 
+The Honours bulk operation validates each selected student against the current
+GitHub record, preserves unrelated profile fields, and publishes one commit and
+pull request for the batch. It uses a `profile/` branch so the data repository's
+trusted pull-request workflow generates batch, special-stream, and search
+projections on that same pull request. Operation status records queue, retry,
+conflict, failure, and PR creation outcomes; published People data changes only
+after the pull request merges and deploys. Self-submitted student profile writes
+recheck protected Honours fields against GitHub's current published record and
+any open draft. A retried bulk operation restores PR labels or recognizes an
+already merged PR before attempting another commit.
+
 Internal routes expose health, operation status/cancellation, and resource
 read/update/discard/submit actions. They require the shared internal secret;
 browser clients must go through the API. Actor headers are trusted only after

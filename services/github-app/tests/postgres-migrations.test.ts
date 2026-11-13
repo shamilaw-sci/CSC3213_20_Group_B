@@ -52,7 +52,7 @@ postgresTest(
       const rows = await admin.query<{ count: string }>(
         `SELECT count(*)::text AS count FROM "${api}".schema_migrations`
       );
-      expect(rows.rows[0]?.count).toBe('6');
+      expect(rows.rows[0]?.count).toBe('7');
       await admin.query(
         `GRANT ALL ON TABLE "${api}".schema_migrations TO "${runtimeRole}"`
       );

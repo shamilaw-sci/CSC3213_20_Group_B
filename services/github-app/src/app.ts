@@ -2,6 +2,7 @@ import { getSecurityTxtRedirectTarget } from '@scs/security';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
+import { handleSubmitHonoursBulkOperation } from '@/controllers/honours.controller';
 import {
   handleCancelOperation,
   handleCleanupOperation,
@@ -76,6 +77,9 @@ app.put('/people/public-profile/pr', async (c) =>
 );
 app.post('/people/public-profile/operations', async (c) =>
   handleSubmitPublicProfileOperation(c.req.raw, c.env)
+);
+app.post('/people/honours/operations', async (c) =>
+  handleSubmitHonoursBulkOperation(c.req.raw, c.env)
 );
 app.delete('/people/public-profile/pr', async (c) =>
   handleDiscardPublicProfilePr(c.req.raw)

@@ -6,7 +6,10 @@ description: Domain areas, exports, validation ownership, consumers, build outpu
 # Schemas package
 
 `packages/schemas` (`@scs/schemas`) is the direct source of shared runtime and
-transport contracts. It exports Zod schemas and inferred types from one package
+transport contracts. Identity review and Honours preview/apply request and
+response shapes are validated here. The pure email classification, student role
+lock, and range selection logic live in `@scs/identity`; the API owns
+persistence and HTTP. It exports Zod schemas and inferred types from one package
 entry point; consumers import from the package and must not re-export those
 contracts through app-local wrappers.
 

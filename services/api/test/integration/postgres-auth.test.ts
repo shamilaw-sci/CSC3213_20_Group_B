@@ -40,6 +40,7 @@ postgresTest(
           '0004_proxy_settings.sql',
           '0005_permissions.sql',
           '0006_public_avatar_moderation.sql',
+          '0007_identity_review.sql',
         ]) {
           const sql = await readFile(
             new URL(`../../migrations/postgres/${file}`, import.meta.url),
@@ -149,6 +150,7 @@ postgresTest(
       });
       expect(identity).toEqual({
         userId: 'u1',
+        emailVerified: true,
         providers: new Set(['github']),
       });
     } finally {

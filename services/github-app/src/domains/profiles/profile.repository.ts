@@ -2,6 +2,7 @@ import type { Octokit } from '@octokit/rest';
 
 import { getOctokit } from '@/config/client.config';
 import { getRuntimeConfig } from '@/config/runtime.config';
+import { assertSelfHonoursUnchanged } from '@/domains/profiles/honours-guard';
 import type { ProfileDraftRequest } from '@/domains/profiles/profile.types';
 import { createAtomicCommit } from '@/github/atomic-commit';
 import { createGithubClient } from '@/github/github.client';
@@ -121,6 +122,23 @@ export class GithubProfileDraftRepository implements ProfileDraftRepository {
     const snapshot = await this.repositoryGateway.readSnapshot(parentSha, [
       request.userPath,
     ]);
+    if (request.profileKind === 'student' && request.updatedByType === 'self') {
+      const publishedSnapshot = openPull
+        ? await this.repositoryGateway.readSnapshot(defaultBranch.sha, [
+            request.userPath,
+          ])
+        : snapshot;
+      assertSelfHonoursUnchanged({
+        ...request,
+        currentContent: publishedSnapshot.files.get(request.userPath),
+      });
+      if (openPull) {
+        assertSelfHonoursUnchanged({
+          ...request,
+          currentContent: snapshot.files.get(request.userPath),
+        });
+      }
+    }
     const currentRevision = normalizedRevision(
       snapshot.revisions.get(request.userPath) ?? null
     );

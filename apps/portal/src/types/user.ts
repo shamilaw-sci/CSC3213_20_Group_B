@@ -1,4 +1,9 @@
-import type { AccessLevel, AppRole, ProfilePictureMode } from '@scs/schemas';
+import type {
+  AcademicDepartmentCode,
+  AccessLevel,
+  AppRole,
+  ProfilePictureMode,
+} from '@scs/schemas';
 
 export interface AdminUserData {
   id: string;
@@ -10,6 +15,7 @@ export interface AdminUserData {
   githubUserID?: number | null;
   role: AppRole;
   accessLevel: AccessLevel;
+  honoursDepartments?: AcademicDepartmentCode[];
   blacklisted: boolean;
   createdAt?: number;
   googleOAuth?: boolean;

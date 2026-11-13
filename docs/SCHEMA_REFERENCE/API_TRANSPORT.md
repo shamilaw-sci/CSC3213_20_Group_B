@@ -62,6 +62,34 @@ caller.
 | `AdminUserPageSchema`           | Bounded administrative user list response.                            |
 | `AdminUserDetailResponseSchema` | User permission detail with provider connection flags.                |
 
+## Identity review and Honours management
+
+| Schema                                  | Responsibility                                                |
+| --------------------------------------- | ------------------------------------------------------------- |
+| `IdentityReviewStatusSchema`            | Review state for registered university accounts.              |
+| `IdentityDecisionSourceSchema`          | Manual mapping or review decision source.                     |
+| `IdentityClassificationSourceSchema`    | Effective classification provenance.                          |
+| `IdentityDecisionRequestSchema`         | Validated administrator decision with expected role.          |
+| `IdentityAccountSchema`                 | Verified account and classification summary.                  |
+| `IdentityAccountsQuerySchema`           | Bounded account search and verification filters.              |
+| `IdentityAccountsResponseSchema`        | Bounded account search page.                                  |
+| `IdentityAuditSchema`                   | One recorded role or review decision.                         |
+| `IdentityHistoryResponseSchema`         | Bounded audit history.                                        |
+| `IdentitySuggestionResponseSchema`      | Optional Jev evidence interpretation.                         |
+| `HonoursPreviewRequestSchema`           | Batch, programme, range expressions, and operation.           |
+| `HonoursPreviewOutcomeSchema`           | Per-student preview result.                                   |
+| `HonoursPreviewEntrySchema`             | One student's current and proposed classification.            |
+| `HonoursPreviewResponseSchema`          | Bounded server-validated dry-run result.                      |
+| `HonoursBulkApplyRequestSchema`         | Confirmed apply request with expected preview and reason.     |
+| `HonoursBulkChangeSchema`               | One expected old and proposed new classification.             |
+| `HonoursBulkOperationRequestSchema`     | Validated batch operation and actor attribution.              |
+| `SubmitHonoursBulkOperationSchema`      | Internal durable submission with idempotency and correlation. |
+| `HonoursBulkAcceptedSchema`             | Asynchronous operation acceptance response.                   |
+| `HonoursApplyResponseSchema`            | Intent state and stable operation ID returned by the API.     |
+| `HonoursHistoryStatusSchema`            | Pending, processing, publication, and failure states.         |
+| `HonoursOperationHistoryEntrySchema`    | Accepted submission, actor, reason, and exact changes.        |
+| `HonoursOperationHistoryResponseSchema` | Bounded history page and cursor.                              |
+
 ## Errors
 
 | Schema                   | Responsibility                                                      |

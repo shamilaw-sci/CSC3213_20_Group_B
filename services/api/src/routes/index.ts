@@ -1,5 +1,16 @@
 import { ProjectIndexJsonSchema } from '@scs/schemas';
 
+import {
+  decideAdminIdentity,
+  getAdminIdentityHistory,
+  listAdminIdentity,
+  suggestAdminIdentity,
+} from '@/services/identity.service';
+import {
+  applyHonours,
+  getHonoursHistory,
+  previewHonours,
+} from '@/services/honours.service';
 import { updateMyNotificationsPreference } from '@/services/permissions.service';
 import { me, updateMe } from '@/services/profile.service';
 import {
@@ -446,6 +457,41 @@ const routes: RegisteredRoute[] = [
     method: 'GET',
     match: { kind: 'exact', path: '/api/admin/users/page' },
     handler: listUsersPage,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/identity/accounts' },
+    handler: listAdminIdentity,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/admin/academic-rules/honours/preview' },
+    handler: previewHonours,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/admin/academic-rules/honours/apply' },
+    handler: applyHonours,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/academic-rules/honours/history' },
+    handler: getHonoursHistory,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/admin/identity/history' },
+    handler: getAdminIdentityHistory,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/admin/identity/decisions' },
+    handler: decideAdminIdentity,
+  },
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/admin/identity/suggestion' },
+    handler: suggestAdminIdentity,
   },
   {
     method: 'GET',

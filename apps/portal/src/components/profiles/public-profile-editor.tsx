@@ -582,6 +582,7 @@ interface SelectFieldProps {
   options: Array<{ value: string; label: string }>;
   onChange: (value: string) => void;
   description?: string;
+  disabled?: boolean;
 }
 
 function SelectField({
@@ -590,6 +591,7 @@ function SelectField({
   options,
   onChange,
   description,
+  disabled,
 }: SelectFieldProps) {
   const fieldId = useId();
 
@@ -598,6 +600,7 @@ function SelectField({
       <Label htmlFor={fieldId}>{label}</Label>
       <Select
         value={value}
+        disabled={disabled}
         items={options}
         onValueChange={(nextValue) => {
           if (nextValue !== null) onChange(nextValue);
@@ -1335,6 +1338,7 @@ function ProfileForm({
                 }
                 required
                 compact
+                disabled={locked.has('studentTrack')}
                 labels={{
                   GENERAL: 'General',
                   HONOURS: 'Honours',
@@ -1368,6 +1372,7 @@ function ProfileForm({
                         label: HONOURS_PROGRAMME_LABELS[programme],
                       }))}
                       onChange={(value) => setField('honoursProgramme', value)}
+                      disabled={locked.has('honoursProgramme')}
                       description="Required. Your department and any eligible public directory are assigned automatically from this programme."
                     />
                     {honoursDepartment ? (

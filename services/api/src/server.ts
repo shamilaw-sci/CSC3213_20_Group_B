@@ -7,6 +7,7 @@ import { handleApiRequest } from '@/index';
 import { trustedClientHeaders } from '@/runtime/bun/client-ip';
 import { bindBackgroundTaskHandler } from '@/runtime/request-context';
 import { createSharpAvatarImageProcessor } from '@/services/avatar-image-processor-sharp';
+import { reconcileDueHonoursIntents } from '@/services/honours.service';
 import type { Env } from '@/types/env';
 
 const databaseUrl = z
@@ -47,6 +48,7 @@ const config = z
     DATA_PUBLIC_BASE_URL: z.url(),
     WEB_PROXY_INTERNAL_SECRET: z.string().min(1),
     TYPESAFE_API_KEY: z.string().min(1),
+    IDENTITY_JEV_ENABLED: z.enum(['true', 'false']).default('false'),
     AVATAR_S3_BUCKET: z.string().min(1),
     AVATAR_S3_REGION: z.string().min(1),
     AVATAR_S3_ENDPOINT: z.url(),
@@ -102,11 +104,13 @@ const backgroundTasks = new Set<Promise<unknown>>();
 let ready = false;
 let stopping = false;
 let server: ReturnType<typeof Bun.serve> | undefined;
+let honoursRecoveryTimer: ReturnType<typeof setInterval> | undefined;
 
 async function shutdown(): Promise<void> {
   if (stopping) return;
   stopping = true;
   ready = false;
+  if (honoursRecoveryTimer) clearInterval(honoursRecoveryTimer);
   await server?.stop();
   await Promise.allSettled(backgroundTasks);
   await pool.end();
@@ -127,11 +131,12 @@ try {
     `SELECT count(*)::text AS count FROM (VALUES
       ('user'), ('session'), ('account'), ('verification'), ('passkey'),
       ('rateLimit'), ('permission'), ('proxySettings'), ('public_avatar_rate'),
-      ('public_avatar_review'), ('public_avatar_audit')
+      ('public_avatar_review'), ('public_avatar_audit'),
+      ('identity_review'), ('identity_audit'), ('honours_operation_history')
     ) AS required(name) WHERE to_regclass(quote_ident(name)) IS NOT NULL`
   );
-  if (tables.rows[0]?.count !== '11')
-    throw new Error('PostgreSQL API migrations 0001 through 0006 are required');
+  if (tables.rows[0]?.count !== '14')
+    throw new Error('PostgreSQL API migrations 0001 through 0007 are required');
   await storage.head('__scs_readiness__');
   server = Bun.serve({
     port: config.API_PORT,
@@ -168,6 +173,15 @@ try {
   process.once('SIGINT', handleSignal);
   process.once('SIGTERM', handleSignal);
   ready = true;
+  const recoverHonours = () => {
+    const task = reconcileDueHonoursIntents(env).catch((error: unknown) =>
+      console.error('Honours intent recovery failed', error)
+    );
+    backgroundTasks.add(task);
+    void task.finally(() => backgroundTasks.delete(task));
+  };
+  recoverHonours();
+  honoursRecoveryTimer = setInterval(recoverHonours, 60_000);
   console.log(`API listening on port ${config.API_PORT}`);
 } catch (error) {
   await shutdown();

@@ -2,7 +2,11 @@ import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 
 import { submitPublicProfileOperationRequestSchema } from '@scs/schemas';
 
-import { APP_ROLE, setUserPermission } from '@/repositories/permissions.repo';
+import {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  setUserPermission,
+} from '@/repositories/permissions.repo';
 import type { Env } from '@/types/env';
 
 import { createTestEnv } from 'test/helpers/create-test-env';
@@ -18,6 +22,74 @@ afterEach(() => {
 });
 
 describe('profile operation compatibility', () => {
+  test('rejects a super-admin attempt to reclassify a student-pattern account', async () => {
+    const studentEmail = 's21513@sci.pdn.ac.lk';
+    const adminEmail = 'admin@sci.pdn.ac.lk';
+    const env = createTestEnv();
+    await setUserPermission(studentEmail, { role: APP_ROLE.STUDENT }, env);
+    await setUserPermission(
+      adminEmail,
+      { role: APP_ROLE.OTHER, accessLevel: ACCESS_LEVEL.SUPER_ADMIN },
+      env
+    );
+    const response = await invokeWorker(
+      `/api/admin/users/${encodeURIComponent(studentEmail)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Origin: 'https://portal.scs-pdn.space',
+          'X-Client-Id': 'portal',
+          Cookie: await createTestSessionCookie(env, adminEmail),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: 'ACADEMIC' }),
+      },
+      env
+    );
+    expect(response.status).toBe(409);
+  });
+
+  test('rejects student self-service Honours assignment before dispatch', async () => {
+    const studentEmail = 's21513@sci.pdn.ac.lk';
+    const upstreamBodies: unknown[] = [];
+    spyOn(globalThis, 'fetch').mockImplementation(
+      (async () =>
+        new Response(null, { status: 404 })) as unknown as typeof fetch
+    );
+    const env = createTestEnv({
+      GITHUB_APP: {
+        fetch: async (request: ServiceRequest) => {
+          upstreamBodies.push(request);
+          return new Response(null, { status: 500 });
+        },
+      } as NonNullable<Env['GITHUB_APP']>,
+    });
+    await setUserPermission(studentEmail, { role: APP_ROLE.STUDENT }, env);
+    const response = await invokeWorker(
+      '/api/people/v2/me/pr',
+      {
+        method: 'PUT',
+        headers: {
+          Origin: 'https://portal.scs-pdn.space',
+          'X-Client-Id': 'portal',
+          Cookie: await createTestSessionCookie(env, studentEmail),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileKind: 'student',
+          profile: {
+            registrationNo: 'S21513',
+            studentTrack: 'HONOURS',
+            honoursProgramme: 'COMPUTER_SCIENCE',
+          },
+        }),
+      },
+      env
+    );
+    expect(response.status).toBe(403);
+    expect(upstreamBodies).toHaveLength(0);
+  });
+
   test('opts the Portal into async profile submission and proxies status', async () => {
     const upstream: Array<{
       url: string;
@@ -198,10 +270,16 @@ describe('profile operation compatibility', () => {
       { role: APP_ROLE.STUDENT, createdAt: 1 },
       env
     );
-    const sessionCookie = await createTestSessionCookie(env, studentEmail);
+    const adminEmail = 'admin@sci.pdn.ac.lk';
+    await setUserPermission(
+      adminEmail,
+      { role: APP_ROLE.OTHER, accessLevel: ACCESS_LEVEL.SUPER_ADMIN },
+      env
+    );
+    const sessionCookie = await createTestSessionCookie(env, adminEmail);
 
     const response = await invokeWorker(
-      '/api/people/v2/me/pr',
+      `/api/people/v2/admin/users/${encodeURIComponent(studentEmail)}/pr`,
       {
         method: 'PUT',
         headers: {

@@ -3,6 +3,7 @@ import { requireD1 } from '@/types/env';
 
 export interface AuthIdentity {
   userId: string;
+  emailVerified: boolean;
   image?: string;
   providers: Set<string>;
   githubUserId?: number;
@@ -14,6 +15,7 @@ export interface AuthIdentityRepository {
 
 export interface AuthIdentityRow {
   userId: string;
+  emailVerified: number | boolean;
   image: string | null;
   providerId: string | null;
   accountId: string | null;
@@ -30,6 +32,7 @@ export function authIdentityFromRows(
 
   return {
     userId: first.userId,
+    emailVerified: first.emailVerified === true || first.emailVerified === 1,
     ...(first.image ? { image: first.image } : {}),
     providers: new Set(
       rows.flatMap((account) =>
@@ -49,7 +52,7 @@ function createD1AuthIdentityRepository(
     async getByEmail(email) {
       const rows = await db
         .prepare(
-          `SELECT u.id AS userId, u.image, a.providerId, a.accountId
+          `SELECT u.id AS userId, u.emailVerified, u.image, a.providerId, a.accountId
          FROM "user" u
          LEFT JOIN account a ON a.userId = u.id
          WHERE lower(u.email) = ?`

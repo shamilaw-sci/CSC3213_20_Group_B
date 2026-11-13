@@ -1,5 +1,10 @@
 import type { OperationHandler } from '@/operations/operation.types';
 import {
+  createHonoursBulkHandler,
+  HONOURS_BULK_ACTION,
+} from '@/domains/honours/honours.operation';
+import { createHonoursBulkRepository } from '@/domains/honours/honours.repository';
+import {
   createProfileOperationHandler,
   PROFILE_UPSERT_ACTION,
 } from '@/domains/profiles/profile.operation';
@@ -15,6 +20,9 @@ export function operationHandlers(): Record<string, OperationHandler> {
     ...createProjectOperationHandlers(createProjectDraftRepository()),
     [PROFILE_UPSERT_ACTION]: createProfileOperationHandler(
       createProfileDraftRepository()
+    ),
+    [HONOURS_BULK_ACTION]: createHonoursBulkHandler(
+      createHonoursBulkRepository()
     ),
   };
 }

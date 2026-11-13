@@ -13,7 +13,7 @@ import {
   StudentTrackSchema,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button } from '@scs/ui/components/button';
+import { Button, buttonVariants } from '@scs/ui/components/button';
 import {
   Card,
   CardAction,
@@ -45,6 +45,7 @@ import {
   Trash2,
   UsersRound,
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   cloneElement,
   isValidElement,
@@ -447,6 +448,14 @@ export default function StudentPlacementPage() {
             </div>
           }
         />
+        <div className="mb-4">
+          <Link
+            className={buttonVariants({ variant: 'outline' })}
+            href="/admin/academic-rules/honours"
+          >
+            Honours Management
+          </Link>
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <Metric

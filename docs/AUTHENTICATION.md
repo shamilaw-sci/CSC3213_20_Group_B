@@ -23,6 +23,16 @@ handlers enforce the permission required for profile, project, academic, proxy,
 or administrative actions. Admin interfaces must remain protected at the API
 boundary even when the Portal also hides unavailable actions.
 
+Student-pattern addresses such as `s21513@sci.pdn.ac.lk` and
+`s21sp513@sci.pdn.ac.lk` receive the immutable `STUDENT` academic role.
+Other registered accounts start as `OTHER` and can still use private Portal
+profiles and account settings. Only verified accounts can be classified by an
+administrator on the Portal's Role Mappings or Identity Review pages.
+Academic roles and administrative access levels remain separate. Review notes,
+sources, and role changes are recorded in `identity_review` and
+`identity_audit` by the D1/PostgreSQL identity migrations. Jev analysis is an
+optional administrator action using supplied evidence; it never assigns a role.
+
 ## Service authentication
 
 The API authenticates requests to the mailer with `MAILER_API_KEY` and requests

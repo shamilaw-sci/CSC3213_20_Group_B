@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@better-auth/passkey": "^1.7.7",
+    "@scs/identity": "workspace:*",
     "@scs/moderation": "workspace:*",
     "@scs/schemas": "workspace:*",
     "@scs/security": "workspace:*",

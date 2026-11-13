@@ -18,6 +18,7 @@ test('D1 auth identity lookup includes linked providers and GitHub ID', async ()
     .run();
   expect(await getAuthIdentityByEmail('TEST@SCI.PDN.AC.LK', env)).toEqual({
     userId: 'u1',
+    emailVerified: true,
     providers: new Set(['github']),
     githubUserId: 12345,
   });

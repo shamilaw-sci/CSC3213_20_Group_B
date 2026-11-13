@@ -19,6 +19,7 @@ import {
   PROFILE_UPSERT_ACTION,
 } from '@/domains/profiles/profile.operation';
 import { createProfileDraftRepository } from '@/domains/profiles/profile.repository';
+import { SelfHonoursConflictError } from '@/domains/profiles/honours-guard';
 import { createOperationExecutor } from '@/operations/queue.consumer';
 import { OperationIdempotencyConflictError } from '@/operations/operation.executor';
 import type { OperationRecord } from '@/operations/operation.types';
@@ -87,7 +88,10 @@ export async function handleUpsertPublicProfilePr(
     const pullRequest = await upsertPublicProfilePr(request.data);
     return Response.json({ success: true, pullRequest });
   } catch (error) {
-    if (error instanceof PublicProfileRequestError) {
+    if (
+      error instanceof PublicProfileRequestError ||
+      error instanceof SelfHonoursConflictError
+    ) {
       return Response.json(
         { message: error.message, code: 'public_profile_conflict' },
         { status: error.status }

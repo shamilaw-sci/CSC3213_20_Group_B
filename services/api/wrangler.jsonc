@@ -7,6 +7,7 @@
   "send_metrics": false,
   "workers_dev": false,
   "preview_urls": false,
+  "triggers": { "crons": ["*/1 * * * *"] },
   "routes": [
     {
       "pattern": "api.scs-pdn.space",

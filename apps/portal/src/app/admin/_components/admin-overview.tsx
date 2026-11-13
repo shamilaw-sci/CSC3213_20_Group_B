@@ -18,6 +18,18 @@ const sections = [
     icon: Users,
   },
   {
+    title: 'Role Mappings',
+    href: '/admin/identity/mappings',
+    description: 'Classify verified accounts and inspect decision history.',
+    icon: Users,
+  },
+  {
+    title: 'Identity Review',
+    href: '/admin/identity/review',
+    description: 'Review unclassified university accounts.',
+    icon: Users,
+  },
+  {
     title: 'Avatar Reviews',
     href: '/admin/avatar-reviews',
     description:
@@ -45,7 +57,18 @@ const sections = [
   },
 ] as const;
 
-export default function AdminOverview() {
+export default function AdminOverview({ fullAdmin }: { fullAdmin: boolean }) {
+  const visibleSections = fullAdmin
+    ? sections
+    : [
+        {
+          title: 'Honours Management',
+          href: '/admin/academic-rules/honours',
+          description:
+            'Review and submit programme assignments in your authorised departments.',
+          icon: GraduationCap,
+        },
+      ];
   return (
     <PageShell>
       <BackButton
@@ -55,10 +78,14 @@ export default function AdminOverview() {
       />
       <PageHeader
         title="Admin"
-        description="Admin tools for accounts, access, and proxy configuration."
+        description={
+          fullAdmin
+            ? 'Admin tools for accounts, access, and proxy configuration.'
+            : 'Honours programme management.'
+        }
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        {sections.map((section) => {
+        {visibleSections.map((section) => {
           const Icon = section.icon;
           return (
             <Link

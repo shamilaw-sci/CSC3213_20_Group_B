@@ -1,7 +1,10 @@
 // API
+export * from '#operation-identity';
 export * from '#schemas/api/editor.schema';
 export * from '#schemas/api/error.schema';
 export * from '#schemas/api/github-app-request.schema';
+export * from '#schemas/api/honours.schema';
+export * from '#schemas/api/identity.schema';
 export * from '#schemas/api/mailer.schema';
 export * from '#schemas/api/mutation.schema';
 export * from '#schemas/api/operation.schema';

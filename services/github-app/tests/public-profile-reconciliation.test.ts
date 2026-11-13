@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  assertSelfHonoursUnchanged,
+  SelfHonoursConflictError,
+} from '@/domains/profiles/honours-guard';
+
+import {
   candidateAggregatePathsForIdentity,
   removeProfile,
   publishedProfileMetadataFromProfile,
@@ -25,6 +30,38 @@ const academic = {
   staffType: 'ACADEMIC_TEACHING',
   academicRank: 'LECTURER',
 };
+
+test('self profile writes cannot restore a stale Honours classification', () => {
+  const current = JSON.stringify(student);
+  expect(() =>
+    assertSelfHonoursUnchanged({
+      profileKind: 'student',
+      updatedByType: 'self',
+      profile: {
+        ...student,
+        studentTrack: 'GENERAL',
+        honoursProgramme: undefined,
+      },
+      currentContent: current,
+    })
+  ).toThrow(SelfHonoursConflictError);
+  expect(() =>
+    assertSelfHonoursUnchanged({
+      profileKind: 'student',
+      updatedByType: 'self',
+      profile: { ...student, fullName: 'Updated Student' },
+      currentContent: current,
+    })
+  ).not.toThrow();
+  expect(() =>
+    assertSelfHonoursUnchanged({
+      profileKind: 'student',
+      updatedByType: 'admin',
+      profile: { ...student, studentTrack: 'GENERAL' },
+      currentContent: current,
+    })
+  ).not.toThrow();
+});
 
 describe('public profile aggregate reconciliation helpers', () => {
   test('limits student aggregate candidates to student paths', () => {

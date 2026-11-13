@@ -25,6 +25,25 @@ server-only `/api/internal/proxies/:username` Web resolver,
 status. Better Auth routes are mounted by both entry points. List routes
 are bounded and page-based.
 
+The identity routes under `/api/admin/identity` list verified accounts, save
+review decisions, expose audit history, and optionally request Jev suggestions.
+The API's existing permission record remains the effective role authority.
+Honours preview, apply, and history routes under `/api/admin/academic-rules/honours`
+validate student identifiers against verified accounts and published profiles.
+Super-admins, admins, and academic users with an explicit department grant may
+manage the relevant programme. Department-scoped staff need either an existing
+Honours programme in their scope or a published subject belonging to that
+department; records without that evidence are ineligible. Apply revalidates
+the preview and persists an intent in AUTH_DB before asking GitHub App to
+accept one durable operation. The intent stores the actor, reason, exact changes,
+idempotency key, and correlation ID. A minute-based API recovery pass retries
+pending intents with the same key after checking current authority and the
+published preview. Cloudflare uses a Worker cron; Bun starts the same recovery
+pass at startup and repeats it every minute. GitHub App continues to own durable
+execution through its existing operation store and queue. Students
+cannot modify their own published
+Honours classification through the individual profile endpoint.
+
 ## Runtime state and integrations
 
 In Cloudflare, `AUTH_DB` is the D1 binding. The Worker calls Mailer with an internal bearer

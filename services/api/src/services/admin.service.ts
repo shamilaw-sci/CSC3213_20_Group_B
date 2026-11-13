@@ -1,3 +1,5 @@
+import { validateRoleAssignment } from '@scs/identity';
+
 import {
   deleteUserPermission,
   LastSuperAdminError,
@@ -24,6 +26,7 @@ import type { Env } from '@/types/env';
 import { verifySessionRequest } from '@/middleware/session';
 import { resolveProfilePictureUpdate } from '@/utils/profile-picture';
 import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
+import { saveIdentityDecision } from '@/repositories/identity.repo';
 
 export async function listUsersPage(req: Request, env: Env): Promise<Response> {
   const origin = req.headers.get('origin') || '';
@@ -194,7 +197,7 @@ export async function updateUserPermissions(
         ? 'Invalid picture mode'
         : error instanceof Error && error.message === 'Invalid accessLevel'
           ? 'Invalid access level'
-          : 'Invalid role';
+          : 'Invalid role or Honours department scope';
     return createJsonErrorResponse(message, 400, origin);
   }
 
@@ -228,6 +231,15 @@ export async function updateUserPermissions(
     ...existingPermission,
     ...normalizedPatch,
   };
+  try {
+    validateRoleAssignment(email, updatedPermission.role);
+  } catch {
+    return createJsonErrorResponse(
+      'Student-pattern accounts must retain the STUDENT role',
+      409,
+      origin
+    );
+  }
 
   const isSelfUpdate = authUserEmail.toLowerCase() === email.toLowerCase();
   if (isSelfUpdate) {
@@ -261,10 +273,40 @@ export async function updateUserPermissions(
   }
 
   try {
-    await setUserPermission(email, updatedPermission, env);
+    if (updatedPermission.role !== existingPermission.role) {
+      const identity = await getAuthIdentityByEmail(email, env);
+      if (!identity?.emailVerified) {
+        return createJsonErrorResponse(
+          'Verified registered account required for role changes',
+          409,
+          origin
+        );
+      }
+      await saveIdentityDecision(env, {
+        email: email.toLowerCase(),
+        oldRole: existingPermission.role,
+        role: updatedPermission.role,
+        status:
+          updatedPermission.role === 'OTHER' ? 'RETAINED_OTHER' : 'APPROVED',
+        source: 'MANUAL',
+        note: '',
+        actorEmail: authUserEmail.toLowerCase(),
+        nextPermission: updatedPermission,
+        expectedPermission: existingPermission,
+      });
+    } else {
+      await setUserPermission(email, updatedPermission, env);
+    }
   } catch (error) {
     if (error instanceof LastSuperAdminError)
       return createJsonErrorResponse(error.message, 409, origin);
+    if (
+      error instanceof Error &&
+      (error.message.includes('permissions changed') ||
+        error.message.includes('role changed'))
+    ) {
+      return createJsonErrorResponse(error.message, 409, origin);
+    }
     console.error('Error updating permission:', error);
     return createTextErrorResponse('Internal Server Error', 500, origin);
   }

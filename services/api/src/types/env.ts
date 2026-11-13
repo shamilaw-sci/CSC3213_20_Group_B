@@ -35,6 +35,7 @@ export interface Env {
   DATA_PUBLIC_BASE_URL: string;
   WEB_PROXY_INTERNAL_SECRET: string;
   TYPESAFE_API_KEY: string;
+  IDENTITY_JEV_ENABLED?: string;
   PROFILE_PICTURES?: R2Bucket;
   AVATAR_STORAGE?: BinaryObjectStore;
   AVATAR_STORAGE_DRIVER?: 'r2' | 's3';

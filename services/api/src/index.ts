@@ -5,6 +5,7 @@ import { createAuth, isBetterAuthRequest } from '@/auth/auth';
 import { handleWorkerRequest } from '@/middleware/request-guards';
 import { dispatchRoute } from '@/routes';
 import { bindExecutionContext } from '@/runtime/request-context';
+import { reconcileDueHonoursIntents } from '@/services/honours.service';
 
 export default {
   async fetch(
@@ -14,6 +15,9 @@ export default {
   ): Promise<Response> {
     bindExecutionContext(req, ctx);
     return handleApiRequest(req, env);
+  },
+  scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): void {
+    ctx.waitUntil(reconcileDueHonoursIntents(env));
   },
 };
 

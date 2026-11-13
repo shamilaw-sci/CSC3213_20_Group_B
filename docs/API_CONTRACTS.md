@@ -25,6 +25,29 @@ and API-to-GitHub-App mutation requests are defined by `@scs/schemas`. Producers
 and consumers import those contracts directly so independently deployable
 workspaces cannot drift behind parallel interfaces or validators.
 
+Identity endpoints under `/api/admin/identity` use shared account, decision,
+history, and suggestion schemas. Only super-admins may classify an existing
+verified account. A decision includes the expected current role and returns
+`409` when that role changed or the immutable student role is challenged.
+Honours preview and apply use shared schemas under
+`/api/admin/academic-rules/honours`. Preview reads published profiles and
+verified student accounts without mutating them. Apply requires the matching
+preview, a reason, explicit confirmation, and an idempotency key; it returns a
+stable operation ID and an API history state. Department-scoped academic users may
+submit only where both the chosen programme and published student evidence
+support their assigned department.
+The API persists the intent before GitHub App acceptance. A `202` response can
+mean `pending_acceptance`; the API's scheduled recovery uses the stored request
+and key, even if the browser disconnects. Once accepted, clients may poll
+`/api/operations/{operationId}` for GitHub App status. The history endpoint
+returns at most 20 submissions per page with a
+cursor. Super-admins can inspect all entries; admins and scoped academic users
+see their own submissions. Each row includes the submitted changes, operation
+ID, and one of `pending_acceptance`, `accepted`, `processing`,
+`awaiting_publication`, `published`, or `failed`. A failed intent requires a new
+preview and idempotency key. Repeating the same active request with a new key
+returns the existing operation ID, preventing a duplicate publication.
+
 ## Common Browser API Rules
 
 - Send session cookies with protected requests.

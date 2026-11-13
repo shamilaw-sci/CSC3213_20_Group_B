@@ -13,7 +13,7 @@ export function createPostgresAuthIdentityRepository(
   return {
     async getByEmail(email) {
       const result = await pool.query<AuthIdentityRow>(
-        `SELECT u.id AS "userId", u.image, a."providerId", a."accountId"
+        `SELECT u.id AS "userId", u."emailVerified", u.image, a."providerId", a."accountId"
          FROM "user" u
          LEFT JOIN account a ON a."userId" = u.id
          WHERE lower(u.email) = $1`,

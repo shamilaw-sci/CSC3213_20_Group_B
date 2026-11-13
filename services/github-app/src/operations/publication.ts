@@ -7,7 +7,8 @@ import type { OperationRecord } from '@/operations/operation.types';
 
 export function repositoryFor(operation: OperationRecord): string {
   const config = getRuntimeConfig();
-  return operation.resource.type === 'profile'
+  return operation.resource.type === 'profile' ||
+    operation.resource.type === 'honours_batch'
     ? config.GITHUB_PEOPLE_DATA_REPOSITORY
     : config.GITHUB_PROJECTS_DATA_REPOSITORY;
 }
@@ -15,6 +16,7 @@ export function repositoryFor(operation: OperationRecord): string {
 function expectedBranch(operation: OperationRecord, branch: string): boolean {
   const prefixes: Record<string, string[]> = {
     profile: ['profile'],
+    honours_batch: ['profile'],
     project: ['project', 'project-delete'],
     course: ['course', 'course-delete'],
     offering: ['course-offering', 'course-offering-delete'],

@@ -93,6 +93,31 @@ async function createAdminContext(env: Env): Promise<string> {
 }
 
 describe('/api/me characterization', () => {
+  test('OTHER retains private profile editing while public People editing is forbidden', async () => {
+    const env = createTestEnv();
+    await setPermission(env, USER_EMAIL, {
+      role: APP_ROLE.OTHER,
+      name: 'Unclassified Member',
+    });
+    const token = await createSessionToken(env, USER_EMAIL);
+    const privateResponse = await apiRequest('/api/me', 'PATCH', env, {
+      token,
+      body: { name: 'Updated Member' },
+    });
+    expect(privateResponse.status).toBe(200);
+    expect((await getPermission(env, USER_EMAIL)).name).toBe('Updated Member');
+    const publicResponse = await apiRequest(
+      '/api/people/v2/me/pr',
+      'PUT',
+      env,
+      {
+        token,
+        body: { profileKind: 'academic', profile: {} },
+      }
+    );
+    expect(publicResponse.status).toBe(403);
+  });
+
   test('rejects a missing session', async () => {
     const response = await apiRequest('/api/me', 'GET', createTestEnv());
 

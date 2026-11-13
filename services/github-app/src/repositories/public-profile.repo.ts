@@ -10,6 +10,7 @@ import {
 
 import { getOctokit } from '@/config/client.config';
 import envConfig from '@/config/env.config';
+import { assertSelfHonoursUnchanged } from '@/domains/profiles/honours-guard';
 import {
   inferProfileKind,
   projectProfileMembership,
@@ -732,6 +733,21 @@ export async function upsertPublicProfilePr(
   const existingPull = await findProfilePullRequest(normalizedUsername, 'open');
   let branch = existingPull?.head.ref;
   const { defaultBranch, sha } = await getDefaultBranchSha();
+
+  if (input.profileKind === 'student' && input.updatedByType === 'self') {
+    const published = await readFile(input.userPath, defaultBranch);
+    assertSelfHonoursUnchanged({
+      ...input,
+      currentContent: published?.content,
+    });
+    if (existingPull) {
+      const draft = await readFile(input.userPath, existingPull.head.ref);
+      assertSelfHonoursUnchanged({
+        ...input,
+        currentContent: draft?.content,
+      });
+    }
+  }
 
   if (existingPull) {
     if (!input.expectedPrHeadSha) {

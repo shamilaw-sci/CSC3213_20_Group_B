@@ -69,6 +69,81 @@ separate deployment and recovery procedure, with
 8. Check health, logs, queue depth, and one representative user flow.
 9. Record any production-only validation that was not possible locally.
 
+For identity administration, apply API D1 migration
+`0008_identity_review.sql` or PostgreSQL migration
+`postgres/0007_identity_review.sql` before deploying routes that query the
+review tables. Review the student-role normalization and its audit rows against
+the target database. Set `IDENTITY_JEV_ENABLED=true` only when optional
+administrator evidence analysis is intended. Verify Honours by previewing an
+authorized single student, then inspecting the accepted operation and its
+GitHub pull request; a successful queue result alone does not mean published
+People projections have deployed. The API's Honours history also contains
+`pending_acceptance` intents. Cloudflare's minute cron and Bun's minute timer
+retry these records with their stored idempotency key. If a record stays pending,
+check API recovery logs and GitHub App availability before submitting another
+request. `accepted` and `awaiting_publication` are distinct from `published`.
+
+### Academic identity and Honours release check
+
+Use isolated test accounts and synthetic People profiles for mutation checks.
+Record the target environment, migration versions, operation IDs, PR numbers,
+and public-data deployment result.
+
+1. Confirm the API Worker has `AUTH_DB`, `GITHUB_APP`, and its existing auth,
+   Google, mailer, and GitHub App secrets. Confirm the GitHub App Worker has
+   `OPERATION_STATE`, `MUTATION_COORDINATOR`, `OPERATION_QUEUE`, its consumer
+   and dead-letter queue, GitHub App credentials, and the matching internal
+   secret. Check the Portal's API base URL and site URL. For Bun, check the
+   PostgreSQL URL/schema and outbox worker settings. See
+   [Environment Variables](ENVIRONMENT_VARIABLES.md) for the full inventory.
+2. Back up the target auth database. Inspect pending D1 migrations with
+   `bunx wrangler d1 migrations list scs-portal-auth --remote` from
+   `services/api`, then apply `0008_identity_review.sql` using the protected
+   `Migrate API D1` workflow. For Bun, use the departmental migrator to apply
+   PostgreSQL `0007_identity_review.sql` after `0001`–`0006`; inspect its
+   checksum and migration journal before starting the API. Check preserved
+   staff roles and access levels, student-pattern normalization, and the
+   `identity_audit` rows. Public People profiles live outside AUTH_DB.
+3. Deploy the GitHub App Worker with its Durable Object migration and Queue
+   bindings, then the API Worker, then Portal. Confirm the API service binding
+   resolves to the deployed GitHub App. Keep the existing Google OAuth client,
+   callback, and scopes.
+4. Confirm the API Worker has the `*/1 * * * *` cron trigger. Create an
+   isolated pending intent by making the GitHub App temporarily unavailable;
+   check that administrative history shows `pending_acceptance`, then restore
+   availability and verify that cron moves the same operation to `accepted`.
+   For Bun, restart the API before its minute recovery pass and verify the
+   same result. Check recovery logs and that no second operation ID appears.
+5. Sign in with a student-pattern account and a non-student institutional
+   account. Check their roles, private Portal profile access, and public
+   profile restrictions. Approve a verified non-student account through admin
+   review; verify its access level does not change. Confirm a student-pattern
+   account cannot be promoted, and HOD Honours access is limited to its
+   assigned department. Sign in again after a role change to check the
+   effective session permission.
+6. Preview and confirm one synthetic Honours assignment. Note the operation
+   ID in API history; disconnect the browser and confirm status and PR
+   progress remain available from a new admin session. Repeat with a small
+   synthetic batch covering an inclusive range and exclusion. Resubmit with
+   the same key and verify history and GitHub show one operation and one PR
+   per assignment. Check a rejected stale preview before retrying.
+7. Inspect GitHub PR labels, validation checks, merge result, and public
+   People projection/deployment. Confirm history moves through `processing`
+   and `awaiting_publication` to `published`; a successful Queue execution
+   alone is not publication. Exercise a failed PR in staging and confirm
+   history reports `failed` with a usable retry path. Check Queue retry and
+   dead-letter metrics and the durable operation by its ID.
+
+If rollout fails before API deployment, keep the older code and restore the
+database backup only when its migration changes must be reversed. If code is
+rolled back after an intent was accepted, retain AUTH_DB and GitHub App durable
+state so the operation ID and idempotency key survive; stop new submissions,
+inspect the PR and operation, then resume with compatible code. Do not replay
+an operation under a new key until its existing state is understood. Follow
+the [departmental restore procedure](DEPARTMENTAL_DEPLOYMENT.md) for
+PostgreSQL/outbox recovery and inspect the GitHub App dead-letter queue for
+exhausted deliveries.
+
 Complete root gate:
 
 ```bash

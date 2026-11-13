@@ -1,0 +1,10 @@
+{
+  "extends": "@scs/tsconfig/library.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["bun", "node"],
+    "lib": ["ES2022"]
+  },
+  "include": ["src", "test", "eslint.config.ts"]
+}

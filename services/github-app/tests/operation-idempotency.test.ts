@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 
 import {
   InMemoryOperationStore,
@@ -34,6 +35,18 @@ describe('operation idempotency', () => {
     });
 
     const first = await executor.submit(command);
+    const priorIdentity = createHash('sha256')
+      .update(
+        JSON.stringify({
+          actor: {
+            subjectId: command.actor.subjectId,
+            type: command.actor.type,
+          },
+          idempotencyKey: command.idempotencyKey,
+        })
+      )
+      .digest('hex');
+    expect(first.operationId).toBe(`op_${priorIdentity}`);
     const duplicate = await executor.submit({
       ...command,
       payload: { tags: ['one', 'two'], title: 'Example' },

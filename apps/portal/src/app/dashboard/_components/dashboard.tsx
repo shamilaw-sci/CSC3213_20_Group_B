@@ -1,6 +1,10 @@
 'use client';
 
-import { ACCESS_LEVEL, APP_ROLE } from '@scs/schemas';
+import {
+  ACCESS_LEVEL,
+  APP_ROLE,
+  CurrentUserResponseSchema,
+} from '@scs/schemas';
 import {
   BookOpen,
   FolderKanban,
@@ -27,6 +31,7 @@ import {
 export default function Dashboard() {
   const router = useRouter();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [canManageHonours, setCanManageHonours] = useState(false);
   const [showCourses, setShowCourses] = useState(false);
   const [showProxySettings, setShowProxySettings] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -58,6 +63,13 @@ export default function Dashboard() {
 
       if (mounted) {
         setIsSuperAdmin(isSuperAdminRole(user));
+        const parsedUser = CurrentUserResponseSchema.safeParse(user);
+        setCanManageHonours(
+          parsedUser.success &&
+            (parsedUser.data.accessLevel === ACCESS_LEVEL.ADMIN ||
+              (parsedUser.data.role === APP_ROLE.ACADEMIC &&
+                (parsedUser.data.honoursDepartments?.length ?? 0) > 0))
+        );
         setShowCourses(canEditCoursesRole(user));
         setShowProxySettings(hasProxySettings);
         setLoaded(true);
@@ -111,11 +123,13 @@ export default function Dashboard() {
       },
     ];
 
-    if (isSuperAdmin) {
+    if (isSuperAdmin || canManageHonours) {
       baseItems.unshift({
         title: 'Admin',
         href: '/admin',
-        description: 'Open admin tools for users and personal-site redirects.',
+        description: isSuperAdmin
+          ? 'Open admin tools for users and personal-site redirects.'
+          : 'Manage Honours programmes in your authorised departments.',
         icon: ShieldCheck,
       });
     }
@@ -130,7 +144,7 @@ export default function Dashboard() {
     }
 
     return baseItems;
-  }, [isSuperAdmin, showCourses, showProxySettings]);
+  }, [isSuperAdmin, canManageHonours, showCourses, showProxySettings]);
 
   if (!loaded) return <DashboardLoading />;
 

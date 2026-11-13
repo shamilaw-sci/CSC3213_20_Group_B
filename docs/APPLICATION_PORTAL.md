@@ -42,8 +42,26 @@ For implementation-level behavior, use the
   admin public profile links to a remove-only public picture page;
   administrators remove the current published picture but never upload a
   replacement there.
+- `/admin/identity/mappings` and `/admin/identity/review` let super-admins
+  classify verified accounts, inspect audit history, and request optional Jev
+  suggestions from evidence they explicitly enter.
+- `/admin/academic-rules/honours` previews individual or range selections and
+  submits confirmed changes through one durable GitHub operation. Academic
+  staff see this tool only after a super-admin assigns department scope. The
+  submission history is stored in the API database; live status remains in the
+  GitHub App's durable operation store.
 
 ## Interaction model
+
+Honours selections accept comma-separated or multiline three-digit indices,
+inclusive ranges, and `sp` identifiers. For batch `s21`, enter `800-999` in
+Include, `845-850, 901, 950` in Exclude, and `720, 725` in Additional to select
+194 identifiers. Exclusions remove included students; Additional runs last and
+can restore one. The chosen programme is explicit and is never inferred from
+an index. Preview reads verified accounts and published batch profiles without
+writing. Apply requires a reason, a matching fresh preview, conflict choice,
+and confirmation. One student can use the Individual student field and the
+same operation workflow.
 
 Editors offer a clear human-friendly form as the default and an advanced JSON
 representation when the schema supports it. Switching modes preserves the same

@@ -133,31 +133,32 @@ development hosts; do not copy those values into Vercel Production or Preview.
 
 ### API Worker
 
-| Name                          | Kind      | Supply     | Status    | Purpose                              |
-| ----------------------------- | --------- | ---------- | --------- | ------------------------------------ |
-| `BETTER_AUTH_SECRET`          | `secret`  | `template` | `runtime` | Better Auth signing                  |
-| `BETTER_AUTH_URL`             | `server`  | `wrangler` | `runtime` | Better Auth base URL                 |
-| `GOOGLE_CLIENT_ID`            | `server`  | `wrangler` | `runtime` | Google OAuth                         |
-| `GOOGLE_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | Google OAuth                         |
-| `GITHUB_CLIENT_ID`            | `server`  | `wrangler` | `runtime` | GitHub OAuth                         |
-| `GITHUB_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | GitHub OAuth                         |
-| `MAILER_API_URL`              | `server`  | `wrangler` | `runtime` | Mailer service endpoint              |
-| `MAILER_API_KEY`              | `secret`  | `template` | `runtime` | Mailer service authentication        |
-| `GITHUB_APP_API_URL`          | `server`  | `wrangler` | `runtime` | GitHub App HTTP fallback             |
-| `GITHUB_APP_INTERNAL_SECRET`  | `secret`  | `template` | `runtime` | GitHub App HTTP authentication       |
-| `WEB_PROXY_INTERNAL_SECRET`   | `secret`  | `template` | `runtime` | Web proxy-resolution authentication  |
-| `DATA_PUBLIC_BASE_URL`        | `server`  | `wrangler` | `runtime` | public data URL construction         |
-| `AUTH_DB`                     | `binding` | `wrangler` | `binding` | D1 auth and settings store           |
-| `GITHUB_APP`                  | `binding` | `wrangler` | `binding` | private GitHub App service transport |
-| `PROFILE_PICTURES`            | `binding` | `wrangler` | `binding` | public avatar R2 bucket              |
-| `IMAGES`                      | `binding` | `wrangler` | `binding` | avatar decode and normalization      |
-| `TYPESAFE_API_KEY`            | `secret`  | `template` | `runtime` | Jev image moderation                 |
-| `AVATAR_STORAGE_DRIVER`       | `server`  | `wrangler` | optional  | `r2` (default) or `s3`               |
-| `AVATAR_S3_BUCKET`            | `server`  | `wrangler` | S3 only   | private avatar bucket                |
-| `AVATAR_S3_REGION`            | `server`  | `wrangler` | S3 only   | S3 region (`auto` for R2 S3 API)     |
-| `AVATAR_S3_ENDPOINT`          | `server`  | `wrangler` | S3 only   | S3-compatible endpoint               |
-| `AVATAR_S3_ACCESS_KEY_ID`     | `secret`  | `template` | S3 only   | S3 access key                        |
-| `AVATAR_S3_SECRET_ACCESS_KEY` | `secret`  | `template` | S3 only   | S3 secret key                        |
+| Name                          | Kind      | Supply     | Status    | Purpose                                                                 |
+| ----------------------------- | --------- | ---------- | --------- | ----------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`          | `secret`  | `template` | `runtime` | Better Auth signing                                                     |
+| `BETTER_AUTH_URL`             | `server`  | `wrangler` | `runtime` | Better Auth base URL                                                    |
+| `GOOGLE_CLIENT_ID`            | `server`  | `wrangler` | `runtime` | Google OAuth                                                            |
+| `GOOGLE_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | Google OAuth                                                            |
+| `GITHUB_CLIENT_ID`            | `server`  | `wrangler` | `runtime` | GitHub OAuth                                                            |
+| `GITHUB_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | GitHub OAuth                                                            |
+| `MAILER_API_URL`              | `server`  | `wrangler` | `runtime` | Mailer service endpoint                                                 |
+| `MAILER_API_KEY`              | `secret`  | `template` | `runtime` | Mailer service authentication                                           |
+| `GITHUB_APP_API_URL`          | `server`  | `wrangler` | `runtime` | GitHub App HTTP fallback                                                |
+| `GITHUB_APP_INTERNAL_SECRET`  | `secret`  | `template` | `runtime` | GitHub App HTTP authentication                                          |
+| `WEB_PROXY_INTERNAL_SECRET`   | `secret`  | `template` | `runtime` | Web proxy-resolution authentication                                     |
+| `DATA_PUBLIC_BASE_URL`        | `server`  | `wrangler` | `runtime` | public data URL construction                                            |
+| `AUTH_DB`                     | `binding` | `wrangler` | `binding` | D1 auth and settings store                                              |
+| `GITHUB_APP`                  | `binding` | `wrangler` | `binding` | private GitHub App service transport                                    |
+| `PROFILE_PICTURES`            | `binding` | `wrangler` | `binding` | public avatar R2 bucket                                                 |
+| `IMAGES`                      | `binding` | `wrangler` | `binding` | avatar decode and normalization                                         |
+| `TYPESAFE_API_KEY`            | `secret`  | `template` | `runtime` | Jev image moderation                                                    |
+| `IDENTITY_JEV_ENABLED`        | `server`  | `optional` | `runtime` | Set `true` to enable administrator-requested identity evidence analysis |
+| `AVATAR_STORAGE_DRIVER`       | `server`  | `wrangler` | optional  | `r2` (default) or `s3`                                                  |
+| `AVATAR_S3_BUCKET`            | `server`  | `wrangler` | S3 only   | private avatar bucket                                                   |
+| `AVATAR_S3_REGION`            | `server`  | `wrangler` | S3 only   | S3 region (`auto` for R2 S3 API)                                        |
+| `AVATAR_S3_ENDPOINT`          | `server`  | `wrangler` | S3 only   | S3-compatible endpoint                                                  |
+| `AVATAR_S3_ACCESS_KEY_ID`     | `secret`  | `template` | S3 only   | S3 access key                                                           |
+| `AVATAR_S3_SECRET_ACCESS_KEY` | `secret`  | `template` | S3 only   | S3 secret key                                                           |
 
 See [Binary object storage](STORAGE.md) before switching providers. Existing
 objects are not copied by changing these variables.

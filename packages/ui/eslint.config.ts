@@ -1,14 +1,16 @@
 import nextConfig from '@scs/eslint-config/next';
 import {
+  projectDirectory,
   tailwindProjectRoot,
   typescriptProjectRoot,
 } from '@scs/eslint-config/project';
 import { globalIgnores } from 'eslint/config';
 
+const projectRoot = projectDirectory(import.meta.url);
 const config = [
   ...nextConfig,
-  typescriptProjectRoot(import.meta.dirname),
-  tailwindProjectRoot(import.meta.dirname, 'src/styles/registry.css'),
+  typescriptProjectRoot(projectRoot),
+  tailwindProjectRoot(projectRoot, 'src/styles/registry.css'),
   {
     rules: {
       '@next/next/no-html-link-for-pages': 'off',

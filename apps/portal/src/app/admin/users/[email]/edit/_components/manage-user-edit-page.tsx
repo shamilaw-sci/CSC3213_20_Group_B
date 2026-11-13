@@ -1,6 +1,9 @@
 'use client';
 
+import { parseStudentIdentifier } from '@scs/identity';
 import {
+  type AcademicDepartmentCode,
+  AcademicDepartmentCodeSchema,
   ACCESS_LEVEL,
   ACCESS_LEVELS,
   type AccessLevel,
@@ -54,6 +57,7 @@ async function updateUser(
     name: string;
     role: AppRole;
     accessLevel: AccessLevel;
+    honoursDepartments: AcademicDepartmentCode[];
     blacklisted: boolean;
     pictureMode: AdminUserData['pictureMode'];
     picture: string;
@@ -76,6 +80,9 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
   const [accessLevel, setAccessLevel] = useState<AccessLevel>(
     getUserAccessLevel(user)
   );
+  const [honoursDepartments, setHonoursDepartments] = useState<
+    AcademicDepartmentCode[]
+  >(user.honoursDepartments ?? []);
   const [blacklisted, setBlacklisted] = useState(user.blacklisted);
   const [profilePicture, setProfilePicture] = useState(() =>
     createInitialProfilePictureDraft({
@@ -104,6 +111,7 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
         name: trimmedName,
         role,
         accessLevel,
+        honoursDepartments,
         blacklisted,
         ...profilePictureDraftPayload(profilePicture),
       });
@@ -181,6 +189,42 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
 
           <Separator />
 
+          <div className="space-y-2">
+            <FieldTitle className="text-base">
+              HOD Honours departments
+            </FieldTitle>
+            <p className="text-muted-foreground text-sm">
+              Explicitly authorize this account to manage Honours
+              classifications in selected departments. This does not grant
+              general admin access.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {AcademicDepartmentCodeSchema.options.map((department) => (
+                <Button
+                  key={department}
+                  type="button"
+                  variant={
+                    honoursDepartments.includes(department)
+                      ? 'default'
+                      : 'outline'
+                  }
+                  disabled={saving}
+                  onClick={() =>
+                    setHonoursDepartments((current) =>
+                      current.includes(department)
+                        ? current.filter((item) => item !== department)
+                        : [...current, department]
+                    )
+                  }
+                >
+                  {department.replaceAll('_', ' ')}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="space-y-3">
             <div className="space-y-1">
               <FieldTitle className="text-base">Profile Picture</FieldTitle>
@@ -206,7 +250,9 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
             <div className="space-y-1">
               <FieldTitle className="text-base">Role</FieldTitle>
               <p className="text-muted-foreground text-sm">
-                Choose the user&apos;s person role.
+                {parseStudentIdentifier(user.email)
+                  ? 'Student-pattern university accounts are permanently classified as STUDENT.'
+                  : 'Choose the user’s person role. This does not grant admin access.'}
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -216,7 +262,9 @@ export default function ManageUserEditPage({ user }: ManageUserEditPageProps) {
                   type="button"
                   variant={role === option ? 'default' : 'outline'}
                   onClick={() => setRole(option)}
-                  disabled={saving}
+                  disabled={
+                    saving || Boolean(parseStudentIdentifier(user.email))
+                  }
                   className="justify-center"
                 >
                   {ROLE_LABEL[option]}

@@ -3,6 +3,13 @@ import { Database, type SQLQueryBindings } from 'bun:sqlite';
 
 function createTestD1Database(): D1Database {
   const database = new Database(':memory:');
+  const preparedStatements = new WeakMap<
+    D1PreparedStatement,
+    {
+      sql: string;
+      values: SQLQueryBindings[];
+    }
+  >();
   database.exec(`
     PRAGMA foreign_keys = ON;
     CREATE TABLE "user" ("id" TEXT NOT NULL PRIMARY KEY, "name" TEXT NOT NULL, "email" TEXT NOT NULL UNIQUE, "emailVerified" INTEGER NOT NULL, "image" TEXT, "createdAt" INTEGER NOT NULL, "updatedAt" INTEGER NOT NULL);
@@ -23,6 +30,11 @@ function createTestD1Database(): D1Database {
     CREATE INDEX "proxySettings_updatedAt_idx" ON "proxySettings" ("updatedAt");
     CREATE INDEX "proxySettings_username_idx" ON "proxySettings" ("username");
     CREATE INDEX "permission_accessLevel_idx" ON "permission" ("accessLevel");
+    CREATE TABLE "identity_review" ("email" TEXT PRIMARY KEY COLLATE NOCASE REFERENCES permission(email) ON DELETE CASCADE, "status" TEXT NOT NULL, "source" TEXT NOT NULL, "note" TEXT NOT NULL, "reviewed_by" TEXT NOT NULL, "reviewed_at" INTEGER NOT NULL);
+    CREATE TABLE "identity_audit" ("id" TEXT NOT NULL PRIMARY KEY, "email" TEXT NOT NULL COLLATE NOCASE, "old_role" TEXT NOT NULL, "new_role" TEXT NOT NULL, "status" TEXT NOT NULL, "source" TEXT NOT NULL, "note" TEXT NOT NULL, "actor_email" TEXT NOT NULL, "created_at" INTEGER NOT NULL);
+    CREATE TABLE "honours_operation_history" ("operation_id" TEXT PRIMARY KEY, "actor_email" TEXT NOT NULL, "batch" TEXT NOT NULL, "programme" TEXT NOT NULL, "action" TEXT NOT NULL, "reason" TEXT NOT NULL, "changes_json" TEXT NOT NULL, "created_at" INTEGER NOT NULL, "actor_subject_id" TEXT, "idempotency_key" TEXT, "correlation_id" TEXT, "apply_json" TEXT, "request_hash" TEXT, "status" TEXT NOT NULL DEFAULT 'accepted', "next_attempt_at" INTEGER NOT NULL DEFAULT 0, "lease_until" INTEGER NOT NULL DEFAULT 0, "lease_token" TEXT, "attempt_count" INTEGER NOT NULL DEFAULT 0, "accepted_at" INTEGER, "last_error" TEXT);
+    CREATE UNIQUE INDEX "honours_operation_history_retry_idx" ON "honours_operation_history" ("actor_subject_id", "idempotency_key");
+    CREATE UNIQUE INDEX "honours_operation_history_active_request_idx" ON "honours_operation_history" ("actor_subject_id", "request_hash") WHERE "status" IN ('pending_acceptance', 'accepted', 'processing', 'awaiting_publication');
     CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("providerId", "accountId");
     CREATE UNIQUE INDEX "passkey_credentialID_unique" ON "passkey" ("credentialID");
   `);
@@ -38,6 +50,10 @@ function createTestD1Database(): D1Database {
     const statement = {
       bind(...bindings: unknown[]) {
         values = bindings.map(normalize) as SQLQueryBindings[];
+        preparedStatements.set(statement as unknown as D1PreparedStatement, {
+          sql,
+          values,
+        });
         return statement;
       },
       async first<T>(columnName?: string): Promise<T | null> {
@@ -79,13 +95,27 @@ function createTestD1Database(): D1Database {
         return [columns, ...rows] as T[];
       },
     };
+    preparedStatements.set(statement as unknown as D1PreparedStatement, {
+      sql,
+      values,
+    });
     return statement as unknown as D1PreparedStatement;
   }
 
   return {
     prepare,
     async batch<T>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
-      return Promise.all(statements.map((statement) => statement.all<T>()));
+      return database.transaction(() =>
+        statements.map((statement) => {
+          const binding = preparedStatements.get(statement);
+          if (!binding) throw new Error('Unknown D1 test statement');
+          return {
+            success: true,
+            meta: {},
+            results: database.query(binding.sql).all(...binding.values) as T[],
+          } as D1Result<T>;
+        })
+      )();
     },
     async exec(query: string): Promise<D1ExecResult> {
       database.exec(query);

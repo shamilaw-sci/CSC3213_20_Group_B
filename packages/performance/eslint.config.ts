@@ -1,12 +1,15 @@
 import base from '@scs/eslint-config/base';
-import { typescriptProjectRoot } from '@scs/eslint-config/project';
+import {
+  projectDirectory,
+  typescriptProjectRoot,
+} from '@scs/eslint-config/project';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 const config = [
   ...tseslint.configs.recommended,
   ...base,
-  typescriptProjectRoot(import.meta.dirname),
+  typescriptProjectRoot(projectDirectory(import.meta.url)),
   {
     files: ['**/*.{ts,js}'],
     languageOptions: { globals: { ...globals.bunBuiltin, ...globals.node } },

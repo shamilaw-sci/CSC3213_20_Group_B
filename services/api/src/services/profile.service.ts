@@ -88,6 +88,9 @@ export async function me(req: Request, env: Env): Promise<Response> {
     picture: permission.picture ?? verified.picture,
     role: getPermissionRole(permission),
     accessLevel: getPermissionAccessLevel(permission),
+    ...(permission.honoursDepartments?.length
+      ? { honoursDepartments: permission.honoursDepartments }
+      : {}),
     blacklisted: permission.blacklisted || false,
     googleOAuth: authIdentity?.providers.has('google') ?? false,
     githubOAuth: authIdentity?.providers.has('github') ?? false,

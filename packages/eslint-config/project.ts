@@ -1,5 +1,19 @@
 import type { Settings } from 'eslint-plugin-better-tailwindcss/api/types';
 
+export function projectDirectory(moduleUrl: string): string {
+  const url = new URL('.', moduleUrl);
+  if (url.protocol !== 'file:') throw new Error('Expected a file URL');
+  const path = decodeURIComponent(url.pathname);
+  const platformPath = url.host
+    ? `//${url.host}${path}`
+    : /^\/[A-Za-z]:\//.test(path)
+      ? path.slice(1)
+      : path;
+  return platformPath.length > 1
+    ? platformPath.replace(/\/$/, '')
+    : platformPath;
+}
+
 export function typescriptProjectRoot(tsconfigRootDir: string) {
   const tsconfigProject = `${tsconfigRootDir.replaceAll('\\', '/')}/tsconfig.json`;
 

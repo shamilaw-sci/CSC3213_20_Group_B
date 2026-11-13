@@ -41,6 +41,7 @@ const migrations = [
       '0004_proxy_settings.sql',
       '0005_permissions.sql',
       '0006_public_avatar_moderation.sql',
+      '0007_identity_review.sql',
     ],
   },
   {

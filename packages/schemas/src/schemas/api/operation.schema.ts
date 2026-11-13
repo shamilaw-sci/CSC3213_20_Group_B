@@ -20,6 +20,7 @@ export const OperationResourceTypeSchema = z.enum([
   'config',
   'user_access',
   'student_placement',
+  'honours_batch',
 ]);
 
 export const OperationResourceSchema = z

@@ -257,14 +257,23 @@ function allowedKindsForRole(role: AppRole): PublicProfileKind[] {
 
 function lockedFieldsForKind(profileKind: PublicProfileKind): string[] {
   if (profileKind === 'student') {
-    return ['registrationNo', 'email', 'level', 'status', 'slqfLevel'];
+    return [
+      'registrationNo',
+      'email',
+      'level',
+      'status',
+      'slqfLevel',
+      'studentTrack',
+      'honoursProgramme',
+    ];
   }
 
   return ['email', 'staffType'];
 }
 
 function schemaDetailsForUser(
-  user: PublicProfileUserContext
+  user: PublicProfileUserContext,
+  adminEditor = false
 ): PublicProfileSchemaResponse {
   return {
     allowedKinds: allowedKindsForRole(user.role),
@@ -273,7 +282,15 @@ function schemaDetailsForUser(
       username: usernameFromEmail(user.email),
     },
     lockedFields: [
-      ...new Set(allowedKindsForRole(user.role).flatMap(lockedFieldsForKind)),
+      ...new Set(
+        allowedKindsForRole(user.role)
+          .flatMap(lockedFieldsForKind)
+          .filter(
+            (field) =>
+              !adminEditor ||
+              (field !== 'studentTrack' && field !== 'honoursProgramme')
+          )
+      ),
     ],
     note: 'Submit profile JSON matching @scs/schemas.',
   };
@@ -846,7 +863,11 @@ export async function getAdminUserPublicProfileSchema(
   const verified = await verifiedAdminTarget(req, env);
   if (!verified.ok) return verified.response;
 
-  return createJsonResponse(schemaDetailsForUser(verified.target), 200, origin);
+  return createJsonResponse(
+    schemaDetailsForUser(verified.target, true),
+    200,
+    origin
+  );
 }
 
 export async function getAdminUserStudentPlacement(
@@ -1145,6 +1166,62 @@ export async function upsertMyPublicProfilePr(
 
   let studentPlacement: StudentPlacementResponse | undefined;
   if (profileKind === 'student') {
+    let published: unknown;
+    try {
+      published = await readPublicJson(
+        env,
+        `/people/v2/users/${usernameFromEmail(user.email)}.json`
+      );
+    } catch {
+      return createJsonErrorResponse(
+        'Unable to verify the published Honours classification',
+        502,
+        origin
+      );
+    }
+    if (
+      (published !== null && !isRecord(published)) ||
+      (isRecord(published) &&
+        ((profile.studentTrack ?? 'GENERAL') !==
+          (published.studentTrack ?? 'GENERAL') ||
+          profile.honoursProgramme !== published.honoursProgramme)) ||
+      (published === null &&
+        (profile.studentTrack === 'HONOURS' ||
+          profile.honoursProgramme !== undefined))
+    ) {
+      return createJsonErrorResponse(
+        'Only an administrator may change an individual Honours classification',
+        403,
+        origin
+      );
+    }
+    const draft = await callGithubApp(
+      env,
+      origin,
+      `/people/public-profile/pr?username=${encodeURIComponent(usernameFromEmail(user.email))}`,
+      undefined,
+      { schema: PublicProfilePrSchema }
+    );
+    if (!draft.ok) return draft.response;
+    if (draft.value.status === 'open') {
+      const currentDraft = draft.value.draftProfile;
+      if (
+        !isRecord(currentDraft) ||
+        (currentDraft.studentTrack ?? 'GENERAL') !==
+          (profile.studentTrack ?? 'GENERAL') ||
+        currentDraft.honoursProgramme !== profile.honoursProgramme ||
+        (isRecord(published) &&
+          ((currentDraft.studentTrack ?? 'GENERAL') !==
+            (published.studentTrack ?? 'GENERAL') ||
+            currentDraft.honoursProgramme !== published.honoursProgramme))
+      ) {
+        return createJsonErrorResponse(
+          'An open profile draft changes Honours classification; contact an administrator',
+          409,
+          origin
+        );
+      }
+    }
     try {
       const placement = await resolveStudentPlacement({
         env,
@@ -1174,6 +1251,19 @@ export async function upsertMyPublicProfilePr(
     targetEmail: user.email,
     studentPlacement,
   });
+
+  if (
+    profileKind === 'student' &&
+    ((trustedProfile.studentTrack ?? 'GENERAL') !==
+      (profile.studentTrack ?? 'GENERAL') ||
+      trustedProfile.honoursProgramme !== profile.honoursProgramme)
+  ) {
+    return createJsonErrorResponse(
+      'Resolved placement would change protected Honours classification',
+      409,
+      origin
+    );
+  }
 
   const parseResult = schemas[profileKind].safeParse(trustedProfile);
   if (!parseResult.success) {

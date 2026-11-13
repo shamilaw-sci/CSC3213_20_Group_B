@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { operationIdForActorKey } from '@scs/schemas';
+
 import type { OperationStore } from '@/operations/operation.store';
 import type { OperationDispatcher } from '@/operations/operation.dispatch';
 import type {
@@ -44,15 +46,15 @@ function digest(value: unknown): string {
     .digest('hex');
 }
 
-function operationIdentity(command: OperationCommand): {
+async function operationIdentity(command: OperationCommand): Promise<{
   operationId: string;
   idempotencyHash: string;
-} {
+}> {
   return {
-    operationId: `op_${digest({
-      actor: command.actor,
-      idempotencyKey: command.idempotencyKey,
-    })}`,
+    operationId: await operationIdForActorKey(
+      command.actor,
+      command.idempotencyKey
+    ),
     idempotencyHash: digest({
       actor: command.actor,
       action: command.action,
@@ -110,7 +112,7 @@ export class OperationExecutor {
   }
 
   async submit(command: OperationCommand): Promise<OperationRecord> {
-    const identity = operationIdentity(command);
+    const identity = await operationIdentity(command);
     const timestamp = this.now().toISOString();
     const created = await this.options.store.create({
       version: 1,

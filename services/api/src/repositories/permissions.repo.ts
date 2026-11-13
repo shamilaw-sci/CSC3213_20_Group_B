@@ -1,6 +1,12 @@
 import {
+  defaultRoleForEmail as classifyEmail,
+  validateRoleAssignment,
+} from '@scs/identity';
+import {
   ACCESS_LEVEL,
   AccessLevelSchema,
+  AcademicDepartmentCodeSchema,
+  type AcademicDepartmentCode,
   APP_ROLE,
   AppRoleSchema,
   ProfilePictureModeSchema,
@@ -39,6 +45,12 @@ function parseStoredPermission(value: unknown): Permission | null {
     normalizeAccessLevel(value.accessLevel) ?? ACCESS_LEVEL.NONE;
   const permission: Permission = { role, accessLevel };
   if (isRepoRoleMap(value.include)) permission.include = value.include;
+  if (Array.isArray(value.honoursDepartments)) {
+    const parsed = AcademicDepartmentCodeSchema.array()
+      .max(9)
+      .safeParse(value.honoursDepartments);
+    if (parsed.success) permission.honoursDepartments = parsed.data;
+  }
   if (
     Array.isArray(value.exclude) &&
     value.exclude.every((item) => typeof item === 'string')
@@ -87,6 +99,7 @@ export interface Permission {
   role: AppRole;
   accessLevel?: AccessLevel;
   include?: Record<string, RepoRole>;
+  honoursDepartments?: AcademicDepartmentCode[];
   exclude?: string[];
   blacklisted?: boolean;
   notifications?: {
@@ -144,12 +157,7 @@ export function getPermissionAccessLevel(
 }
 
 export function defaultRoleForEmail(email: string): AppRole {
-  const username = email.toLowerCase().split('@')[0] ?? '';
-  if (/^s\d{5}$/.test(username) || /^s\d{2}sp\d{3}$/.test(username)) {
-    return APP_ROLE.STUDENT;
-  }
-
-  return APP_ROLE.ACADEMIC;
+  return classifyEmail(email);
 }
 
 export function isSuperAdmin(permission?: Permission | null): boolean {
@@ -187,6 +195,11 @@ export function normalizePermissionPatch(
   }
 
   if ('include' in patch) normalized.include = patch.include;
+  if ('honoursDepartments' in patch) {
+    normalized.honoursDepartments = AcademicDepartmentCodeSchema.array()
+      .max(9)
+      .parse(patch.honoursDepartments);
+  }
   if ('exclude' in patch) normalized.exclude = patch.exclude;
   if ('blacklisted' in patch) normalized.blacklisted = patch.blacklisted;
   if ('notifications' in patch) normalized.notifications = patch.notifications;
@@ -212,6 +225,10 @@ export function sanitizePermission(permission: Permission): Permission {
   };
 
   if ('include' in permission) sanitized.include = permission.include;
+  if ('honoursDepartments' in permission)
+    sanitized.honoursDepartments = AcademicDepartmentCodeSchema.array()
+      .max(9)
+      .parse(permission.honoursDepartments);
   if ('exclude' in permission) sanitized.exclude = permission.exclude;
   if ('blacklisted' in permission)
     sanitized.blacklisted = permission.blacklisted;
@@ -281,6 +298,7 @@ export async function setUserPermission(
   permission: Permission,
   env: Env
 ): Promise<void> {
+  validateRoleAssignment(email, permission.role);
   if (env.PERMISSION_REPOSITORY)
     return env.PERMISSION_REPOSITORY.set(email, permission);
   const sanitizedEmail = email.toLowerCase();

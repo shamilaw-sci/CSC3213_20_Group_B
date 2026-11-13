@@ -1,4 +1,7 @@
-import { typescriptProjectRoot } from '@scs/eslint-config/project';
+import {
+  projectDirectory,
+  typescriptProjectRoot,
+} from '@scs/eslint-config/project';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
@@ -19,7 +22,7 @@ const importSortRules = {
 };
 
 const config = [
-  typescriptProjectRoot(import.meta.dirname),
+  typescriptProjectRoot(projectDirectory(import.meta.url)),
   {
     ignores: ['dist/**', 'coverage/**'],
   },

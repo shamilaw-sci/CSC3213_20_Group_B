@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { AcademicDepartmentCodeSchema } from '#schemas/academics/academic-organization.schema';
 import { createPageSchema } from '#schemas/api/pagination.schema';
 
 export const AppRoleSchema = z.enum([
@@ -27,6 +28,7 @@ export const CurrentUserResponseSchema = z.object({
   picture: z.string().optional(),
   role: AppRoleSchema,
   accessLevel: AccessLevelSchema,
+  honoursDepartments: z.array(AcademicDepartmentCodeSchema).max(9).optional(),
   blacklisted: z.boolean(),
   googleOAuth: z.boolean(),
   githubOAuth: z.boolean(),
@@ -58,6 +60,7 @@ export const AdminUserDetailResponseSchema = z.object({
   picture: z.string().optional(),
   role: AppRoleSchema,
   accessLevel: AccessLevelSchema,
+  honoursDepartments: z.array(AcademicDepartmentCodeSchema).max(9).optional(),
   blacklisted: z.boolean().optional(),
   pictureMode: ProfilePictureModeSchema.nullable().optional(),
   gravatarMail: z.string().nullable().optional(),
