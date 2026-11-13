@@ -42,7 +42,7 @@ For implementation-level behavior, use the
   admin public profile links to a remove-only public picture page;
   administrators remove the current published picture but never upload a
   replacement there.
-- `/admin/identity/mappings` and `/admin/identity/review` let super-admins
+- `/admin/identity` lets super-admins
   classify verified accounts, inspect audit history, and request optional Jev
   suggestions from evidence they explicitly enter.
 - `/admin/academic-rules/honours` previews individual or range selections and

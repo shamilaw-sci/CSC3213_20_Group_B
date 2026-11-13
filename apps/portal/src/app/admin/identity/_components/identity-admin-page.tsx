@@ -13,7 +13,7 @@ import {
   IdentitySuggestionResponseSchema,
 } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
-import { Button, buttonVariants } from '@scs/ui/components/button';
+import { Button } from '@scs/ui/components/button';
 import {
   Card,
   CardContent,
@@ -141,11 +141,63 @@ function Help({
   );
 }
 
+function IdentityHelp() {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            className="border-border bg-card border"
+          />
+        }
+      >
+        <Info className="size-4" />
+        How this works
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-3 text-sm">
+        <div>
+          <p className="font-semibold">Student accounts</p>
+          <p className="text-muted-foreground">
+            Student-format university emails receive the Student role
+            automatically.
+          </p>
+        </div>
+        <div>
+          <p className="font-semibold">Role and access</p>
+          <p className="text-muted-foreground">
+            Classifying a staff account does not grant admin access.
+          </p>
+        </div>
+        <div>
+          <p className="font-semibold">Review decisions</p>
+          <p className="text-muted-foreground">
+            Use institutional evidence to assign a staff role, or keep an
+            account unclassified when evidence is insufficient.
+          </p>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function viewLinkClass(active: boolean) {
+  return `inline-flex min-h-9 items-center justify-center rounded-md border px-4 py-2 text-sm font-medium shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+    active
+      ? 'border-primary bg-primary text-primary-foreground'
+      : 'border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground'
+  }`;
+}
+
+type IdentityView = 'mappings' | 'review';
+
 export default function IdentityAdminPage({
-  mode,
+  initialView,
 }: {
-  mode: 'mappings' | 'review';
+  initialView: IdentityView;
 }) {
+  const [mode, setMode] = useState<IdentityView>(initialView);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState(
@@ -174,6 +226,59 @@ export default function IdentityAdminPage({
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState('');
   const [revision, setRevision] = useState(0);
+
+  const setView = useCallback(
+    (view: IdentityView) => {
+      if (view === mode) return;
+      setMode(view);
+      setQuery('');
+      setSearch('');
+      setRoleFilter(view === 'review' ? 'OTHER' : '');
+      setStatusFilter(view === 'review' ? 'PENDING' : '');
+      setVerifiedFilter(view === 'review' ? 'verified' : 'all');
+      setCursor('');
+      setPreviousCursors([]);
+      setItems([]);
+      setNextCursor(null);
+      setSelected(null);
+      setLoading(true);
+    },
+    [mode]
+  );
+
+  useEffect(() => {
+    function syncView() {
+      setView(
+        new URLSearchParams(window.location.search).get('view') === 'review'
+          ? 'review'
+          : 'mappings'
+      );
+    }
+    window.addEventListener('popstate', syncView);
+    return () => window.removeEventListener('popstate', syncView);
+  }, [setView]);
+
+  function navigateView(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    view: IdentityView
+  ) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    if (view === mode) return;
+    window.history.pushState(
+      null,
+      '',
+      view === 'review' ? '/admin/identity?view=review' : '/admin/identity'
+    );
+    setView(view);
+  }
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -310,47 +415,33 @@ export default function IdentityAdminPage({
     <PageShell width="wide">
       <BackButton fallbackHref="/admin" label="Back to Admin" preferFallback />
       <PageHeader
-        title={
-          mode === 'review'
-            ? 'Accounts needing review'
-            : 'Account classifications'
-        }
-        description={
-          mode === 'review'
-            ? 'Check verified accounts whose university email did not identify a student. Use institutional evidence to classify staff or record why a decision is still open.'
-            : 'Find registered university accounts, see how their role was assigned, and review or correct staff classifications.'
-        }
+        title="Account classifications"
+        description="Find registered university accounts, check their roles, and review classifications needing a decision."
       />
-      <div className="flex flex-wrap gap-2">
-        <Link
-          className={buttonVariants({
-            variant: mode === 'mappings' ? 'default' : 'outline',
-          })}
-          href="/admin/identity/mappings"
+      <div className="flex flex-wrap items-center gap-3">
+        <nav
+          aria-label="Account classification views"
+          className="bg-muted/50 border-border inline-flex flex-wrap gap-1
+            rounded-lg border p-1"
         >
-          All account classifications
-        </Link>
-        <Link
-          className={buttonVariants({
-            variant: mode === 'review' ? 'default' : 'outline',
-          })}
-          href="/admin/identity/review"
-        >
-          Needs review
-        </Link>
-        <Help title="Automatic student classification">
-          S21513@sci.pdn.ac.lk is always STUDENT. The same rule covers S21SP345.
-          Administrators cannot change this role.
-        </Help>
-        <Help title="Role versus access level">
-          Changing a registered staff account from OTHER to ACADEMIC enables its
-          public profile category. It does not grant ADMIN access.
-        </Help>
-        <Help title="Review decisions">
-          A staff-format university email starts as OTHER. Approve a supported
-          category, or retain OTHER when evidence is insufficient. Private
-          Portal editing stays available.
-        </Help>
+          <Link
+            className={viewLinkClass(mode === 'mappings')}
+            href="/admin/identity"
+            aria-current={mode === 'mappings' ? 'page' : undefined}
+            onClick={(event) => navigateView(event, 'mappings')}
+          >
+            All account classifications
+          </Link>
+          <Link
+            className={viewLinkClass(mode === 'review')}
+            href="/admin/identity?view=review"
+            aria-current={mode === 'review' ? 'page' : undefined}
+            onClick={(event) => navigateView(event, 'review')}
+          >
+            Needs review
+          </Link>
+        </nav>
+        <IdentityHelp />
       </div>
       <Card>
         <CardHeader>
@@ -385,8 +476,8 @@ export default function IdentityAdminPage({
               <RefreshCw className="size-4" /> Refresh
             </Button>
           </form>
-          <div className="flex flex-wrap gap-2">
-            <div className="flex flex-col gap-1 text-sm">
+          <div className="grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
+            <div className="flex min-w-0 flex-col gap-1 text-sm">
               <span id="role-filter-label">Role</span>
               <Select
                 value={roleFilter || 'all'}
@@ -397,8 +488,15 @@ export default function IdentityAdminPage({
                   setRoleFilter(value === 'all' ? '' : value);
                 }}
               >
-                <SelectTrigger aria-labelledby="role-filter-label">
-                  <SelectValue />
+                <SelectTrigger
+                  aria-labelledby="role-filter-label"
+                  className="w-full"
+                >
+                  <SelectValue>
+                    {roleFilter
+                      ? roleLabels[roleFilter as AppRole]
+                      : 'All roles'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -412,7 +510,7 @@ export default function IdentityAdminPage({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1 text-sm">
+            <div className="flex min-w-0 flex-col gap-1 text-sm">
               <span id="status-filter-label">Review status</span>
               <Select
                 value={statusFilter || 'all'}
@@ -423,8 +521,15 @@ export default function IdentityAdminPage({
                   setStatusFilter(value === 'all' ? '' : value);
                 }}
               >
-                <SelectTrigger aria-labelledby="status-filter-label">
-                  <SelectValue />
+                <SelectTrigger
+                  aria-labelledby="status-filter-label"
+                  className="w-full"
+                >
+                  <SelectValue>
+                    {statusFilter
+                      ? labels[statusFilter as ReviewStatus]
+                      : 'All statuses'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -438,7 +543,7 @@ export default function IdentityAdminPage({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1 text-sm">
+            <div className="flex min-w-0 flex-col gap-1 text-sm">
               <span id="verified-filter-label">Verification</span>
               <Select
                 value={verifiedFilter}
@@ -449,8 +554,17 @@ export default function IdentityAdminPage({
                   setVerifiedFilter(value);
                 }}
               >
-                <SelectTrigger aria-labelledby="verified-filter-label">
-                  <SelectValue />
+                <SelectTrigger
+                  aria-labelledby="verified-filter-label"
+                  className="w-full"
+                >
+                  <SelectValue>
+                    {verifiedFilter === 'all'
+                      ? 'All'
+                      : verifiedFilter === 'verified'
+                        ? 'Verified'
+                        : 'Unverified'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

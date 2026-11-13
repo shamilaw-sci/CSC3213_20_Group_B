@@ -27,13 +27,13 @@ Student-pattern addresses such as `s21513@sci.pdn.ac.lk` and
 `s21sp513@sci.pdn.ac.lk` receive the immutable `STUDENT` academic role.
 Other registered accounts start as `OTHER` and can still use private Portal
 profiles and account settings. Only verified accounts can be classified by an
-administrator on the Portal's Role Mappings or Identity Review pages.
+administrator on the Portal's Account Classifications page.
 Academic roles and administrative access levels remain separate. Review notes,
 sources, and role changes are recorded in `identity_review` and
 `identity_audit` by the D1/PostgreSQL identity migrations. Jev analysis is an
 optional administrator action using supplied evidence; it never assigns a role.
 
-The Identity Review page starts with verified `OTHER` accounts that have no
+The Needs Review view starts with verified `OTHER` accounts that have no
 recorded decision. In account listings, `PENDING` means an `OTHER` role still
 needs review; accounts with an existing non-`OTHER` role and no review record
 show `NOT_REQUIRED`. This is a derived display state, not a value saved to the

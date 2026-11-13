@@ -19,16 +19,9 @@ const sections = [
   },
   {
     title: 'Account Classifications',
-    href: '/admin/identity/mappings',
+    href: '/admin/identity',
     description:
-      'Find registered accounts, check their roles, and see decisions.',
-    icon: Users,
-  },
-  {
-    title: 'Accounts Needing Review',
-    href: '/admin/identity/review',
-    description:
-      'Classify verified accounts whose roles need an admin decision.',
+      'Find account roles and review classifications needing a decision.',
     icon: Users,
   },
   {

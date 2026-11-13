@@ -1,5 +1,5 @@
-import IdentityAdminPage from '@/app/admin/identity/_components/identity-admin-page';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <IdentityAdminPage mode="review" />;
+  redirect('/admin/identity?view=review');
 }
