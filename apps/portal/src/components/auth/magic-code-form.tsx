@@ -1,12 +1,13 @@
 'use client';
 
+import { isUniversityEmailDomain } from '@scs/schemas';
 import { Button } from '@scs/ui/components/button';
-import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { EmailCompletionInput } from '@/components/auth/email-completion-input';
 import { MagicCodeInput } from '@/components/auth/magic-code-input';
 import { authConfig } from '@/config/auth.config';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
@@ -69,10 +70,6 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     };
   }, []);
 
-  function isValidEmailDomain(e: string): boolean {
-    return /@(pdn\.ac\.lk|sci\.pdn\.ac\.lk)$/.test(e.trim());
-  }
-
   function maskEmail(e: string): string {
     const [local, domain] = e.split('@');
     if (!local || !domain) return e;
@@ -89,7 +86,7 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
       setEmailError('Please enter your email address.');
       return;
     }
-    if (!isValidEmailDomain(e)) {
+    if (!isUniversityEmailDomain(e)) {
       setEmailError('Use your @pdn.ac.lk or @sci.pdn.ac.lk email.');
       return;
     }
@@ -241,17 +238,13 @@ export function MagicCodeForm({ onBack }: MagicCodeFormProps) {
     <div className="space-y-3">
       <div className="space-y-1">
         <Label htmlFor="email-input">Email Address</Label>
-        <Input
-          id="email-input"
-          type="email"
-          placeholder="you@pdn.ac.lk"
+        <EmailCompletionInput
           value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
+          onChange={(value) => {
+            setEmail(value);
             setEmailError('');
           }}
           disabled={step === 'sending'}
-          autoComplete="email"
         />
       </div>
       {emailError && <p className="text-destructive text-sm">{emailError}</p>}

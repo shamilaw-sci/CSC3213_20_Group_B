@@ -52,6 +52,10 @@ caller.
 
 ## Shared permissions
 
+`UniversityEmailDomainSchema` defines the two university email domains used by
+Portal email OTP and API account checks. It does not authorize an account;
+server-side identity and permission checks still apply.
+
 | Schema                          | Responsibility                                                        |
 | ------------------------------- | --------------------------------------------------------------------- |
 | `AppRoleSchema`                 | Person category used by portal authorization.                         |

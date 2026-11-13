@@ -12,6 +12,7 @@ export * from '#schemas/api/pagination.schema';
 export * from '#schemas/api/permission.schema';
 export * from '#schemas/api/proxy.schema';
 export * from '#schemas/api/student-placement.schema';
+export * from '#schemas/api/university-email.schema';
 
 // Academics
 export * from '#schemas/academics/academic-organization.schema';

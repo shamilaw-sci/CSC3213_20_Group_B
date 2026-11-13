@@ -6,8 +6,6 @@ export const COOKIE_DOMAIN = '.scs-pdn.space';
 
 export const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 5;
 
-export const ALLOWED_GOOGLE_WORKSPACES_DOMAINS = ['sci.pdn.ac.lk', 'pdn.ac.lk'];
-
 export const ALLOWED_ORIGINS = [
   'https://portal.scs-pdn.space',
   'https://portal.scs.pdn.ac.lk',
