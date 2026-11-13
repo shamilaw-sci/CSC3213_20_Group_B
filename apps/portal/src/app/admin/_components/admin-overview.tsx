@@ -18,15 +18,17 @@ const sections = [
     icon: Users,
   },
   {
-    title: 'Role Mappings',
+    title: 'Account Classifications',
     href: '/admin/identity/mappings',
-    description: 'Classify verified accounts and inspect decision history.',
+    description:
+      'Find registered accounts, check their roles, and see decisions.',
     icon: Users,
   },
   {
-    title: 'Identity Review',
+    title: 'Accounts Needing Review',
     href: '/admin/identity/review',
-    description: 'Review unclassified university accounts.',
+    description:
+      'Classify verified accounts whose roles need an admin decision.',
     icon: Users,
   },
   {

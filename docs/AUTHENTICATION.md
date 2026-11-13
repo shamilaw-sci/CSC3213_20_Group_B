@@ -33,6 +33,14 @@ sources, and role changes are recorded in `identity_review` and
 `identity_audit` by the D1/PostgreSQL identity migrations. Jev analysis is an
 optional administrator action using supplied evidence; it never assigns a role.
 
+The Identity Review page starts with verified `OTHER` accounts that have no
+recorded decision. In account listings, `PENDING` means an `OTHER` role still
+needs review; accounts with an existing non-`OTHER` role and no review record
+show `NOT_REQUIRED`. This is a derived display state, not a value saved to the
+review table. The account list uses bounded cursor pages and includes only
+registered Portal accounts. It does not represent the full public student
+directory or an admission queue.
+
 ## Service authentication
 
 The API authenticates requests to the mailer with `MAILER_API_KEY` and requests

@@ -233,6 +233,46 @@ test('identity search paginates and a review may retain OTHER', async () => {
   });
 });
 
+test('automatic student accounts do not appear in the pending review queue', async () => {
+  const env = createTestEnv();
+  const now = Date.now();
+  for (const [id, email, role] of [
+    ['student', 's21513@sci.pdn.ac.lk', APP_ROLE.STUDENT],
+    ['staff', 'staff@sci.pdn.ac.lk', APP_ROLE.OTHER],
+  ] as const) {
+    await env.AUTH_DB.prepare(
+      `INSERT INTO "user" (id, name, email, emailVerified, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(id, id, email, 1, now, now)
+      .run();
+    await setUserPermission(email, { role, name: id }, env);
+  }
+  expect(
+    (
+      await listIdentityAccounts(env, {
+        query: '',
+        status: 'PENDING',
+        limit: 25,
+      })
+    ).items.map((account) => account.email)
+  ).toEqual(['staff@sci.pdn.ac.lk']);
+  expect(
+    (
+      await listIdentityAccounts(env, {
+        query: '',
+        status: 'NOT_REQUIRED',
+        limit: 25,
+      })
+    ).items[0]
+  ).toMatchObject({
+    email: 's21513@sci.pdn.ac.lk',
+    role: 'STUDENT',
+    status: 'NOT_REQUIRED',
+    source: 'STUDENT_PATTERN',
+  });
+});
+
 test('identity decision cannot invent an account or change a student role', async () => {
   const env = createTestEnv();
   const adminEmail = 'admin@sci.pdn.ac.lk';

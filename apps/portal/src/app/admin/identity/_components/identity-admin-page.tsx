@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
+import { Skeleton } from '@scs/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -63,12 +64,57 @@ type ReviewStatus = IdentityReviewStatus;
 type Account = IdentityAccount;
 type Audit = IdentityAudit;
 const statuses = IdentityReviewStatusSchema.options;
+const decisionStatuses = statuses.filter((value) => value !== 'NOT_REQUIRED');
 const labels: Record<ReviewStatus, string> = {
-  PENDING: 'Pending',
+  PENDING: 'Pending review',
   NEEDS_EVIDENCE: 'Needs evidence',
   APPROVED: 'Approved',
   RETAINED_OTHER: 'Reviewed and retained as OTHER',
   CONFLICT: 'Conflict',
+  NOT_REQUIRED: 'No review needed',
+};
+const roleLabels: Record<AppRole, string> = {
+  USER: 'User',
+  STUDENT: 'Student',
+  ACADEMIC: 'Academic staff',
+  NON_ACADEMIC: 'Non-academic staff',
+  ACADEMIC_SUPPORT: 'Academic support staff',
+  OTHER: 'Unclassified',
+};
+const sourceLabels: Record<Account['source'], string> = {
+  STUDENT_PATTERN: 'Student email rule',
+  AUTOMATIC: 'Default classification',
+  EXISTING: 'Existing role',
+  MANUAL: 'Admin change',
+  REVIEW: 'Identity review',
+  MIGRATION: 'Earlier migration',
+};
+const roleColors: Record<AppRole, string> = {
+  USER: 'border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+  STUDENT:
+    'border-blue-300 bg-blue-100 text-blue-900 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100',
+  ACADEMIC:
+    'border-violet-300 bg-violet-100 text-violet-900 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-100',
+  NON_ACADEMIC:
+    'border-cyan-300 bg-cyan-100 text-cyan-900 dark:border-cyan-700 dark:bg-cyan-950 dark:text-cyan-100',
+  ACADEMIC_SUPPORT:
+    'border-indigo-300 bg-indigo-100 text-indigo-900 dark:border-indigo-700 dark:bg-indigo-950 dark:text-indigo-100',
+  OTHER:
+    'border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100',
+};
+const statusColors: Record<ReviewStatus, string> = {
+  PENDING:
+    'border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100',
+  NEEDS_EVIDENCE:
+    'border-orange-300 bg-orange-100 text-orange-900 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-100',
+  APPROVED:
+    'border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100',
+  RETAINED_OTHER:
+    'border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+  CONFLICT:
+    'border-red-300 bg-red-100 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100',
+  NOT_REQUIRED:
+    'border-blue-300 bg-blue-100 text-blue-900 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100',
 };
 
 function Help({
@@ -110,9 +156,14 @@ export default function IdentityAdminPage({
   const [roleFilter, setRoleFilter] = useState(
     mode === 'review' ? 'OTHER' : ''
   );
-  const [statusFilter, setStatusFilter] = useState('');
-  const [verifiedFilter, setVerifiedFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(
+    mode === 'review' ? 'PENDING' : ''
+  );
+  const [verifiedFilter, setVerifiedFilter] = useState(
+    mode === 'review' ? 'verified' : 'all'
+  );
   const [cursor, setCursor] = useState('');
+  const [previousCursors, setPreviousCursors] = useState<string[]>([]);
   const [items, setItems] = useState<Account[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selected, setSelected] = useState<Account | null>(null);
@@ -177,7 +228,7 @@ export default function IdentityAdminPage({
   async function inspect(account: Account) {
     setSelected(account);
     setRole(account.role);
-    setStatus(account.status);
+    setStatus(account.status === 'NOT_REQUIRED' ? 'APPROVED' : account.status);
     setNote(account.note);
     setHistory([]);
     setHistoryError('');
@@ -264,11 +315,15 @@ export default function IdentityAdminPage({
     <PageShell width="wide">
       <BackButton fallbackHref="/admin" label="Back to Admin" preferFallback />
       <PageHeader
-        title={mode === 'review' ? 'Identity Review' : 'Role Mappings'}
+        title={
+          mode === 'review'
+            ? 'Accounts needing review'
+            : 'Account classifications'
+        }
         description={
           mode === 'review'
-            ? 'Review registered OTHER accounts and record an academic category or a deliberate unresolved decision.'
-            : 'Manage academic roles for verified registered university accounts.'
+            ? 'Check verified accounts whose university email did not identify a student. Use institutional evidence to classify staff or record why a decision is still open.'
+            : 'Find registered university accounts, see how their role was assigned, and review or correct staff classifications.'
         }
       />
       <div className="flex flex-wrap gap-2">
@@ -278,7 +333,7 @@ export default function IdentityAdminPage({
           })}
           href="/admin/identity/mappings"
         >
-          Role mappings
+          All account classifications
         </Link>
         <Link
           className={buttonVariants({
@@ -286,7 +341,7 @@ export default function IdentityAdminPage({
           })}
           href="/admin/identity/review"
         >
-          Review OTHER
+          Needs review
         </Link>
         <Help title="Automatic student classification">
           S21513@sci.pdn.ac.lk is always STUDENT. The same rule covers S21SP345.
@@ -302,9 +357,19 @@ export default function IdentityAdminPage({
           Portal editing stays available.
         </Help>
       </div>
+      <p className="text-muted-foreground text-sm">
+        A student email such as S21513@sci.pdn.ac.lk is classified
+        automatically. “Pending” means a role decision is still needed; it does
+        not mean an account, student record, or admission is awaiting approval.
+        This list contains registered Portal accounts, not every student in the
+        public directory. Email verification only confirms control of the email
+        address.
+      </p>
       <Card>
         <CardHeader>
-          <CardTitle>Find an account</CardTitle>
+          <CardTitle>
+            {mode === 'review' ? 'Review queue' : 'Find an account'}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <form
@@ -312,6 +377,7 @@ export default function IdentityAdminPage({
             onSubmit={(event) => {
               event.preventDefault();
               setCursor('');
+              setPreviousCursors([]);
               setSearch(query.trim());
             }}
           >
@@ -340,6 +406,7 @@ export default function IdentityAdminPage({
                 onValueChange={(value) => {
                   if (value === null) return;
                   setCursor('');
+                  setPreviousCursors([]);
                   setRoleFilter(value === 'all' ? '' : value);
                 }}
               >
@@ -351,7 +418,7 @@ export default function IdentityAdminPage({
                     <SelectItem value="all">All roles</SelectItem>
                     {APP_ROLES.map((value) => (
                       <SelectItem key={value} value={value}>
-                        {value}
+                        {roleLabels[value]}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -365,6 +432,7 @@ export default function IdentityAdminPage({
                 onValueChange={(value) => {
                   if (value === null) return;
                   setCursor('');
+                  setPreviousCursors([]);
                   setStatusFilter(value === 'all' ? '' : value);
                 }}
               >
@@ -390,6 +458,7 @@ export default function IdentityAdminPage({
                 onValueChange={(value) => {
                   if (value === null) return;
                   setCursor('');
+                  setPreviousCursors([]);
                   setVerifiedFilter(value);
                 }}
               >
@@ -407,7 +476,16 @@ export default function IdentityAdminPage({
             </div>
           </div>
           {loading ? (
-            <p role="status">Loading accounts…</p>
+            <div
+              role="status"
+              aria-label="Loading accounts"
+              className="space-y-3"
+              aria-busy="true"
+            >
+              {Array.from({ length: 5 }, (_, index) => (
+                <Skeleton key={index} className="h-14 w-full" />
+              ))}
+            </div>
           ) : failure ? (
             <div
               role="alert"
@@ -423,12 +501,17 @@ export default function IdentityAdminPage({
               </Button>
             </div>
           ) : items.length === 0 ? (
-            <p>No matching registered accounts.</p>
+            <p>
+              {mode === 'review' && !search
+                ? 'No accounts match this review queue. Try another review status to see earlier decisions.'
+                : 'No registered accounts match these filters. Try a name or university email.'}
+            </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Account</TableHead>
+                  <TableHead>Email verification</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Status</TableHead>
@@ -445,21 +528,36 @@ export default function IdentityAdminPage({
                         {account.name || account.email}
                       </span>
                       <span className="text-muted-foreground">
-                        {account.email} ·{' '}
-                        {account.emailVerified ? 'Verified' : 'Unverified'}
+                        {account.email}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{account.role}</Badge>
+                      <Badge
+                        variant="outline"
+                        className={
+                          account.emailVerified
+                            ? statusColors.APPROVED
+                            : statusColors.PENDING
+                        }
+                      >
+                        {account.emailVerified
+                          ? 'Email verified'
+                          : 'Email not verified'}
+                      </Badge>
                     </TableCell>
-                    <TableCell>{account.source.replaceAll('_', ' ')}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={
-                          account.status === 'CONFLICT'
-                            ? 'destructive'
-                            : 'outline'
-                        }
+                        variant="outline"
+                        className={roleColors[account.role]}
+                      >
+                        {roleLabels[account.role]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{sourceLabels[account.source]}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={statusColors[account.status]}
                       >
                         {labels[account.status]}
                       </Badge>
@@ -470,7 +568,11 @@ export default function IdentityAdminPage({
                         variant="outline"
                         onClick={() => void inspect(account)}
                       >
-                        {mode === 'review' ? 'Review' : 'Edit mapping'}
+                        {account.role === 'STUDENT'
+                          ? 'View classification'
+                          : mode === 'review'
+                            ? 'Review account'
+                            : 'View or edit'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -478,18 +580,41 @@ export default function IdentityAdminPage({
               </TableBody>
             </Table>
           )}
-          <div className="flex gap-2">
-            {cursor && (
-              <Button variant="outline" onClick={() => setCursor('')}>
-                First page
+          <nav
+            aria-label="Account pages"
+            className="flex flex-wrap items-center gap-2"
+          >
+            <span className="text-muted-foreground mr-auto text-sm">
+              Page {previousCursors.length + 1} · {items.length} accounts on
+              this page
+            </span>
+            {previousCursors.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={() => {
+                  setCursor(previousCursors.at(-1) ?? '');
+                  setPreviousCursors((values) => values.slice(0, -1));
+                }}
+              >
+                Previous page
               </Button>
             )}
             {nextCursor && (
-              <Button variant="outline" onClick={() => setCursor(nextCursor)}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={() => {
+                  setPreviousCursors((values) => [...values, cursor]);
+                  setCursor(nextCursor);
+                }}
+              >
                 Next page
               </Button>
             )}
-          </div>
+          </nav>
         </CardContent>
       </Card>
       <Dialog
@@ -503,7 +628,8 @@ export default function IdentityAdminPage({
             <DialogHeader>
               <DialogTitle>{selected.name || selected.email}</DialogTitle>
               <DialogDescription>
-                Review the account and save an academic role decision.
+                See the current classification and decision history. Save only a
+                change supported by institutional evidence.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4">
@@ -512,7 +638,8 @@ export default function IdentityAdminPage({
                 {selected.createdAt
                   ? new Date(selected.createdAt).toLocaleString()
                   : 'date unavailable'}{' '}
-                · Access: {selected.accessLevel} · Source: {selected.source}
+                · Access: {selected.accessLevel} · Source:{' '}
+                {sourceLabels[selected.source]}
               </p>
               <p className="text-sm">
                 {selected.reviewedBy
@@ -563,7 +690,7 @@ export default function IdentityAdminPage({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {statuses.map((value) => (
+                      {decisionStatuses.map((value) => (
                         <SelectItem key={value} value={value}>
                           {labels[value]}
                         </SelectItem>

@@ -8,6 +8,10 @@ export const IdentityReviewStatusSchema = z.enum([
   'APPROVED',
   'RETAINED_OTHER',
   'CONFLICT',
+  'NOT_REQUIRED',
+]);
+const IdentityDecisionStatusSchema = IdentityReviewStatusSchema.exclude([
+  'NOT_REQUIRED',
 ]);
 export const IdentityDecisionSourceSchema = z.enum(['MANUAL', 'REVIEW']);
 export const IdentityClassificationSourceSchema = z.enum([
@@ -35,7 +39,7 @@ export const IdentityDecisionRequestSchema = z
     email: z.email(),
     expectedRole: AppRoleSchema,
     role: AppRoleSchema,
-    status: IdentityReviewStatusSchema,
+    status: IdentityDecisionStatusSchema,
     source: IdentityDecisionSourceSchema,
     note: z.string().trim().max(1000),
   })

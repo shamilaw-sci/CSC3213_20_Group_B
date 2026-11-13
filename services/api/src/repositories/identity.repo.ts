@@ -44,6 +44,8 @@ export async function listIdentityAccounts(
   const params: Array<string | number> = [input.cursor ?? '', query, query];
   const pg = Boolean(env.AUTH_DATABASE);
   const placeholder = (index: number) => (pg ? `$${index}` : '?');
+  const reviewStatus =
+    "coalesce(r.status, CASE WHEN p.role = 'OTHER' THEN 'PENDING' ELSE 'NOT_REQUIRED' END)";
   const conditions = [
     `p.email > ${placeholder(1)}`,
     `(lower(p.email) LIKE ${placeholder(2)} ESCAPE '\\' OR lower(p.name) LIKE ${placeholder(3)} ESCAPE '\\')`,
@@ -54,9 +56,7 @@ export async function listIdentityAccounts(
   }
   if (input.status) {
     params.push(input.status);
-    conditions.push(
-      `coalesce(r.status, 'PENDING') = ${placeholder(params.length)}`
-    );
+    conditions.push(`${reviewStatus} = ${placeholder(params.length)}`);
   }
   if (input.verified === 'verified')
     conditions.push(
@@ -70,7 +70,7 @@ export async function listIdentityAccounts(
   const sql = `SELECT p.email, p.name, p.role, p.${pg ? '"accessLevel"' : 'accessLevel'} AS "accessLevel",
     p.${pg ? '"createdAt"' : 'createdAt'} AS "createdAt",
     u.${pg ? '"emailVerified"' : 'emailVerified'} AS "emailVerified",
-    r.status, r.source, r.note, r.reviewed_by AS "reviewedBy", r.reviewed_at AS "reviewedAt"
+    ${reviewStatus} AS status, r.source, r.note, r.reviewed_by AS "reviewedBy", r.reviewed_at AS "reviewedAt"
     FROM permission p JOIN "user" u ON lower(u.email) = lower(p.email)
     LEFT JOIN identity_review r ON lower(r.email) = lower(p.email)
     WHERE ${conditions.join(' AND ')} ORDER BY p.email LIMIT ${placeholder(params.length)}`;
@@ -90,7 +90,7 @@ export async function listIdentityAccounts(
         emailVerified: row.emailVerified === true || row.emailVerified === 1,
         createdAt: row.createdAt === null ? null : Number(row.createdAt),
         reviewedAt: row.reviewedAt === null ? null : Number(row.reviewedAt),
-        status: row.status ?? 'PENDING',
+        status: row.status,
         source:
           row.source ??
           (parseStudentIdentifier(row.email)
