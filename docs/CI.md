@@ -39,6 +39,8 @@ flowchart TD
 
 Pull requests use Turbo's `--affected` selection. Merge groups and `main` run
 the complete gate against the integrated repository state.
+CI runs lint tasks one workspace at a time to avoid overloading the
+Tailwind class rule's synchronous worker on the shared GitHub runner.
 
 ## Checks and Their Purpose
 

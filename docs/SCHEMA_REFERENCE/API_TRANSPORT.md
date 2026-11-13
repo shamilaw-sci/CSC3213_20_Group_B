@@ -108,6 +108,7 @@ caller.
 | `OperationResourceSchema`       | Operation target type and identity.                                      |
 | `OperationActorSchema`          | User or service actor reference.                                         |
 | `OperationStatusSchema`         | Queued, running, or terminal operation state.                            |
+| `PublicationStateSchema`        | GitHub validation, merge, deployment, and cleanup progress.              |
 | `OperationOutcomeSchema`        | Success, failure, conflict, or cancellation outcome.                     |
 | `OperationStatusResponseSchema` | Complete status response with lifecycle timestamps and terminal outcome. |
 

@@ -38,7 +38,7 @@ describe('monorepo CI workflow', () => {
     const knip = workflow.indexOf('run: bun run knip');
     const format = workflow.indexOf('run: bun run format:check');
     const turbo = workflow.indexOf(
-      'bunx turbo run lint typecheck typecheck:test test build'
+      'bunx turbo run lint --affected --concurrency=1'
     );
 
     expect(docs).toBeGreaterThan(-1);
@@ -63,10 +63,13 @@ describe('monorepo CI workflow', () => {
   test('uses affected verification only for pull requests', () => {
     expect(workflow).toContain("if: github.event_name == 'pull_request'");
     expect(workflow).toContain(
-      'bunx turbo run lint typecheck typecheck:test test build --affected'
+      'bunx turbo run lint --affected --concurrency=1'
+    );
+    expect(workflow).toContain(
+      'bunx turbo run typecheck typecheck:test test build --affected'
     );
     expect(workflow).toContain("if: github.event_name != 'pull_request'");
-    expect(workflow).toContain('bun run lint');
+    expect(workflow).toContain('bunx turbo run lint --concurrency=1');
     expect(workflow).toContain('bun run typecheck');
     expect(workflow).toContain('bun run typecheck:test');
     expect(workflow).toContain('bun run test');

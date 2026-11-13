@@ -47,7 +47,8 @@ as `bun run check` in this order:
 
 The privileged projection updater is separate from this required check. It
 verifies the PR author and changed paths, regenerates projections using trusted
-base-branch code, and commits only the resulting projection files. The recovery
+base-branch code, formats the changed public JSON with trusted tooling, and
+commits only the resulting public-data files. The recovery
 workflow runs `bun run check` after generating a proposed repair. Deployment
 reruns the full validation sequence for the selected current `main` commit
 before publishing the Worker.
