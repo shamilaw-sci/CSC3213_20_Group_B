@@ -50,6 +50,8 @@ export function EmailCompletionInput({
     <div className="relative min-w-0">
       <Input
         id="email-input"
+        className="focus-visible:border-foreground/50
+          focus-visible:ring-foreground/20"
         type="text"
         inputMode="email"
         autoCapitalize="none"
