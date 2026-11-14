@@ -18,6 +18,36 @@ calls the API origin configured by `NEXT_PUBLIC_BASE_API_URL`; it does not handl
 provider client secrets. See [database portability](DATABASE_PORTABILITY.md)
 before moving state between runtimes.
 
+```mermaid
+sequenceDiagram
+  actor Member
+  participant Portal
+  participant API as API and Better Auth
+  participant Mailer
+  participant DB as AUTH_DB or PostgreSQL
+
+  Member->>Portal: Request email sign-in code
+  Portal->>API: Better Auth OTP request
+  API->>API: Check allowed Portal origin for mail
+  API->>DB: Store hashed, expiring code and rate state
+  API->>Mailer: Send named OTP template with service credential
+  Mailer-->>Member: Deliver code through SMTP
+  Member->>Portal: Enter code
+  Portal->>API: Verify code and create session
+  API->>DB: Read verification and user state
+  API-->>Portal: Set session cookie
+  Portal->>API: Protected request with cookie and client ID
+  API->>DB: Resolve session and current permission
+  API-->>Portal: Authorized data or bounded error
+```
+
+The Mailer confirms SMTP acceptance, not inbox delivery. Better Auth limits
+OTP attempts and expiry; the API reads current permission and blacklist state
+for protected requests. Google, GitHub, and passkey sign-in use the same
+session and permission boundary but have their own provider or relying-party
+checks. See [Mailer delivery](SERVICES/MAILER/DELIVERY_PIPELINE.md) and
+[API identity and state](SERVICES/API/IDENTITY_AND_STATE.md).
+
 Sessions identify a user, but identity alone is not authorization. API route
 handlers enforce the permission required for profile, project, academic, proxy,
 or administrative actions. Admin interfaces must remain protected at the API
@@ -40,6 +70,19 @@ show `NOT_REQUIRED`. This is a derived display state, not a value saved to the
 review table. The account list uses bounded cursor pages and includes only
 registered Portal accounts. It does not represent the full public student
 directory or an admission queue.
+
+### ORCID linking
+
+ORCID is an optional verified researcher identifier for an existing signed-in
+university account. It is not a Portal sign-in provider. The owner starts the
+flow from Portal account settings; the API records a one-time intent bound to
+the current session and completes the ORCID `/authenticate` code exchange on
+its callback. A replacement takes effect only after a successful callback.
+Disconnect removes the account association. The API stores the identifier,
+not ORCID access or refresh tokens. See
+[API identity and state](SERVICES/API/IDENTITY_AND_STATE.md#orcid-association)
+for the flow and [Operations](OPERATIONS.md#orcid-research-identity-and-output-migration)
+for migration and deployment requirements.
 
 ## Service authentication
 

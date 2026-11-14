@@ -1,6 +1,6 @@
 ---
 title: API identity and state
-description: Better Auth policy, D1 tables, permission resolution, proxy state, and administrative safety invariants.
+description: Better Auth, ORCID linking, relational state, permission resolution, and administrative invariants.
 ---
 
 # API identity and state
@@ -45,21 +45,105 @@ session.
 
 ## D1 ownership
 
-Migrations are append-only and currently create seven state groups:
+Migrations are append-only. The Cloudflare D1 sequence currently has nine
+files; the PostgreSQL sequence has eight files with equivalent identity and
+ORCID state but different numbering. See
+[database portability](../../DATABASE_PORTABILITY.md) before changing either
+runtime.
 
-| Migration                           | Owned state                                                                         |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| `0001_better_auth.sql`              | users, sessions, provider accounts, verification records, passkeys, and rate limits |
-| `0002_auth_identity_uniqueness.sql` | unique provider-account and passkey credential identities                           |
-| `0003_proxy_settings.sql`           | per-user proxy destination, attempt budget/window, audit fields, and revision       |
-| `0004_permissions.sql`              | normalized role/access fields plus the complete JSON permission record              |
-| `0005_proxy_username_lookup.sql`    | indexed username lookup for internal Web resolution                                 |
-| `0006_public_avatar_rate.sql`       | hourly public-avatar upload attempt window per username                             |
-| `0007_public_avatar_moderation.sql` | pending avatar reviews, reviewer identity, and append-only avatar audit history     |
+| Migration                           | Owned state                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `0001_better_auth.sql`              | users, sessions, provider accounts, verification records, passkeys, and rate limits  |
+| `0002_auth_identity_uniqueness.sql` | unique provider-account and passkey credential identities                            |
+| `0003_proxy_settings.sql`           | per-user proxy destination, attempt budget/window, audit fields, and revision        |
+| `0004_permissions.sql`              | normalized role/access fields plus the complete JSON permission record               |
+| `0005_proxy_username_lookup.sql`    | indexed username lookup for internal Web resolution                                  |
+| `0006_public_avatar_rate.sql`       | hourly public-avatar upload attempt window per username                              |
+| `0007_public_avatar_moderation.sql` | pending avatar reviews, reviewer identity, and append-only avatar audit history      |
+| `0008_identity_review.sql`          | identity decisions and audit; Honours submission intent, history, and recovery state |
+| `0009_orcid_link.sql`               | short-lived ORCID OAuth intent and one-ORCID-per-user account constraint             |
+
+The diagram shows database foreign keys, not every query join:
+
+```mermaid
+erDiagram
+  user ||--o{ session : owns
+  user ||--o{ account : links
+  user ||--o{ passkey : registers
+  user ||--o| orcid_link_intent : starts
+  permission ||--o| identity_review : records
+```
+
+`permission` is keyed by case-insensitive email rather than a foreign key to
+`user`; the API resolves the signed-in email to that record on protected
+requests. `identity_audit` and `honours_operation_history` retain actor and
+change history without foreign keys to the Better Auth user. The ORCID account
+row uses `providerId = 'orcid'` in the existing `account` table; the intent is
+temporary and is removed on connect or disconnect.
 
 The relational role and access columns support filtering and constraints; the
 JSON column preserves the complete application permission shape. Repository
 functions normalize stored values before exposing them.
+
+An absent identity or Honours table is a deployment error. These routes return
+`503` with `DATABASE_MIGRATION_REQUIRED`; they do not report an empty account
+list or history. Apply the pending migration to the correct database before
+retrying. [Operations](../../OPERATIONS.md) describes the protected migration
+workflow.
+
+## Account classification and Honours
+
+The API derives an immutable `STUDENT` role for recognized student email
+patterns. Other registered accounts start as `OTHER`. The identity review
+routes list verified accounts, accept super-admin decisions with an expected
+current role, and expose audit history. `PENDING` for an unreviewed `OTHER`
+account and `NOT_REQUIRED` for an unreviewed non-`OTHER` account are display
+states; neither is stored as a review decision. Optional Jev suggestions use
+submitted evidence and do not assign roles. See
+[Authentication](../../AUTHENTICATION.md) for the policy.
+
+Honours preview reads current published profiles and verified accounts. Apply
+checks a fresh matching preview, reason, confirmation, department scope, and
+idempotency key. The API stores the request in `AUTH_DB` before GitHub App
+acceptance. Its scheduled recovery retries pending acceptance with the same
+key; history and the GitHub App operation status remain distinct. A successful
+repository operation can still await PR merge and public-data deployment. See
+[API contracts](../../API_CONTRACTS.md) for states and permissions.
+
+## ORCID association
+
+An authenticated, verified university user starts linking from an allowed
+Portal origin. The API stores a hash of a one-time state, the initiating user
+and session, Portal origin, and a ten-minute expiry. The callback requires that
+same session, exchanges the code with ORCID, validates `/authenticate` and the
+identifier, then updates the account association. OAuth access tokens are not
+persisted. A failed replacement leaves the previous association in place;
+disconnect removes the association and pending intent. The public username
+lookup returns only the current verified identifier, with `no-store` caching.
+
+```mermaid
+sequenceDiagram
+  actor Member
+  participant Portal
+  participant API
+  participant ORCID
+  participant DB as AUTH_DB
+
+  Member->>Portal: Connect ORCID
+  Portal->>API: Request authorization URL with session
+  API->>DB: Store hashed state and session intent
+  API-->>Portal: Authorization URL
+  Portal->>ORCID: Redirect for /authenticate
+  ORCID->>API: Callback with code and state
+  API->>DB: Verify intent and same session
+  API->>ORCID: Exchange code
+  API->>DB: Save verified account association
+  API-->>Portal: Redirect to account settings
+```
+
+The [People application](../../APPLICATION_PEOPLE.md) asks the API for this
+association by public username and then retrieves public works from ORCID.
+Legacy ORCID URLs in editable profile JSON do not prove account ownership.
 
 ## Permission invariants
 

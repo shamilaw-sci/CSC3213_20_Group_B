@@ -17,5 +17,15 @@ build time.
 | [UI](UI/INDEX.md)             | product-neutral primitives, hooks, and theme tokens | shells, cards, editors, and domain composition |
 | [Tooling](TOOLING/INDEX.md)   | TypeScript and ESLint policy presets                | local files, aliases, runtime globals, ignores |
 
+Other package guides are organized by the workflow they support:
+
+| Package            | Canonical guide                                                       | Boundary                                                                |
+| ------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `@scs/identity`    | [Identity package](../PACKAGE_IDENTITY.md)                            | Pure account and Honours rules; the API owns decisions and persistence. |
+| `@scs/moderation`  | [Public avatars](../PUBLIC_AVATARS.md#review-queue-and-audit-history) | Classification and policy; the API owns upload, review, and storage.    |
+| `@scs/storage`     | [Binary object storage](../STORAGE.md)                                | Conditional binary writes; the API owns avatar pointers.                |
+| `@scs/performance` | [Performance testing](../PERFORMANCE_TESTING.md)                      | Guarded local and authorized hosted load runs.                          |
+| `@scs/webmcp`      | [Browser WebMCP](../WEBMCP.md)                                        | Browser tool registration and validation.                               |
+
 Use direct package exports. Do not import a shared contract or primitive into a
 local wrapper only to re-export it under the owning app or service.

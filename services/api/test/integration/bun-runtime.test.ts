@@ -154,6 +154,7 @@ integrationTest(
         '0005_permissions.sql',
         '0006_public_avatar_moderation.sql',
         '0007_identity_review.sql',
+        '0008_orcid_link.sql',
       ]) {
         await pool.query(
           await readFile(

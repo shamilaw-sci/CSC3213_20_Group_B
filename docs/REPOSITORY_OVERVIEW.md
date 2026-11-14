@@ -12,21 +12,24 @@ verification but is not a combined runtime.
 
 ## Workspace map
 
-| Area                   | Workspaces                                                                                                           | Purpose                                                               |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Public applications    | `apps/web`, `apps/people`, `apps/projects`                                                                           | Department content and public data discovery                          |
-| Management application | `apps/portal`                                                                                                        | Authenticated profile, project, course, and administration workflows  |
-| Documentation          | `apps/docs`                                                                                                          | This handbook, search, and machine-readable documentation             |
-| API and automation     | `services/api`, `services/github-app`                                                                                | Browser API, auth/state, and durable GitHub-backed mutations          |
-| Bun service            | `services/mailer`                                                                                                    | Authenticated React Email rendering and SMTP delivery                 |
-| Shared runtime         | `packages/security`, `packages/moderation`, `packages/storage`, `packages/schemas`, `packages/ui`, `packages/webmcp` | Security discovery, moderation, storage, contracts, UI, browser tools |
-| Tooling                | `packages/eslint-config`, `packages/tsconfig`, `packages/performance`                                                | Shared checks and guarded performance tests                           |
+| Area                   | Workspaces                                                                                                                                | Purpose                                                                               |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Public applications    | `apps/web`, `apps/people`, `apps/projects`                                                                                                | Department content and public data discovery                                          |
+| Management application | `apps/portal`                                                                                                                             | Authenticated profile, project, course, and administration workflows                  |
+| Documentation          | `apps/docs`                                                                                                                               | This handbook, search, and machine-readable documentation                             |
+| Local report viewer    | `apps/performance-report`                                                                                                                 | Reads generated performance reports from the local results directory                  |
+| API and automation     | `services/api`, `services/github-app`                                                                                                     | Browser API, auth/state, and durable GitHub-backed mutations                          |
+| Bun service            | `services/mailer`                                                                                                                         | Authenticated React Email rendering and SMTP delivery                                 |
+| Shared runtime         | `packages/security`, `packages/moderation`, `packages/storage`, `packages/schemas`, `packages/identity`, `packages/ui`, `packages/webmcp` | Security discovery, moderation, storage, contracts, academic rules, UI, browser tools |
+| Tooling                | `packages/eslint-config`, `packages/tsconfig`, `packages/performance`                                                                     | Shared checks and guarded performance tests                                           |
 
 The separately deployed public-data repository is not a workspace. Public apps
 read its published JSON. Mutations travel from Portal to API to GitHub App and
 become reviewed Git changes; browser code never receives GitHub App secrets.
 The API and GitHub App support Cloudflare Worker and self-hosted Bun runtimes;
 the [departmental deployment](DEPARTMENTAL_DEPLOYMENT.md) describes the latter.
+The [performance report viewer](PERFORMANCE_TESTING.md#cancellation-and-reporting)
+reads local artifacts and is not part of the public application deployment map.
 
 ## Where to make a change
 

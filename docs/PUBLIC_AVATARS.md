@@ -246,13 +246,19 @@ the private object is deleted and the published picture is untouched.
 ```mermaid
 stateDiagram-v2
   [*] --> pending: review_required upload
-  pending --> approved: administrator approves
+  pending --> approved: administrator claims review
+  approved --> pending: pointer publication fails
   pending --> rejected: administrator rejects
   pending --> rejected: owner withdraws
   pending --> rejected: newer upload supersedes
-  approved --> [*]: current.json points to object
-  rejected --> [*]: published picture unchanged
 ```
+
+The review row stores only `pending`, `approved`, or `rejected`.
+Owner withdrawal and replacement use `rejected` with audit context, not a
+separate cancellation status. Approval claims the row before checking the
+private object and conditionally writing `current.json`. If publication fails,
+the same review returns to `pending` for a retry; a successful claim alone does
+not prove that the picture is public.
 
 Every owner upload, owner removal, administrator removal, review submission, and
 review decision appends an immutable row to `public_avatar_audit`. Each row

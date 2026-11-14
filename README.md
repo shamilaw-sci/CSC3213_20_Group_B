@@ -75,26 +75,27 @@ Public People pictures use the separate [avatar API](docs/PUBLIC_AVATARS.md).
 
 ## Workspaces
 
-| Path                     | Package              | Responsibility                                           |
-| ------------------------ | -------------------- | -------------------------------------------------------- |
-| `apps/web`               | `@scs/web`           | Department website                                       |
-| `apps/docs`              | `@scs/docs`          | Repository handbook and agent-readable reference         |
-| `apps/people`            | `@scs/people`        | Public staff, student, alumni, and profile pages         |
-| `apps/projects`          | `@scs/projects`      | Public project discovery and project details             |
-| `apps/portal`            | `@scs/portal`        | Authentication and management workflows                  |
-| `services/api`           | `@scs/api`           | Browser-facing API, Better Auth, and state               |
-| `services/github-app`    | `@scs/github-app`    | Durable Git-backed mutations and pull requests           |
-| `services/mailer`        | `@scs/mailer`        | Authenticated templated email and SMTP delivery          |
-| `packages/security`      | `@scs/security`      | Shared security.txt validation and generation            |
-| `packages/moderation`    | `@scs/moderation`    | Provider-independent avatar moderation                   |
-| `packages/storage`       | `@scs/storage`       | Binary object storage with conditional writes            |
-| `packages/schemas`       | `@scs/schemas`       | Shared Zod and transport contracts                       |
-| `packages/identity`      | `@scs/identity`      | Institutional classification and Honours selection rules |
-| `packages/ui`            | `@scs/ui`            | Shared shadcn primitives and hooks                       |
-| `packages/eslint-config` | `@scs/eslint-config` | Shared lint policy                                       |
-| `packages/performance`   | `@scs/performance`   | Guarded load tests and local performance reports         |
-| `packages/webmcp`        | `@scs/webmcp`        | Validated browser tool registration for WebMCP           |
-| `packages/tsconfig`      | `@scs/tsconfig`      | Shared TypeScript presets                                |
+| Path                      | Package                   | Responsibility                                           |
+| ------------------------- | ------------------------- | -------------------------------------------------------- |
+| `apps/web`                | `@scs/web`                | Department website                                       |
+| `apps/docs`               | `@scs/docs`               | Repository handbook and agent-readable reference         |
+| `apps/people`             | `@scs/people`             | Public staff, student, alumni, and profile pages         |
+| `apps/projects`           | `@scs/projects`           | Public project discovery and project details             |
+| `apps/portal`             | `@scs/portal`             | Authentication and management workflows                  |
+| `apps/performance-report` | `@scs/performance-report` | Local viewer for generated performance reports           |
+| `services/api`            | `@scs/api`                | Browser-facing API, Better Auth, and state               |
+| `services/github-app`     | `@scs/github-app`         | Durable Git-backed mutations and pull requests           |
+| `services/mailer`         | `@scs/mailer`             | Authenticated templated email and SMTP delivery          |
+| `packages/security`       | `@scs/security`           | Shared security.txt validation and generation            |
+| `packages/moderation`     | `@scs/moderation`         | Provider-independent avatar moderation                   |
+| `packages/storage`        | `@scs/storage`            | Binary object storage with conditional writes            |
+| `packages/schemas`        | `@scs/schemas`            | Shared Zod and transport contracts                       |
+| `packages/identity`       | `@scs/identity`           | Institutional classification and Honours selection rules |
+| `packages/ui`             | `@scs/ui`                 | Shared shadcn primitives and hooks                       |
+| `packages/eslint-config`  | `@scs/eslint-config`      | Shared lint policy                                       |
+| `packages/performance`    | `@scs/performance`        | Guarded load tests and local performance reports         |
+| `packages/webmcp`         | `@scs/webmcp`             | Validated browser tool registration for WebMCP           |
+| `packages/tsconfig`       | `@scs/tsconfig`           | Shared TypeScript presets                                |
 
 The public data repository is a separate system. It is not a Bun workspace in
 this repository.

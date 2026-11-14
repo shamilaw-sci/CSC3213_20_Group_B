@@ -34,6 +34,7 @@
     "SERVICES",
     "---Shared packages---",
     "PACKAGE_SECURITY",
+    "PACKAGE_IDENTITY",
     "PACKAGE_SCHEMAS",
     "PACKAGE_UI",
     "PACKAGE_TSCONFIG",

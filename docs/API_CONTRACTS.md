@@ -153,17 +153,10 @@ A successful submission returns `MutationAcceptedSchema` with `202 Accepted`:
 }
 ```
 
-```mermaid
-stateDiagram-v2
-  [*] --> queued
-  queued --> running
-  queued --> cancelled
-  running --> succeeded
-  running --> conflicted
-  running --> failed
-  running --> queued: retryable failure
-  queued --> failed: retry limit reached
-```
+The [durable operation lifecycle](SERVICES/GITHUB_APP/DURABLE_OPERATIONS.md#submission-and-identity)
+shows terminal states and cancellation boundaries. Retryable handler failures
+remain `running` while the executor has attempts left; they do not return to
+`queued`.
 
 Read or request cancellation of the caller's operation with:
 

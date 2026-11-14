@@ -12,9 +12,10 @@ and dependency sections.
 
 ## System Context
 
-The repository contains five Next.js applications, two services with both
-Cloudflare Worker and Bun entry points, one Bun mail service, and shared
-packages. Public records are published from a separate Git repository. The
+The repository contains five public-facing Next.js applications and a local
+Next.js performance report viewer, two services with both Cloudflare Worker
+and Bun entry points, one Bun mail service, and shared packages. Public records
+are published from a separate Git repository. The
 diagram below shows the Cloudflare deployment; the
 [departmental profile](DEPARTMENTAL_DEPLOYMENT.md) substitutes PostgreSQL for
 D1, Durable Objects, and Queue state and SeaweedFS for private avatar storage.
@@ -76,25 +77,27 @@ GitHub App through a Cloudflare service binding or authenticated HTTP.
 
 ## Workspace Responsibilities
 
-| Workspace                | Owns                                                                                 | Must not own                                      |
-| ------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| `apps/web`               | department content, public navigation, external learning links                       | authenticated administration                      |
-| `apps/people`            | staff, student, alumni, and individual public profiles                               | profile mutation credentials                      |
-| `apps/projects`          | project collections, search, and public project details                              | project write workflows                           |
-| `apps/portal`            | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes      |
-| `apps/docs`              | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source            |
-| `services/api`           | Better Auth, sessions, authorization, relational state, public API contracts         | GitHub installation credentials                   |
-| `services/github-app`    | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state        |
-| `services/mailer`        | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                           |
-| `packages/security`      | RFC 9116 document validation, generation, and discovery redirect policy              | authentication, authorization, or incident data   |
-| `packages/moderation`    | Avatar classification policy and provider adapters                                   | upload handling, storage, or administrator review |
-| `packages/storage`       | Binary objects and atomic conditional write drivers                                  | D1, Durable Objects, repositories, or Queues      |
-| `packages/schemas`       | shared Zod schemas and transport types                                               | provider-specific runtime configuration           |
-| `packages/ui`            | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions            |
-| `packages/tsconfig`      | compiler presets                                                                     | workspace file lists and runtime entry points     |
-| `packages/eslint-config` | shared lint policy                                                                   | product-specific exceptions without evidence      |
-| `packages/performance`   | guarded load tests and local reports                                                 | hosted traffic without operator authorization     |
-| `packages/webmcp`        | browser tool registration and validation                                             | privileged service credentials                    |
+| Workspace                 | Owns                                                                                 | Must not own                                      |
+| ------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `apps/web`                | department content, public navigation, external learning links                       | authenticated administration                      |
+| `apps/people`             | staff, student, alumni, and individual public profiles                               | profile mutation credentials                      |
+| `apps/projects`           | project collections, search, and public project details                              | project write workflows                           |
+| `apps/portal`             | sign-in UI and authorized management experiences                                     | provider secrets or direct repository writes      |
+| `apps/docs`               | repository handbook, search, metadata, and agent-readable representations            | a second authored documentation source            |
+| `apps/performance-report` | local, generated performance report viewing                                          | production traffic generation or provider data    |
+| `services/api`            | Better Auth, sessions, authorization, relational state, public API contracts         | GitHub installation credentials                   |
+| `services/github-app`     | installation authentication, durable mutations, branches, commits, and pull requests | browser sessions or UI authorization state        |
+| `services/mailer`         | authenticated mail requests, React Email templates, and SMTP delivery                | application permissions                           |
+| `packages/security`       | RFC 9116 document validation, generation, and discovery redirect policy              | authentication, authorization, or incident data   |
+| `packages/moderation`     | Avatar classification policy and provider adapters                                   | upload handling, storage, or administrator review |
+| `packages/identity`       | Institutional email classification and Honours selection rules                       | account persistence or API authorization          |
+| `packages/storage`        | Binary objects and atomic conditional write drivers                                  | D1, Durable Objects, repositories, or Queues      |
+| `packages/schemas`        | shared Zod schemas and transport types                                               | provider-specific runtime configuration           |
+| `packages/ui`             | reusable shadcn primitives and shared UI hooks                                       | product workflows or page compositions            |
+| `packages/tsconfig`       | compiler presets                                                                     | workspace file lists and runtime entry points     |
+| `packages/eslint-config`  | shared lint policy                                                                   | product-specific exceptions without evidence      |
+| `packages/performance`    | guarded load tests and local reports                                                 | hosted traffic without operator authorization     |
+| `packages/webmcp`         | browser tool registration and validation                                             | privileged service credentials                    |
 
 ## Read and Write Paths
 
@@ -152,7 +155,8 @@ the validated public JSON snapshot is promoted manually. See
 
 | State                                                                 | Authoritative owner        | Notes                                           |
 | --------------------------------------------------------------------- | -------------------------- | ----------------------------------------------- |
-| users, accounts, sessions, verification, passkeys                     | API D1 database            | managed through Better Auth and API migrations  |
+| users, accounts, sessions, verification, passkeys, ORCID link intents | API D1 database            | managed through Better Auth and API migrations  |
+| identity review, audit, and Honours submission history                | API D1 database            | API migrations and scheduled recovery           |
 | personal-site redirect settings and edit-attempt state                | API D1 database            | updates consume attempts atomically             |
 | application roles, access levels, blacklist, notification preferences | API D1 database            | checked on protected requests                   |
 | person, project, course, and offering entity records                  | data repository            | individual entity files are authoritative       |
@@ -184,21 +188,10 @@ does not roll back either resource's persisted data.
 
 ## Durable Operation Lifecycle
 
-```mermaid
-stateDiagram-v2
-  [*] --> queued
-  queued --> running
-  queued --> cancelled
-  running --> succeeded
-  running --> conflicted
-  running --> failed
-  running --> queued: retryable failure
-  queued --> failed: retry limit reached
-```
-
 Operations for the same logical resource are serialized. Unrelated resources
 may proceed concurrently. Reusing an idempotency key with different input is a
-contract error, not a second mutation.
+contract error, not a second mutation. See the state diagram and cancellation
+rules in [Durable operations](SERVICES/GITHUB_APP/DURABLE_OPERATIONS.md).
 
 On Cloudflare, the operation Durable Object schedules an alarm before it stores
 the command. The alarm sends the operation ID to Cloudflare Queues and

@@ -36,10 +36,11 @@ Markdown files are readable on GitHub and published by the documentation site.
 - Services: start with [Service internals](SERVICES/INDEX.md), then use the
   concise [API](SERVICE_API.md), [GitHub App](SERVICE_GITHUB_APP.md), and
   [Mailer](SERVICE_MAILER.md) entry points.
-- Shared packages: [Schemas package](PACKAGE_SCHEMAS.md),
-  [Security package](PACKAGE_SECURITY.md), [UI package](PACKAGE_UI.md),
-  [TypeScript config](PACKAGE_TSCONFIG.md), and
-  [ESLint config](PACKAGE_ESLINT_CONFIG.md).
+- Shared packages: use the [package guide](PACKAGES/INDEX.md) for every package;
+  [Identity](PACKAGE_IDENTITY.md), [Schemas](PACKAGE_SCHEMAS.md),
+  [Security](PACKAGE_SECURITY.md), [UI](PACKAGE_UI.md),
+  [TypeScript](PACKAGE_TSCONFIG.md), and [ESLint](PACKAGE_ESLINT_CONFIG.md)
+  have focused overviews.
 - Working practices: [Testing](TESTING.md),
   [Performance testing](PERFORMANCE_TESTING.md),
   [Dependency management](DEPENDENCY_MANAGEMENT.md),

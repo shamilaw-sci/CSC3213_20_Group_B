@@ -11,20 +11,22 @@ administrative surface.
 
 ## Route families
 
-| Route family               | Purpose                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------- |
-| `/login`, `/signup`        | email-code, OAuth, and passkey entry flows                                      |
-| `/dashboard`, `/account/*` | signed-in landing page and current account settings                             |
-| `/user/me/*`               | current member profile and publishing workflows                                 |
-| `/user/projects/*`         | member project editing and submission                                           |
-| `/user/proxy`              | delegated profile-management settings                                           |
-| `/academic/courses/*`      | course and offering editing                                                     |
-| `/admin/users/*`           | user inspection, public-picture removal, upload-count reset, and administration |
-| `/admin/avatar-reviews`    | pending public-picture moderation                                               |
-| `/admin/projects/*`        | administrative project editing                                                  |
-| `/admin/proxies`           | proxy relationship administration                                               |
-| `/admin/academic-rules`    | student placement metadata                                                      |
-| `/privacy`, `/tos`         | public policy pages                                                             |
+| Route family                    | Purpose                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| `/login`, `/signup`             | email-code, OAuth, and passkey entry flows                                      |
+| `/dashboard`, `/account/*`      | signed-in landing page and current account settings                             |
+| `/user/me/*`                    | current member profile and publishing workflows                                 |
+| `/user/projects/*`              | member project editing and submission                                           |
+| `/user/proxy`                   | delegated profile-management settings                                           |
+| `/academic/courses/*`           | course and offering editing                                                     |
+| `/admin/users/*`                | user inspection, public-picture removal, upload-count reset, and administration |
+| `/admin/avatar-reviews`         | pending public-picture moderation                                               |
+| `/admin/projects/*`             | administrative project editing                                                  |
+| `/admin/proxies`                | proxy relationship administration                                               |
+| `/admin/academic-rules`         | student placement metadata                                                      |
+| `/admin/identity`               | account classifications and Needs review view                                   |
+| `/admin/academic-rules/honours` | department-scoped Honours preview and submission                                |
+| `/privacy`, `/tos`              | public policy pages                                                             |
 
 ## Guard sequence
 
@@ -60,11 +62,18 @@ sequenceDiagram
 not validate that cookie, load a user, or inspect a role. Treat it as an
 optimistic routing filter, never as an authorization boundary.
 
-The `/admin` layout performs an additional server-side `/api/me` request and
-requires the super-admin role before it renders children. Individual API
-endpoints still enforce their own permissions. A hidden navigation item or a
-successful proxy check must never be treated as permission to read or mutate a
-resource.
+The `/admin` layout performs an additional server-side `/api/me` request. It
+admits super-admins, admins, and academic users with at least one assigned
+Honours department. Individual API endpoints still enforce their own
+permissions. A hidden navigation item or a successful proxy check must never
+be treated as permission to read or mutate a resource.
+
+`/admin/identity` contains All account classifications and Needs review
+(`?view=review`). Older `/admin/identity/mappings` and
+`/admin/identity/review` paths redirect to those views. Only super-admins can
+submit classification decisions. The Honours page is available to admins and
+academic users with a department grant; the API checks programme and student
+evidence for scoped users.
 
 ## Session navigation and logout
 

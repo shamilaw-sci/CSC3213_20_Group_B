@@ -54,9 +54,13 @@ For implementation-level behavior, use the
   admin public profile links to a remove-only public picture page;
   administrators remove the current published picture but never upload a
   replacement there.
-- `/admin/identity` lets super-admins
-  classify verified accounts, inspect audit history, and request optional Jev
-  suggestions from evidence they explicitly enter.
+- `/admin/identity` is the Account classifications page, with All account
+  classifications and Needs review views. Super-admins can classify verified
+  accounts, inspect audit history, and request optional Jev suggestions from
+  evidence they explicitly enter. Older `/mappings` and `/review` paths
+  redirect to these views.
+- `/account/settings` lets the account owner connect, replace, or disconnect a
+  verified ORCID identifier through the API's session-bound OAuth flow.
 - `/admin/academic-rules/honours` previews individual or range selections and
   submits confirmed changes through one durable GitHub operation. Academic
   staff see this tool only after a super-admin assigns department scope. The

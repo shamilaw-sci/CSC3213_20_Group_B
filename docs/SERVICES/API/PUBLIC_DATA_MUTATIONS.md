@@ -17,6 +17,7 @@ sequenceDiagram
   participant P as Portal
   participant A as API
   participant J as GitHub App
+  participant S as Operation state
   participant Q as Operation queue
   participant G as GitHub repository
 
@@ -25,9 +26,11 @@ sequenceDiagram
   A->>A: Parse with @scs/schemas
   alt Prefer: respond-async
     A->>J: Submit operation
-    J->>Q: Persist and enqueue
+    J->>S: Schedule alarm and persist command
     J-->>A: 202 operation handle
     A-->>P: 202 status URL
+    S->>Q: Alarm enqueues operation ID
+    Q->>J: Execute repository mutation
     P->>A: Poll /api/operations/{id}
     A->>J: Read actor-scoped status
   else synchronous request
@@ -38,7 +41,11 @@ sequenceDiagram
   end
 ```
 
-The asynchronous path is selected by `Prefer: respond-async`. The API uses an
+The asynchronous path is selected by `Prefer: respond-async`. On Cloudflare,
+the operation Durable Object schedules its alarm before storing the command;
+the alarm sends the ID to Queue and retries dispatch failures. In the
+self-hosted runtime, a PostgreSQL outbox row is committed with the operation
+and a worker publishes it to pg-boss. The API uses an
 explicit caller idempotency key when supplied, otherwise creates one. It hashes
 the normalized actor email into an opaque subject ID and sends a fresh
 correlation ID. Raw email is not used as the durable operation actor identity.

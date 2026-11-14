@@ -56,9 +56,16 @@ provider exports.
 
 ## Authentication
 
-Better Auth is the sole Portal authentication provider. Its state lives in D1.
+Better Auth is the sole Portal authentication provider. Its state lives in D1
+on Cloudflare or PostgreSQL in the departmental runtime.
 Enabled flows are email OTP, passkeys, Google, and GitHub. Email/password and
 parallel custom JWT, OAuth, magic-code, or WebAuthn routes are not enabled.
+
+ORCID is an optional account-linked researcher identifier, not a sign-in flow;
+its callback requires the initiating session and one-time state. Public People
+pages use the current API association rather than trusting editable profile
+links. See [Authentication](AUTHENTICATION.md#orcid-linking).
+
 The supported university email domains are defined in `@scs/schemas` and
 checked by the API. Portal uses the same rule for its email OTP form; its inline
 completion is only a typing aid and never authorizes an account.

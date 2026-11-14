@@ -42,6 +42,20 @@ changes belong to Portal/API/GitHub App. People displays approved pictures from
 the API Worker and links owners to the separate Portal picture page. Configure
 canonical, data, and API origins through typed public environment values.
 
+## Verified research identity
+
+On a profile, the browser asks the People `/api/orcid/{identity}` route for the
+current verified identifier. That route reads the API's public username lookup;
+old ORCID links in published profile JSON are ignored as verification evidence.
+With an identifier, the browser retrieves public works from ORCID, validates
+and normalizes them, and shows the Research Outputs tab when usable works exist.
+The in-memory cache lasts about one hour. An empty public works response hides
+the tab; a temporary failure can leave previously cached works visible.
+Connecting and disconnecting the identifier belong to the account owner in
+[Portal](APPLICATION_PORTAL.md). The API's
+[ORCID association](SERVICES/API/IDENTITY_AND_STATE.md#orcid-association)
+is authoritative.
+
 ## Change and verify
 
 Trace the schema and published loader before changing labels. Keep server

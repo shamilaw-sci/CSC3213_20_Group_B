@@ -29,13 +29,35 @@ commit to the Caddy snapshot; merging a pull request alone does not update that
 snapshot. See [departmental deployment](DEPARTMENTAL_DEPLOYMENT.md).
 
 ```mermaid
-flowchart LR
-  Portal --> API
-  API --> Automation[GitHub App]
-  Automation --> PullRequest[Data repository pull request]
-  PullRequest --> Published[Published JSON]
-  Published --> PublicApps[Web, People, Projects]
+sequenceDiagram
+  actor Editor
+  participant Portal
+  participant API
+  participant App as GitHub App
+  participant Repo as Data repository
+  participant Checks as Data workflows
+  participant Data as Public JSON
+  participant Sites as Public apps
+
+  Editor->>Portal: Submit edit
+  Portal->>API: Validated request, revision, idempotency key
+  API->>App: Authorized mutation
+  App->>Repo: Commit authoritative file and open or update PR
+  Repo->>Checks: Trusted projection update and validation
+  Checks-->>Repo: Required check result
+  Repo->>Repo: Protected merge after checks
+  Repo->>Checks: Validate current main and deploy
+  Checks->>Data: Publish validated JSON
+  Sites->>Data: Read public projections
 ```
+
+The PR can remain open, fail validation, or close without merging. A successful
+GitHub App operation means the proposed repository change completed; it does
+not prove that the public JSON was deployed. The operation status reconciles
+trusted PR, validation, merge, and deployment evidence. See
+[Public data repository](PUBLIC_DATA_REPOSITORY.md#github-automation) for the
+workflow policy and [API contracts](API_CONTRACTS.md#durable-mutations) for
+status semantics.
 
 ## Rules
 

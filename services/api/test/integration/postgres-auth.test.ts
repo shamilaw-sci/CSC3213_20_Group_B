@@ -41,6 +41,7 @@ postgresTest(
           '0005_permissions.sql',
           '0006_public_avatar_moderation.sql',
           '0007_identity_review.sql',
+          '0008_orcid_link.sql',
         ]) {
           const sql = await readFile(
             new URL(`../../migrations/postgres/${file}`, import.meta.url),
@@ -77,6 +78,7 @@ postgresTest(
           'permission',
           'public_avatar_review',
           'public_avatar_audit',
+          'orcid_link_intent',
         ])
       );
       const after = await getMigrations(options);

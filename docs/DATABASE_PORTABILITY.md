@@ -9,7 +9,8 @@ The Cloudflare API runs on D1. Better Auth owns its user, session, account,
 verification, passkey, and rate-limit tables. Application repositories retain
 D1 as their Worker default. The Bun API entry point composes PostgreSQL for
 Better Auth and every application-owned relational repository. Its startup
-readiness check requires all seven reviewed PostgreSQL migrations.
+readiness check requires the tables produced by all eight reviewed PostgreSQL
+migrations.
 
 `createPostgresRelationalBindings(pool)` wires Better Auth and every
 application-owned relational repository to one PostgreSQL pool. The Worker
@@ -77,6 +78,13 @@ review, and audit updates together. The D1 path batches those writes with a
 conditional role update. Apply these migrations before enabling the new
 identity endpoints; PostgreSQL integration tests require `POSTGRES_TEST_URL`.
 
+D1 `0009_orcid_link.sql` and PostgreSQL `0008_orcid_link.sql` add a short-lived
+OAuth intent linked to the Better Auth user and a unique index allowing one
+ORCID account association per user. The existing provider-account uniqueness
+index prevents one ORCID identifier from being attached to two users. The
+callback stores the identifier, not the OAuth token. See
+[ORCID association](SERVICES/API/IDENTITY_AND_STATE.md#orcid-association).
+
 Drizzle ORM supports both [D1](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
 and [PostgreSQL](https://orm.drizzle.team/docs/connect-overview). It was evaluated
 for the rate-window table. Three statements, including a dialect-specific
@@ -91,15 +99,15 @@ The reviewed SQL in `services/api/migrations/postgres` is separate from the D1
 SQLite migrations. `0001_better_auth.sql` is based on Better Auth 1.7.7's
 generated PostgreSQL plan. `0002_auth_identity_uniqueness.sql` preserves the
 extra account and passkey uniqueness rules from D1 migration 0002.
-`0003_public_avatar_rate.sql` through `0007_identity_review.sql` add
-application-owned tables. Apply all seven
+`0003_public_avatar_rate.sql` through `0008_orcid_link.sql` add
+application-owned tables and indexes. Apply all eight
 once, in order, within one transaction to an empty, dedicated schema. The
 database role needs schema creation or ownership and table/index creation
 privileges. Configure that schema as the connection's `search_path`, then
 confirm Better Auth reports no outstanding migration steps. Do not use D1 SQL
 files against PostgreSQL or run automatic schema pushes in production.
 
-Before any real cutover, independently review all seven SQL migrations and the
+Before any real cutover, independently review all eight SQL migrations and the
 data export/import procedure. Freeze writes, back up D1, export Better Auth
 and application-owned tables, and import them into a fresh PostgreSQL schema.
 Preserve IDs, epoch-millisecond timestamps, permission/proxy JSON, review
@@ -107,7 +115,8 @@ status and audit rows, and avatar rate-window rows; normalize permission emails
 to lowercase and reject collisions before import. Import auth parent rows
 before dependent sessions, accounts, and passkeys. Verify per-table counts,
 foreign keys, uniqueness, JSON values, representative sessions, pending review
-queues, current quotas, and proxy attempt allowances. Store object-storage keys
+queues, current quotas, ORCID associations and pending intents, and proxy
+attempt allowances. Store object-storage keys
 unchanged and separately migrate objects if the storage provider changes.
 Switch only after the complete API profile passes integration tests. A database
 URL change does not copy data. Rollback after new writes requires reconciliation
@@ -123,8 +132,9 @@ shutdown behavior. This phase does not perform a live D1 data cutover.
 ## Local PostgreSQL integration test
 
 `services/api/test/integration/postgres-auth.test.ts` creates a random schema,
-applies all seven reviewed SQL files in one transaction, tests Better Auth's
-PostgreSQL session read and identity uniqueness, then drops the schema. It runs only when
+applies migrations `0001` through `0008` in one transaction, checks the ORCID
+intent table, tests Better Auth's PostgreSQL session read and identity
+uniqueness, then drops the schema. The test runs only when
 `POSTGRES_TEST_URL` points to an isolated disposable database. The ordinary Bun
 test run skips this live test when the variable is absent. Never point it at a
 production database: the test role must have schema creation and drop rights.
