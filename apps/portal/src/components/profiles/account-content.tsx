@@ -490,7 +490,7 @@ export default function ProfileContent({
           <CardHeader>
             <CardTitle>Sign-In Methods</CardTitle>
             <CardDescription>
-              Manage linked authentication providers and sign-in alerts.
+              Manage the accounts and methods you use to sign in.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -604,7 +604,7 @@ export default function ProfileContent({
                 <div className="flex min-w-0 items-center gap-3">
                   <Mail className="size-5" />
                   <div>
-                    <p className="text-sm font-medium">Email (Magic Code)</p>
+                    <p className="text-sm font-medium">Email code</p>
                     <p className="text-muted-foreground text-xs">
                       Sign in using a one-time code sent to your email
                     </p>
@@ -706,8 +706,7 @@ export default function ProfileContent({
                     </p>
                   ) : (
                     <p className="text-muted-foreground text-xs">
-                      Leave blank to let the server assign a unique default
-                      name.
+                      Leave blank to name this passkey automatically.
                     </p>
                   )}
                 </div>
@@ -917,9 +916,6 @@ export default function ProfileContent({
         <Card>
           <CardHeader>
             <CardTitle>Notification Preferences</CardTitle>
-            <CardDescription>
-              Choose what notifications you want to receive.
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div

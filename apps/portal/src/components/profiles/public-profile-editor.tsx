@@ -336,15 +336,15 @@ function statusBadgeClass(status: PublicProfilePr['status']) {
 function statusLabel(status: PublicProfilePr['status']) {
   switch (status) {
     case 'open':
-      return 'Open PR';
+      return 'Under review';
     case 'auto_merge_queued':
-      return 'Auto merge queued';
+      return 'Waiting to publish';
     case 'checks_pending':
-      return 'Checks pending';
+      return 'Being checked';
     case 'checks_failed':
-      return 'Checks failed';
+      return 'Needs attention';
     case 'merged':
-      return 'Merged';
+      return 'Approved';
     case 'closed':
       return 'Closed';
     default:
@@ -2617,7 +2617,7 @@ export default function PublicProfileEditor({
                     })}
                   >
                     <ExternalLink className="mr-2 size-4" />
-                    Open PR #{pr.number}
+                    View GitHub request #{pr.number}
                   </a>
                 )}
                 {targetEmail &&
@@ -2646,7 +2646,7 @@ export default function PublicProfileEditor({
           <CardTitle>Public Profile Details</CardTitle>
           {hasOpenDraft && (
             <CardDescription>
-              An unmerged PR draft exists. Submitting updates that same draft.
+              Your changes are under review. Submitting again updates them.
             </CardDescription>
           )}
         </CardHeader>
@@ -2665,7 +2665,7 @@ export default function PublicProfileEditor({
             status={editorStatus}
             statusDetail={
               hasOpenDraft
-                ? `Editing the draft in PR #${pr?.number}.`
+                ? 'Editing your submitted changes.'
                 : publishedProfile
                   ? undefined
                   : 'No public profile has been published yet.'
@@ -2683,7 +2683,7 @@ export default function PublicProfileEditor({
                     p-3 text-sm"
                 >
                   {hasOpenDraft
-                    ? `Submitting updates the current PR #${pr?.number}.`
+                    ? 'Submitting updates your current request.'
                     : placementLoading
                       ? 'Refreshing official student placement fields.'
                       : 'Complete the guided sections, then review the public information.'}

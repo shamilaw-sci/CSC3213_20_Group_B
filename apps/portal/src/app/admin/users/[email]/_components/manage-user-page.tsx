@@ -202,7 +202,7 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">OAuth Providers</p>
+                  <p className="text-sm font-medium">Linked sign-in accounts</p>
                   <p className="text-muted-foreground text-sm">
                     {user.googleOAuth && user.githubOAuth
                       ? 'Google and GitHub accounts linked'
@@ -210,7 +210,7 @@ export default function ManageUserPage({ user }: ManageUserPageProps) {
                         ? 'Google account linked'
                         : user.githubOAuth
                           ? 'GitHub account linked'
-                          : 'No OAuth providers linked'}
+                          : 'No sign-in accounts linked'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

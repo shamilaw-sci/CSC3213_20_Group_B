@@ -67,13 +67,13 @@ function Help({
 function historyMessage(status: HonoursHistoryStatus): string {
   switch (status) {
     case 'pending_acceptance':
-      return 'Pending acceptance · Retrying safely';
+      return 'Submitting · Trying again';
     case 'accepted':
-      return 'Accepted · Queued for processing';
+      return 'Submitted · Waiting to be processed';
     case 'processing':
-      return 'Processing · GitHub update in progress';
+      return 'Processing · Updating records';
     case 'awaiting_publication':
-      return 'Awaiting publication · Review the pull request';
+      return 'Awaiting publication · Review the GitHub request';
     case 'published':
       return 'Published';
     case 'failed':
@@ -86,9 +86,8 @@ function operationMessage(
   intentStatus: HonoursHistoryStatus
 ): string {
   if (!status) return historyMessage(intentStatus);
-  if (status.status === 'queued') return 'Accepted · Queued for processing';
-  if (status.status === 'running')
-    return 'Processing · GitHub update in progress';
+  if (status.status === 'queued') return 'Submitted · Waiting to be processed';
+  if (status.status === 'running') return 'Processing · Updating records';
   if (status.status === 'failed')
     return 'Failed · Review the error and submit a new preview to retry';
   if (status.status === 'conflicted')
@@ -96,12 +95,12 @@ function operationMessage(
   if (status.status === 'cancelled') return 'Cancelled';
   if (status.publication === 'published') return 'Published';
   if (status.publication === 'merged')
-    return 'Awaiting publication · Pull request merged';
+    return 'Approved · Waiting to appear publicly';
   if (status.publication === 'checks_failed')
-    return 'Awaiting merge · Checks failed; review the pull request and rerun checks';
+    return 'Needs attention · Checks failed; review the GitHub request';
   if (status.publication === 'closed' || status.publication === 'superseded')
-    return 'Failed · Pull request did not publish; preview again before retrying';
-  return 'Awaiting merge · GitHub pull request created';
+    return 'Not published · Preview again before retrying';
+  return 'Under review · GitHub request created';
 }
 
 export default function HonoursPage() {
@@ -283,7 +282,7 @@ export default function HonoursPage() {
       setParseError('');
     } catch (error) {
       setParseError(
-        error instanceof Error ? error.message : 'Unable to load operation'
+        error instanceof Error ? error.message : 'Could not load the status'
       );
     }
   }
@@ -294,11 +293,7 @@ export default function HonoursPage() {
       (preview.counts.planned_assign ?? 0) +
       (preview.counts.planned_revoke ?? 0) +
       (overwriteConflicts ? (preview.counts.conflict ?? 0) : 0);
-    if (
-      !window.confirm(
-        `Submit ${planned} Honours changes in one GitHub pull request?`
-      )
-    )
+    if (!window.confirm(`Send ${planned} Honours changes for review together?`))
       return;
     const parsed = HonoursBulkApplyRequestSchema.safeParse({
       batch,
@@ -508,7 +503,7 @@ export default function HonoursPage() {
             </Button>
             <Help label="Preview changes">
               Preview reads registered accounts and published batch data. It
-              makes no changes and does not create a GitHub pull request.
+              makes no changes or requests for review.
             </Help>
           </div>
           {parseError && (
@@ -535,9 +530,8 @@ export default function HonoursPage() {
               </span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Eligible changes are submitted as one durable GitHub operation and
-              one pull request. Published data changes after that pull request
-              merges and deploys.
+              Eligible changes are sent for review together. Public records
+              change after the request is approved and published.
             </p>
             <details>
               <summary className="cursor-pointer font-medium">
@@ -577,11 +571,10 @@ export default function HonoursPage() {
                   Reason for change
                 </label>
                 <Help label="Apply changes">
-                  Submitting creates a durable server-side operation. One GitHub
-                  pull request carries the selected profile changes. The batch
-                  is atomic: a changed or missing student record stops the
-                  operation so you can preview again. Check operation and
-                  publication status below before considering it complete.
+                  All selected changes are submitted together. If a student
+                  record has changed or is missing, nothing is updated; preview
+                  again before retrying. Check the status below to confirm when
+                  the changes are published.
                 </Help>
               </div>
               <Input
@@ -625,7 +618,7 @@ export default function HonoursPage() {
             {operationId && (
               <div className="space-y-2 rounded-md border p-3 text-sm">
                 <p>
-                  Operation ID: <code>{operationId}</code>
+                  Submission reference: <code>{operationId}</code>
                 </p>
                 <Button
                   variant="outline"
@@ -651,7 +644,7 @@ export default function HonoursPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Open GitHub pull request
+                      View GitHub request
                     </a>
                   )}
               </div>
@@ -661,7 +654,7 @@ export default function HonoursPage() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>Operation history</CardTitle>
+          <CardTitle>Submission history</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {historyError && (
@@ -679,9 +672,9 @@ export default function HonoursPage() {
               </Button>
             </div>
           )}
-          {historyLoading && <p role="status">Loading operations…</p>}
+          {historyLoading && <p role="status">Loading submissions…</p>}
           {historyItems.length === 0 && !historyError && !historyLoading && (
-            <p>No Honours operations have been submitted yet.</p>
+            <p>No Honours changes have been submitted yet.</p>
           )}
           {historyItems.map((entry) => (
             <div key={entry.operationId} className="rounded-md border p-3">
@@ -735,7 +728,7 @@ export default function HonoursPage() {
               variant="outline"
               onClick={() => void loadHistory(historyCursor)}
             >
-              Load older operations
+              Load older submissions
             </Button>
           )}
           {operationStatus && (

@@ -216,7 +216,7 @@ async function fetchProjectPrStatus(slug: string): Promise<Response> {
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('Project PR status request timed out.');
+      throw new Error('Could not check the project review status. Try again.');
     }
 
     throw error;
@@ -268,6 +268,25 @@ function enumLabel(value: string) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function projectReviewLabel(status: PublicProjectPr['status']) {
+  switch (status) {
+    case 'open':
+      return 'Under review';
+    case 'checks_pending':
+      return 'Being checked';
+    case 'checks_failed':
+      return 'Needs attention';
+    case 'auto_merge_queued':
+      return 'Waiting to publish';
+    case 'merged':
+      return 'Approved';
+    case 'closed':
+      return 'Closed';
+    default:
+      return 'Not submitted';
+  }
 }
 
 function today() {
@@ -1009,7 +1028,7 @@ export function ProjectForm({
         });
         if (!response.ok)
           throw new Error(
-            `Repository index request failed (${response.status}).`
+            `Could not load the GitHub project details (${response.status}).`
           );
         const payload: unknown = await response.json();
         if (
@@ -1017,7 +1036,9 @@ export function ProjectForm({
           typeof payload.content !== 'string' ||
           payload.content.length > 45000
         ) {
-          throw new Error('Repository index is invalid or too large.');
+          throw new Error(
+            'The GitHub project details are invalid or too large.'
+          );
         }
         const bytes = Uint8Array.from(
           atob(payload.content.replace(/\s/g, '')),
@@ -1067,7 +1088,7 @@ export function ProjectForm({
       setSourcePreviewError(
         error instanceof Error
           ? error.message
-          : 'Unable to check repository index.'
+          : 'Could not check the GitHub project details.'
       );
     } finally {
       setSourcePreviewLoading(false);
@@ -1213,7 +1234,7 @@ export function ProjectForm({
             }}
           />
           <TextField
-            label="Slug"
+            label="Project link name"
             validationPath="slug"
             value={typeof project.slug === 'string' ? project.slug : ''}
             required
@@ -1732,9 +1753,9 @@ export function ProjectForm({
         source.kind === 'GITHUB_REPO' ? (
           <div className="bg-muted/35 space-y-3 rounded-md border p-4 text-sm">
             <p>
-              Add a <code>$schema</code> entry to the root{' '}
-              <code>.docs/index.json</code> for editor help with valid project
-              fields. Project ID and slug stay in the registry.
+              Add this line to <code>.docs/index.json</code> in the GitHub
+              project to get help with valid fields. The project link name stays
+              here.
             </p>
             <code className="block overflow-auto break-all">
               {`"$schema": "${ProjectIndexSchemaUrl}"`}
@@ -1745,10 +1766,10 @@ export function ProjectForm({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  void copyProjectSchema(ProjectIndexSchemaUrl, 'Schema URL')
+                  void copyProjectSchema(ProjectIndexSchemaUrl, 'Help link')
                 }
               >
-                <Copy className="size-4" /> Copy schema URL
+                <Copy className="size-4" /> Copy help link
               </Button>
               <Button
                 type="button"
@@ -1757,11 +1778,11 @@ export function ProjectForm({
                 onClick={() =>
                   void copyProjectSchema(
                     `"$schema": "${ProjectIndexSchemaUrl}"`,
-                    'JSON entry'
+                    'Line'
                   )
                 }
               >
-                <Copy className="size-4" /> Copy JSON entry
+                <Copy className="size-4" /> Copy line
               </Button>
               <a
                 href={ProjectIndexSchemaUrl}
@@ -1769,7 +1790,7 @@ export function ProjectForm({
                 rel="noreferrer"
                 className="text-primary underline"
               >
-                View schema
+                View field guide
               </a>
             </div>
           </div>
@@ -1786,8 +1807,8 @@ export function ProjectForm({
           >
             <RefreshCw className="size-4" />
             {sourcePreviewLoading
-              ? 'Checking repository…'
-              : 'Check repository index'}
+              ? 'Checking GitHub details…'
+              : 'Check GitHub details'}
           </Button>
           {sourcePreviewError ? (
             <p role="alert" className="text-destructive text-sm">
@@ -1799,8 +1820,8 @@ export function ProjectForm({
           <div className="space-y-3 rounded-md border p-4 text-sm">
             <p className="font-medium">
               {sourcePreview.changedFields.length === 0
-                ? 'Repository index matches this draft.'
-                : `${sourcePreview.changedFields.length} field(s) differ from this draft.`}
+                ? 'GitHub details match these changes.'
+                : `${sourcePreview.changedFields.length} details differ from these changes.`}
             </p>
             <a
               className="text-primary underline"
@@ -1808,7 +1829,7 @@ export function ProjectForm({
               target="_blank"
               rel="noreferrer"
             >
-              View index source
+              View GitHub file
             </a>
             {sourcePreview.changedFields.map((field) => (
               <details key={field} className="rounded-md border p-3">
@@ -1817,15 +1838,13 @@ export function ProjectForm({
                 </summary>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <div>
-                    <p className="text-muted-foreground mb-1">Portal draft</p>
+                    <p className="text-muted-foreground mb-1">Your changes</p>
                     <pre className="overflow-auto break-all whitespace-pre-wrap">
                       {JSON.stringify(project[field], null, 2) ?? 'Not set'}
                     </pre>
                   </div>
                   <div>
-                    <p className="text-muted-foreground mb-1">
-                      Repository index
-                    </p>
+                    <p className="text-muted-foreground mb-1">GitHub file</p>
                     <pre className="overflow-auto break-all whitespace-pre-wrap">
                       {JSON.stringify(sourcePreview.project[field], null, 2) ??
                         'Not set'}
@@ -2124,7 +2143,7 @@ export default function ProjectEditor({
       const message =
         prLoadError instanceof Error
           ? prLoadError.message
-          : 'Failed to load project PR status.';
+          : 'Could not load the project review status.';
       setPrError(message);
       setPr(null);
 
@@ -2363,7 +2382,7 @@ export default function ProjectEditor({
       selectedSlug !== targetSlug &&
       !isSuperAdminRole(user ?? {})
     ) {
-      toast.error('Project slug must match the selected project.');
+      toast.error('The project link name must match the selected project.');
       return;
     }
 
@@ -2463,10 +2482,10 @@ export default function ProjectEditor({
     try {
       await navigator.clipboard.writeText(selectedSlug);
       setDeleteSlugCopied(true);
-      toast.success('Project slug copied.');
+      toast.success('Project link name copied.');
       window.setTimeout(() => setDeleteSlugCopied(false), 2000);
     } catch {
-      toast.error('Could not copy project slug.');
+      toast.error('Could not copy the project link name.');
     }
   }
 
@@ -2475,7 +2494,7 @@ export default function ProjectEditor({
 
     const slugToDelete = selectedSlug;
     if (deleteConfirmation.trim() !== slugToDelete) {
-      toast.error('Type the project slug to confirm removal.');
+      toast.error('Type the project link name to confirm removal.');
       return;
     }
 
@@ -2664,8 +2683,7 @@ export default function ProjectEditor({
                     {isNew ? 'New Project' : projectTitle(project)}
                   </CardTitle>
                   <CardDescription>
-                    {schema?.note ??
-                      'Project data is validated before a GitHub pull request is opened.'}
+                    People listed on the project can submit changes for review.
                   </CardDescription>
                 </div>
                 <div
@@ -2701,11 +2719,12 @@ export default function ProjectEditor({
                               variant="outline"
                               className={statusBadgeClass(pr.status)}
                             >
-                              PR {enumLabel(pr.status)}
+                              {projectReviewLabel(pr.status)}
                             </Badge>
                           ) : (
                             <Badge variant="outline">
-                              PR {prLoading ? 'loading' : 'unavailable'}
+                              Review status{' '}
+                              {prLoading ? 'loading' : 'unavailable'}
                             </Badge>
                           )}
                           {pr?.branch ? (
@@ -2752,7 +2771,7 @@ export default function ProjectEditor({
                             })}
                           >
                             <ExternalLink className="size-4" />
-                            Open PR
+                            View GitHub request
                           </a>
                         ) : null}
                       </div>
@@ -2769,9 +2788,9 @@ export default function ProjectEditor({
                     status={editorStatus}
                     statusDetail={
                       pr?.status === 'open'
-                        ? 'A pull request draft is open.'
+                        ? 'Your changes are under review.'
                         : publishedProject
-                          ? 'Published data is available for comparison.'
+                          ? undefined
                           : 'This project has not been published yet.'
                     }
                     sections={PROJECT_EDITOR_SECTIONS}
@@ -2871,7 +2890,7 @@ export default function ProjectEditor({
           <DialogHeader>
             <DialogTitle>Remove project?</DialogTitle>
             <DialogDescription>
-              Submit a delete PR for this project.
+              Send a request to remove this project from the public directory.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -2909,7 +2928,9 @@ export default function ProjectEditor({
                   </Button>
                 </div>
               </div>
-              <Label htmlFor="project-delete-confirmation">Project slug</Label>
+              <Label htmlFor="project-delete-confirmation">
+                Project link name
+              </Label>
               <Input
                 id="project-delete-confirmation"
                 value={deleteConfirmation}

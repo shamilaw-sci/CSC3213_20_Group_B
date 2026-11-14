@@ -158,8 +158,10 @@ function prStatusVariant(
 }
 
 function statusLabel(status: StudentPlacementPr['status']) {
-  if (status === 'none') return 'No draft';
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  if (status === 'none') return 'Not submitted';
+  if (status === 'open') return 'Under review';
+  if (status === 'merged') return 'Approved';
+  return 'Closed';
 }
 
 export default function StudentPlacementPage() {
@@ -206,7 +208,7 @@ export default function StudentPlacementPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to load placement PR status'
+          : 'Could not load the academic rules review status'
       );
     } finally {
       setLoadingPr(false);
@@ -385,7 +387,9 @@ export default function StudentPlacementPage() {
       const nextPr = StudentPlacementPrSchema.parse(await res.json());
       setPr(nextPr);
       toast.success(
-        nextPr.number ? `PR #${nextPr.number} created` : 'PR created'
+        nextPr.number
+          ? `GitHub request #${nextPr.number} created`
+          : 'Changes sent for review'
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to submit');
@@ -410,13 +414,13 @@ export default function StudentPlacementPage() {
           : undefined;
       toast.success(
         closed
-          ? `Closed ${closed} stale placement PR${closed === 1 ? '' : 's'}.`
-          : 'No stale placement PRs found.'
+          ? `Closed ${closed} outdated request${closed === 1 ? '' : 's'}.`
+          : 'No outdated requests found.'
       );
       await refreshPrStatus();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to close placement PRs'
+        error instanceof Error ? error.message : 'Could not close the requests'
       );
     } finally {
       setClosingPrs(false);
@@ -487,13 +491,13 @@ export default function StudentPlacementPage() {
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <CardTitle>Academic Rules PR</CardTitle>
+                <CardTitle>Academic rules review</CardTitle>
                 <Badge variant={prStatusVariant(pr?.status ?? 'none')}>
                   {loadingPr ? 'Loading' : statusLabel(pr?.status ?? 'none')}
                 </Badge>
               </div>
               <CardDescription>
-                One metadata PR covers undergraduate levels, alumni tracks, and
+                One request includes undergraduate levels, alumni tracks, and
                 postgraduate programme rules.
               </CardDescription>
             </div>
@@ -521,14 +525,11 @@ export default function StudentPlacementPage() {
                   rel="noreferrer"
                   className="text-primary font-medium hover:underline"
                 >
-                  PR #{pr.number}
+                  View GitHub request #{pr.number}
                 </a>
               ) : (
-                <span>No student placement metadata PR found.</span>
+                <span>No academic rules request has been submitted.</span>
               )}
-              {pr?.branch ? (
-                <span className="min-w-0 break-all">Branch: {pr.branch}</span>
-              ) : null}
               {pr?.updatedAt ? (
                 <span>Updated: {new Date(pr.updatedAt).toLocaleString()}</span>
               ) : null}
@@ -541,7 +542,7 @@ export default function StudentPlacementPage() {
             </Button>
             <Button onClick={submit} disabled={saving || loading || !data}>
               <Save data-icon="inline-start" />
-              {saving ? 'Submitting...' : 'Submit PR'}
+              {saving ? 'Submitting...' : 'Send for review'}
             </Button>
           </CardFooter>
         </Card>

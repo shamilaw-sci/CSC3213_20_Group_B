@@ -326,7 +326,7 @@ export default function PublicAvatarPage() {
       />
       <PageHeader
         title="Public picture"
-        description="Manage the picture shown in the People directory. This does not change your private account picture or use a public profile pull request."
+        description="Manage the picture shown in the People directory. Your private account picture stays separate."
       />
 
       {loading ? (

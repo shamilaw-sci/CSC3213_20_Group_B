@@ -69,8 +69,8 @@ export function PublicAvatarGuidelines() {
         </li>
       </ul>
       <p className="text-muted-foreground border-t pt-4 text-xs/5">
-        This picture is separate from your private account picture and does not
-        use a public profile pull request.
+        This picture is separate from your private account picture and public
+        profile details.
       </p>
     </section>
   );

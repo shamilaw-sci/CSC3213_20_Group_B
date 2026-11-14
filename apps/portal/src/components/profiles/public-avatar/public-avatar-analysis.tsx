@@ -355,8 +355,8 @@ export function PublicAvatarAnalysisPanel({
             </div>
             <p className="text-sm/6">
               The automatic image check could not be completed, so the picture
-              was not published. This is a technical problem, not a moderation
-              rejection.
+              was not published. Please try again later; your picture was not
+              rejected.
             </p>
             <p className="text-sm/6">{analysis.message}</p>
           </div>

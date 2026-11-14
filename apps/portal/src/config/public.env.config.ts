@@ -4,6 +4,7 @@ import { z } from 'zod';
 const publicEnvConfig = createEnv({
   client: {
     NEXT_PUBLIC_SITE_URL: z.url().default('https://portal.scs-pdn.space'),
+    NEXT_PUBLIC_DEPARTMENT_SITE_URL: z.url().default('https://scs-pdn.space'),
     NEXT_PUBLIC_BASE_API_URL: z.url().default('https://api.scs-pdn.space'),
     NEXT_PUBLIC_PEOPLE_DATA_BASE_URL: z
       .url()
@@ -17,6 +18,8 @@ const publicEnvConfig = createEnv({
   },
   runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_DEPARTMENT_SITE_URL:
+      process.env.NEXT_PUBLIC_DEPARTMENT_SITE_URL,
     NEXT_PUBLIC_BASE_API_URL: process.env.NEXT_PUBLIC_BASE_API_URL,
     NEXT_PUBLIC_PEOPLE_DATA_BASE_URL:
       process.env.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL,

@@ -11,6 +11,7 @@ import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 
 const UserProxyResponseSchema = z.object({
   proxy: AdminProxySettingsSchema.pick({
+    username: true,
     active: true,
     url: true,
     availableAttempts: true,
@@ -20,6 +21,7 @@ const UserProxyResponseSchema = z.object({
 export default function ProxySettings() {
   const router = useRouter();
   const [proxy, setProxy] = useState<{
+    username: string;
     active: boolean;
     url: string;
     availableAttempts: number;
@@ -47,6 +49,7 @@ export default function ProxySettings() {
 
       if (mounted) {
         setProxy({
+          username: proxyData.username,
           active: proxyData.active,
           url: proxyData.url,
           availableAttempts: proxyData.availableAttempts ?? 5,
@@ -69,6 +72,7 @@ export default function ProxySettings() {
 
   return (
     <ProxySettingsPage
+      username={proxy.username}
       active={proxy.active}
       url={proxy.url}
       availableAttempts={proxy.availableAttempts}

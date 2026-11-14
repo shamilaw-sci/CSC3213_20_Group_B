@@ -112,13 +112,13 @@ export default function Dashboard() {
       {
         title: 'Public Profile',
         href: '/account/public-profile',
-        description: 'Edit your people directory profile and PR status.',
+        description: 'Edit your public profile and check publication progress.',
         icon: IdCard,
       },
       {
         title: 'Account Settings',
         href: '/account/settings',
-        description: 'Configure account preferences and security settings.',
+        description: 'Manage your account and sign-in settings.',
         icon: Settings,
       },
     ];
@@ -136,9 +136,9 @@ export default function Dashboard() {
 
     if (showProxySettings) {
       baseItems.push({
-        title: 'Personal Site Redirect',
+        title: 'Personal Site Link',
         href: '/user/proxy',
-        description: 'Configure where your /~username address redirects.',
+        description: 'Choose the website opened by your /~username address.',
         icon: Network,
       });
     }
@@ -152,7 +152,7 @@ export default function Dashboard() {
     <PageShell width="wide">
       <PageHeader
         title="Dashboard"
-        description="Quick access to portal tools and account areas."
+        description="Choose what you want to manage."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

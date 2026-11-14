@@ -468,7 +468,7 @@ export function PublicDataPlayground() {
                     isProfileKind(kind)
                       ? 'Institutional username'
                       : kind === 'project'
-                        ? 'Project slug'
+                        ? 'Project link name'
                         : `${kind === 'course' ? 'Course' : 'Offering'} ID`
                   }
                 />
@@ -515,7 +515,7 @@ export function PublicDataPlayground() {
               status={editorState.published ? 'published' : 'new'}
               statusDetail={
                 editorState.published
-                  ? 'Published data is available for comparison.'
+                  ? undefined
                   : 'Start with a blank public record.'
               }
               sections={

@@ -167,6 +167,25 @@ function enumLabel(value: string) {
     .join(' ');
 }
 
+function courseReviewLabel(status: PublicAcademicPr['status']) {
+  switch (status) {
+    case 'open':
+      return 'Under review';
+    case 'checks_pending':
+      return 'Being checked';
+    case 'checks_failed':
+      return 'Needs attention';
+    case 'auto_merge_queued':
+      return 'Waiting to publish';
+    case 'merged':
+      return 'Approved';
+    case 'closed':
+      return 'Closed';
+    default:
+      return 'Not submitted';
+  }
+}
+
 function courseFromRecord(value: unknown): CourseRecord | null {
   if (!isRecord(value)) return null;
   const id = typeof value.id === 'string' ? value.id : '';
@@ -797,10 +816,7 @@ export default function CourseEditor({
       <BackButton fallbackHref="/academic/courses" label="Back to Courses" />
       <PageHeader
         title={newCourse ? 'New Course' : course.title || 'Course'}
-        description={
-          schema?.note ??
-          'Course data is validated before a GitHub pull request is opened.'
-        }
+        description="Academic staff and super administrators can submit course changes for review."
         icon={<BookOpen className="text-muted-foreground size-6" />}
         action={
           <div className="flex flex-wrap gap-2">
@@ -822,7 +838,7 @@ export default function CourseEditor({
       {pr ? (
         <div className="flex flex-wrap items-center gap-2">
           <Badge className={prBadgeClass(pr.status)} variant="outline">
-            {enumLabel(pr.status)}
+            {courseReviewLabel(pr.status)}
           </Badge>
           {pr.url ? (
             <a
@@ -831,7 +847,7 @@ export default function CourseEditor({
               rel="noreferrer"
               className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
-              PR #{pr.number}
+              View GitHub request #{pr.number}
             </a>
           ) : null}
         </div>
@@ -850,9 +866,9 @@ export default function CourseEditor({
                 status={editorStatus}
                 statusDetail={
                   pr?.status === 'open'
-                    ? 'A pull request draft is open.'
+                    ? 'Your changes are under review.'
                     : publishedCourse
-                      ? 'Published data is available for comparison.'
+                      ? undefined
                       : 'This course has not been published yet.'
                 }
                 sections={COURSE_EDITOR_SECTIONS}

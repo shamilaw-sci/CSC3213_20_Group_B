@@ -25,10 +25,12 @@ import { toast } from 'sonner';
 
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
+import publicEnvConfig from '@/config/public.env.config';
 import { apiHeaders, readApiError, userProxyApiUrl } from '@/lib/api';
 import { getProxyUrlError } from '@/lib/proxy-url';
 
 interface ProxySettingsPageProps {
+  username: string;
   active: boolean;
   url: string;
   availableAttempts: number;
@@ -45,6 +47,7 @@ async function saveProxySettings(payload: { active: boolean; url: string }) {
 }
 
 export default function ProxySettingsPage({
+  username,
   active: initialActive,
   url: initialUrl,
   availableAttempts,
@@ -60,6 +63,11 @@ export default function ProxySettingsPage({
   const [proxyUrlError, setProxyUrlError] = useState<string | null>(null);
 
   const canEdit = attemptsRemaining > 0;
+  const personalSiteUrl = new URL(
+    `/~${encodeURIComponent(username)}`,
+    publicEnvConfig.NEXT_PUBLIC_DEPARTMENT_SITE_URL
+  ).toString();
+  const exampleDestination = savedProxyUrl || 'https://example.com';
   const isProxyUrlValid = getProxyUrlError(proxyUrl) === null;
   const attemptsTone =
     attemptsRemaining <= 0
@@ -149,9 +157,27 @@ export default function ProxySettingsPage({
       />
 
       <PageHeader
-        title="Personal Site Redirect"
-        description="Choose where your /~username address redirects and track today's edit allowance."
+        title="Personal Site Link"
+        description="Choose the website opened by your department address."
       />
+
+      <div className="bg-muted/40 space-y-2 rounded-md border p-4 text-sm">
+        <p className="font-medium">How your link works</p>
+        <p className="wrap-break-word">
+          When this link is on, opening <strong>{personalSiteUrl}</strong> takes
+          visitors to <strong>{exampleDestination}</strong>.
+        </p>
+        {!savedProxyUrl ? (
+          <p className="text-muted-foreground">
+            This is an example. Save a website address and turn on the link to
+            make it work.
+          </p>
+        ) : !savedActive ? (
+          <p className="text-muted-foreground">
+            Your link is off. Turn it on to send visitors to this website.
+          </p>
+        ) : null}
+      </div>
 
       <div
         className={`flex flex-col gap-3 rounded-md border px-4 py-3 sm:flex-row
@@ -203,9 +229,9 @@ export default function ProxySettingsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Redirect destination</CardTitle>
+          <CardTitle>Personal site destination</CardTitle>
           <CardDescription>
-            Configure the HTTPS destination for your personal site.
+            Enter the secure website address visitors should open.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -220,7 +246,7 @@ export default function ProxySettingsPage({
                     Enable Redirect
                   </Label>
                   <p className="text-muted-foreground text-sm">
-                    Toggle your personal-site redirect on or off
+                    Turn your personal site link on or off.
                   </p>
                 </div>
                 <Switch
@@ -235,13 +261,14 @@ export default function ProxySettingsPage({
 
               <div className="space-y-2">
                 <Label htmlFor="proxyUrl" className="text-base">
-                  Destination URL
+                  Website address
                 </Label>
                 <p
                   id="proxyUrl-description"
                   className="text-muted-foreground text-sm"
                 >
-                  Enter the HTTPS URL visitors should be redirected to
+                  Enter the address of the website visitors should see. It must
+                  start with https://.
                 </p>
                 <Input
                   id="proxyUrl"
@@ -292,7 +319,7 @@ export default function ProxySettingsPage({
               <div className="space-y-2">
                 <FieldTitle className="text-base">Destination URL</FieldTitle>
                 <p className="text-muted-foreground text-sm break-all">
-                  {savedProxyUrl || 'No destination URL configured'}
+                  {savedProxyUrl || 'No website address saved'}
                 </p>
               </div>
 
@@ -302,7 +329,7 @@ export default function ProxySettingsPage({
                 className="w-full sm:w-auto"
               >
                 <Edit className="mr-2 size-4" />
-                Edit Redirect Settings
+                Edit personal site link
               </Button>
             </div>
           )}

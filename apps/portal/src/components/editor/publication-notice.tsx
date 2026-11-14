@@ -33,37 +33,37 @@ function operationMessage(
     ? `Deletion requested for ${pendingDeletionResourceId}. `
     : '';
   if (!operation || operation.status === 'queued')
-    return `${deletionPrefix}Submitted for processing. You can safely close this page.`;
+    return `${deletionPrefix}Submitted. You can close this page while we process your changes.`;
   if (operation.status === 'running')
-    return `${deletionPrefix}GitHub processing is in progress.`;
+    return `${deletionPrefix}Your changes are being processed.`;
   if (operation.status === 'succeeded')
     return (
       deletionPrefix +
       (operation.publication === 'published'
-        ? 'Published after a verified deployment.'
+        ? 'Your changes are published.'
         : operation.publication === 'merged'
-          ? 'PR merged. Deployment has not yet been verified.'
+          ? 'Changes approved. Waiting for them to appear publicly.'
           : operation.publication === 'checks_pending'
-            ? 'GitHub validation is in progress.'
+            ? 'Your changes are being checked.'
             : operation.publication === 'checks_passed'
-              ? 'GitHub validation passed. Waiting for merge.'
+              ? 'Checks passed. Waiting for approval.'
               : operation.publication === 'auto_merge_queued'
-                ? 'GitHub validation passed. Automatic merge is queued.'
+                ? 'Checks passed. Your changes are waiting to be approved.'
                 : operation.publication === 'checks_failed'
-                  ? 'GitHub validation failed. Review the PR before cleanup.'
+                  ? 'Checks failed. Review the GitHub request before discarding it.'
                   : operation.publication === 'cleaned_up'
-                    ? 'Failed PR closed and its automation branch deleted.'
+                    ? 'The failed submission was discarded.'
                     : operation.publication === 'cleanup_partial'
-                      ? 'PR cleanup is incomplete. Retry the cleanup action.'
+                      ? 'The failed submission was only partly discarded. Try again.'
                       : operation.publication === 'superseded'
-                        ? 'This PR was updated by a later operation. Check the public record.'
+                        ? 'A newer submission replaced this one. Check the public page.'
                         : operation.publication === 'closed'
-                          ? 'PR closed without publication.'
+                          ? 'This submission was closed without being published.'
                           : operation.publication === 'unknown'
-                            ? 'PR created. Publication status is temporarily unavailable.'
+                            ? 'Submitted. Publication status is temporarily unavailable.'
                             : operation.outcome.pullRequest
-                              ? `PR #${operation.outcome.pullRequest.number} was created. Publication is still pending.`
-                              : 'The repository operation completed. Check the public record before treating it as published.')
+                              ? `GitHub request #${operation.outcome.pullRequest.number} was created. Publication is still pending.`
+                              : 'Processing finished. Check the public page to see whether your changes are published.')
     );
   if (operation.status === 'cancelled') return 'The submission was cancelled.';
   return `Publication could not proceed: ${operation.outcome.error.message}`;
@@ -115,7 +115,7 @@ export function PublicationNotice({ scope }: { scope: string }) {
       return;
     if (
       !window.confirm(
-        'Close this failed PR and delete its automation branch? This cannot be undone.'
+        'Close the failed GitHub request and remove its working copy? This cannot be undone.'
       )
     )
       return;
@@ -181,9 +181,8 @@ export function PublicationNotice({ scope }: { scope: string }) {
       <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <div className="space-y-1">
         <p>
-          Public changes are reviewed and published through GitHub. Publication
-          may take a few minutes. After submitting, you can safely close this
-          page; processing will continue automatically.
+          After submitting, you can close this page. Your changes will continue
+          through review and publication, which may take a few minutes.
         </p>
         {accepted ? (
           <div className="space-y-2">
@@ -221,7 +220,7 @@ export function PublicationNotice({ scope }: { scope: string }) {
                   disabled={busy}
                   onClick={() => void cleanup()}
                 >
-                  Close PR &amp; Delete Branch
+                  Discard failed submission
                 </Button>
               ) : null}
             </div>

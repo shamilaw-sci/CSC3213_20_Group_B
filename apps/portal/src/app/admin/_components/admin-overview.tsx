@@ -28,7 +28,7 @@ const sections = [
     title: 'Avatar Reviews',
     href: '/admin/avatar-reviews',
     description:
-      'Approve or reject public pictures that need a manual moderation decision.',
+      'Approve or reject public pictures that need a person to review them.',
     icon: Images,
   },
   {
