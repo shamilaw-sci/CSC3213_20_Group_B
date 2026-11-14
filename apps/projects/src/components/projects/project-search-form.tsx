@@ -5,7 +5,7 @@ import { Input } from '@scs/ui/components/input';
 import { Label } from '@scs/ui/components/label';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
 
 import {
   buildCollectionPath,
@@ -17,7 +17,7 @@ export function ProjectSearchForm({
 }: Readonly<{ defaultValue?: string }>) {
   const router = useRouter();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement, Event>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const query = canonicalizeSearchSegment(

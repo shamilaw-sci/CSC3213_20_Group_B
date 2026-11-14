@@ -7,7 +7,7 @@ import {
   settingsSchema,
 } from '@/config/schema';
 
-const nonnegative = z.number().finite().nonnegative();
+const nonnegative = z.number().nonnegative();
 const revision = z.string().regex(/^[a-f0-9]{40}$/);
 export const savedPlanSchema = z.strictObject({
   schemaVersion: z.literal(1),

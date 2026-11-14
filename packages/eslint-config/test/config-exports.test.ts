@@ -2,7 +2,10 @@ import { describe, expect, test } from 'bun:test';
 
 import baseConfig from '@scs/eslint-config/base';
 import nextConfig from '@scs/eslint-config/next';
-import { typescriptProjectRoot } from '@scs/eslint-config/project';
+import {
+  projectDirectory,
+  typescriptProjectRoot,
+} from '@scs/eslint-config/project';
 import workerConfig from '@scs/eslint-config/worker';
 import projectsConfig from '../../../apps/projects/eslint.config';
 import webConfig from '../../../apps/web/eslint.config';
@@ -13,7 +16,7 @@ type FlatConfig = {
   files?: string[];
   name?: string;
   languageOptions?: {
-    parserOptions?: { project?: boolean; projectService?: boolean };
+    parserOptions?: { project?: string[] | boolean; projectService?: boolean };
   };
   rules?: Record<string, unknown>;
   settings?: {
@@ -120,7 +123,20 @@ describe('shared ESLint exports', () => {
     ]);
   });
 
-  test('GitHub App tests retain the non-type-aware override', () => {
+  test('workspace project roots enable typed deprecation diagnostics', () => {
+    const root = projectDirectory(
+      new URL('../project.ts', import.meta.url).href
+    );
+    const config = typescriptProjectRoot(root) as FlatConfig;
+
+    expect(config.rules?.['@typescript-eslint/no-deprecated']).toBe('error');
+    expect(config.languageOptions?.parserOptions?.project).toContain(
+      `${root.replaceAll('\\', '/')}/tsconfig.json`
+    );
+    expect(config.languageOptions?.parserOptions?.projectService).toBe(false);
+  });
+
+  test('GitHub App tests retain their rule override but check deprecations', () => {
     const testOverride = (githubAppConfig as FlatConfig[]).find((entry) =>
       entry.files?.includes('tests/**/*.ts')
     );
@@ -130,5 +146,8 @@ describe('shared ESLint exports', () => {
     expect(
       testOverride?.rules?.['@typescript-eslint/no-floating-promises']
     ).toBe('off');
+    expect(testOverride?.rules?.['@typescript-eslint/no-deprecated']).toBe(
+      'error'
+    );
   });
 });

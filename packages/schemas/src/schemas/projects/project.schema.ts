@@ -214,7 +214,7 @@ export const ProjectSummarySchema = z
     title: z.string(),
     shortDescription: z.string(),
   })
-  .passthrough();
+  .loose();
 
 export type ProjectSummary = z.infer<typeof ProjectSummarySchema>;
 

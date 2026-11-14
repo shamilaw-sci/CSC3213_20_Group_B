@@ -25,7 +25,7 @@ describe('PeopleSearchEntrySchema', () => {
     const entry = PeopleSearchEntrySchema.parse({
       ...validEntry,
       identity: 'S21513',
-      email: 'S21513@SCI.PDN.AC.LK',
+      email: ' S21513@SCI.PDN.AC.LK ',
       keywords: ['Jane Student'],
     });
 

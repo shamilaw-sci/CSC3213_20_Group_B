@@ -197,7 +197,7 @@ const pointSchema = z.object({
   metric: z.string().max(100),
   data: z.object({
     time: z.iso.datetime({ offset: true }),
-    value: z.number().finite().nonnegative(),
+    value: z.number().nonnegative(),
     tags: z.record(z.string(), z.string()).nullish(),
   }),
 });

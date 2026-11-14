@@ -12,7 +12,7 @@ export const PeopleSearchEntrySchema = z.object({
     .regex(/^\/people\/[A-Za-z0-9._-]+$/),
   name: z.string().trim().min(1),
   subtitle: z.string().trim().min(1),
-  email: z.string().trim().toLowerCase().email().optional(),
+  email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
   keywords: z.array(z.string().trim().toLowerCase().min(1)).min(1),
 });
 

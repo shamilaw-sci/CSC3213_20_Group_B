@@ -59,6 +59,9 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: printf '%s\n' "$PR_TITLE" | bunx commitlint
 
+      - name: Lint repository tooling
+        run: bun run lint:root
+
       - name: Verify affected workspaces
         if: github.event_name == 'pull_request'
         run: |

@@ -81,9 +81,9 @@ export class PostgresOperationDispatcher implements OperationDispatcher {
         { id: jobId(operationId) }
       );
       if (!sent) {
-        const existing = await this.boss.getJobById<OperationQueueMessage>(
+        const [existing] = await this.boss.findJobs<OperationQueueMessage>(
           OPERATION_QUEUE_NAME,
-          jobId(operationId)
+          { id: jobId(operationId), limit: 1 }
         );
         if (existing?.data.operationId !== operationId)
           throw new Error(`Could not enqueue operation ${operationId}`);

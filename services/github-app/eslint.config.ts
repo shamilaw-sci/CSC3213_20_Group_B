@@ -48,6 +48,10 @@ const config = [
         ...globals.node,
       },
     },
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      '@typescript-eslint/no-deprecated': 'error',
+    },
   },
 ];
 

@@ -70,7 +70,7 @@ export const getPublicAcademicRecordQuerySchema = z.object({
   id: academicRegistryIdSchema,
 });
 
-const PublicProfileStudentSchema = StudentSchema.passthrough();
+const PublicProfileStudentSchema = StudentSchema.loose();
 
 export const updateStudentPlacementMetadataRequestSchema = z
   .object({

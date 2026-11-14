@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { AvatarProvider, AvatarProviderResult } from '#avatar/types';
 
-const probability = z.number().finite().min(0).max(1);
+const probability = z.number().min(0).max(1);
 const safetyValues = [
   'safe',
   'sexual',

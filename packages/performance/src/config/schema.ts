@@ -38,7 +38,7 @@ const journeyNames = [
   'integrations',
 ] as const;
 const label = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}$/);
-const positive = z.number().finite().positive();
+const positive = z.number().positive();
 const capsSchema = z.strictObject({
   vus: z.int().min(1).max(10000),
   rps: z.int().min(1).max(20000),

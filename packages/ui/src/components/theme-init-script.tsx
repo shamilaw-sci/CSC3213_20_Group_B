@@ -30,9 +30,12 @@ function initializeTheme() {
 
   try {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    // Remove the fallback when browsers without addEventListener leave support.
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', applyTheme);
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Keep color-scheme updates in browsers without MediaQueryList.addEventListener.
     } else if (typeof mediaQuery.addListener === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Same compatibility branch as the feature check above.
       mediaQuery.addListener(applyTheme);
     }
   } catch {

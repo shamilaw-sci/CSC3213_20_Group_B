@@ -125,6 +125,11 @@ bun run build
 fixtures, and runner globals. A workspace without a test script has no test
 coverage; Turbo does not treat it as a passing suite.
 
+Root and workspace lint commands report deprecated TypeScript APIs through the
+shared ESLint configuration. The repository's VS Code ESLint extension also
+shows these diagnostics in Problems while editing. New deprecated usage fails
+lint.
+
 ## Handover Boundaries
 
 The repository is production-oriented, but source control cannot prove or

@@ -91,7 +91,7 @@ function labelFor(segment: string) {
   );
 }
 
-function friendlyMessage(issue: z.ZodIssue, label: string) {
+function friendlyMessage(issue: z.core.$ZodIssue, label: string) {
   if (label === 'Credits') return 'Enter a whole number from 0 to 10.';
   if (issue.code === 'too_small' && issue.minimum === 1)
     return issue.origin === 'array'
@@ -191,7 +191,7 @@ function sectionFor(kind: PlaygroundKind, root: string) {
 
 export function playgroundValidationIssues(
   kind: PlaygroundKind,
-  issues: readonly z.ZodIssue[]
+  issues: readonly z.core.$ZodIssue[]
 ): {
   fields: FieldIssue[];
   summary: EditorValidationIssue[];

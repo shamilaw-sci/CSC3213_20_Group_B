@@ -10,9 +10,6 @@ const config = [
   {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: {
-        projectService: true,
-      },
       globals: {
         ...globals.bunBuiltin,
         ...globals.node,
