@@ -103,6 +103,7 @@ const workspaceVariables = {
       ['COOKIE_DOMAIN', 'server'],
       ['NEXT_PUBLIC_API_CLIENT_ID', 'browser'],
       ['NEXT_PUBLIC_BASE_API_URL', 'browser'],
+      ['NEXT_PUBLIC_DEPARTMENT_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_PEOPLE_DATA_BASE_URL', 'browser'],
       ['NEXT_PUBLIC_SITE_URL', 'browser'],
       ['NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH', 'browser'],
