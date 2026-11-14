@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import {
   playgroundRelatedFiles,
+  playgroundPublicPath,
   playgroundRecord,
   playgroundTarget,
 } from '@/components/playground/playground-data';
@@ -41,6 +42,19 @@ describe('public data playground output', () => {
     );
   });
 
+  test('omits empty optional profile fields like the signed-in editor', () => {
+    const parsed = playgroundRecord('academic', {
+      title: 'Dr',
+      fullName: 'Example Academic',
+      email: 'example@sci.pdn.ac.lk',
+      staffType: 'ACADEMIC_TEACHING',
+      academicRank: 'LECTURER',
+      website: '',
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data).not.toHaveProperty('website');
+  });
+
   test('uses individual academic files and identifies their generated collections', () => {
     expect(playgroundTarget('course', { id: 'software-engineering' })).toBe(
       'public/academic/v2/courses/software-engineering.json'
@@ -54,6 +68,19 @@ describe('public data playground output', () => {
     expect(playgroundRelatedFiles('offering', {})).toEqual([
       'public/academic/v2/offerings.json',
     ]);
+  });
+
+  test('locates only safe public records for optional preload', () => {
+    expect(playgroundPublicPath('student', ' S21513 ')).toBe(
+      'people/v2/users/s21513.json'
+    );
+    expect(playgroundPublicPath('project', 'example-project')).toBe(
+      'projects/v2/projects/example-project.json'
+    );
+    expect(playgroundPublicPath('course', 'software-engineering')).toBe(
+      'academic/v2/courses/software-engineering.json'
+    );
+    expect(playgroundPublicPath('offering', '../secret')).toBeNull();
   });
 
   test('lists affected project and student projections', () => {

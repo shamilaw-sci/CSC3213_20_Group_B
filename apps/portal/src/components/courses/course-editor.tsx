@@ -91,11 +91,12 @@ interface CourseEditorProps {
   nextHref?: string;
 }
 
-interface OfferingRecord {
+export interface OfferingRecord {
   id: string;
   courseId: string;
   academicYear: string;
   semester: Semester;
+  departments?: string[];
   staff: {
     staff: string;
     role: CourseStaff['role'];
@@ -245,7 +246,7 @@ function offeringFromRecord(value: unknown): OfferingRecord | null {
   return { id, courseId, academicYear, semester, staff };
 }
 
-function emptyCourse(): CourseRecord {
+export function emptyCourse(): CourseRecord {
   return {
     id: 'new-course',
     primaryCode: 'CSC3213',
@@ -256,7 +257,7 @@ function emptyCourse(): CourseRecord {
   };
 }
 
-function emptyOffering(course: CourseRecord): OfferingRecord {
+export function emptyOffering(course: CourseRecord): OfferingRecord {
   return {
     id: `${course.primaryCode.toLowerCase()}-2025-2026-sem1`,
     courseId: course.id,
@@ -1005,7 +1006,7 @@ function DepartmentCheckboxes({
   );
 }
 
-function CourseForm({
+export function CourseForm({
   course,
   readOnly,
   onChange,
@@ -1195,35 +1196,55 @@ function CourseForm({
   );
 }
 
-function OfferingForm({
+export function OfferingForm({
   offering,
   readOnly,
   createMode = false,
   onSave,
+  onChange,
+  standalone = false,
 }: {
   offering: OfferingRecord;
   readOnly: boolean;
   createMode?: boolean;
   onSave: (offering: OfferingRecord) => void;
+  onChange?: (offering: OfferingRecord) => void;
+  standalone?: boolean;
 }) {
   const [draft, setDraft] = useState(offering);
+  const activeDraft = standalone ? offering : draft;
   const formId = useId();
 
   function setField<K extends keyof OfferingRecord>(
     field: K,
     value: OfferingRecord[K]
   ) {
-    setDraft((current) => ({ ...current, [field]: value }));
+    const next = { ...activeDraft, [field]: value };
+    if (!standalone) setDraft(next);
+    onChange?.(next);
   }
 
   return (
     <div className="rounded-md border p-4">
       <FieldGroup className="grid gap-4 md:grid-cols-2">
+        {standalone ? (
+          <Field>
+            <FieldLabel htmlFor={`${formId}-course-id`}>Course ID</FieldLabel>
+            <Input
+              id={`${formId}-course-id`}
+              value={activeDraft.courseId}
+              readOnly={readOnly}
+              onChange={(event) =>
+                setField('courseId', slugify(event.target.value))
+              }
+            />
+          </Field>
+        ) : null}
         <Field>
           <FieldLabel htmlFor={`${formId}-id`}>Offering ID</FieldLabel>
           <Input
             id={`${formId}-id`}
-            value={draft.id}
+            value={activeDraft.id}
             readOnly={readOnly}
             onChange={(event) => setField('id', slugify(event.target.value))}
           />
@@ -1234,7 +1255,7 @@ function OfferingForm({
           </FieldLabel>
           <Input
             id={`${formId}-academic-year`}
-            value={draft.academicYear}
+            value={activeDraft.academicYear}
             readOnly={readOnly}
             onChange={(event) => setField('academicYear', event.target.value)}
           />
@@ -1242,7 +1263,7 @@ function OfferingForm({
         <Field>
           <FieldLabel htmlFor={`${formId}-semester`}>Semester</FieldLabel>
           <Select
-            value={draft.semester}
+            value={activeDraft.semester}
             disabled={readOnly}
             items={[
               { value: 'SEM1', label: 'Semester 1' },
@@ -1272,7 +1293,7 @@ function OfferingForm({
                 size="sm"
                 onClick={() =>
                   setField('staff', [
-                    ...draft.staff,
+                    ...activeDraft.staff,
                     { staff: '', role: 'LECTURER' },
                   ])
                 }
@@ -1282,13 +1303,13 @@ function OfferingForm({
               </Button>
             ) : null}
           </div>
-          {draft.staff.length === 0 ? (
+          {activeDraft.staff.length === 0 ? (
             <p className="text-muted-foreground rounded-md border p-3 text-sm">
               No teaching staff assigned.
             </p>
           ) : (
             <div className="space-y-2">
-              {draft.staff.map((member, index) => (
+              {activeDraft.staff.map((member, index) => (
                 <div
                   key={`${member.staff}-${index}`}
                   className="grid gap-2 rounded-md border p-3
@@ -1304,10 +1325,11 @@ function OfferingForm({
                       readOnly={readOnly}
                       placeholder="Academic username"
                       onChange={(event) => {
-                        const staff = draft.staff.map((entry, entryIndex) =>
-                          entryIndex === index
-                            ? { ...entry, staff: event.target.value.trim() }
-                            : entry
+                        const staff = activeDraft.staff.map(
+                          (entry, entryIndex) =>
+                            entryIndex === index
+                              ? { ...entry, staff: event.target.value.trim() }
+                              : entry
                         );
                         setField('staff', staff);
                       }}
@@ -1326,13 +1348,14 @@ function OfferingForm({
                       }))}
                       onValueChange={(role) => {
                         if (role === null) return;
-                        const staff = draft.staff.map((entry, entryIndex) =>
-                          entryIndex === index
-                            ? {
-                                ...entry,
-                                role: role as OfferingRecord['staff'][number]['role'],
-                              }
-                            : entry
+                        const staff = activeDraft.staff.map(
+                          (entry, entryIndex) =>
+                            entryIndex === index
+                              ? {
+                                  ...entry,
+                                  role: role as OfferingRecord['staff'][number]['role'],
+                                }
+                              : entry
                         );
                         setField('staff', staff);
                       }}
@@ -1362,7 +1385,7 @@ function OfferingForm({
                       onClick={() =>
                         setField(
                           'staff',
-                          draft.staff.filter(
+                          activeDraft.staff.filter(
                             (_, entryIndex) => entryIndex !== index
                           )
                         )
@@ -1377,7 +1400,14 @@ function OfferingForm({
           )}
         </Field>
       </FieldGroup>
-      {!readOnly ? (
+      {standalone ? (
+        <DepartmentCheckboxes
+          value={activeDraft.departments ?? []}
+          readOnly={readOnly}
+          onChange={(departments) => setField('departments', departments)}
+        />
+      ) : null}
+      {!readOnly && !standalone ? (
         <div className="mt-4 flex justify-end">
           <Button
             size="sm"

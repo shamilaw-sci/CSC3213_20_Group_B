@@ -70,6 +70,7 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { pruneEmpty } from '@/components/editor/prune-empty';
 import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
@@ -238,7 +239,7 @@ function enumLabel(value: string) {
     .join(' ');
 }
 
-function emptyProfile(kind: PublicProfileKind): ProfileRecord {
+export function emptyProfile(kind: PublicProfileKind): ProfileRecord {
   if (kind === 'student') {
     return {
       title: 'Mr',
@@ -348,27 +349,6 @@ function asString(value: unknown) {
 
 function asArray<T extends ProfileRecord>(value: unknown): T[] {
   return Array.isArray(value) ? (value.filter(isRecord) as T[]) : [];
-}
-
-function pruneEmpty(value: unknown): unknown {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    return trimmed ? trimmed : undefined;
-  }
-
-  if (Array.isArray(value)) {
-    const items = value.map(pruneEmpty).filter((item) => item !== undefined);
-    return items.length ? items : undefined;
-  }
-
-  if (isRecord(value)) {
-    const entries = Object.entries(value)
-      .map(([key, entry]) => [key, pruneEmpty(entry)] as const)
-      .filter(([, entry]) => entry !== undefined);
-    return entries.length ? Object.fromEntries(entries) : undefined;
-  }
-
-  return value;
 }
 
 function applyKindDefaults(kind: PublicProfileKind, current: ProfileRecord) {
@@ -1182,7 +1162,7 @@ interface FormProps {
   onProfileChange: (profile: ProfileRecord) => void;
 }
 
-function ProfileForm({
+export function ProfileForm({
   profileKind,
   profile,
   identity,

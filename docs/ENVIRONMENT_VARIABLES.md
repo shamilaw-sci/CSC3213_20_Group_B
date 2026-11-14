@@ -122,14 +122,14 @@ development hosts; do not copy those values into Vercel Production or Preview.
 
 ### Portal
 
-| Name                                       | Kind      | Supply     | Status    | Purpose                        |
-| ------------------------------------------ | --------- | ---------- | --------- | ------------------------------ |
-| `NEXT_PUBLIC_SITE_URL`                     | `browser` | `template` | `runtime` | canonical URL and metadata     |
-| `NEXT_PUBLIC_BASE_API_URL`                 | `browser` | `template` | `runtime` | browser API client             |
-| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`         | `browser` | `template` | `runtime` | public profile data            |
-| `NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH` | `browser` | `template` | `runtime` | verification input constraints |
-| `NEXT_PUBLIC_API_CLIENT_ID`                | `browser` | `template` | `runtime` | API client identification      |
-| `COOKIE_DOMAIN`                            | `server`  | `template` | `runtime` | authentication cookie scope    |
+| Name                                       | Kind      | Supply     | Status    | Purpose                                  |
+| ------------------------------------------ | --------- | ---------- | --------- | ---------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                     | `browser` | `template` | `runtime` | canonical URL and metadata               |
+| `NEXT_PUBLIC_BASE_API_URL`                 | `browser` | `template` | `runtime` | browser API client                       |
+| `NEXT_PUBLIC_PEOPLE_DATA_BASE_URL`         | `browser` | `template` | `runtime` | public profiles and playground data host |
+| `NEXT_PUBLIC_VERIFICATION_CODE_MAX_LENGTH` | `browser` | `template` | `runtime` | verification input constraints           |
+| `NEXT_PUBLIC_API_CLIENT_ID`                | `browser` | `template` | `runtime` | API client identification                |
+| `COOKIE_DOMAIN`                            | `server`  | `template` | `runtime` | authentication cookie scope              |
 
 ### API Worker
 

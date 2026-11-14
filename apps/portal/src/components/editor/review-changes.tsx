@@ -27,9 +27,9 @@ export function ReviewChanges({
 
   return (
     <dl className="divide-y rounded-md border">
-      {changes.map((change) => (
+      {changes.map((change, index) => (
         <div
-          key={change.field}
+          key={`${change.field}:${change.label}:${index}`}
           className="grid gap-3 p-4 sm:grid-cols-[minmax(9rem,0.35fr)_1fr_auto]
             sm:items-start"
         >

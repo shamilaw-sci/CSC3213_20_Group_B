@@ -4,6 +4,7 @@ import {
   AcademicDepartmentCodeSchema,
   CurrentUserResponseSchema,
   MutationAcceptedSchema,
+  ProjectIndexSchema,
   ProjectIndexSchemaUrl,
   type ProjectLinks,
   type ProjectPerson,
@@ -135,7 +136,7 @@ interface UserContext {
   accessLevel?: unknown;
 }
 
-interface CourseCatalogRecord {
+export interface CourseCatalogRecord {
   id: string;
   primaryCode: string;
   codes: string[];
@@ -144,7 +145,7 @@ interface CourseCatalogRecord {
   departments: string[];
 }
 
-interface CourseOfferingRecord {
+export interface CourseOfferingRecord {
   id: string;
   courseId: string;
   academicYear: string;
@@ -494,7 +495,7 @@ function projectPersonFromProfile(
   };
 }
 
-function emptyProject(
+export function emptyProject(
   identity?: PublicProjectSchemaResponse['identity']
 ): ProjectRecord {
   const slug = 'new-project';
@@ -855,7 +856,7 @@ function DepartmentCheckboxes({
   );
 }
 
-function ProjectForm({
+export function ProjectForm({
   project,
   onChange,
   canSubmitAnyProject,
@@ -864,6 +865,7 @@ function ProjectForm({
   courses,
   offerings,
   readOnly = false,
+  publicMode = false,
 }: {
   project: ProjectRecord;
   onChange: (project: ProjectRecord) => void;
@@ -873,6 +875,7 @@ function ProjectForm({
   courses: CourseCatalogRecord[];
   offerings: CourseOfferingRecord[];
   readOnly?: boolean;
+  publicMode?: boolean;
 }) {
   const formId = useId();
   function setField(key: string, value: unknown) {
@@ -934,6 +937,71 @@ function ProjectForm({
     setSourcePreviewLoading(true);
     setSourcePreviewError(null);
     try {
+      if (publicMode) {
+        const owner =
+          typeof source.repositoryOwner === 'string'
+            ? source.repositoryOwner
+            : '';
+        const name =
+          typeof source.repositoryName === 'string'
+            ? source.repositoryName
+            : '';
+        if (
+          !/^[a-z\d][a-z\d-]{0,38}$/i.test(owner) ||
+          !/^[a-z\d._-]+$/i.test(name)
+        ) {
+          throw new Error('Add a valid public GitHub repository first.');
+        }
+        const indexUrl = `https://api.github.com/repos/${owner}/${name}/contents/.docs/index.json`;
+        const response = await fetch(indexUrl, {
+          headers: { Accept: 'application/vnd.github+json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok)
+          throw new Error(
+            `Repository index request failed (${response.status}).`
+          );
+        const payload: unknown = await response.json();
+        if (
+          !isRecord(payload) ||
+          typeof payload.content !== 'string' ||
+          payload.content.length > 45000
+        ) {
+          throw new Error('Repository index is invalid or too large.');
+        }
+        const bytes = Uint8Array.from(
+          atob(payload.content.replace(/\s/g, '')),
+          (char) => char.charCodeAt(0)
+        );
+        const index = ProjectIndexSchema.parse(
+          JSON.parse(new TextDecoder().decode(bytes))
+        );
+        const merged = ProjectSchema.parse({
+          ...project,
+          ...index,
+          links: { ...links, ...index.links },
+          media: { ...media, ...index.media },
+          dates: { ...dates, ...index.dates },
+          ...(project.course && index.course && isRecord(project.course)
+            ? { course: { ...project.course, ...index.course } }
+            : {}),
+          id: project.id,
+          slug: project.slug,
+        });
+        const changedFields = Object.keys(merged).filter(
+          (field) =>
+            JSON.stringify(merged[field as keyof typeof merged]) !==
+            JSON.stringify(project[field])
+        );
+        setSourcePreview({
+          indexUrl,
+          project: merged,
+          changedFields,
+          draft: project,
+        });
+        return;
+      }
       const response = await fetch(publicProjectSourcePreviewApiUrl(slug), {
         method: 'POST',
         credentials: 'include',

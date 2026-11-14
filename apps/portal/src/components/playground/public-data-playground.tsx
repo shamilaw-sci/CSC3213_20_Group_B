@@ -1,5 +1,6 @@
 'use client';
 
+import { CourseOfferingSchema, CourseSchema } from '@scs/schemas';
 import { Button } from '@scs/ui/components/button';
 import {
   Card,
@@ -23,219 +24,263 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@scs/ui/components/tabs';
-import { Copy } from 'lucide-react';
+import { Copy, RefreshCw } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import type { OfferingRecord } from '@/components/courses/course-editor';
+import type { CourseRecord } from '@/components/courses/course-review';
+import { CourseReview } from '@/components/courses/course-review';
+import {
+  createEditorState,
+  type EditorState,
+  type EditorValidator,
+} from '@/components/editor/editor-state';
+import { EditorWorkspace } from '@/components/editor/editor-workspace';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import {
   playgroundDefinitions,
-  type PlaygroundField,
   type PlaygroundKind,
+  playgroundPublicPath,
   playgroundRecord,
   playgroundRelatedFiles,
   playgroundTarget,
 } from '@/components/playground/playground-data';
+import type { ProfileRecord } from '@/components/profiles/profile-types';
+import { PublicProfileReview } from '@/components/profiles/public-profile-review';
+import type {
+  CourseCatalogRecord,
+  CourseOfferingRecord,
+} from '@/components/projects/project-editor';
+import { ProjectReview } from '@/components/projects/project-review';
+import publicEnvConfig from '@/config/public.env.config';
 
-const JsonEditor = dynamic(
+const ProfileForm = dynamic(
   () =>
-    import('@/components/editor/json-editor').then(
-      (module) => module.JsonEditor
+    import('@/components/profiles/public-profile-editor').then(
+      (module) => module.ProfileForm
     ),
-  {
-    ssr: false,
-    loading: () => <div className="bg-muted/40 min-h-96 rounded-md border" />,
-  }
+  { ssr: false }
 );
-const JsonPreview = dynamic(
+const ProjectForm = dynamic(
   () =>
-    import('@/components/editor/json-preview').then(
-      (module) => module.JsonPreview
+    import('@/components/projects/project-editor').then(
+      (module) => module.ProjectForm
     ),
-  {
-    ssr: false,
-    loading: () => <div className="bg-muted/40 min-h-72 rounded-md border" />,
-  }
+  { ssr: false }
+);
+const CourseForm = dynamic(
+  () =>
+    import('@/components/courses/course-editor').then(
+      (module) => module.CourseForm
+    ),
+  { ssr: false }
+);
+const OfferingForm = dynamic(
+  () =>
+    import('@/components/courses/course-editor').then(
+      (module) => module.OfferingForm
+    ),
+  { ssr: false }
 );
 
 const kinds = Object.keys(playgroundDefinitions) as PlaygroundKind[];
-type View = 'form' | 'json';
+const profileKinds = [
+  'student',
+  'academic',
+  'academic-support',
+  'non-academic',
+] as const;
+const profileSections = [
+  { id: 'profile-about', label: 'About you' },
+  { id: 'profile-role', label: 'Role and affiliation' },
+  { id: 'profile-work', label: 'Work and studies' },
+  { id: 'profile-links', label: 'Links' },
+] as const;
+const projectSections = [
+  { id: 'project-title', label: 'Basics' },
+  { id: 'project-people', label: 'People' },
+  { id: 'project-academic', label: 'Academic context' },
+  { id: 'project-links', label: 'Links' },
+  { id: 'project-source', label: 'Source' },
+] as const;
+const courseSections = [
+  { id: 'course-details', label: 'Details' },
+  { id: 'course-codes', label: 'Codes' },
+  { id: 'course-departments', label: 'Departments' },
+] as const;
 
-function formatFieldValue(field: PlaygroundField, value: unknown) {
-  if (field.kind === 'json')
-    return value === undefined ? '' : JSON.stringify(value, null, 2);
-  return value === undefined ? '' : String(value);
+function isProfileKind(
+  kind: PlaygroundKind
+): kind is (typeof profileKinds)[number] {
+  return profileKinds.some((profileKind) => profileKind === kind);
 }
 
-function issueText(issues: { path: PropertyKey[]; message: string }[]) {
-  return issues.map(
-    (issue) => `${issue.path.join('.') || 'Record'}: ${issue.message}`
-  );
+function validateDraft(
+  kind: PlaygroundKind
+): EditorValidator<Record<string, unknown>> {
+  return (value) => {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      return {
+        success: false,
+        issues: [
+          {
+            field: 'editor-title',
+            message: 'JSON must contain one record object.',
+          },
+        ],
+      };
+    }
+    const result = playgroundRecord(kind, value as Record<string, unknown>);
+    if (!result.success) {
+      return {
+        success: false,
+        issues: result.error.issues.map((issue) => ({
+          field: 'editor-title',
+          message: `${issue.path.join('.') || 'Record'}: ${issue.message}`,
+        })),
+      };
+    }
+    return { success: true, data: result.data as Record<string, unknown> };
+  };
 }
 
 export function PublicDataPlayground() {
   const [kind, setKind] = useState<PlaygroundKind>('student');
-  const [view, setView] = useState<View>('form');
-  const [draft, setDraft] = useState<Record<string, unknown>>({
-    ...playgroundDefinitions.student.initial,
-  });
-  const [fieldText, setFieldText] = useState<Record<string, string>>({});
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [jsonText, setJsonText] = useState('');
-  const [jsonError, setJsonError] = useState<string | null>(null);
-  const [jsonIssues, setJsonIssues] = useState<string[]>([]);
-  const [editingJson, setEditingJson] = useState(false);
-  const [pendingForm, setPendingForm] = useState(false);
+  const [editorState, setEditorState] = useState<
+    EditorState<Record<string, unknown>>
+  >(() =>
+    createEditorState({ ...playgroundDefinitions.student.initial }, null)
+  );
+  const [identifier, setIdentifier] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [courses, setCourses] = useState<CourseCatalogRecord[]>([]);
+  const [offerings, setOfferings] = useState<CourseOfferingRecord[]>([]);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
 
-  const definition = playgroundDefinitions[kind];
-  const result = playgroundRecord(kind, draft);
+  const draft = editorState.draft;
+  const validation = playgroundRecord(kind, draft);
   const target = playgroundTarget(kind, draft);
   const relatedFiles = playgroundRelatedFiles(kind, draft);
-  const errors = result.success ? [] : issueText(result.error.issues);
   const canCopy = Boolean(
-    target &&
-    result.success &&
-    !(editingJson && jsonText !== JSON.stringify(draft, null, 2)) &&
-    Object.keys(fieldErrors).length === 0
+    target && validation.success && !editorState.json.dirty
   );
-  const recordText = result.success
-    ? `${JSON.stringify(result.data, null, 2)}\n`
+  const recordText = validation.success
+    ? `${JSON.stringify(validation.data, null, 2)}\n`
     : '';
 
+  useEffect(() => {
+    if (kind !== 'project') return;
+    const controller = new AbortController();
+    const base = new URL(publicEnvConfig.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL)
+      .origin;
+    async function loadCatalogs() {
+      try {
+        const [courseResponse, offeringResponse] = await Promise.all([
+          fetch(`${base}/academic/v2/courses.json`, {
+            signal: controller.signal,
+          }),
+          fetch(`${base}/academic/v2/offerings.json`, {
+            signal: controller.signal,
+          }),
+        ]);
+        if (!courseResponse.ok || !offeringResponse.ok)
+          throw new Error('Public course references are unavailable.');
+        const [courseValues, offeringValues]: unknown[] = await Promise.all([
+          courseResponse.json(),
+          offeringResponse.json(),
+        ]);
+        const parsedCourses = CourseSchema.array().parse(courseValues);
+        const parsedOfferings =
+          CourseOfferingSchema.array().parse(offeringValues);
+        setCourses(parsedCourses);
+        setOfferings(
+          parsedOfferings.map((offering) => ({
+            ...offering,
+            academicYear: String(offering.academicYear),
+          }))
+        );
+        setCatalogError(null);
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setCatalogError(
+            error instanceof Error
+              ? error.message
+              : 'Public course references are unavailable.'
+          );
+      }
+    }
+    void loadCatalogs();
+    return () => controller.abort();
+  }, [kind]);
+
   function changeKind(next: PlaygroundKind) {
-    if (editingJson && jsonText !== JSON.stringify(draft, null, 2)) {
+    if (editorState.surface === 'advanced' && editorState.json.dirty) {
       toast.error(
         'Apply or discard your JSON edits before changing record type.'
       );
       return;
     }
     setKind(next);
-    setView('form');
-    setDraft({ ...playgroundDefinitions[next].initial });
-    setFieldText({});
-    setFieldErrors({});
-    setJsonText('');
-    setJsonError(null);
-    setJsonIssues([]);
-    setEditingJson(false);
-    setPendingForm(false);
-  }
-
-  function changeField(field: PlaygroundField, text: string) {
-    if (field.kind === 'json') {
-      setFieldText((previous) => ({ ...previous, [field.key]: text }));
-      if (text.trim() === '') {
-        setFieldErrors((previous) => {
-          const next = { ...previous };
-          delete next[field.key];
-          return next;
-        });
-        setDraft((previous) => {
-          const next = { ...previous };
-          delete next[field.key];
-          return next;
-        });
-        return;
-      }
-      try {
-        const value: unknown = JSON.parse(text);
-        setDraft((previous) => ({ ...previous, [field.key]: value }));
-        setFieldErrors((previous) => {
-          const next = { ...previous };
-          delete next[field.key];
-          return next;
-        });
-      } catch {
-        setFieldErrors((previous) => ({
-          ...previous,
-          [field.key]: 'Enter valid JSON for this field.',
-        }));
-      }
-      return;
-    }
-    setDraft((previous) => {
-      const next = { ...previous };
-      if (text === '' && field.key !== 'fullName' && field.key !== 'title')
-        delete next[field.key];
-      else next[field.key] = field.kind === 'number' ? Number(text) : text;
-      return next;
-    });
-  }
-
-  function changeView(next: View) {
-    if (next === 'json') {
-      if (Object.keys(fieldErrors).length) {
-        toast.error('Fix the JSON in the form fields first.');
-        return;
-      }
-      setJsonText(JSON.stringify(draft, null, 2));
-      setJsonError(null);
-      setJsonIssues([]);
-      setEditingJson(false);
-      setPendingForm(false);
-      setView('json');
-      return;
-    }
-    if (editingJson && jsonText !== JSON.stringify(draft, null, 2)) {
-      setPendingForm(true);
-      return;
-    }
-    setView('form');
-  }
-
-  function applyJson() {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch {
-      setJsonError('The JSON is not valid. Fix the syntax before applying it.');
-      setJsonIssues([]);
-      return;
-    }
-    if (
-      typeof parsed !== 'object' ||
-      parsed === null ||
-      Array.isArray(parsed)
-    ) {
-      setJsonError('JSON must contain one record object.');
-      setJsonIssues([]);
-      return;
-    }
-    const validation = playgroundRecord(
-      kind,
-      parsed as Record<string, unknown>
+    setEditorState(
+      createEditorState({ ...playgroundDefinitions[next].initial }, null)
     );
-    if (!validation.success) {
-      setJsonError(null);
-      setJsonIssues(issueText(validation.error.issues));
-      return;
-    }
-    setDraft(validation.data as Record<string, unknown>);
-    setJsonText(JSON.stringify(validation.data, null, 2));
-    setJsonError(null);
-    setJsonIssues([]);
-    setFieldText({});
-    setFieldErrors({});
-    setEditingJson(false);
-    if (pendingForm) setView('form');
-    setPendingForm(false);
+    setIdentifier('');
+    setLoadError(null);
   }
 
-  function discardJson() {
-    setJsonText(JSON.stringify(draft, null, 2));
-    setJsonError(null);
-    setJsonIssues([]);
-    setEditingJson(false);
-    if (pendingForm) setView('form');
-    setPendingForm(false);
+  function startBlank() {
+    setEditorState(
+      createEditorState({ ...playgroundDefinitions[kind].initial }, null)
+    );
+    setIdentifier('');
+    setLoadError(null);
+  }
+
+  async function loadPublished() {
+    const path = playgroundPublicPath(kind, identifier);
+    if (!path) {
+      setLoadError(
+        'Enter a valid username, project slug, course ID, or offering ID.'
+      );
+      return;
+    }
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const base = new URL(publicEnvConfig.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL)
+        .origin;
+      const response = await fetch(`${base}/${path}`, { cache: 'no-store' });
+      if (response.status === 404)
+        throw new Error('No published record was found for that identifier.');
+      if (!response.ok)
+        throw new Error(`Published data request failed (${response.status}).`);
+      const value: unknown = await response.json();
+      const parsed = playgroundRecord(kind, value as Record<string, unknown>);
+      if (!parsed.success)
+        throw new Error(
+          'The published record does not match the selected form schema.'
+        );
+      const record = parsed.data as Record<string, unknown>;
+      if (playgroundTarget(kind, record)?.replace(/^public\//, '') !== path) {
+        throw new Error(
+          'The record identifier does not match its public file path.'
+        );
+      }
+      setEditorState(createEditorState(record, record));
+      toast.success('Published record loaded into the form.');
+    } catch (error) {
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to load published data.'
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function copy(value: string, label: string) {
@@ -253,13 +298,14 @@ export function PublicDataPlayground() {
     <PageShell width="wide">
       <PageHeader
         title="Public data playground"
-        description="Build a public record for a manual data repository pull request. Nothing is submitted or saved here."
+        description="Use the same guided editors as the signed-in Portal. Fill a new record or optionally load published data; nothing is submitted here."
       />
       <Card>
         <CardHeader>
           <CardTitle>Choose a record</CardTitle>
           <CardDescription>
-            Select the public record you want to create or edit.
+            All form fields can be filled manually. Loading a published record
+            is optional.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -285,9 +331,159 @@ export function PublicDataPlayground() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <FieldDescription>{definition.description}</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="playground-identifier">
+                Load existing public record (optional)
+              </FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  id="playground-identifier"
+                  className="max-w-md"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                  placeholder={
+                    isProfileKind(kind)
+                      ? 'Institutional username'
+                      : kind === 'project'
+                        ? 'Project slug'
+                        : `${kind === 'course' ? 'Course' : 'Offering'} ID`
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading || !identifier.trim()}
+                  onClick={() => void loadPublished()}
+                >
+                  <RefreshCw data-icon="inline-start" />
+                  {loading ? 'Loading…' : 'Load published'}
+                </Button>
+                <Button type="button" variant="ghost" onClick={startBlank}>
+                  Start blank
+                </Button>
+              </div>
+              <FieldDescription>
+                Loads only the public JSON for this record type. The loaded
+                record becomes the comparison in Review changes.
+              </FieldDescription>
+              {loadError ? (
+                <p role="alert" className="text-destructive text-sm">
+                  {loadError}
+                </p>
+              ) : null}
             </Field>
           </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {kind === 'project' && catalogError ? (
+        <p role="alert" className="text-destructive text-sm">
+          {catalogError} Course and offering choices may be unavailable.
+        </p>
+      ) : null}
+
+      <Card>
+        <CardContent className="pt-6">
+          <EditorWorkspace
+            state={editorState}
+            onStateChange={setEditorState}
+            title={playgroundDefinitions[kind].label}
+            status={editorState.published ? 'published' : 'new'}
+            statusDetail={
+              editorState.published
+                ? 'Published data is available for comparison.'
+                : 'Start with a blank public record.'
+            }
+            sections={
+              isProfileKind(kind)
+                ? profileSections
+                : kind === 'project'
+                  ? projectSections
+                  : kind === 'course'
+                    ? courseSections
+                    : []
+            }
+            canEditJson
+            canSubmit={false}
+            submitLabel="Copy JSON"
+            onSubmit={() => {}}
+            validateJson={validateDraft(kind)}
+            renderEdit={(value, onChange) => {
+              if (isProfileKind(kind))
+                return (
+                  <ProfileForm
+                    profileKind={kind}
+                    profile={value as ProfileRecord}
+                    lockedFields={[]}
+                    onProfileChange={onChange}
+                  />
+                );
+              if (kind === 'project')
+                return (
+                  <ProjectForm
+                    project={value}
+                    onChange={onChange}
+                    canSubmitAnyProject
+                    canEditIdentity
+                    isNew={!editorState.published}
+                    courses={courses}
+                    offerings={offerings}
+                    publicMode
+                  />
+                );
+              if (kind === 'course')
+                return (
+                  <CourseForm
+                    course={value as unknown as CourseRecord}
+                    readOnly={false}
+                    onChange={(course) => onChange({ ...course })}
+                  />
+                );
+              return (
+                <OfferingForm
+                  offering={value as unknown as OfferingRecord}
+                  readOnly={false}
+                  standalone
+                  onChange={(offering) => onChange({ ...offering })}
+                  onSave={() => {}}
+                />
+              );
+            }}
+            renderReview={(value, published, onChangeField) => {
+              if (isProfileKind(kind))
+                return (
+                  <PublicProfileReview
+                    profileKind={kind}
+                    draft={value}
+                    published={published}
+                    onChangeField={onChangeField}
+                  />
+                );
+              if (kind === 'project')
+                return (
+                  <ProjectReview
+                    draft={value}
+                    published={published}
+                    onChangeField={onChangeField}
+                  />
+                );
+              if (kind === 'course')
+                return (
+                  <CourseReview
+                    draft={value as unknown as CourseRecord}
+                    published={published as unknown as CourseRecord | null}
+                    offeringCount={0}
+                    onChangeField={onChangeField}
+                  />
+                );
+              return (
+                <pre className="bg-muted overflow-auto rounded-md p-4 text-sm">
+                  {JSON.stringify(value, null, 2)}
+                </pre>
+              );
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -295,7 +491,8 @@ export function PublicDataPlayground() {
         <CardHeader>
           <CardTitle>File to change</CardTitle>
           <CardDescription>
-            Create or replace this authoritative JSON file.
+            Create or replace this authoritative JSON file in the public data
+            repository.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
@@ -321,9 +518,8 @@ export function PublicDataPlayground() {
         <CardHeader>
           <CardTitle>Related generated files</CardTitle>
           <CardDescription>
-            The data repository generator may update these files after the
-            authoritative record changes. Run <code>bun run generate</code>{' '}
-            there and include the changed projections in the pull request.
+            Run <code>bun run generate</code> in the data repository and include
+            the changed projections in the pull request.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -339,8 +535,8 @@ export function PublicDataPlayground() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => void copy(file, 'Related path')}
                   aria-label={`Copy ${file}`}
+                  onClick={() => void copy(file, 'Related path')}
                 >
                   <Copy data-icon="inline-start" />
                   Copy
@@ -350,220 +546,32 @@ export function PublicDataPlayground() {
           </ul>
           {kind === 'student' ? (
             <p className="text-muted-foreground text-sm">
-              Existing special-programme membership files under{' '}
-              <code>public/people/v2/special/</code> may also be refreshed. The
-              playground cannot know membership without reading the repository.
+              Existing special-programme files under{' '}
+              <code>public/people/v2/special/</code> may also be refreshed.
+              Membership is not available from this form.
             </p>
           ) : null}
           {kind === 'project' ? (
             <p className="text-muted-foreground text-sm">
               For an existing project, removed people may have old{' '}
-              <code>by-person</code> files updated or removed too.
+              <code>by-person</code> files updated or removed.
             </p>
           ) : null}
           {kind === 'course' || kind === 'offering' ? (
             <p className="text-muted-foreground text-sm">
               If IDs or references change, review related projects and offerings
-              in the repository; the playground does not resolve cross-record
-              references.
+              in the repository.
             </p>
           ) : null}
         </CardContent>
       </Card>
 
-      <Tabs value={view} onValueChange={(value) => changeView(value as View)}>
-        <TabsList aria-label="Playground view">
-          <TabsTrigger value="form">Form</TabsTrigger>
-          <TabsTrigger value="json">JSON</TabsTrigger>
-        </TabsList>
-        <TabsContent value="form">
-          <Card>
-            <CardHeader>
-              <CardTitle>{definition.label}</CardTitle>
-              <CardDescription>
-                Optional fields may be left blank. Structured fields accept JSON
-                arrays or objects.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldGroup>
-                {definition.fields.map((field) => {
-                  const fieldId = `playground-${field.key}`;
-                  const value =
-                    fieldText[field.key] ??
-                    formatFieldValue(field, draft[field.key]);
-                  const error =
-                    fieldErrors[field.key] ??
-                    errors.find((issue) => issue.startsWith(`${field.key}:`));
-                  return (
-                    <Field key={field.key} data-invalid={Boolean(error)}>
-                      <FieldLabel htmlFor={fieldId}>{field.label}</FieldLabel>
-                      {field.options ? (
-                        <Select
-                          value={value || null}
-                          onValueChange={(next) =>
-                            changeField(field, next ?? '')
-                          }
-                        >
-                          <SelectTrigger
-                            id={fieldId}
-                            className="w-full"
-                            aria-invalid={Boolean(error)}
-                          >
-                            <SelectValue placeholder="Select a value" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {field.options.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      ) : field.kind === 'json' || field.kind === 'textarea' ? (
-                        <textarea
-                          id={fieldId}
-                          value={value}
-                          onChange={(event) =>
-                            changeField(field, event.target.value)
-                          }
-                          aria-invalid={Boolean(error)}
-                          rows={field.kind === 'json' ? 5 : 3}
-                          className="border-input bg-background
-                            focus-visible:ring-ring/50
-                            aria-invalid:border-destructive min-h-20 w-full
-                            rounded-md border px-3 py-2 font-mono text-sm
-                            shadow-xs focus-visible:ring-3
-                            focus-visible:outline-none"
-                        />
-                      ) : (
-                        <Input
-                          id={fieldId}
-                          type={field.kind === 'number' ? 'number' : 'text'}
-                          value={value}
-                          onChange={(event) =>
-                            changeField(field, event.target.value)
-                          }
-                          aria-invalid={Boolean(error)}
-                        />
-                      )}
-                      {field.hint ? (
-                        <FieldDescription>{field.hint}</FieldDescription>
-                      ) : null}
-                      {error ? (
-                        <FieldDescription>{error}</FieldDescription>
-                      ) : null}
-                    </Field>
-                  );
-                })}
-              </FieldGroup>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="json">
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced JSON</CardTitle>
-              <CardDescription>
-                View the same draft as structured data. Apply valid edits before
-                returning to the form or copying.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {!editingJson ? (
-                <div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingJson(true)}
-                  >
-                    Edit JSON
-                  </Button>
-                </div>
-              ) : null}
-              {jsonError ? (
-                <p role="alert" className="text-destructive mt-2 text-sm">
-                  {jsonError}
-                </p>
-              ) : null}
-              {jsonIssues.length ? (
-                <div role="alert" className="text-destructive text-sm">
-                  <p>The JSON does not match this record:</p>
-                  <ul className="mt-2 list-inside list-disc">
-                    {jsonIssues.map((issue, index) => (
-                      <li key={`${issue}-${index}`}>{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {editingJson ? (
-                <JsonEditor
-                  value={jsonText}
-                  onChange={(text) => {
-                    setJsonText(text);
-                    setJsonError(null);
-                    setJsonIssues([]);
-                  }}
-                />
-              ) : (
-                <JsonPreview
-                  value={
-                    result.success &&
-                    typeof result.data === 'object' &&
-                    result.data !== null
-                      ? result.data
-                      : draft
-                  }
-                  enableClipboard
-                  monospace
-                />
-              )}
-              {editingJson ? (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    onClick={applyJson}
-                    disabled={jsonText === JSON.stringify(draft, null, 2)}
-                  >
-                    Apply JSON
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={discardJson}
-                    disabled={jsonText === JSON.stringify(draft, null, 2)}
-                  >
-                    Discard changes
-                  </Button>
-                  {pendingForm ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setPendingForm(false)}
-                    >
-                      Stay here
-                    </Button>
-                  ) : null}
-                </div>
-              ) : null}
-              {pendingForm ? (
-                <p className="text-muted-foreground text-sm">
-                  Apply or discard your JSON edits before switching to the form.
-                </p>
-              ) : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
       <Card>
         <CardHeader>
           <CardTitle>Validate and copy</CardTitle>
           <CardDescription>
-            Validated against the schema bundled with this Portal build. For an
-            existing file, compare with its current content before replacing it.
+            Validated against the shared schema bundled with this Portal build.
+            Compare an existing file before replacing it.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -571,15 +579,19 @@ export function PublicDataPlayground() {
             <p className="text-sm">Record is valid and ready to copy.</p>
           ) : (
             <div role="status" className="text-sm">
-              <p>Complete the required fields to copy a validated record.</p>
+              <p>
+                Complete the required fields and apply any Advanced JSON edits
+                before copying.
+              </p>
               <ul className="mt-2 list-inside list-disc">
                 {!target ? <li>Enter a valid file identifier.</li> : null}
-                {Object.values(fieldErrors).map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-                {errors.slice(0, 8).map((error, index) => (
-                  <li key={`${error}-${index}`}>{error}</li>
-                ))}
+                {!validation.success
+                  ? validation.error.issues.slice(0, 8).map((issue, index) => (
+                      <li key={`${issue.path.join('.')}-${index}`}>
+                        {issue.path.join('.') || 'Record'}: {issue.message}
+                      </li>
+                    ))
+                  : null}
               </ul>
             </div>
           )}
@@ -615,7 +627,6 @@ export function PublicDataPlayground() {
               public data repository
             </Link>
             , edit the path shown above, and run its validation checks.
-            Generated indexes are refreshed by repository tooling.
           </p>
         </CardContent>
       </Card>

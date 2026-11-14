@@ -23,13 +23,15 @@ For implementation-level behavior, use the
 ## Route areas
 
 - `/login`, `/signup`, `/privacy`, and `/tos` cover entry and policy.
-- `/playground` is a public, local-only form and JSON editor for manual data
-  repository pull requests. It validates against the bundled shared schemas,
-  shows the authoritative target file and related generated files, and copies
-  a record or path without submitting data. All four record families have
-  individual authoritative files. The JSON tab uses the same preview and
-  code editor as the authenticated editors. Manual editors must compare an
-  existing file before replacing it and run the data repository checks.
+- `/playground` is a public browser draft editor for manual data repository pull
+  requests. It reuses the authenticated profile, project, course, and offering
+  form controls and the shared review and Advanced JSON surfaces. A user may
+  optionally load an existing published record from the public data service;
+  private account data is never loaded. The playground validates against the
+  bundled shared schemas, shows the authoritative file and related generated
+  files, and copies a record or path without submitting data. Manual editors
+  must compare an existing file before replacing it and run the data repository
+  checks.
 - `/.well-known/security.txt` serves the authoritative RFC 9116 document;
   `/privacy#security-reporting` is its reporting policy.
 - `/dashboard` and `/account/*` cover the current account.
