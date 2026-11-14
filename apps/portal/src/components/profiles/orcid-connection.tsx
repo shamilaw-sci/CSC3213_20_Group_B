@@ -14,10 +14,26 @@ import { toast } from 'sonner';
 
 import { apiHeaders, apiUrl, readApiError } from '@/lib/api';
 
-export function OrcidConnection() {
+export function OrcidConnection({
+  inPublicProfile = false,
+  onBeforeNavigate,
+}: {
+  inPublicProfile?: boolean;
+  onBeforeNavigate?: () => void;
+}) {
   const [orcid, setOrcid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get('orcid');
+    if (status !== 'connected' && status !== 'failed') return;
+    if (status === 'connected') toast.success('ORCID connected');
+    else toast.error('ORCID connection was not completed');
+    url.searchParams.delete('orcid');
+    window.history.replaceState(window.history.state, '', url);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -55,6 +71,7 @@ export function OrcidConnection() {
       });
       if (!response.ok) throw new Error((await readApiError(response)).message);
       const body = (await response.json()) as { url: string };
+      onBeforeNavigate?.();
       window.location.assign(body.url);
     } catch (error) {
       toast.error(
@@ -88,12 +105,18 @@ export function OrcidConnection() {
     <Card>
       <CardHeader>
         <CardTitle>
-          {orcid ? 'Connected ORCID' : 'Connect your ORCID'}
+          {inPublicProfile
+            ? 'ORCID'
+            : orcid
+              ? 'Connected ORCID'
+              : 'Connect your ORCID'}
         </CardTitle>
         <CardDescription>
           {orcid
             ? 'Your researcher identifier is verified through ORCID.'
-            : 'Connect your ORCID account to display your verified researcher identifier and automatically retrieve your public research outputs.'}
+            : inPublicProfile
+              ? 'Connect your ORCID account to verify your researcher identifier and display your public research outputs.'
+              : 'Connect your ORCID account to display your verified researcher identifier and automatically retrieve your public research outputs.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -115,16 +138,17 @@ export function OrcidConnection() {
                 Manage your research through ORCID
               </h3>
               <p className="text-muted-foreground mt-1 text-sm">
-                Your public research outputs are retrieved automatically from
-                ORCID. Add or update your publications, datasets, software, and
-                other research contributions on ORCID, and they can appear on
-                your SCS-PDN public profile.
+                {inPublicProfile
+                  ? 'Your public research outputs are retrieved from ORCID automatically. Add or update your publications, datasets, software, and other research contributions on ORCID. Only publicly visible outputs appear on your SCS-PDN profile, and updates may take up to one hour.'
+                  : 'Your public research outputs are retrieved automatically from ORCID. Add or update your publications, datasets, software, and other research contributions on ORCID, and they can appear on your SCS-PDN public profile.'}
               </p>
-              <p className="text-muted-foreground mt-2 text-sm">
-                You don&apos;t need to add them separately here. Only publicly
-                visible research outputs are included, and updates may take up
-                to one hour to appear.
-              </p>
+              {!inPublicProfile && (
+                <p className="text-muted-foreground mt-2 text-sm">
+                  You don&apos;t need to add them separately here. Only publicly
+                  visible research outputs are included, and updates may take up
+                  to one hour to appear.
+                </p>
+              )}
               <a
                 href="https://orcid.org/my-orcid"
                 target="_blank"

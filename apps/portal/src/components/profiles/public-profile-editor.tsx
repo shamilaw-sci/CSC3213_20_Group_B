@@ -76,6 +76,7 @@ import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
+import { OrcidConnection } from '@/components/profiles/orcid-connection';
 import type {
   ProfileRecord,
   PublicProfileInitialData,
@@ -109,6 +110,11 @@ import {
   rememberAcceptedMutation,
   stableMutationKey,
 } from '@/lib/mutation-operation';
+import {
+  consumeOrcidEditorReturn,
+  readOrcidEditorReturn,
+  saveOrcidEditorReturn,
+} from '@/lib/orcid-editor-return';
 
 const PROFILE_LABELS: Record<PublicProfileKind, string> = {
   academic: 'Academic',
@@ -216,7 +222,7 @@ const KNOWN_SOCIAL_EXAMPLES: Record<KnownSocialPlatform, string> = {
   facebook: 'username or facebook.com/username',
   instagram: '@username or instagram.com/username',
   youtube: '@username or youtube.com/@username',
-  orcid: 'Connect ORCID in account settings',
+  orcid: 'Connect ORCID as the account owner',
   googleScholar: 'Google Scholar user ID or citations profile URL',
   researchGate: 'ResearchGate username or profile URL',
   academia: 'Academia.edu username or profile URL',
@@ -320,6 +326,25 @@ function statusBadgeClass(status: PublicProfilePr['status']) {
   }
 
   return 'border-border bg-muted text-muted-foreground   ';
+}
+
+function statusLabel(status: PublicProfilePr['status']) {
+  switch (status) {
+    case 'open':
+      return 'Open PR';
+    case 'auto_merge_queued':
+      return 'Auto merge queued';
+    case 'checks_pending':
+      return 'Checks pending';
+    case 'checks_failed':
+      return 'Checks failed';
+    case 'merged':
+      return 'Merged';
+    case 'closed':
+      return 'Closed';
+    default:
+      return '';
+  }
 }
 
 function statusButtonClass(status: PublicProfilePr['status']) {
@@ -939,7 +964,7 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
     if (!known) return;
     if (known.platform === 'orcid') {
       toast.error(
-        'Connect ORCID in account settings to verify your researcher identity.'
+        'The account owner must connect ORCID to verify their researcher identity.'
       );
       return;
     }
@@ -975,8 +1000,9 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
     <div className="space-y-6">
       <h3 className="text-sm font-semibold">Social profiles</h3>
       <p className="text-muted-foreground text-sm">
-        ORCID is managed in account settings. Existing manually entered ORCID
-        links are unverified and are not used for research outputs.
+        ORCID is managed by the account owner in the section above or in account
+        settings. Existing manually entered ORCID links are unverified and are
+        not used for research outputs.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         {SOCIAL_FIELDS.map(([key, label]) => (
@@ -2038,6 +2064,32 @@ export default function PublicProfileEditor({
   const [discarding, setDiscarding] = useState(false);
   const [placementLoading, setPlacementLoading] = useState(false);
 
+  useEffect(() => {
+    if (targetEmail) return;
+    try {
+      const pending = readOrcidEditorReturn(window.sessionStorage);
+      if (
+        !pending ||
+        pending.path !== window.location.pathname ||
+        !initialData.schema.allowedKinds.includes(pending.profileKind)
+      )
+        return;
+      const timer = window.setTimeout(() => {
+        consumeOrcidEditorReturn(window.sessionStorage);
+        setProfileKind(pending.profileKind);
+        setDraftProfile(pending.draft);
+        setEditorState((current) => ({
+          ...createEditorState(pending.draft, current.published),
+          surface: pending.surface,
+          json: pending.json,
+        }));
+      }, 0);
+      return () => window.clearTimeout(timer);
+    } catch {
+      /* Storage can be disabled without blocking ordinary profile editing. */
+    }
+  }, [initialData.schema.allowedKinds, targetEmail]);
+
   const allowedKinds = schema?.allowedKinds.length
     ? schema.allowedKinds
     : [profileKind];
@@ -2449,8 +2501,8 @@ export default function PublicProfileEditor({
         title={targetEmail ? 'Public Profile Admin Edit' : 'Public Profile'}
         description={
           targetEmail
-            ? `Edit ${targetName || targetEmail}'s public people-directory profile and submit it through an automated GitHub PR.`
-            : 'Edit the public people directory profile and submit it through an automated GitHub PR.'
+            ? `Manage ${targetName || targetEmail}'s public people-directory profile.`
+            : 'Manage your public people-directory profile.'
         }
         action={
           <Button variant="outline" onClick={refresh} disabled={loading}>
@@ -2460,15 +2512,13 @@ export default function PublicProfileEditor({
         }
       />
 
-      <PublicationNotice scope={`profile:${targetEmail ?? 'self'}`} />
-
       <Card>
         <CardHeader>
-          <CardTitle>Public picture</CardTitle>
+          <CardTitle>Profile Picture</CardTitle>
           <CardDescription>
             {targetEmail
               ? `View or remove the picture shown for ${targetName || targetEmail} in the People directory.`
-              : 'Change the picture shown in the People directory on its own page.'}
+              : 'Manage the picture shown in the People directory independently of profile details.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -2485,63 +2535,24 @@ export default function PublicProfileEditor({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Pending PR</CardTitle>
-          <CardDescription>
-            Edits update the current open PR. After it is merged, the next edit
-            creates a new PR.
-          </CardDescription>
-        </CardHeader>
-        <CardContent
-          className="flex flex-col gap-3 sm:flex-row sm:items-center
-            sm:justify-between"
-        >
-          <div className="space-y-2">
-            <Badge
-              variant="outline"
-              className={statusBadgeClass(pr?.status ?? 'none')}
-            >
-              {pr?.status ?? 'none'}
-            </Badge>
-            {pr?.branch ? (
-              <p className="text-muted-foreground text-sm">{pr.branch}</p>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {pr?.url ? (
-              <a
-                href={pr.url}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonVariants({
-                  variant: 'outline',
-                  className: statusButtonClass(pr.status),
-                })}
-              >
-                <ExternalLink className="mr-2 size-4" />
-                Open PR #{pr.number}
-              </a>
-            ) : null}
-            {targetEmail && pr?.status === 'open' && pr.number && pr.headSha ? (
-              <Button
-                variant="outline"
-                onClick={() => void discardDraft()}
-                disabled={discarding}
-                className="border-destructive/40 text-destructive
-                  hover:bg-destructive/10"
-              >
-                <XCircle className="mr-2 size-4" />
-                {discarding ? 'Discarding...' : 'Discard draft'}
-              </Button>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+      {!targetEmail && (
+        <OrcidConnection
+          inPublicProfile
+          onBeforeNavigate={() =>
+            saveOrcidEditorReturn(window.sessionStorage, {
+              path: window.location.pathname,
+              profileKind,
+              draft: editorState.draft,
+              surface: editorState.surface,
+              json: editorState.json,
+            })
+          }
+        />
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile editor</CardTitle>
+          <CardTitle>Public Profile Details</CardTitle>
           <CardDescription>
             {hasOpenDraft
               ? 'An unmerged PR draft exists. Submitting updates that same draft.'
@@ -2549,6 +2560,58 @@ export default function PublicProfileEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <PublicationNotice scope={`profile:${targetEmail ?? 'self'}`} />
+          {pr?.status !== 'none' && (
+            <div
+              className="flex flex-col gap-3 sm:flex-row sm:items-center
+                sm:justify-between"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={statusBadgeClass(pr.status)}
+                >
+                  {statusLabel(pr.status)}
+                </Badge>
+                {pr.branch && (
+                  <span className="text-muted-foreground text-sm">
+                    {pr.branch}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {pr.url && (
+                  <a
+                    href={pr.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={buttonVariants({
+                      variant: 'outline',
+                      className: statusButtonClass(pr.status),
+                    })}
+                  >
+                    <ExternalLink className="mr-2 size-4" />
+                    Open PR #{pr.number}
+                  </a>
+                )}
+                {targetEmail &&
+                  pr.status === 'open' &&
+                  pr.number &&
+                  pr.headSha && (
+                    <Button
+                      variant="outline"
+                      onClick={() => void discardDraft()}
+                      disabled={discarding}
+                      className="border-destructive/40 text-destructive
+                        hover:bg-destructive/10"
+                    >
+                      <XCircle className="mr-2 size-4" />
+                      {discarding ? 'Discarding...' : 'Discard draft'}
+                    </Button>
+                  )}
+              </div>
+            </div>
+          )}
           <EditorWorkspace
             state={editorState}
             onStateChange={(nextState) => {

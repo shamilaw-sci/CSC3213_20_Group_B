@@ -85,6 +85,7 @@ import {
   SiZenodo,
 } from 'react-icons/si';
 
+import { VerifiedOrcidLink } from '@/components/people/verified-orcid-link';
 import { avatarUrlForPerson } from '@/lib/avatar-url';
 import { getOrcidWorks, type ResearchOutput } from '@/lib/orcid-works';
 import {
@@ -329,6 +330,7 @@ interface ProfileLink {
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
   iconUrl?: string;
   priority: 'primary' | 'secondary';
+  verifiedOrcid?: boolean;
 }
 
 interface ProfileField {
@@ -583,10 +585,11 @@ function getProfileLinks(
 
   if (verifiedOrcid)
     links.push({
-      label: `Verified ORCID ${verifiedOrcid}`,
+      label: 'ORCID',
       href: `https://orcid.org/${verifiedOrcid}`,
-      icon: SiOrcid,
+      icon: FaOrcid,
       priority: 'primary',
+      verifiedOrcid: true,
     });
   return [...links, ...getSocialProfileLinks(socialLinks)];
 }
@@ -606,6 +609,8 @@ function ProfileLinkList({
   return (
     <div className="grid gap-2">
       {visibleLinks.map((link) => {
+        if (link.verifiedOrcid)
+          return <VerifiedOrcidLink key={link.href} href={link.href} />;
         const Icon = link.icon;
         return (
           <a
@@ -646,6 +651,8 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {links.map((link) => {
+        if (link.verifiedOrcid)
+          return <VerifiedOrcidLink key={link.href} href={link.href} compact />;
         const Icon = link.icon;
         return (
           <a

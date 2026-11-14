@@ -70,6 +70,25 @@ describe('guided public profile editor', () => {
     expect(adminRoute).toContain('initialData={initialData}');
   });
 
+  test('keeps independent picture and ORCID actions before PR details', () => {
+    const editor = profileComponent('public-profile-editor.tsx');
+    const picture = editor.indexOf('<CardTitle>Profile Picture</CardTitle>');
+    const orcid = editor.indexOf('<OrcidConnection');
+    const details = editor.indexOf(
+      '<CardTitle>Public Profile Details</CardTitle>'
+    );
+    const notice = editor.indexOf('<PublicationNotice');
+
+    expect(picture).toBeGreaterThan(0);
+    expect(orcid).toBeGreaterThan(picture);
+    expect(details).toBeGreaterThan(orcid);
+    expect(notice).toBeGreaterThan(details);
+    expect(editor).not.toContain('<CardTitle>Pending PR</CardTitle>');
+    expect(editor).not.toContain('Edits update the current open PR.');
+    expect(editor).toContain("pr?.status !== 'none'");
+    expect(editor).toContain('submitLabel="Submit Profile Changes"');
+  });
+
   test('removes the superseded editor selector after migration', () => {
     expect(
       existsSync(

@@ -8,6 +8,7 @@ import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import { BackButton } from '@/components/navigation/back-button';
 import ProfileContent from '@/components/profiles/account-content';
 import { apiHeaders, meApiUrl } from '@/lib/api';
+import { readOrcidEditorReturn } from '@/lib/orcid-editor-return';
 
 interface ProfileData {
   id: string;
@@ -28,6 +29,17 @@ export default function Settings({ from }: SettingsProps) {
   const [user, setUser] = useState<ProfileData | null>(null);
   const fallbackHref = from === 'profile' ? '/user/me' : '/dashboard';
   const label = from === 'profile' ? 'Back to Info' : 'Back to Dashboard';
+
+  useEffect(() => {
+    const status = new URL(window.location.href).searchParams.get('orcid');
+    if (status !== 'connected' && status !== 'failed') return;
+    try {
+      const pending = readOrcidEditorReturn(window.sessionStorage);
+      if (pending) router.replace(`${pending.path}?orcid=${status}`);
+    } catch {
+      /* Storage can be disabled; account settings remains the callback destination. */
+    }
+  }, [router]);
 
   useEffect(() => {
     let mounted = true;

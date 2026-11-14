@@ -1,3 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip/schema.json"
+  "$schema": "https://unpkg.com/knip/schema.json",
+  "ignore": ["tests/fixtures/*.fixture.tsx"],
+  "ignoreDependencies": ["@testing-library/react", "@types/jsdom", "jsdom"]
 }
