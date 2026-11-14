@@ -8,6 +8,7 @@ describe('mailer request validation', () => {
       to: 'student@eng.pdn.ac.lk',
       template: {
         name: 'portal-sign-in-otp',
+        origin: 'https://portal.scs-pdn.space',
         props: {
           otp: '123456',
           expiresInMinutes: 5,
@@ -21,6 +22,7 @@ describe('mailer request validation', () => {
       to: 'student@eng.pdn.ac.lk',
       template: {
         name: 'portal-sign-in-otp',
+        origin: 'https://portal.scs-pdn.space',
         props: {
           otp: '123456',
           expiresInMinutes: 5,

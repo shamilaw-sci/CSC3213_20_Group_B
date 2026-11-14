@@ -12,6 +12,7 @@ describe('mailer send request contract', () => {
       to: 'student@eng.pdn.ac.lk',
       template: {
         name: 'portal-sign-in-otp',
+        origin: 'https://portal.scs-pdn.space',
         props: {
           otp: '123456',
           expiresInMinutes: 5,
@@ -22,11 +23,29 @@ describe('mailer send request contract', () => {
     expect(result.success).toBe(true);
   });
 
+  test.each([
+    'https://portal.scs.pdn.ac.lk',
+    'http://localhost:3000',
+    'http://portal.scs-pdn.localhost:3000',
+  ])('accepts a canonical trusted Portal origin form: %s', (origin) => {
+    expect(
+      MailerSendRequestSchema.safeParse({
+        to: 'student@eng.pdn.ac.lk',
+        template: {
+          name: 'portal-sign-in-otp',
+          origin,
+          props: { otp: '000042', expiresInMinutes: 5 },
+        },
+      }).success
+    ).toBe(true);
+  });
+
   test('rejects malformed OTP template props at the service boundary', () => {
     const result = MailerSendRequestSchema.safeParse({
       to: 'student@eng.pdn.ac.lk',
       template: {
         name: 'portal-sign-in-otp',
+        origin: 'https://portal.scs-pdn.space',
         props: {
           otp: '<strong>123456</strong>',
           expiresInMinutes: 0,
@@ -46,6 +65,25 @@ describe('mailer send request contract', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  test.each([
+    'https://portal.scs-pdn.space/login',
+    'https://portal.scs-pdn.space:443',
+    'https://user@portal.scs-pdn.space',
+    'http://portal.scs-pdn.space',
+    'https://portal.scs-pdn.space\r\nX-Injected: true',
+  ])('rejects a noncanonical or unsafe OTP origin: %s', (origin) => {
+    expect(
+      MailerSendRequestSchema.safeParse({
+        to: 'student@eng.pdn.ac.lk',
+        template: {
+          name: 'portal-sign-in-otp',
+          origin,
+          props: { otp: '123456', expiresInMinutes: 5 },
+        },
+      }).success
+    ).toBe(false);
   });
 });
 

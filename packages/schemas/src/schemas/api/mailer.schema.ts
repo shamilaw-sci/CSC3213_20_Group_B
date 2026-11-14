@@ -5,6 +5,21 @@ const MailRecipientSchema = z.union([
   z.array(z.email()).min(1).max(50),
 ]);
 
+const OtpOriginSchema = z.url().refine((value) => {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return (
+    url.origin === value &&
+    !url.username &&
+    !url.password &&
+    (url.protocol === 'https:' ||
+      (url.protocol === 'http:' &&
+        (url.hostname === 'localhost' ||
+          url.hostname.endsWith('.localhost') ||
+          ['127.0.0.1', '[::1]'].includes(url.hostname))))
+  );
+});
+
 const RawMailerSendRequestSchema = z
   .object({
     to: MailRecipientSchema,
@@ -27,6 +42,7 @@ const PortalSignInOtpRequestSchema = z
     template: z
       .object({
         name: z.literal('portal-sign-in-otp'),
+        origin: OtpOriginSchema,
         props: z
           .object({
             otp: z.string().regex(/^\d{6}$/),

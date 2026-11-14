@@ -34,10 +34,15 @@ named template must preserve both forms. Do not make essential content depend
 on remote images, custom fonts, client-side JavaScript, hover, or dark-mode
 support.
 
-The experimental `OTP-Token` Internet-Draft header is not emitted. The API
-accepts multiple Portal origins, while the draft requires a canonical origin
-for each code, and Gmail has not documented support for the header as a way to
-enable its Copy code action.
+For Portal login mail only, Nodemailer's native `otp` option adds one top-level
+`OTP-Token` header with the same six-digit code and the origin of the Portal
+request. The API accepts that origin only when it exactly matches its configured
+trusted origins; the Mailer contract also requires a canonical HTTPS origin (or
+an HTTP loopback origin for local development). Invalid values fail the send.
+This header is based on an [Internet-Draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/),
+and Gmail has not documented that it enables Copy code. Remove the `otp` option
+from `resolveMailMessage` to disable the experimental header without changing
+the visible template or SMTP transport.
 
 ## Adding a template safely
 
@@ -79,6 +84,12 @@ Use a non-production recipient and verify:
    expiry;
 5. the message renders legibly with images disabled; and
 6. provider logs show acceptance without application logs exposing content.
+
+For a manual Gmail check, send a test code only with operator authorization,
+open the received message, choose **More → Show original**, and inspect the
+top-level `OTP-Token` header and authentication results. Local MIME tests prove
+only what Nodemailer composes; they cannot prove iCloud preserves the header or
+that Gmail offers Copy code.
 
 Source tests must not use real SMTP credentials. Record provider-side delivery
 as a credential-dependent check, not as part of the unit-suite result.

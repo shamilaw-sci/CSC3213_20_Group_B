@@ -1,9 +1,89 @@
 import { describe, expect, test } from 'bun:test';
 
-import { createAuth, validateAuthUserInfo } from '@/auth/auth';
+import {
+  createAuth,
+  trustedOtpOrigin,
+  validateAuthUserInfo,
+} from '@/auth/auth';
 import { createTestEnv } from 'test/helpers/create-test-env';
 
 const PORTAL_ORIGIN = 'https://portal.scs-pdn.space';
+
+test('binds OTP mail only to an explicitly trusted request origin', () => {
+  const env = createTestEnv();
+  for (const origin of [PORTAL_ORIGIN, 'https://portal.scs.pdn.ac.lk']) {
+    expect(
+      trustedOtpOrigin(
+        new Request(
+          'https://api.scs-pdn.space/api/auth/email-otp/send-verification-otp',
+          {
+            method: 'POST',
+            headers: { Origin: origin },
+          }
+        ),
+        env
+      )
+    ).toBe(origin);
+  }
+
+  expect(() =>
+    trustedOtpOrigin(
+      new Request(
+        'https://api.scs-pdn.space/api/auth/email-otp/send-verification-otp',
+        {
+          method: 'POST',
+          headers: {
+            Origin: 'https://attacker.example',
+            Host: 'portal.scs-pdn.space',
+          },
+        }
+      ),
+      env
+    )
+  ).toThrow('Portal OTP request origin is not trusted');
+  expect(() =>
+    trustedOtpOrigin(new Request('https://api.scs-pdn.space'), env)
+  ).toThrow('Portal OTP request origin is not trusted');
+
+  expect(
+    trustedOtpOrigin(
+      new Request(
+        'https://api.scs-pdn.space/api/auth/email-otp/send-verification-otp',
+        {
+          method: 'POST',
+          headers: { Referer: `${PORTAL_ORIGIN}/login` },
+        }
+      ),
+      env
+    )
+  ).toBe(PORTAL_ORIGIN);
+  expect(() =>
+    trustedOtpOrigin(
+      new Request(
+        'https://api.scs-pdn.space/api/auth/email-otp/send-verification-otp',
+        {
+          method: 'POST',
+          headers: { Referer: 'https://attacker.example/login' },
+        }
+      ),
+      env
+    )
+  ).toThrow('Portal OTP request origin is not trusted');
+
+  const stagingOrigin = 'https://portal.staging.example';
+  expect(
+    trustedOtpOrigin(
+      new Request(
+        'https://api.staging.example/api/auth/email-otp/send-verification-otp',
+        {
+          method: 'POST',
+          headers: { Origin: stagingOrigin },
+        }
+      ),
+      createTestEnv({ ALLOWED_ORIGINS: [stagingOrigin] })
+    )
+  ).toBe(stagingOrigin);
+});
 
 describe('Better Auth account-linking policy', () => {
   test('links exact verified OAuth emails to verified migrated users', () => {

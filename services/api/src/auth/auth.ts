@@ -66,6 +66,19 @@ function requestOrigin(request: Request, env: Env): string {
   );
 }
 
+export function trustedOtpOrigin(request: Request, env: Env): string {
+  // Bind the email header to the browser's trusted Portal origin, never Host or proxy headers.
+  const originHeader = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const origin =
+    originHeader ??
+    (referer && URL.canParse(referer) ? new URL(referer).origin : null);
+  if (!origin || !(env.ALLOWED_ORIGINS ?? ALLOWED_ORIGINS).includes(origin)) {
+    throw new Error('Portal OTP request origin is not trusted');
+  }
+  return origin;
+}
+
 function passkeyRpId(request: Request, env: Env): string {
   return (
     env.PASSKEY_RP_ID ??
@@ -196,6 +209,7 @@ export function authOptions(request: Request, env: Env) {
             email,
             otp,
             OTP_EXPIRES_IN_SECONDS / 60,
+            trustedOtpOrigin(request, env),
             env.MAILER_API_URL,
             env.MAILER_API_KEY
           );

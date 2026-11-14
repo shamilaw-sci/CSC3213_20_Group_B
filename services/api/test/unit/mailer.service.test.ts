@@ -19,6 +19,7 @@ test('sends OTP data as a named template without raw email markup', async () => 
     'student@eng.pdn.ac.lk',
     '123456',
     5,
+    'https://portal.scs-pdn.space',
     'https://mailer.example.test',
     'test-api-key'
   );
@@ -30,6 +31,7 @@ test('sends OTP data as a named template without raw email markup', async () => 
     to: 'student@eng.pdn.ac.lk',
     template: {
       name: 'portal-sign-in-otp',
+      origin: 'https://portal.scs-pdn.space',
       props: {
         otp: '123456',
         expiresInMinutes: 5,
@@ -51,6 +53,7 @@ test('does not include an upstream HTML document in a mailer error', async () =>
       'student@eng.pdn.ac.lk',
       '123456',
       5,
+      'https://portal.scs-pdn.space',
       'https://mailer.example.test',
       'test-api-key'
     )
@@ -67,6 +70,7 @@ test('preserves a validated Mailer error message', async () => {
       'student@eng.pdn.ac.lk',
       '123456',
       5,
+      'https://portal.scs-pdn.space',
       'https://mailer.example.test',
       'test-api-key'
     )
@@ -83,6 +87,7 @@ test('rejects a malformed successful Mailer response', async () => {
       'student@eng.pdn.ac.lk',
       '123456',
       5,
+      'https://portal.scs-pdn.space',
       'https://mailer.example.test',
       'test-api-key'
     )

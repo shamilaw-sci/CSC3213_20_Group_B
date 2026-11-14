@@ -40,6 +40,7 @@ export async function sendPortalSignInOtpEmail(
   to: string,
   otp: string,
   expiresInMinutes: number,
+  origin: string,
   apiUrl: string,
   apiKey: string
 ): Promise<MailerSendResponse> {
@@ -47,6 +48,7 @@ export async function sendPortalSignInOtpEmail(
     to,
     template: {
       name: 'portal-sign-in-otp',
+      origin,
       props: { otp, expiresInMinutes },
     },
   } satisfies PortalSignInOtpRequest;

@@ -325,6 +325,7 @@ instead of presentation markup. The Portal sign-in request is:
   "to": "user@pdn.ac.lk",
   "template": {
     "name": "portal-sign-in-otp",
+    "origin": "https://portal.scs-pdn.space",
     "props": {
       "otp": "123456",
       "expiresInMinutes": 5
@@ -336,7 +337,9 @@ instead of presentation markup. The Portal sign-in request is:
 The mailer owns the template subject and renders both HTML and plain text with
 React Email before SMTP delivery. `to` contains 1–50 valid addresses. Raw
 requests require a non-empty `subject` and at least one of `html` or `text`;
-the OTP template requires a six-digit code and an expiry from 1–60 minutes.
+the OTP template requires a six-digit code, an expiry from 1–60 minutes, and
+the canonical Portal origin bound to the code. The API selects that origin from
+its configured trusted origins before calling the Mailer.
 Success returns `{ "ok": true }`; validation, authentication, and upstream
 SMTP failures return `400`, `401`, and `502`.
 

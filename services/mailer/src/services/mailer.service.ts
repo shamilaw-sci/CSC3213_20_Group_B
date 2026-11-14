@@ -10,6 +10,7 @@ interface ResolvedMailMessage {
   subject: string;
   html?: string;
   text?: string;
+  otp?: { code: string; origin: string };
 }
 
 /** Reuse one SMTP transport so warm requests can reuse pooled connections. */
@@ -31,6 +32,10 @@ export async function resolveMailMessage(
     return {
       to: payload.to,
       subject: `${payload.template.props.otp} - Your SCS Portal login code`,
+      otp: {
+        code: payload.template.props.otp,
+        origin: payload.template.origin,
+      },
       html: await render(email),
       text: await render(email, { plainText: true }),
     };
