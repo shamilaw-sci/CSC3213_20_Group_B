@@ -22,11 +22,13 @@ import { UopLogoIcon } from '@/components/icons/uop-logo';
 import { authClient } from '@/lib/auth-client';
 
 const signedOutNavigation = [
+  { href: '/playground', label: 'Playground' },
   { href: '/login', label: 'Sign in' },
   { href: '/signup', label: 'Create account' },
 ] as const;
 
 const signedInNavigation = [
+  { href: '/playground', label: 'Playground' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/user/me', label: 'Account' },
 ] as const;

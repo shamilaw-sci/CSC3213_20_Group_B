@@ -23,6 +23,12 @@ For implementation-level behavior, use the
 ## Route areas
 
 - `/login`, `/signup`, `/privacy`, and `/tos` cover entry and policy.
+- `/playground` is a public, local-only form and JSON editor for manual data
+  repository pull requests. It validates against the bundled shared schemas,
+  shows the authoritative target file, and copies a record or path without
+  submitting data. Courses and offerings are records inside collection arrays;
+  people and projects are individual files. Manual editors must compare an
+  existing file before replacing it and run the data repository checks.
 - `/.well-known/security.txt` serves the authoritative RFC 9116 document;
   `/privacy#security-reporting` is its reporting policy.
 - `/dashboard` and `/account/*` cover the current account.
