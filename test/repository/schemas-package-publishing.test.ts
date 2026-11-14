@@ -29,6 +29,7 @@ describe('private schemas package publishing', () => {
       'SCHEMAS_VERSION: 0.${{ github.run_number }}.${{ github.run_attempt }}'
     );
     expect(workflow).toContain('npm publish packages/schemas/package');
+    expect(workflow).toContain('Smoke test prepared package');
     expect(workflow).toContain('NODE_AUTH_TOKEN: ${{ github.token }}');
     expect(workflow).toContain(
       'NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/schemas-package.npmrc'

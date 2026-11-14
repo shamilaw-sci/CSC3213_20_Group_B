@@ -25,6 +25,11 @@ const manifest = {
     },
   },
   imports: {
+    '#operation-identity': {
+      types: './dist/operation-identity.d.ts',
+      import: './dist/operation-identity.js',
+      default: './dist/operation-identity.js',
+    },
     '#schemas/*': {
       types: './dist/schemas/*.d.ts',
       import: './dist/schemas/*.js',

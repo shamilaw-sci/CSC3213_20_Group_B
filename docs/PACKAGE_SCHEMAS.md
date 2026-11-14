@@ -52,6 +52,8 @@ Every verified push to `main` that changes `packages/schemas/**` publishes a
 new immutable version. The version is generated as
 `0.<workflow run number>.<run attempt>`, and the artifact contains only the
 prepared package metadata, compiled JavaScript, declarations, and license.
+The publish workflow imports the prepared artifact before uploading it, so
+unresolved internal imports cannot reach consumers.
 Consumers should pin an exact version and upgrade deliberately after a
 successful publish rather than use a moving range.
 

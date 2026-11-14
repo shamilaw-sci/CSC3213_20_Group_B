@@ -47,6 +47,10 @@ jobs:
         run: |
           bun packages/schemas/scripts/prepare-github-package.ts
 
+      - name: Smoke test prepared package
+        run: |
+          bun -e "import('./packages/schemas/package/dist/index.js').then((pkg) => { if (!pkg.CourseSchema) throw new Error('CourseSchema export missing') })"
+
       - name: Publish private package
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
