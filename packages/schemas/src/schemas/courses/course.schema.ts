@@ -14,7 +14,8 @@ export const CourseSchema = z
     primaryCode: CourseCodeSchema,
     codes: z.array(CourseCodeSchema).min(1),
     title: z.string().trim().min(1),
-    credits: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(6)]),
+    credits: z.number().int().min(0).max(10),
+    nonGpa: z.boolean().optional(),
     departments: z.array(AcademicDepartmentCodeSchema).default([]),
   })
   .refine(

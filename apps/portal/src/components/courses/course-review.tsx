@@ -10,11 +10,12 @@ import {
 
 export interface CourseRecord {
   codes: string[];
-  credits: 1 | 2 | 3 | 6;
+  credits: number;
   departments: string[];
   id: string;
   primaryCode: string;
   title: string;
+  nonGpa?: boolean;
 }
 
 interface CourseReviewProps {
@@ -44,6 +45,16 @@ export function CourseReview({
       label: 'Credits',
       after: String(draft.credits),
       before: before ? String(before.credits) : undefined,
+    },
+    {
+      field: 'course-details',
+      label: 'GPA status',
+      after: draft.nonGpa ? 'Non GPA course' : 'Counts toward GPA',
+      before: before
+        ? before.nonGpa
+          ? 'Non GPA course'
+          : 'Counts toward GPA'
+        : undefined,
     },
     {
       field: 'course-codes',

@@ -24,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import { Checkbox } from '@scs/ui/components/checkbox';
 import { Field, FieldGroup, FieldLabel } from '@scs/ui/components/field';
 import { Input } from '@scs/ui/components/input';
 import {
@@ -56,6 +57,7 @@ import {
   type EditorState,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { useFieldValidation } from '@/components/editor/field-validation';
 import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
@@ -111,7 +113,6 @@ const ACADEMIC_DEPARTMENT_LABELS = Object.fromEntries(
     department.name,
   ])
 ) as Record<(typeof ACADEMIC_DEPARTMENTS)[number], string>;
-const CREDIT_OPTIONS = [1, 2, 3, 6] as const;
 const STAFF_ROLES = CourseStaffSchema.shape.role.options;
 
 const COURSE_EDITOR_SECTIONS = [
@@ -170,13 +171,27 @@ function courseFromRecord(value: unknown): CourseRecord | null {
     ? value.codes.filter((code): code is string => typeof code === 'string')
     : [];
   const title = typeof value.title === 'string' ? value.title : '';
-  const credits = CREDIT_OPTIONS.includes(value.credits as 1 | 2 | 3 | 6)
-    ? (value.credits as 1 | 2 | 3 | 6)
-    : 3;
+  const credits =
+    typeof value.credits === 'number' &&
+    Number.isFinite(value.credits) &&
+    Number.isInteger(value.credits) &&
+    value.credits >= 0 &&
+    value.credits <= 10
+      ? value.credits
+      : 3;
+  const nonGpa = value.nonGpa === true ? true : undefined;
   const departments = uniqueDepartments(value.departments);
 
   if (!id || !primaryCode || !title || codes.length === 0) return null;
-  return { id, primaryCode, codes, title, credits, departments };
+  return {
+    id,
+    primaryCode,
+    codes,
+    title,
+    credits,
+    departments,
+    ...(nonGpa ? { nonGpa } : {}),
+  };
 }
 
 function validateCourseDraft(value: unknown) {
@@ -1016,6 +1031,10 @@ export function CourseForm({
   onChange: (course: CourseRecord) => void;
 }) {
   const [codeDraft, setCodeDraft] = useState('');
+  const idValidation = useFieldValidation('id');
+  const titleValidation = useFieldValidation('title');
+  const creditsValidation = useFieldValidation('credits');
+  const codeValidation = useFieldValidation('primaryCode');
 
   function setField<K extends keyof CourseRecord>(
     field: K,
@@ -1055,45 +1074,94 @@ export function CourseForm({
       <CourseDetailsSection>
         <FieldGroup className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="course-id">Course ID</FieldLabel>
+            <FieldLabel htmlFor={idValidation.id ?? 'course-id'}>
+              Course ID
+            </FieldLabel>
             <Input
-              id="course-id"
+              id={idValidation.id ?? 'course-id'}
+              aria-invalid={!!idValidation.error}
+              aria-describedby={
+                idValidation.error ? 'course-id-error' : undefined
+              }
               value={course.id}
               readOnly={readOnly}
               onChange={(event) => setField('id', slugify(event.target.value))}
             />
+            {idValidation.error ? (
+              <p id="course-id-error" className="text-destructive text-xs">
+                {idValidation.error}
+              </p>
+            ) : null}
           </Field>
           <Field className="md:col-span-2">
-            <FieldLabel htmlFor="course-title">Title</FieldLabel>
+            <FieldLabel htmlFor={titleValidation.id ?? 'course-title'}>
+              Title
+            </FieldLabel>
             <Input
-              id="course-title"
+              id={titleValidation.id ?? 'course-title'}
+              aria-invalid={!!titleValidation.error}
+              aria-describedby={
+                titleValidation.error ? 'course-title-error' : undefined
+              }
               value={course.title}
               readOnly={readOnly}
               onChange={(event) => setField('title', event.target.value)}
             />
+            {titleValidation.error ? (
+              <p id="course-title-error" className="text-destructive text-xs">
+                {titleValidation.error}
+              </p>
+            ) : null}
           </Field>
           <Field>
-            <FieldLabel htmlFor="course-credits">Credits</FieldLabel>
-            <Select
-              value={String(course.credits)}
-              disabled={readOnly}
-              onValueChange={(value) => {
-                if (value !== null) {
-                  setField('credits', Number(value) as 1 | 2 | 3 | 6);
+            <FieldLabel htmlFor={creditsValidation.id ?? 'course-credits'}>
+              Credits (0–10)
+            </FieldLabel>
+            <Input
+              id={creditsValidation.id ?? 'course-credits'}
+              type="number"
+              min={0}
+              max={10}
+              step={1}
+              value={Number.isFinite(course.credits) ? course.credits : ''}
+              readOnly={readOnly}
+              aria-invalid={!!creditsValidation.error}
+              aria-describedby={
+                creditsValidation.error ? 'course-credits-error' : undefined
+              }
+              onChange={(event) =>
+                setField(
+                  'credits',
+                  event.target.value === ''
+                    ? Number.NaN
+                    : Number(event.target.value)
+                )
+              }
+            />
+            {creditsValidation.error ? (
+              <p id="course-credits-error" className="text-destructive text-xs">
+                {creditsValidation.error}
+              </p>
+            ) : null}
+          </Field>
+          <Field className="md:col-span-2">
+            <div className="flex items-start gap-3 rounded-md border p-3">
+              <Checkbox
+                id="course-non-gpa"
+                checked={course.nonGpa === true}
+                disabled={readOnly}
+                onCheckedChange={(checked) =>
+                  setField('nonGpa', checked ? true : undefined)
                 }
-              }}
-            >
-              <SelectTrigger id="course-credits" className="w-full">
-                <SelectValue placeholder="Select credits" />
-              </SelectTrigger>
-              <SelectContent>
-                {CREDIT_OPTIONS.map((credits) => (
-                  <SelectItem key={credits} value={String(credits)}>
-                    {credits}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              />
+              <div className="space-y-1">
+                <FieldLabel htmlFor="course-non-gpa">Non GPA course</FieldLabel>
+                <p className="text-muted-foreground text-xs">
+                  Mark this when the course does not count toward GPA. Zero
+                  credits and non GPA are separate choices.
+                </p>
+              </div>
+            </div>
           </Field>
         </FieldGroup>
       </CourseDetailsSection>
@@ -1101,9 +1169,15 @@ export function CourseForm({
       <CourseCodesSection>
         <FieldGroup className="grid gap-4">
           <Field>
-            <FieldLabel htmlFor="course-primary-code">Primary Code</FieldLabel>
+            <FieldLabel htmlFor={codeValidation.id ?? 'course-primary-code'}>
+              Primary Code
+            </FieldLabel>
             <Input
-              id="course-primary-code"
+              id={codeValidation.id ?? 'course-primary-code'}
+              aria-invalid={!!codeValidation.error}
+              aria-describedby={
+                codeValidation.error ? 'course-primary-code-error' : undefined
+              }
               value={course.primaryCode}
               readOnly={readOnly}
               placeholder="CSC3213"
@@ -1120,6 +1194,14 @@ export function CourseForm({
                 });
               }}
             />
+            {codeValidation.error ? (
+              <p
+                id="course-primary-code-error"
+                className="text-destructive text-xs"
+              >
+                {codeValidation.error}
+              </p>
+            ) : null}
             <p className="text-muted-foreground text-xs">
               Enter the catalog's primary code. Previous codes remain available
               as alternate codes until removed.
@@ -1214,6 +1296,10 @@ export function OfferingForm({
   const [draft, setDraft] = useState(offering);
   const activeDraft = standalone ? offering : draft;
   const formId = useId();
+  const courseValidation = useFieldValidation('courseId');
+  const idValidation = useFieldValidation('id');
+  const yearValidation = useFieldValidation('academicYear');
+  const semesterValidation = useFieldValidation('semester');
 
   function setField<K extends keyof OfferingRecord>(
     field: K,
@@ -1229,39 +1315,78 @@ export function OfferingForm({
       <FieldGroup className="grid gap-4 md:grid-cols-2">
         {standalone ? (
           <Field>
-            <FieldLabel htmlFor={`${formId}-course-id`}>Course ID</FieldLabel>
+            <FieldLabel htmlFor={courseValidation.id ?? `${formId}-course-id`}>
+              Course ID
+            </FieldLabel>
             <Input
-              id={`${formId}-course-id`}
+              id={courseValidation.id ?? `${formId}-course-id`}
+              aria-invalid={!!courseValidation.error}
+              aria-describedby={
+                courseValidation.error ? `${formId}-course-id-error` : undefined
+              }
               value={activeDraft.courseId}
               readOnly={readOnly}
               onChange={(event) =>
                 setField('courseId', slugify(event.target.value))
               }
             />
+            {courseValidation.error ? (
+              <p
+                id={`${formId}-course-id-error`}
+                className="text-destructive text-xs"
+              >
+                {courseValidation.error}
+              </p>
+            ) : null}
           </Field>
         ) : null}
         <Field>
-          <FieldLabel htmlFor={`${formId}-id`}>Offering ID</FieldLabel>
+          <FieldLabel htmlFor={idValidation.id ?? `${formId}-id`}>
+            Offering ID
+          </FieldLabel>
           <Input
-            id={`${formId}-id`}
+            id={idValidation.id ?? `${formId}-id`}
+            aria-invalid={!!idValidation.error}
+            aria-describedby={
+              idValidation.error ? `${formId}-id-error` : undefined
+            }
             value={activeDraft.id}
             readOnly={readOnly}
             onChange={(event) => setField('id', slugify(event.target.value))}
           />
+          {idValidation.error ? (
+            <p id={`${formId}-id-error`} className="text-destructive text-xs">
+              {idValidation.error}
+            </p>
+          ) : null}
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${formId}-academic-year`}>
+          <FieldLabel htmlFor={yearValidation.id ?? `${formId}-academic-year`}>
             Academic Year
           </FieldLabel>
           <Input
-            id={`${formId}-academic-year`}
+            id={yearValidation.id ?? `${formId}-academic-year`}
+            aria-invalid={!!yearValidation.error}
+            aria-describedby={
+              yearValidation.error ? `${formId}-academic-year-error` : undefined
+            }
             value={activeDraft.academicYear}
             readOnly={readOnly}
             onChange={(event) => setField('academicYear', event.target.value)}
           />
+          {yearValidation.error ? (
+            <p
+              id={`${formId}-academic-year-error`}
+              className="text-destructive text-xs"
+            >
+              {yearValidation.error}
+            </p>
+          ) : null}
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${formId}-semester`}>Semester</FieldLabel>
+          <FieldLabel htmlFor={semesterValidation.id ?? `${formId}-semester`}>
+            Semester
+          </FieldLabel>
           <Select
             value={activeDraft.semester}
             disabled={readOnly}
@@ -1274,7 +1399,16 @@ export function OfferingForm({
               if (parsed.success) setField('semester', parsed.data);
             }}
           >
-            <SelectTrigger id={`${formId}-semester`} className="w-full">
+            <SelectTrigger
+              id={semesterValidation.id ?? `${formId}-semester`}
+              className="w-full"
+              aria-invalid={!!semesterValidation.error}
+              aria-describedby={
+                semesterValidation.error
+                  ? `${formId}-semester-error`
+                  : undefined
+              }
+            >
               <SelectValue placeholder="Select semester" />
             </SelectTrigger>
             <SelectContent>
@@ -1282,6 +1416,14 @@ export function OfferingForm({
               <SelectItem value="SEM2">Semester 2</SelectItem>
             </SelectContent>
           </Select>
+          {semesterValidation.error ? (
+            <p
+              id={`${formId}-semester-error`}
+              className="text-destructive text-xs"
+            >
+              {semesterValidation.error}
+            </p>
+          ) : null}
         </Field>
         <Field className="md:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">

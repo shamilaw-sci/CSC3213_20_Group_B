@@ -37,7 +37,7 @@ describe('CourseSchema', () => {
   });
 
   it('accepts all valid credit values', () => {
-    const credits = [1, 2, 3, 6] as const;
+    const credits = Array.from({ length: 11 }, (_, value) => value);
     for (const creditsValue of credits) {
       expect(() =>
         CourseSchema.parse({ ...validCourse, credits: creditsValue })
@@ -46,7 +46,19 @@ describe('CourseSchema', () => {
   });
 
   it('rejects invalid credit values', () => {
-    expect(() => CourseSchema.parse({ ...validCourse, credits: 4 })).toThrow();
+    for (const credits of [-1, 0.5, 10.1, 11]) {
+      expect(() => CourseSchema.parse({ ...validCourse, credits })).toThrow();
+    }
+  });
+
+  it('marks a course as non GPA without changing existing records', () => {
+    expect(CourseSchema.parse(validCourse)).not.toHaveProperty('nonGpa');
+    expect(CourseSchema.parse({ ...validCourse, nonGpa: true })).toMatchObject({
+      nonGpa: true,
+    });
+    expect(() =>
+      CourseSchema.parse({ ...validCourse, nonGpa: 'true' })
+    ).toThrow();
   });
 
   it('accepts a format-valid course code outside the catalog', () => {

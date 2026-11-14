@@ -18,7 +18,7 @@ flowchart LR
 | ------------------------ | ------------------------------------------------------------------------- |
 | `CourseCodeSchema`       | Normalized department-style course code.                                  |
 | `CourseIdSchema`         | Stable kebab-case course record identifier.                               |
-| `CourseSchema`           | Course identity, codes, title, credits, and departments.                  |
+| `CourseSchema`           | Course identity, codes, title, credits, GPA status, and departments.      |
 | `CourseOfferingIdSchema` | Stable kebab-case offering identifier.                                    |
 | `CourseStaffSchema`      | Academic username and teaching role assignment.                           |
 | `CourseOfferingSchema`   | Course, academic year, semester, staff, and departments for one offering. |
@@ -28,3 +28,8 @@ context without duplicating the course definition. A course can exist without
 an offering. Its primary code is editable in the course catalog; changing it
 adds the new code to the catalog's codes while previous codes remain available
 as alternate codes.
+
+`credits` is a whole number from 0 through 10. Set `nonGpa: true` for a course
+that does not count toward GPA; an omitted flag means it counts toward GPA.
+Credit value and GPA status are independent, so a zero-credit course is not
+automatically non GPA.

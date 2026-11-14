@@ -5,11 +5,13 @@ import type { EditorValidationIssue } from '@/components/editor/editor-state';
 interface ValidationSummaryProps {
   heading?: string;
   issues: readonly EditorValidationIssue[];
+  onFocusField?: (field: string) => void;
 }
 
 export function ValidationSummary({
   heading = 'Check the highlighted fields',
   issues,
+  onFocusField,
 }: ValidationSummaryProps) {
   if (issues.length === 0) return null;
 
@@ -37,7 +39,11 @@ export function ValidationSummary({
               type="button"
               className="hover:text-destructive text-left underline
                 underline-offset-2 focus-visible:outline-none"
-              onClick={() => focusField(issue.field)}
+              onClick={() =>
+                onFocusField
+                  ? onFocusField(issue.field)
+                  : focusField(issue.field)
+              }
             >
               {issue.message}
             </button>

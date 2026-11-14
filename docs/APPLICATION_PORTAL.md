@@ -28,10 +28,13 @@ For implementation-level behavior, use the
   form controls and the shared review and Advanced JSON surfaces. A user may
   optionally load an existing published record from the public data service;
   private account data is never loaded. The playground validates against the
-  bundled shared schemas, shows the authoritative file and related generated
-  files, and copies a record or path without submitting data. Manual editors
-  must compare an existing file before replacing it and run the data repository
-  checks.
+  bundled shared schemas and highlights form errors with plain-language links.
+  Before preparing files, it checks whether the target public record exists.
+  The user can load it or keep the draft and compare. It then shows a JSON card
+  and copy action for each known affected file, with add, replace, or remove
+  guidance based on the currently published collections. It does not submit
+  data. Manual editors must run the data repository generator and checks before
+  a pull request because published collections may lag repository changes.
 - `/.well-known/security.txt` serves the authoritative RFC 9116 document;
   `/privacy#security-reporting` is its reporting policy.
 - `/dashboard` and `/account/*` cover the current account.

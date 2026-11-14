@@ -76,6 +76,7 @@ import {
   type EditorValidationIssue,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { useFieldValidation } from '@/components/editor/field-validation';
 import { PublicationNotice } from '@/components/editor/publication-notice';
 import {
   EditorPageLoading,
@@ -587,6 +588,7 @@ function userCanEditProject(
 
 function TextField({
   label,
+  validationPath,
   value,
   onChange,
   placeholder,
@@ -595,6 +597,7 @@ function TextField({
   readOnly = false,
 }: {
   label: string;
+  validationPath?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -602,7 +605,9 @@ function TextField({
   type?: string;
   readOnly?: boolean;
 }) {
-  const fieldId = useId();
+  const generatedId = useId();
+  const validation = useFieldValidation(validationPath);
+  const fieldId = validation.id ?? generatedId;
   return (
     <div className="space-y-1.5">
       <Label htmlFor={fieldId}>
@@ -616,25 +621,36 @@ function TextField({
         placeholder={placeholder}
         readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
+        aria-invalid={!!validation.error}
+        aria-describedby={validation.error ? `${fieldId}-error` : undefined}
       />
+      {validation.error ? (
+        <p id={`${fieldId}-error`} className="text-destructive text-xs">
+          {validation.error}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function TextAreaField({
   label,
+  validationPath,
   value,
   onChange,
   placeholder,
   readOnly = false,
 }: {
   label: string;
+  validationPath?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   readOnly?: boolean;
 }) {
-  const fieldId = useId();
+  const generatedId = useId();
+  const validation = useFieldValidation(validationPath);
+  const fieldId = validation.id ?? generatedId;
 
   return (
     <div className="space-y-1.5">
@@ -649,25 +665,36 @@ function TextAreaField({
         placeholder={placeholder}
         readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
+        aria-invalid={!!validation.error}
+        aria-describedby={validation.error ? `${fieldId}-error` : undefined}
       />
+      {validation.error ? (
+        <p id={`${fieldId}-error`} className="text-destructive text-xs">
+          {validation.error}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function SelectField({
   label,
+  validationPath,
   value,
   options,
   onChange,
   disabled = false,
 }: {
   label: string;
+  validationPath?: string;
   value: string;
   options: readonly string[];
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
-  const fieldId = useId();
+  const generatedId = useId();
+  const validation = useFieldValidation(validationPath);
+  const fieldId = validation.id ?? generatedId;
   return (
     <div className="space-y-1.5">
       <Label htmlFor={fieldId}>{label}</Label>
@@ -682,7 +709,12 @@ function SelectField({
           if (nextValue !== null) onChange(nextValue);
         }}
       >
-        <SelectTrigger id={fieldId} className="w-full">
+        <SelectTrigger
+          id={fieldId}
+          className="w-full"
+          aria-invalid={!!validation.error}
+          aria-describedby={validation.error ? `${fieldId}-error` : undefined}
+        >
           <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
@@ -693,6 +725,11 @@ function SelectField({
           ))}
         </SelectContent>
       </Select>
+      {validation.error ? (
+        <p id={`${fieldId}-error`} className="text-destructive text-xs">
+          {validation.error}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -1135,6 +1172,7 @@ export function ProjectForm({
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
             label="Title"
+            validationPath="title"
             value={typeof project.title === 'string' ? project.title : ''}
             required
             readOnly={readOnly}
@@ -1164,6 +1202,7 @@ export function ProjectForm({
           />
           <TextField
             label="Slug"
+            validationPath="slug"
             value={typeof project.slug === 'string' ? project.slug : ''}
             required
             readOnly={readOnly || !canEditIdentity}
@@ -1180,6 +1219,7 @@ export function ProjectForm({
           />
           <TextField
             label="ID"
+            validationPath="id"
             value={typeof project.id === 'string' ? project.id : ''}
             required
             readOnly={readOnly || !canEditIdentity}
@@ -1187,6 +1227,7 @@ export function ProjectForm({
           />
           <SelectField
             label="Status"
+            validationPath="status"
             value={
               typeof project.status === 'string' ? project.status : 'PLANNED'
             }
@@ -1197,6 +1238,7 @@ export function ProjectForm({
         </div>
         <TextAreaField
           label="Short Description"
+          validationPath="shortDescription"
           value={
             typeof project.shortDescription === 'string'
               ? project.shortDescription
@@ -1207,6 +1249,7 @@ export function ProjectForm({
         />
         <TextAreaField
           label="Description"
+          validationPath="description"
           value={
             typeof project.description === 'string' ? project.description : ''
           }
@@ -1263,6 +1306,7 @@ export function ProjectForm({
         <div className="grid gap-4 md:grid-cols-2">
           <SelectField
             label="Project Type"
+            validationPath="projectType"
             value={
               projectTypeOptions.includes(projectType) ? projectType : 'OTHER'
             }
@@ -1285,6 +1329,7 @@ export function ProjectForm({
           />
           <TextField
             label="Academic Year"
+            validationPath="academicYear"
             value={
               typeof project.academicYear === 'string'
                 ? project.academicYear
@@ -1351,6 +1396,59 @@ export function ProjectForm({
                   .
                 </p>
               </div>
+              {publicMode ? (
+                <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                  <TextField
+                    label="Course ID"
+                    validationPath="course.courseId"
+                    value={
+                      isRecord(project.course)
+                        ? String(project.course.courseId ?? '')
+                        : ''
+                    }
+                    onChange={(courseId) =>
+                      setField('course', {
+                        ...(isRecord(project.course) ? project.course : {}),
+                        courseId: slugify(courseId),
+                      })
+                    }
+                  />
+                  <TextField
+                    label="Course code"
+                    validationPath="course.code"
+                    value={
+                      isRecord(project.course)
+                        ? String(project.course.code ?? '')
+                        : ''
+                    }
+                    onChange={(code) =>
+                      setField('course', {
+                        ...(isRecord(project.course) ? project.course : {}),
+                        code: code.toUpperCase(),
+                      })
+                    }
+                  />
+                  <TextField
+                    label="Course title"
+                    validationPath="course.title"
+                    value={
+                      isRecord(project.course)
+                        ? String(project.course.title ?? '')
+                        : ''
+                    }
+                    onChange={(title) =>
+                      setField('course', {
+                        ...(isRecord(project.course) ? project.course : {}),
+                        title,
+                      })
+                    }
+                  />
+                  <p className="text-muted-foreground text-xs md:col-span-3">
+                    Enter these manually when the published course list is empty
+                    or does not include the course.
+                  </p>
+                </div>
+              ) : null}
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor={`${formId}-offering`}>Course Offering</Label>
                 <Select
@@ -1466,14 +1564,14 @@ export function ProjectForm({
                       next[index] = {
                         ...person,
                         username,
-                        name: '',
-                        email: undefined,
-                        sNumber: undefined,
+                        name: publicMode ? person.name : '',
+                        email: publicMode ? person.email : undefined,
+                        sNumber: publicMode ? person.sNumber : undefined,
                       };
                       setField('people', next);
                     }}
                     onBlur={(event) => {
-                      if (!readOnly) {
+                      if (!readOnly && (!publicMode || !person.name.trim())) {
                         void applyPersonLookup(
                           index,
                           person,
@@ -1518,7 +1616,47 @@ export function ProjectForm({
                   </div>
                 ) : null}
               </div>
-              {person.name || person.email || person.sNumber ? (
+              {publicMode ? (
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <TextField
+                    label="Name"
+                    validationPath={`people.${index}.name`}
+                    value={person.name ?? ''}
+                    required
+                    onChange={(name) => {
+                      const next = [...people];
+                      next[index] = { ...person, name };
+                      setField('people', next);
+                    }}
+                  />
+                  <TextField
+                    label="Email"
+                    type="email"
+                    validationPath={`people.${index}.email`}
+                    value={person.email ?? ''}
+                    onChange={(email) => {
+                      const next = [...people];
+                      next[index] = { ...person, email: email || undefined };
+                      setField('people', next);
+                    }}
+                  />
+                  <TextField
+                    label="Registration number"
+                    validationPath={`people.${index}.sNumber`}
+                    value={person.sNumber ?? ''}
+                    onChange={(sNumber) => {
+                      const next = [...people];
+                      next[index] = {
+                        ...person,
+                        sNumber: sNumber || undefined,
+                      };
+                      setField('people', next);
+                    }}
+                  />
+                </div>
+              ) : null}
+              {!publicMode &&
+              (person.name || person.email || person.sNumber) ? (
                 <div
                   className="text-muted-foreground mt-3 flex flex-wrap gap-x-6
                     gap-y-2 text-sm"
@@ -1529,11 +1667,11 @@ export function ProjectForm({
                     <span>S Number: {person.sNumber}</span>
                   ) : null}
                 </div>
-              ) : (
+              ) : !publicMode ? (
                 <p className="text-muted-foreground mt-3 text-sm">
                   Directory details not found yet.
                 </p>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
@@ -1545,6 +1683,7 @@ export function ProjectForm({
             <TextField
               key={field}
               label={enumLabel(field)}
+              validationPath={`links.${field}`}
               type="url"
               value={
                 typeof links[field] === 'string' ? (links[field] as string) : ''

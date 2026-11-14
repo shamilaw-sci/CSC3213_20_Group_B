@@ -89,7 +89,7 @@ export const playgroundDefinitions: Record<PlaygroundKind, Definition> = {
       tags: [],
       people: [{ name: '', role: 'student' }],
       links: {},
-      source: { kind: 'MANUAL', curator: '' },
+      source: { kind: 'MANUAL', curator: 'SCS Projects Team' },
       media: {},
       dates: { lastUpdatedAt: '' },
     },
@@ -119,6 +119,15 @@ export const playgroundDefinitions: Record<PlaygroundKind, Definition> = {
     },
   },
 };
+
+export function playgroundInitial(
+  kind: PlaygroundKind
+): Record<string, unknown> {
+  const initial = { ...playgroundDefinitions[kind].initial };
+  if (kind === 'project')
+    initial.dates = { lastUpdatedAt: new Date().toISOString().slice(0, 10) };
+  return initial;
+}
 
 export function playgroundTarget(
   kind: PlaygroundKind,
@@ -185,12 +194,15 @@ export function playgroundPublicPath(
 
 export function playgroundRelatedFiles(
   kind: PlaygroundKind,
-  draft: Record<string, unknown>
+  draft: Record<string, unknown>,
+  published?: Readonly<Record<string, unknown>> | null
 ): string[] {
   if (kind === 'course') return ['public/academic/v2/courses.json'];
   if (kind === 'offering') return ['public/academic/v2/offerings.json'];
   if (kind === 'project') {
-    const people = Array.isArray(draft.people) ? draft.people : [];
+    const people = [draft, published].flatMap((project) =>
+      Array.isArray(project?.people) ? project.people : []
+    );
     const usernames = people.flatMap((person) => {
       if (typeof person !== 'object' || person === null) return [];
       const username = (person as Record<string, unknown>).username;
@@ -209,17 +221,21 @@ export function playgroundRelatedFiles(
   }
   const files = ['public/people/v2/search.json'];
   if (kind === 'student') {
-    const match = /^S(\d{2})/i.exec(String(draft.registrationNo ?? ''));
-    if (match) files.push(`public/people/v2/students/s${match[1]}.json`);
+    for (const profile of [draft, published]) {
+      const match = /^S(\d{2})/i.exec(String(profile?.registrationNo ?? ''));
+      if (match) files.push(`public/people/v2/students/s${match[1]}.json`);
+    }
     files.push('public/people/v2/manifest.json');
-    return files;
+    return [...new Set(files)];
   }
   const staffKind = kind === 'academic' ? 'academic' : kind;
   files.push(`public/people/v2/staff/${staffKind}.json`);
-  const department = String(draft.department ?? '')
-    .toLowerCase()
-    .replaceAll('_', '-');
-  if (department)
-    files.push(`public/people/v2/staff/${department}/${staffKind}.json`);
-  return files;
+  for (const profile of [draft, published]) {
+    const department = String(profile?.department ?? '')
+      .toLowerCase()
+      .replaceAll('_', '-');
+    if (department)
+      files.push(`public/people/v2/staff/${department}/${staffKind}.json`);
+  }
+  return [...new Set(files)];
 }

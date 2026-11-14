@@ -39,15 +39,22 @@ import {
   type EditorValidator,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { FieldValidationProvider } from '@/components/editor/field-validation';
 import { PageHeader, PageShell } from '@/components/layout/page-shell';
 import {
   playgroundDefinitions,
+  playgroundInitial,
   type PlaygroundKind,
   playgroundPublicPath,
   playgroundRecord,
   playgroundRelatedFiles,
   playgroundTarget,
 } from '@/components/playground/playground-data';
+import {
+  type PlaygroundFile,
+  preparePlaygroundFiles,
+} from '@/components/playground/playground-files';
+import { playgroundValidationIssues } from '@/components/playground/playground-validation';
 import type { ProfileRecord } from '@/components/profiles/profile-types';
 import { PublicProfileReview } from '@/components/profiles/public-profile-review';
 import type {
@@ -82,6 +89,13 @@ const OfferingForm = dynamic(
   () =>
     import('@/components/courses/course-editor').then(
       (module) => module.OfferingForm
+    ),
+  { ssr: false }
+);
+const JsonPreview = dynamic(
+  () =>
+    import('@/components/editor/json-preview').then(
+      (module) => module.JsonPreview
     ),
   { ssr: false }
 );
@@ -151,26 +165,37 @@ export function PublicDataPlayground() {
   const [kind, setKind] = useState<PlaygroundKind>('student');
   const [editorState, setEditorState] = useState<
     EditorState<Record<string, unknown>>
-  >(() =>
-    createEditorState({ ...playgroundDefinitions.student.initial }, null)
-  );
+  >(() => createEditorState(playgroundInitial('student'), null));
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseCatalogRecord[]>([]);
   const [offerings, setOfferings] = useState<CourseOfferingRecord[]>([]);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [preparedFiles, setPreparedFiles] = useState<PlaygroundFile[] | null>(
+    null
+  );
+  const [prepareError, setPrepareError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [existingRecord, setExistingRecord] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
 
   const draft = editorState.draft;
   const validation = playgroundRecord(kind, draft);
+  const visibleIssues = validation.success
+    ? { fields: [], summary: [] }
+    : playgroundValidationIssues(kind, validation.error.issues);
   const target = playgroundTarget(kind, draft);
-  const relatedFiles = playgroundRelatedFiles(kind, draft);
+  const relatedFiles = playgroundRelatedFiles(
+    kind,
+    draft,
+    editorState.published
+  );
   const canCopy = Boolean(
     target && validation.success && !editorState.json.dirty
   );
-  const recordText = validation.success
-    ? `${JSON.stringify(validation.data, null, 2)}\n`
-    : '';
 
   useEffect(() => {
     if (kind !== 'project') return;
@@ -225,19 +250,21 @@ export function PublicDataPlayground() {
       return;
     }
     setKind(next);
-    setEditorState(
-      createEditorState({ ...playgroundDefinitions[next].initial }, null)
-    );
+    setEditorState(createEditorState(playgroundInitial(next), null));
     setIdentifier('');
     setLoadError(null);
+    setPreparedFiles(null);
+    setExistingRecord(null);
+    setPrepareError(null);
   }
 
   function startBlank() {
-    setEditorState(
-      createEditorState({ ...playgroundDefinitions[kind].initial }, null)
-    );
+    setEditorState(createEditorState(playgroundInitial(kind), null));
     setIdentifier('');
     setLoadError(null);
+    setPreparedFiles(null);
+    setExistingRecord(null);
+    setPrepareError(null);
   }
 
   async function loadPublished() {
@@ -271,6 +298,8 @@ export function PublicDataPlayground() {
         );
       }
       setEditorState(createEditorState(record, record));
+      setPreparedFiles(null);
+      setExistingRecord(null);
       toast.success('Published record loaded into the form.');
     } catch (error) {
       setLoadError(
@@ -292,6 +321,99 @@ export function PublicDataPlayground() {
         'Clipboard access failed. Select and copy the text manually.'
       );
     }
+  }
+
+  async function prepareFiles(comparison: Record<string, unknown> | null) {
+    if (!target || !validation.success) return;
+    setPreparing(true);
+    setPrepareError(null);
+    try {
+      const base = new URL(publicEnvConfig.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL)
+        .origin;
+      const related = playgroundRelatedFiles(kind, draft, comparison);
+      const files = await preparePlaygroundFiles({
+        kind,
+        record: validation.data as Record<string, unknown>,
+        published: comparison,
+        target,
+        related,
+        base,
+      });
+      setPreparedFiles(files);
+    } catch (error) {
+      setPrepareError(
+        error instanceof Error ? error.message : 'Could not prepare the files.'
+      );
+    } finally {
+      setPreparing(false);
+    }
+  }
+
+  async function checkAndPrepare() {
+    if (!target || !validation.success) return;
+    setPreparing(true);
+    setPrepareError(null);
+    setPreparedFiles(null);
+    try {
+      const base = new URL(publicEnvConfig.NEXT_PUBLIC_PEOPLE_DATA_BASE_URL)
+        .origin;
+      const response = await fetch(
+        `${base}/${target.replace(/^public\//, '')}`,
+        { cache: 'no-store' }
+      );
+      if (response.status !== 404 && !response.ok)
+        throw new Error(
+          `Could not check the existing file (${response.status}).`
+        );
+      if (response.ok) {
+        const value: unknown = await response.json();
+        const parsed = playgroundRecord(kind, value as Record<string, unknown>);
+        if (!parsed.success)
+          throw new Error('The published file does not match this form.');
+        const record = parsed.data as Record<string, unknown>;
+        if (
+          editorState.published &&
+          playgroundTarget(
+            kind,
+            editorState.published as Record<string, unknown>
+          ) !== target
+        ) {
+          throw new Error(
+            'Another published record already uses this new file path. Choose a different identifier before preparing files.'
+          );
+        }
+        if (
+          editorState.published &&
+          JSON.stringify(editorState.published) === JSON.stringify(record)
+        ) {
+          await prepareFiles(record);
+        } else {
+          setExistingRecord(record);
+        }
+      } else {
+        setExistingRecord(null);
+        await prepareFiles(
+          editorState.published as Record<string, unknown> | null
+        );
+      }
+    } catch (error) {
+      setPrepareError(
+        error instanceof Error
+          ? error.message
+          : 'Could not check the existing file.'
+      );
+    } finally {
+      setPreparing(false);
+    }
+  }
+
+  function updatePlaygroundState(next: EditorState<Record<string, unknown>>) {
+    if (next.draft !== editorState.draft) {
+      setPreparedFiles(null);
+      setExistingRecord(null);
+      setPrepareError(null);
+    }
+    setEditorState(next);
   }
 
   return (
@@ -385,238 +507,213 @@ export function PublicDataPlayground() {
 
       <Card>
         <CardContent className="pt-6">
-          <EditorWorkspace
-            state={editorState}
-            onStateChange={setEditorState}
-            title={playgroundDefinitions[kind].label}
-            status={editorState.published ? 'published' : 'new'}
-            statusDetail={
-              editorState.published
-                ? 'Published data is available for comparison.'
-                : 'Start with a blank public record.'
-            }
-            sections={
-              isProfileKind(kind)
-                ? profileSections
-                : kind === 'project'
-                  ? projectSections
-                  : kind === 'course'
-                    ? courseSections
-                    : []
-            }
-            canEditJson
-            canSubmit={false}
-            submitLabel="Copy JSON"
-            onSubmit={() => {}}
-            validateJson={validateDraft(kind)}
-            renderEdit={(value, onChange) => {
-              if (isProfileKind(kind))
+          <FieldValidationProvider issues={visibleIssues.fields}>
+            <EditorWorkspace
+              state={editorState}
+              onStateChange={updatePlaygroundState}
+              title={playgroundDefinitions[kind].label}
+              status={editorState.published ? 'published' : 'new'}
+              statusDetail={
+                editorState.published
+                  ? 'Published data is available for comparison.'
+                  : 'Start with a blank public record.'
+              }
+              sections={
+                isProfileKind(kind)
+                  ? profileSections
+                  : kind === 'project'
+                    ? projectSections
+                    : kind === 'course'
+                      ? courseSections
+                      : []
+              }
+              canEditJson
+              canSubmit={false}
+              submitLabel="Copy JSON"
+              onSubmit={() => {}}
+              validateJson={validateDraft(kind)}
+              validationIssues={visibleIssues.summary}
+              renderEdit={(value, onChange) => {
+                if (isProfileKind(kind))
+                  return (
+                    <ProfileForm
+                      profileKind={kind}
+                      profile={value as ProfileRecord}
+                      lockedFields={[]}
+                      onProfileChange={onChange}
+                    />
+                  );
+                if (kind === 'project')
+                  return (
+                    <ProjectForm
+                      project={value}
+                      onChange={onChange}
+                      canSubmitAnyProject
+                      canEditIdentity
+                      isNew={!editorState.published}
+                      courses={courses}
+                      offerings={offerings}
+                      publicMode
+                    />
+                  );
+                if (kind === 'course')
+                  return (
+                    <CourseForm
+                      course={value as unknown as CourseRecord}
+                      readOnly={false}
+                      onChange={(course) => onChange({ ...course })}
+                    />
+                  );
                 return (
-                  <ProfileForm
-                    profileKind={kind}
-                    profile={value as ProfileRecord}
-                    lockedFields={[]}
-                    onProfileChange={onChange}
-                  />
-                );
-              if (kind === 'project')
-                return (
-                  <ProjectForm
-                    project={value}
-                    onChange={onChange}
-                    canSubmitAnyProject
-                    canEditIdentity
-                    isNew={!editorState.published}
-                    courses={courses}
-                    offerings={offerings}
-                    publicMode
-                  />
-                );
-              if (kind === 'course')
-                return (
-                  <CourseForm
-                    course={value as unknown as CourseRecord}
+                  <OfferingForm
+                    offering={value as unknown as OfferingRecord}
                     readOnly={false}
-                    onChange={(course) => onChange({ ...course })}
+                    standalone
+                    onChange={(offering) => onChange({ ...offering })}
+                    onSave={() => {}}
                   />
                 );
-              return (
-                <OfferingForm
-                  offering={value as unknown as OfferingRecord}
-                  readOnly={false}
-                  standalone
-                  onChange={(offering) => onChange({ ...offering })}
-                  onSave={() => {}}
-                />
-              );
-            }}
-            renderReview={(value, published, onChangeField) => {
-              if (isProfileKind(kind))
+              }}
+              renderReview={(value, published, onChangeField) => {
+                if (isProfileKind(kind))
+                  return (
+                    <PublicProfileReview
+                      profileKind={kind}
+                      draft={value}
+                      published={published}
+                      onChangeField={onChangeField}
+                    />
+                  );
+                if (kind === 'project')
+                  return (
+                    <ProjectReview
+                      draft={value}
+                      published={published}
+                      onChangeField={onChangeField}
+                    />
+                  );
+                if (kind === 'course')
+                  return (
+                    <CourseReview
+                      draft={value as unknown as CourseRecord}
+                      published={published as unknown as CourseRecord | null}
+                      offeringCount={0}
+                      onChangeField={onChangeField}
+                    />
+                  );
                 return (
-                  <PublicProfileReview
-                    profileKind={kind}
-                    draft={value}
-                    published={published}
-                    onChangeField={onChangeField}
-                  />
+                  <pre className="bg-muted overflow-auto rounded-md p-4 text-sm">
+                    {JSON.stringify(value, null, 2)}
+                  </pre>
                 );
-              if (kind === 'project')
-                return (
-                  <ProjectReview
-                    draft={value}
-                    published={published}
-                    onChangeField={onChangeField}
-                  />
-                );
-              if (kind === 'course')
-                return (
-                  <CourseReview
-                    draft={value as unknown as CourseRecord}
-                    published={published as unknown as CourseRecord | null}
-                    offeringCount={0}
-                    onChangeField={onChangeField}
-                  />
-                );
-              return (
-                <pre className="bg-muted overflow-auto rounded-md p-4 text-sm">
-                  {JSON.stringify(value, null, 2)}
-                </pre>
-              );
-            }}
-          />
+              }}
+            />
+          </FieldValidationProvider>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>File to change</CardTitle>
+          <CardTitle>Prepare JSON files</CardTitle>
           <CardDescription>
-            Create or replace this authoritative JSON file in the public data
-            repository.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-3">
-          <code className="bg-muted rounded-md px-3 py-2 text-sm break-all">
-            {target ?? 'Complete the record identifier to see the path'}
-          </code>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!target}
-            onClick={() => {
-              if (target) void copy(target, 'File path');
-            }}
-          >
-            <Copy data-icon="inline-start" />
-            Copy path
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Related generated files</CardTitle>
-          <CardDescription>
-            Run <code>bun run generate</code> in the data repository and include
-            the changed projections in the pull request.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-2">
-            {relatedFiles.map((file) => (
-              <li key={file} className="flex flex-wrap items-center gap-2">
-                <code
-                  className="bg-muted rounded-md px-2 py-1 text-sm break-all"
-                >
-                  {file}
-                </code>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  aria-label={`Copy ${file}`}
-                  onClick={() => void copy(file, 'Related path')}
-                >
-                  <Copy data-icon="inline-start" />
-                  Copy
-                </Button>
-              </li>
-            ))}
-          </ul>
-          {kind === 'student' ? (
-            <p className="text-muted-foreground text-sm">
-              Existing special-programme files under{' '}
-              <code>public/people/v2/special/</code> may also be refreshed.
-              Membership is not available from this form.
-            </p>
-          ) : null}
-          {kind === 'project' ? (
-            <p className="text-muted-foreground text-sm">
-              For an existing project, removed people may have old{' '}
-              <code>by-person</code> files updated or removed.
-            </p>
-          ) : null}
-          {kind === 'course' || kind === 'offering' ? (
-            <p className="text-muted-foreground text-sm">
-              If IDs or references change, review related projects and offerings
-              in the repository.
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Validate and copy</CardTitle>
-          <CardDescription>
-            Validated against the shared schema bundled with this Portal build.
-            Compare an existing file before replacing it.
+            Check the published file first, then prepare every known JSON file
+            with its path and editing guidance.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {canCopy ? (
-            <p className="text-sm">Record is valid and ready to copy.</p>
-          ) : (
+          <code
+            className="bg-muted w-fit rounded-md px-3 py-2 text-sm break-all"
+          >
+            {target ?? 'Complete the record identifier to see the path'}
+          </code>
+          {!canCopy ? (
             <div role="status" className="text-sm">
               <p>
                 Complete the required fields and apply any Advanced JSON edits
-                before copying.
+                before preparing files.
               </p>
               <ul className="mt-2 list-inside list-disc">
                 {!target ? <li>Enter a valid file identifier.</li> : null}
-                {!validation.success
-                  ? validation.error.issues.slice(0, 8).map((issue, index) => (
-                      <li key={`${issue.path.join('.')}-${index}`}>
-                        {issue.path.join('.') || 'Record'}: {issue.message}
-                      </li>
-                    ))
-                  : null}
+                {validation.success ? null : (
+                  <li>
+                    Use the linked errors above the form to find each field.
+                  </li>
+                )}
               </ul>
             </div>
-          )}
-          <div className="flex flex-wrap gap-3">
+          ) : null}
+          <div>
             <Button
               type="button"
-              disabled={!canCopy}
-              onClick={() => {
-                if (canCopy) void copy(recordText, 'JSON record');
-              }}
+              disabled={!canCopy || preparing}
+              onClick={() => void checkAndPrepare()}
             >
-              <Copy data-icon="inline-start" />
-              Copy JSON record
+              {preparing ? 'Checking files…' : 'Check and prepare files'}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!canCopy || !target}
-              onClick={() => {
-                if (canCopy && target)
-                  void copy(`${target}\n\n${recordText}`, 'Path and JSON');
-              }}
+          </div>
+          {existingRecord ? (
+            <div
+              className="border-primary/40 bg-primary/5 space-y-3 rounded-md
+                border p-4"
             >
-              Copy path and JSON
-            </Button>
+              <p className="font-medium">
+                A published record already exists at this path.
+              </p>
+              <p className="text-sm">
+                Load it into the form, or keep what you entered and use the
+                published record to show what to replace.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditorState(
+                      createEditorState(existingRecord, existingRecord)
+                    );
+                    setExistingRecord(null);
+                    setPreparedFiles(null);
+                  }}
+                >
+                  Load published into form
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const comparison = existingRecord;
+                    setEditorState({ ...editorState, published: comparison });
+                    setExistingRecord(null);
+                    void prepareFiles(comparison);
+                  }}
+                >
+                  Keep my draft and compare
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          {prepareError ? (
+            <p role="alert" className="text-destructive text-sm">
+              {prepareError}
+            </p>
+          ) : null}
+          <div className="text-muted-foreground space-y-2 text-sm">
+            <p>
+              Expected files: one record and {relatedFiles.length} related file
+              {relatedFiles.length === 1 ? '' : 's'}.
+            </p>
+            <p>
+              The related JSON uses the currently published collections as a
+              starting point. Run <code>bun run generate</code> and{' '}
+              <code>bun run check</code> in the data repository before the pull
+              request. Other repository changes may alter the final generated
+              files.
+            </p>
+            {kind === 'student' ? (
+              <p>
+                Special-programme files may also change; the repository
+                generator determines their membership.
+              </p>
+            ) : null}
           </div>
           <p className="text-muted-foreground text-sm">
             Open a pull request in the{' '}
@@ -626,10 +723,70 @@ export function PublicDataPlayground() {
             >
               public data repository
             </Link>
-            , edit the path shown above, and run its validation checks.
+            , include the generated files, and review the proposed changes.
           </p>
         </CardContent>
       </Card>
+
+      {preparedFiles?.map((file) => (
+        <Card key={file.path}>
+          <CardHeader>
+            <CardTitle className="text-base break-all">{file.path}</CardTitle>
+            <CardDescription>
+              {file.action === 'create'
+                ? 'Add'
+                : file.action === 'replace'
+                  ? 'Update'
+                  : file.action === 'remove'
+                    ? 'Remove'
+                    : 'No change'}{' '}
+              · {file.guidance}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void copy(file.path, 'File path')}
+              >
+                <Copy data-icon="inline-start" /> Copy path
+              </Button>
+              {file.value !== null ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    void copy(
+                      `${JSON.stringify(file.value, null, 2)}\n`,
+                      'JSON file'
+                    )
+                  }
+                >
+                  <Copy data-icon="inline-start" /> Copy JSON
+                </Button>
+              ) : null}
+            </div>
+            {file.value !== null ? (
+              <details open={file.path === target}>
+                <summary className="cursor-pointer text-sm font-medium">
+                  View JSON
+                </summary>
+                <div
+                  className="mt-3 max-h-96 overflow-auto rounded-md border p-2"
+                >
+                  <JsonPreview value={file.value} monospace />
+                </div>
+              </details>
+            ) : (
+              <p className="text-sm">
+                This file should be deleted after its last entry is removed.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </PageShell>
   );
 }

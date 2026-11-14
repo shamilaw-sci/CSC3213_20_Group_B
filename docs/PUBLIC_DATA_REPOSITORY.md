@@ -28,8 +28,13 @@ pull request and shows the file to edit. Profile records go in
 `public/academic/v2/courses/<id>.json` or
 `public/academic/v2/offerings/<id>.json`. The playground also lists related
 generated files, including the academic `courses.json` and `offerings.json`
-collections. Loading an existing published record is optional and reads only
-the public data service. The playground never submits a PR.
+collections. It checks the public target before preparing file cards. If a
+record exists, the editor may load it or keep a manual draft and compare. Each
+known affected path has copyable JSON or a remove instruction, plus guidance
+for its entry in a shared collection. These proposals start from the currently
+published public collections; they may differ from the data repository's latest
+state. Run `bun run generate` and inspect the PR diff as the authoritative
+projection result. The playground never submits a PR.
 
 From the data repository root, run `bun run check` for typechecking, tests,
 projection freshness, data validation, formatting, and a Worker build. After

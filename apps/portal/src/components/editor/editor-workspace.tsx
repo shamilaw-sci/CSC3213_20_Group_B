@@ -13,6 +13,7 @@ import {
   type EditorState,
   type EditorSurface,
   editorTransitionClass,
+  type EditorValidationIssue,
   type EditorValidator,
   requestEditorSurface,
   updateEditorDraft,
@@ -39,6 +40,7 @@ interface EditorWorkspaceProps<T extends object> {
   submitting?: boolean;
   title: string;
   validateJson: EditorValidator<T>;
+  validationIssues?: readonly EditorValidationIssue[];
 }
 
 const surfaceLabels: Record<EditorSurface, string> = {
@@ -62,6 +64,7 @@ export function EditorWorkspace<T extends object>({
   submitting = false,
   title,
   validateJson,
+  validationIssues,
 }: EditorWorkspaceProps<T>) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -130,7 +133,10 @@ export function EditorWorkspace<T extends object>({
         </nav>
       </header>
 
-      <ValidationSummary issues={state.validationIssues} />
+      <ValidationSummary
+        issues={validationIssues ?? state.validationIssues}
+        onFocusField={changeField}
+      />
 
       <div
         className={`${editorTransitionClass(false)} motion-reduce:transform-none

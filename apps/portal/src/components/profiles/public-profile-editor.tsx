@@ -70,6 +70,7 @@ import {
   updateEditorDraft,
 } from '@/components/editor/editor-state';
 import { EditorWorkspace } from '@/components/editor/editor-workspace';
+import { useFieldValidation } from '@/components/editor/field-validation';
 import { pruneEmpty } from '@/components/editor/prune-empty';
 import { PublicationNotice } from '@/components/editor/publication-notice';
 import { EditorPageLoading } from '@/components/feedback/page-loading';
@@ -507,6 +508,7 @@ function profileIssueField(path: PropertyKey[]) {
 
 interface FieldProps {
   label: string;
+  validationPath?: string;
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
@@ -520,6 +522,7 @@ interface FieldProps {
 
 function Field({
   label,
+  validationPath,
   value,
   onChange,
   required,
@@ -530,7 +533,10 @@ function Field({
   error,
   onBlur,
 }: FieldProps) {
-  const fieldId = useId();
+  const generatedId = useId();
+  const validation = useFieldValidation(validationPath);
+  const fieldId = validation.id ?? generatedId;
+  const fieldError = error ?? validation.error;
 
   return (
     <div className="space-y-1.5">
@@ -546,10 +552,15 @@ function Field({
         onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
-        aria-invalid={!!error}
+        aria-invalid={!!fieldError}
+        aria-describedby={fieldError ? `${fieldId}-error` : undefined}
       />
-      {error ? <p className="text-destructive text-xs">{error}</p> : null}
-      {description && !error ? (
+      {fieldError ? (
+        <p id={`${fieldId}-error`} className="text-destructive text-xs">
+          {fieldError}
+        </p>
+      ) : null}
+      {description && !fieldError ? (
         <p className="text-muted-foreground text-xs">{description}</p>
       ) : null}
     </div>
@@ -558,6 +569,7 @@ function Field({
 
 interface SelectFieldProps {
   label: string;
+  validationPath?: string;
   value: string;
   options: Array<{ value: string; label: string }>;
   onChange: (value: string) => void;
@@ -567,13 +579,16 @@ interface SelectFieldProps {
 
 function SelectField({
   label,
+  validationPath,
   value,
   options,
   onChange,
   description,
   disabled,
 }: SelectFieldProps) {
-  const fieldId = useId();
+  const generatedId = useId();
+  const validation = useFieldValidation(validationPath);
+  const fieldId = validation.id ?? generatedId;
 
   return (
     <div className="space-y-1.5">
@@ -586,7 +601,12 @@ function SelectField({
           if (nextValue !== null) onChange(nextValue);
         }}
       >
-        <SelectTrigger id={fieldId} className="w-full">
+        <SelectTrigger
+          id={fieldId}
+          className="w-full"
+          aria-invalid={!!validation.error}
+          aria-describedby={validation.error ? `${fieldId}-error` : undefined}
+        >
           <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
@@ -597,6 +617,11 @@ function SelectField({
           ))}
         </SelectContent>
       </Select>
+      {validation.error ? (
+        <p id={`${fieldId}-error`} className="text-destructive text-xs">
+          {validation.error}
+        </p>
+      ) : null}
       {description ? (
         <p className="text-muted-foreground text-xs">{description}</p>
       ) : null}
@@ -641,6 +666,7 @@ function TextAreaField({
 
 interface OptionGridProps {
   label: string;
+  validationPath?: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
@@ -652,6 +678,7 @@ interface OptionGridProps {
 
 function OptionGrid({
   label,
+  validationPath,
   value,
   options,
   onChange,
@@ -660,8 +687,13 @@ function OptionGrid({
   labels,
   disabled,
 }: OptionGridProps) {
+  const validation = useFieldValidation(validationPath);
   return (
-    <div className="space-y-2">
+    <div
+      id={validation.id}
+      className="space-y-2"
+      aria-invalid={!!validation.error}
+    >
       <FieldTitle>
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
@@ -688,6 +720,9 @@ function OptionGrid({
           </Button>
         ))}
       </div>
+      {validation.error ? (
+        <p className="text-destructive text-xs">{validation.error}</p>
+      ) : null}
     </div>
   );
 }
@@ -1235,6 +1270,7 @@ export function ProfileForm({
           <div className="md:col-span-2">
             <OptionGrid
               label="Title"
+              validationPath="title"
               value={asString(profile.title)}
               options={TITLES}
               onChange={(value) => setField('title', value)}
@@ -1245,12 +1281,14 @@ export function ProfileForm({
           </div>
           <Field
             label="Full Name"
+            validationPath="fullName"
             value={asString(profile.fullName)}
             onChange={(value) => setField('fullName', value)}
             required
           />
           <Field
             label={isStaff ? 'University Email' : 'Email'}
+            validationPath="email"
             value={displayEmail}
             onChange={(value) => setField('email', value)}
             required={isStaff}
@@ -1260,6 +1298,7 @@ export function ProfileForm({
           />
           <Field
             label="Mobile Phone"
+            validationPath="mobilePhone"
             value={asString(profile.mobilePhone)}
             onChange={(value) => setField('mobilePhone', value)}
             placeholder="+94 7X XXX XXXX"
@@ -1274,6 +1313,7 @@ export function ProfileForm({
             <div className="grid gap-4 md:grid-cols-2">
               <Field
                 label="Registration No"
+                validationPath="registrationNo"
                 value={displayRegistrationNo}
                 onChange={(value) => setField('registrationNo', value)}
                 required
@@ -1282,6 +1322,7 @@ export function ProfileForm({
               />
               <Field
                 label="Personal Email"
+                validationPath="personalEmail"
                 value={asString(profile.personalEmail)}
                 onChange={(value) => setField('personalEmail', value)}
                 type="email"
@@ -1290,6 +1331,7 @@ export function ProfileForm({
             </div>
             <OptionGrid
               label="Student Type"
+              validationPath="studentType"
               value={studentType}
               options={STUDENT_TYPES}
               onChange={(value) => setField('studentType', value)}
@@ -1303,6 +1345,7 @@ export function ProfileForm({
             {!isPostgraduate ? (
               <OptionGrid
                 label="Track"
+                validationPath="studentTrack"
                 value={undergraduateTrack}
                 options={[...STUDENT_TRACKS]}
                 onChange={(value) =>
@@ -1329,6 +1372,7 @@ export function ProfileForm({
               <>
                 <OptionGrid
                   label="Level"
+                  validationPath="level"
                   value={asString(undergraduateLevel)}
                   options={undergraduateLevelOptions}
                   onChange={(value) => setField('level', value)}
@@ -1346,6 +1390,7 @@ export function ProfileForm({
                   <>
                     <SelectField
                       label="Honours Programme"
+                      validationPath="honoursProgramme"
                       value={asString(profile.honoursProgramme)}
                       options={HONOURS_PROGRAMMES.map((programme) => ({
                         value: programme,
@@ -1385,6 +1430,7 @@ export function ProfileForm({
               <>
                 <SelectField
                   label="Programme"
+                  validationPath="postgraduateProgramme"
                   value={
                     POSTGRADUATE_PROGRAMMES.includes(
                       profile.postgraduateProgramme as PostgraduateProgramme
@@ -1400,6 +1446,7 @@ export function ProfileForm({
                 />
                 <OptionGrid
                   label="SLQF Level"
+                  validationPath="slqfLevel"
                   value={asString(profile.slqfLevel)}
                   options={['L7', 'L8', 'L9', 'L10', 'L11', 'L12']}
                   onChange={(value) => setField('slqfLevel', value)}
@@ -1419,6 +1466,7 @@ export function ProfileForm({
             )}
             <OptionGrid
               label="Status"
+              validationPath="status"
               value={asString(profile.status)}
               options={STUDENT_STATUSES}
               onChange={(value) => setField('status', value)}
@@ -1453,6 +1501,7 @@ export function ProfileForm({
             <div className="grid gap-4 md:grid-cols-2">
               <SelectField
                 label="Department"
+                validationPath="department"
                 value={asString(profile.department)}
                 options={ACADEMIC_DEPARTMENTS.map((department) => ({
                   value: department,
@@ -1463,6 +1512,7 @@ export function ProfileForm({
               />
               <SelectField
                 label="Unit"
+                validationPath="unit"
                 value={asString(profile.unit)}
                 options={ACADEMIC_UNITS.map((unit) => ({
                   value: unit,
@@ -1480,6 +1530,7 @@ export function ProfileForm({
             <h3 className="text-base font-semibold">Academic Details</h3>
             <OptionGrid
               label="Academic Rank"
+              validationPath="academicRank"
               value={asString(profile.academicRank)}
               options={ACADEMIC_RANKS}
               onChange={(value) => setField('academicRank', value)}
@@ -1488,18 +1539,21 @@ export function ProfileForm({
             <div className="grid gap-4 md:grid-cols-2">
               <Field
                 label="Office Phone"
+                validationPath="officePhone"
                 value={asString(profile.officePhone)}
                 onChange={(value) => setField('officePhone', value)}
                 placeholder="+94 81 239 XXXX"
               />
               <Field
                 label="Office Location"
+                validationPath="officeLocation"
                 value={asString(profile.officeLocation)}
                 onChange={(value) => setField('officeLocation', value)}
                 placeholder="Room 101, SCS Building"
               />
               <Field
                 label="Website"
+                validationPath="website"
                 value={asString(profile.website)}
                 onChange={(value) => setField('website', value)}
                 type="url"
@@ -1507,6 +1561,7 @@ export function ProfileForm({
               />
               <Field
                 label="CV URL"
+                validationPath="cvUrl"
                 value={asString(profile.cvUrl)}
                 onChange={(value) => setField('cvUrl', value)}
                 type="url"
@@ -1575,6 +1630,7 @@ export function ProfileForm({
             </h3>
             <OptionGrid
               label="Designation"
+              validationPath="designation"
               value={asString(profile.designation)}
               options={ACADEMIC_SUPPORT_POSITIONS}
               onChange={(value) => setField('designation', value)}
@@ -1582,6 +1638,7 @@ export function ProfileForm({
             />
             <Field
               label="Office Phone"
+              validationPath="officePhone"
               value={asString(profile.officePhone)}
               onChange={(value) => setField('officePhone', value)}
               placeholder="+94 81 239 XXXX"
@@ -1606,6 +1663,7 @@ export function ProfileForm({
             <h3 className="text-base font-semibold">Non-Academic Details</h3>
             <OptionGrid
               label="Designation"
+              validationPath="designation"
               value={asString(profile.designation)}
               options={NON_ACADEMIC_POSITIONS}
               onChange={(value) => setField('designation', value)}
@@ -1613,6 +1671,7 @@ export function ProfileForm({
             />
             <Field
               label="Office Phone"
+              validationPath="officePhone"
               value={asString(profile.officePhone)}
               onChange={(value) => setField('officePhone', value)}
               placeholder="+94 81 239 XXXX"
