@@ -53,6 +53,12 @@ test('the separate verification trigger shows a short tooltip on keyboard focus'
   await waitFor(() => {
     expect(screen.getByText('Verified')).toBeTruthy();
   });
+  expect(
+    screen
+      .getByText('Verified')
+      .parentElement?.querySelector('svg')
+      ?.classList.contains('text-info-surface-foreground')
+  ).toBe(true);
 });
 
 test('the compact ORCID icon shows verification on keyboard focus', async () => {
@@ -65,4 +71,10 @@ test('the compact ORCID icon shows verification on keyboard focus', async () => 
   await waitFor(() => {
     expect(screen.getByText('Verified')).toBeTruthy();
   });
+  expect(
+    screen
+      .getByText('Verified')
+      .parentElement?.querySelector('svg')
+      ?.classList.contains('text-info-surface-foreground')
+  ).toBe(true);
 });

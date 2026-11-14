@@ -12,7 +12,10 @@ function VerifiedTooltipContent() {
   return (
     <TooltipContent>
       <span className="inline-flex items-center gap-1">
-        <BadgeCheck className="size-4" aria-hidden="true" />
+        <BadgeCheck
+          className="text-info-surface-foreground size-4"
+          aria-hidden="true"
+        />
         Verified
       </span>
     </TooltipContent>
