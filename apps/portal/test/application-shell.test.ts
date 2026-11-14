@@ -40,6 +40,7 @@ describe('Portal application shell', () => {
     expect(home).toContain("href={session?.user ? '/dashboard' : '/login'}");
     expect(home).toContain("session?.user ? 'Open dashboard' : 'Sign in'");
     expect(home).toContain('!isPending && !session?.user');
+    expect(home).not.toContain('href="/playground"');
   });
 
   test('keeps logout in the global header instead of repeating it on dashboard', () => {

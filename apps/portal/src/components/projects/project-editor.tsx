@@ -50,6 +50,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import {
   Archive,
@@ -816,15 +821,22 @@ function StringListEditor({
                 onBlur={(event) => normalizeItem(index, event.target.value)}
               />
               {!readOnly ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => removeItem(index)}
-                  aria-label={`Remove ${label} item ${index + 1}`}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => removeItem(index)}
+                        aria-label={`Remove ${label} item ${index + 1}`}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    }
+                  />
+                  <TooltipContent>{`Remove ${label} item ${index + 1}`}</TooltipContent>
+                </Tooltip>
               ) : null}
             </div>
           ))}

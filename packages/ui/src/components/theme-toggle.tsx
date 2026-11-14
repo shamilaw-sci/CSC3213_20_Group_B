@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes';
 import { type ComponentProps, useEffect, useState } from 'react';
 
 import { Button } from '#components/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components/tooltip';
 import { cn } from '#lib/utils';
 
 export interface ThemeToggleProps {
@@ -48,19 +49,27 @@ export function ThemeToggle({
 
   const isDark = resolvedTheme === 'dark';
 
-  return (
+  const button = (
     <Button
       type="button"
       variant={variant}
       size={showLabel ? 'default' : 'icon'}
       className={cn('shrink-0', showLabel && 'gap-2', className)}
       aria-label="Toggle color theme"
-      title="Change color theme"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
       <Sun className="hidden size-4 dark:block" aria-hidden="true" />
       <Moon className="size-4 dark:hidden" aria-hidden="true" />
       {showLabel ? <span>Theme</span> : null}
     </Button>
+  );
+
+  if (showLabel) return button;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={button} />
+      <TooltipContent>Change color theme</TooltipContent>
+    </Tooltip>
   );
 }

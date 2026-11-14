@@ -73,9 +73,6 @@ export default function PortalHome() {
       ) : null}
 
       <div className="text-muted-foreground mt-8 flex gap-4 text-sm">
-        <Link href="/playground" className="hover:text-foreground">
-          Public data playground
-        </Link>
         <Link href="/privacy" className="hover:text-foreground">
           Privacy Policy
         </Link>

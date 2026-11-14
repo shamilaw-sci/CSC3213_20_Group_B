@@ -56,6 +56,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@scs/ui/components/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import { ExternalLink, Plus, RefreshCw, Trash2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -801,19 +806,26 @@ function ArrayEditor({
             <div key={index} className="bg-muted/20 rounded-md border p-3">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <Badge variant="outline">#{index + 1}</Badge>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() =>
-                    onChange(
-                      value.filter((_, itemIndex) => itemIndex !== index)
-                    )
-                  }
-                  aria-label={`Remove ${label} item ${index + 1}`}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() =>
+                          onChange(
+                            value.filter((_, itemIndex) => itemIndex !== index)
+                          )
+                        }
+                        aria-label={`Remove ${label} item ${index + 1}`}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    }
+                  />
+                  <TooltipContent>{`Remove ${label} item ${index + 1}`}</TooltipContent>
+                </Tooltip>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {renderItem(
@@ -905,17 +917,26 @@ function StringArrayEditor({
                   placeholder={placeholder}
                 />
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() =>
-                  onChange(value.filter((_, itemIndex) => itemIndex !== index))
-                }
-                aria-label={`Remove ${label} item ${index + 1}`}
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() =>
+                        onChange(
+                          value.filter((_, itemIndex) => itemIndex !== index)
+                        )
+                      }
+                      aria-label={`Remove ${label} item ${index + 1}`}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  }
+                />
+                <TooltipContent>{`Remove ${label} item ${index + 1}`}</TooltipContent>
+              </Tooltip>
             </div>
           ))}
         </div>
@@ -1048,22 +1069,29 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
                     {KnownSocialLabels[platform] ?? 'Known platform'} ·
                     automatic icon
                   </Badge>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Remove additional ${KnownSocialLabels[platform] ?? 'known'} profile ${index + 1}`}
-                    onClick={() =>
-                      onChange({
-                        ...links,
-                        profiles: profiles.filter(
-                          (_, itemIndex) => itemIndex !== index
-                        ),
-                      })
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Remove additional ${KnownSocialLabels[platform] ?? 'known'} profile ${index + 1}`}
+                          onClick={() =>
+                            onChange({
+                              ...links,
+                              profiles: profiles.filter(
+                                (_, itemIndex) => itemIndex !== index
+                              ),
+                            })
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>{`Remove additional ${KnownSocialLabels[platform] ?? 'known'} profile ${index + 1}`}</TooltipContent>
+                  </Tooltip>
                 </div>
                 <Field
                   label="Profile URL"

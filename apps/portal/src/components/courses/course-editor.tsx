@@ -35,6 +35,11 @@ import {
   SelectValue,
 } from '@scs/ui/components/select';
 import { Separator } from '@scs/ui/components/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import { BookOpen, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
@@ -1518,23 +1523,30 @@ export function OfferingForm({
                     </Select>
                   </div>
                   {!readOnly ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="self-end"
-                      aria-label={`Remove staff member ${index + 1}`}
-                      onClick={() =>
-                        setField(
-                          'staff',
-                          activeDraft.staff.filter(
-                            (_, entryIndex) => entryIndex !== index
-                          )
-                        )
-                      }
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="self-end"
+                            aria-label={`Remove staff member ${index + 1}`}
+                            onClick={() =>
+                              setField(
+                                'staff',
+                                activeDraft.staff.filter(
+                                  (_, entryIndex) => entryIndex !== index
+                                )
+                              )
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>{`Remove staff member ${index + 1}`}</TooltipContent>
+                    </Tooltip>
                   ) : null}
                 </div>
               ))}

@@ -175,11 +175,6 @@ export function LoginForm({
                       onClick={loginWithPasskey}
                       disabled={!passkeySupported || passkeyLoading || loading}
                       className="relative"
-                      title={
-                        passkeySupported
-                          ? undefined
-                          : 'Passkeys are not supported in this browser.'
-                      }
                     >
                       <Fingerprint />
                       {passkeyLoading ? 'Checking passkey...' : 'Use Passkey'}
@@ -194,7 +189,9 @@ export function LoginForm({
                       )}
                     </Button>
                     <p className="text-muted-foreground text-center text-xs">
-                      Your browser will show available passkeys to choose from.
+                      {passkeySupported
+                        ? 'Your browser will show available passkeys to choose from.'
+                        : 'Passkeys are not supported in this browser.'}
                     </p>
                   </Field>
                   <div className="relative flex items-center py-1">

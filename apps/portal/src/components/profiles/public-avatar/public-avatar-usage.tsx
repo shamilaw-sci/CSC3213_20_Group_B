@@ -3,6 +3,11 @@
 import type { PublicAvatarQuota } from '@scs/schemas';
 import { Badge } from '@scs/ui/components/badge';
 import { Button } from '@scs/ui/components/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import {
   CheckCircle2,
@@ -39,21 +44,27 @@ export function PublicAvatarUsage({
             Hourly picture upload attempts for your account.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Refresh upload usage"
-          title="Refresh upload usage"
-          disabled={refreshing}
-          onClick={onRefresh}
-        >
-          {refreshing ? (
-            <LoaderCircle className="animate-spin" />
-          ) : (
-            <RefreshCw />
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Refresh upload usage"
+                disabled={refreshing}
+                onClick={onRefresh}
+              >
+                {refreshing ? (
+                  <LoaderCircle className="animate-spin" />
+                ) : (
+                  <RefreshCw />
+                )}
+              </Button>
+            }
+          />
+          <TooltipContent>Refresh upload usage</TooltipContent>
+        </Tooltip>
       </div>
 
       <div aria-live="polite" className="space-y-4">

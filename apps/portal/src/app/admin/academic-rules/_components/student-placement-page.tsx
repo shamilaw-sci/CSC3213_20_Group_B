@@ -35,6 +35,11 @@ import {
   SelectValue,
 } from '@scs/ui/components/select';
 import { Switch } from '@scs/ui/components/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import {
   CheckCircle2,
@@ -955,17 +960,23 @@ function RemoveButton({
   onClick: () => void;
 }) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground hover:text-destructive"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-    >
-      <Trash2 />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive"
+            aria-label={label}
+            onClick={onClick}
+          >
+            <Trash2 />
+          </Button>
+        }
+      />
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 

@@ -21,6 +21,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@scs/ui/components/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
 import { cn } from 'cn';
 import {
   BriefcaseBusiness,
@@ -655,33 +660,41 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
           return <VerifiedOrcidLink key={link.href} href={link.href} compact />;
         const Icon = link.icon;
         return (
-          <a
-            key={`${link.label}-${link.href}`}
-            href={link.href}
-            target={link.href.startsWith('http') ? '_blank' : undefined}
-            rel={
-              link.href.startsWith('http') ? 'noopener noreferrer' : undefined
-            }
-            aria-label={link.label}
-            title={link.label}
-            className="bg-card text-muted-foreground hover:border-primary
-              hover:bg-primary hover:text-primary-foreground inline-flex size-10
-              items-center justify-center rounded-md border transition-colors"
-          >
-            {link.iconUrl ? (
-              <Image
-                src={link.iconUrl}
-                alt=""
-                width={20}
-                height={20}
-                unoptimized
-                className="size-5 object-contain"
-                aria-hidden={true}
-              />
-            ) : (
-              <Icon className="size-5" aria-hidden={true} />
-            )}
-          </a>
+          <Tooltip key={`${link.label}-${link.href}`}>
+            <TooltipTrigger
+              render={
+                <a
+                  href={link.href}
+                  target={link.href.startsWith('http') ? '_blank' : undefined}
+                  rel={
+                    link.href.startsWith('http')
+                      ? 'noopener noreferrer'
+                      : undefined
+                  }
+                  aria-label={link.label}
+                  className="bg-card text-muted-foreground hover:border-primary
+                    hover:bg-primary hover:text-primary-foreground inline-flex
+                    size-10 items-center justify-center rounded-md border
+                    transition-colors"
+                >
+                  {link.iconUrl ? (
+                    <Image
+                      src={link.iconUrl}
+                      alt=""
+                      width={20}
+                      height={20}
+                      unoptimized
+                      className="size-5 object-contain"
+                      aria-hidden={true}
+                    />
+                  ) : (
+                    <Icon className="size-5" aria-hidden={true} />
+                  )}
+                </a>
+              }
+            />
+            <TooltipContent>{link.label}</TooltipContent>
+          </Tooltip>
         );
       })}
     </div>

@@ -256,7 +256,8 @@ describe('shared UI component contracts', () => {
     const labeled = renderToStaticMarkup(<ThemeToggle showLabel />);
 
     expect(iconOnly).toContain('aria-label="Toggle color theme"');
-    expect(iconOnly).toContain('title="Change color theme"');
+    expect(iconOnly).toContain('data-slot="tooltip-trigger"');
+    expect(iconOnly).not.toContain('title="Change color theme"');
     expect(iconOnly).toContain('data-variant="outline"');
     expect(iconOnly).not.toContain('>Theme<');
     expect(labeled).toContain('>Theme<');
