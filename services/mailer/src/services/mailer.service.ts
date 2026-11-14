@@ -30,7 +30,7 @@ export async function resolveMailMessage(
     const email = PortalSignInOtpEmail(payload.template.props);
     return {
       to: payload.to,
-      subject: 'SCS Portal sign-in code',
+      subject: `${payload.template.props.otp} - Your SCS Portal login code`,
       html: await render(email),
       text: await render(email, { plainText: true }),
     };

@@ -32,7 +32,7 @@ export function PortalSignInOtpEmail({
       >
         <Head />
         <Body className="bg-canvas text-ink m-0 px-4 py-8 font-sans">
-          <Preview>Your SCS Portal sign-in code is {otp}</Preview>
+          <Preview>Your SCS Portal login code</Preview>
           <Container
             className="border-border bg-surface mx-auto rounded-xl border
               border-solid px-8 py-8"
@@ -44,7 +44,7 @@ export function PortalSignInOtpEmail({
               Confirm your sign-in
             </Heading>
             <Text className="text-muted my-0 text-base leading-6">
-              Your sign-in code is {otp}.
+              Use this SCS Portal login code to sign in:
             </Text>
             <Section
               className="border-border bg-canvas my-6 rounded-lg border
@@ -55,8 +55,9 @@ export function PortalSignInOtpEmail({
               </Text>
             </Section>
             <Text className="text-muted my-0 text-sm leading-6">
-              This code expires in {expiresInMinutes} minutes. If you did not
-              request it, you can safely ignore this email.
+              This code expires in {expiresInMinutes} minutes and can be used
+              only once. If you did not request a login code, you can safely
+              ignore this email.
             </Text>
           </Container>
         </Body>

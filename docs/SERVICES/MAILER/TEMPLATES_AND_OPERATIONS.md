@@ -16,8 +16,9 @@ The component includes:
 
 - an English document and inbox preview;
 - a clear SCS Portal sender context;
-- the six-digit code in readable text rather than an image;
-- the configured expiry in minutes; and
+- a code-first subject (`{code} - Your SCS Portal login code`);
+- the six-digit code once in selectable body text near its login label;
+- the configured expiry in minutes and single-use guidance; and
 - advice to ignore an unrequested message.
 
 `email-theme.ts` owns the small email-specific palette. The component uses
@@ -32,6 +33,11 @@ the HTML document and `{ plainText: true }` creates the text alternative. A new
 named template must preserve both forms. Do not make essential content depend
 on remote images, custom fonts, client-side JavaScript, hover, or dark-mode
 support.
+
+The experimental `OTP-Token` Internet-Draft header is not emitted. The API
+accepts multiple Portal origins, while the draft requires a canonical origin
+for each code, and Gmail has not documented support for the header as a way to
+enable its Copy code action.
 
 ## Adding a template safely
 
