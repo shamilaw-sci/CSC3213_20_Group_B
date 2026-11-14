@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 import { VerifiedOrcidLink } from '@/components/people/verified-orcid-link';
 
-test('Links tab keeps a full ORCID link with a separate verification mark', () => {
+test('Links tab uses a full ORCID link with a separate verification mark', () => {
   const markup = renderToStaticMarkup(
     <VerifiedOrcidLink href="https://orcid.org/0000-0002-1825-0097" />
   );
@@ -16,7 +16,7 @@ test('Links tab keeps a full ORCID link with a separate verification mark', () =
   expect(markup).toMatch(/<\/a><button[^>]+aria-label="Verified"/);
 });
 
-test('the compact row shows only the ORCID icon with verification in its tooltip', () => {
+test('the sidebar shows only the ORCID icon with verification in its tooltip', () => {
   const markup = renderToStaticMarkup(
     <VerifiedOrcidLink href="https://orcid.org/0000-0002-1825-0097" compact />
   );
