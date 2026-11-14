@@ -22,6 +22,36 @@ afterEach(() => {
 });
 
 describe('profile operation compatibility', () => {
+  test.each(['s21513', 's21sp513'])(
+    'rejects postgraduate placement for undergraduate email %s',
+    async (username) => {
+      const studentEmail = `${username}@sci.pdn.ac.lk`;
+      const env = createTestEnv();
+      await setUserPermission(studentEmail, { role: APP_ROLE.STUDENT }, env);
+      const response = await invokeWorker(
+        '/api/people/v2/me/student-placement',
+        {
+          method: 'POST',
+          headers: {
+            Origin: 'https://portal.scs-pdn.space',
+            'X-Client-Id': 'portal',
+            Cookie: await createTestSessionCookie(env, studentEmail),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            studentType: 'POSTGRADUATE',
+            postgraduateProgramme: 'MSC',
+          }),
+        },
+        env
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        error: 'S-number student email accounts are undergraduate only',
+      });
+    }
+  );
+
   test('rejects a super-admin attempt to reclassify a student-pattern account', async () => {
     const studentEmail = 's21513@sci.pdn.ac.lk';
     const adminEmail = 'admin@sci.pdn.ac.lk';

@@ -1,5 +1,6 @@
 'use client';
 
+import { parseStudentIdentifier } from '@scs/identity';
 import {
   AcademicDepartmentCodeSchema,
   AcademicRankSchema,
@@ -1282,6 +1283,9 @@ export function ProfileForm({
 
   const isStudent = profileKind === 'student';
   const isStaff = !isStudent;
+  const undergraduateEmail = Boolean(
+    identity?.email && parseStudentIdentifier(identity.email)
+  );
   const studentType = asString(profile.studentType) || 'UNDERGRADUATE';
   const isPostgraduate = isStudent && studentType === 'POSTGRADUATE';
   const isHonoursStudent =
@@ -1401,7 +1405,7 @@ export function ProfileForm({
               label="Student Type"
               validationPath="studentType"
               value={studentType}
-              options={STUDENT_TYPES}
+              options={undergraduateEmail ? ['UNDERGRADUATE'] : STUDENT_TYPES}
               onChange={(value) => setField('studentType', value)}
               required
               compact

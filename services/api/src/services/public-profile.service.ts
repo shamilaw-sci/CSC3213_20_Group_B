@@ -1,3 +1,4 @@
+import { parseStudentIdentifier } from '@scs/identity';
 import {
   AcademicSupportStaffSchema,
   AcademicTeachingStaffSchema,
@@ -723,6 +724,16 @@ async function resolveStudentPlacement(input: {
     input.request.studentType === 'POSTGRADUATE'
       ? 'POSTGRADUATE'
       : 'UNDERGRADUATE';
+  if (
+    studentType === 'POSTGRADUATE' &&
+    parseStudentIdentifier(input.targetEmail)
+  ) {
+    return {
+      ok: false,
+      message: 'S-number student email accounts are undergraduate only',
+      status: 400,
+    };
+  }
   const metadata = await getStudentPlacementMetadata(input.env);
 
   if (studentType === 'POSTGRADUATE') {

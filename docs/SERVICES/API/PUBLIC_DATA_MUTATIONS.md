@@ -68,6 +68,11 @@ The schema-description endpoints return capabilities, identity context, locked
 fields, and explanatory notes so Portal can build a truthful editor. They do
 not replace server authorization.
 
+Student accounts with `sYYXXX@sci.pdn.ac.lk` or
+`sYYSPXXX@sci.pdn.ac.lk` email addresses are undergraduate accounts. The API
+rejects postgraduate placement for these identities in both self-service and
+administrator profile workflows.
+
 ## Published reads
 
 Published JSON URLs are constructed from `DATA_PUBLIC_BASE_URL` and fixed path
