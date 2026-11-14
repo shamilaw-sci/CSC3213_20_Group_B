@@ -13,10 +13,9 @@ for the application read and write paths.
 
 ## Data layout and validation
 
-Entity files in `public/people/v2/users` and `public/projects/v2/projects`,
-along with the academic `courses.json` and `offerings.json` collections, are
-authoritative. Collection,
-search, manifest, staff, student, and `by-person` files are deterministic
+Entity files in `public/people/v2/users`, `public/projects/v2/projects`,
+`public/academic/v2/courses`, and `public/academic/v2/offerings` are
+authoritative. Collection, search, manifest, staff, student, and `by-person` files are deterministic
 projections. Special-programme files retain membership while the generator
 refreshes member records from authoritative users. Avatars are stored and
 moderated by the API Worker in R2; public records must not contain
@@ -25,10 +24,11 @@ moderated by the API Worker in R2; public records must not contain
 The Portal's public `/playground` builds schema-validated JSON for a manual
 pull request and shows the file to edit. Profile records go in
 `public/people/v2/users/<username>.json`, and project records go in
-`public/projects/v2/projects/<slug>.json`. A course or offering is one record
-inside `public/academic/v2/courses.json` or
-`public/academic/v2/offerings.json`; copying a record does not replace the
-whole collection. The playground does not read existing records or submit a PR.
+`public/projects/v2/projects/<slug>.json`. A course or offering belongs in
+`public/academic/v2/courses/<id>.json` or
+`public/academic/v2/offerings/<id>.json`. The playground also lists related
+generated files, including the academic `courses.json` and `offerings.json`
+collections. It does not read existing records or submit a PR.
 
 From the data repository root, run `bun run check` for typechecking, tests,
 projection freshness, data validation, formatting, and a Worker build. After

@@ -25,9 +25,10 @@ For implementation-level behavior, use the
 - `/login`, `/signup`, `/privacy`, and `/tos` cover entry and policy.
 - `/playground` is a public, local-only form and JSON editor for manual data
   repository pull requests. It validates against the bundled shared schemas,
-  shows the authoritative target file, and copies a record or path without
-  submitting data. Courses and offerings are records inside collection arrays;
-  people and projects are individual files. Manual editors must compare an
+  shows the authoritative target file and related generated files, and copies
+  a record or path without submitting data. All four record families have
+  individual authoritative files. The JSON tab uses the same preview and
+  code editor as the authenticated editors. Manual editors must compare an
   existing file before replacing it and run the data repository checks.
 - `/.well-known/security.txt` serves the authoritative RFC 9116 document;
   `/privacy#security-reporting` is its reporting policy.

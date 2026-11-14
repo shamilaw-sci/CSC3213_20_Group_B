@@ -146,7 +146,7 @@ export const playgroundDefinitions: Record<
   academic: {
     label: 'Academic teaching profile',
     description:
-      'One public academic staff record. Enter the institutional username for its file name.',
+      'One public academic staff record. The public email determines the file name.',
     schema: AcademicTeachingStaffSchema,
     initial: {
       title: 'Dr',
@@ -155,11 +155,6 @@ export const playgroundDefinitions: Record<
       academicRank: 'LECTURER',
     },
     fields: [
-      {
-        key: '_username',
-        label: 'Institutional username',
-        hint: 'Used for the file name only; it is not written into JSON.',
-      },
       ...staffFields,
       {
         key: 'academicRank',
@@ -191,11 +186,6 @@ export const playgroundDefinitions: Record<
       designation: 'PROGRAMMER',
     },
     fields: [
-      {
-        key: '_username',
-        label: 'Institutional username',
-        hint: 'Used for the file name only; it is not written into JSON.',
-      },
       ...staffFields,
       {
         key: 'designation',
@@ -221,11 +211,6 @@ export const playgroundDefinitions: Record<
       designation: 'STAFF_ASSISTANT',
     },
     fields: [
-      {
-        key: '_username',
-        label: 'Institutional username',
-        hint: 'Used for the file name only; it is not written into JSON.',
-      },
       ...staffFields,
       {
         key: 'designation',
@@ -300,7 +285,7 @@ export const playgroundDefinitions: Record<
   course: {
     label: 'Course',
     description:
-      'One record to insert or replace inside the courses collection.',
+      'One authoritative course file. The ID determines the file name.',
     schema: CourseSchema,
     initial: {
       id: '',
@@ -332,7 +317,7 @@ export const playgroundDefinitions: Record<
   offering: {
     label: 'Course offering',
     description:
-      'One record to insert or replace inside the offerings collection.',
+      'One authoritative offering file. The ID determines the file name.',
     schema: CourseOfferingSchema,
     initial: {
       id: '',
@@ -362,8 +347,13 @@ export function playgroundTarget(
   kind: PlaygroundKind,
   draft: Record<string, unknown>
 ): string | null {
-  if (kind === 'course') return 'public/academic/v2/courses.json';
-  if (kind === 'offering') return 'public/academic/v2/offerings.json';
+  if (kind === 'course' || kind === 'offering') {
+    const id = String(draft.id ?? '').trim();
+    const directory = kind === 'course' ? 'courses' : 'offerings';
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)
+      ? `public/academic/v2/${directory}/${id}.json`
+      : null;
+  }
   if (kind === 'project') {
     const slug = String(draft.slug ?? '').trim();
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
@@ -371,7 +361,9 @@ export function playgroundTarget(
       : null;
   }
   const username = String(
-    kind === 'student' ? (draft.registrationNo ?? '') : (draft._username ?? '')
+    kind === 'student'
+      ? (draft.registrationNo ?? '')
+      : String(draft.email ?? '').split('@')[0]
   )
     .trim()
     .toLowerCase();
@@ -384,7 +376,46 @@ export function playgroundRecord(
   kind: PlaygroundKind,
   draft: Record<string, unknown>
 ) {
-  const { _username, ...record } = draft;
-  void _username;
-  return playgroundDefinitions[kind].schema.safeParse(record);
+  return playgroundDefinitions[kind].schema.safeParse(draft);
+}
+
+export function playgroundRelatedFiles(
+  kind: PlaygroundKind,
+  draft: Record<string, unknown>
+): string[] {
+  if (kind === 'course') return ['public/academic/v2/courses.json'];
+  if (kind === 'offering') return ['public/academic/v2/offerings.json'];
+  if (kind === 'project') {
+    const people = Array.isArray(draft.people) ? draft.people : [];
+    const usernames = people.flatMap((person) => {
+      if (typeof person !== 'object' || person === null) return [];
+      const username = (person as Record<string, unknown>).username;
+      return typeof username === 'string' &&
+        /^[a-z][a-z0-9._]{2,29}$/.test(username.toLowerCase())
+        ? [`public/projects/v2/by-person/${username.toLowerCase()}.json`]
+        : [];
+    });
+    return [
+      ...new Set([
+        'public/projects/v2/projects.json',
+        'public/projects/v2/manifest.json',
+        ...usernames,
+      ]),
+    ];
+  }
+  const files = ['public/people/v2/search.json'];
+  if (kind === 'student') {
+    const match = /^S(\d{2})/i.exec(String(draft.registrationNo ?? ''));
+    if (match) files.push(`public/people/v2/students/s${match[1]}.json`);
+    files.push('public/people/v2/manifest.json');
+    return files;
+  }
+  const staffKind = kind === 'academic' ? 'academic' : kind;
+  files.push(`public/people/v2/staff/${staffKind}.json`);
+  const department = String(draft.department ?? '')
+    .toLowerCase()
+    .replaceAll('_', '-');
+  if (department)
+    files.push(`public/people/v2/staff/${department}/${staffKind}.json`);
+  return files;
 }

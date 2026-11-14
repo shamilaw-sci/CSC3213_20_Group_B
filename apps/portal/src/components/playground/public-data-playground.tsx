@@ -30,6 +30,7 @@ import {
   TabsTrigger,
 } from '@scs/ui/components/tabs';
 import { Copy } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -40,8 +41,30 @@ import {
   type PlaygroundField,
   type PlaygroundKind,
   playgroundRecord,
+  playgroundRelatedFiles,
   playgroundTarget,
 } from '@/components/playground/playground-data';
+
+const JsonEditor = dynamic(
+  () =>
+    import('@/components/editor/json-editor').then(
+      (module) => module.JsonEditor
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="bg-muted/40 min-h-96 rounded-md border" />,
+  }
+);
+const JsonPreview = dynamic(
+  () =>
+    import('@/components/editor/json-preview').then(
+      (module) => module.JsonPreview
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="bg-muted/40 min-h-72 rounded-md border" />,
+  }
+);
 
 const kinds = Object.keys(playgroundDefinitions) as PlaygroundKind[];
 type View = 'form' | 'json';
@@ -68,37 +91,19 @@ export function PublicDataPlayground() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [jsonIssues, setJsonIssues] = useState<string[]>([]);
+  const [editingJson, setEditingJson] = useState(false);
+  const [pendingForm, setPendingForm] = useState(false);
 
   const definition = playgroundDefinitions[kind];
-  let current = draft;
-  let syntaxError = jsonError;
-  if (view === 'json') {
-    try {
-      const parsed: unknown = JSON.parse(jsonText);
-      if (
-        typeof parsed !== 'object' ||
-        parsed === null ||
-        Array.isArray(parsed)
-      ) {
-        syntaxError = 'JSON must contain one record object.';
-      } else {
-        current = {
-          ...(parsed as Record<string, unknown>),
-          _username: draft._username,
-        };
-        syntaxError = null;
-      }
-    } catch {
-      syntaxError = 'Enter valid JSON before copying or returning to the form.';
-    }
-  }
-  const result = playgroundRecord(kind, current);
-  const target = playgroundTarget(kind, current);
+  const result = playgroundRecord(kind, draft);
+  const target = playgroundTarget(kind, draft);
+  const relatedFiles = playgroundRelatedFiles(kind, draft);
   const errors = result.success ? [] : issueText(result.error.issues);
   const canCopy = Boolean(
     target &&
     result.success &&
-    !syntaxError &&
+    !(editingJson && jsonText !== JSON.stringify(draft, null, 2)) &&
     Object.keys(fieldErrors).length === 0
   );
   const recordText = result.success
@@ -106,6 +111,12 @@ export function PublicDataPlayground() {
     : '';
 
   function changeKind(next: PlaygroundKind) {
+    if (editingJson && jsonText !== JSON.stringify(draft, null, 2)) {
+      toast.error(
+        'Apply or discard your JSON edits before changing record type.'
+      );
+      return;
+    }
     setKind(next);
     setView('form');
     setDraft({ ...playgroundDefinitions[next].initial });
@@ -113,6 +124,9 @@ export function PublicDataPlayground() {
     setFieldErrors({});
     setJsonText('');
     setJsonError(null);
+    setJsonIssues([]);
+    setEditingJson(false);
+    setPendingForm(false);
   }
 
   function changeField(field: PlaygroundField, text: string) {
@@ -162,24 +176,66 @@ export function PublicDataPlayground() {
         toast.error('Fix the JSON in the form fields first.');
         return;
       }
-      const { _username, ...record } = draft;
-      void _username;
-      setJsonText(JSON.stringify(record, null, 2));
+      setJsonText(JSON.stringify(draft, null, 2));
       setJsonError(null);
+      setJsonIssues([]);
+      setEditingJson(false);
+      setPendingForm(false);
       setView('json');
       return;
     }
-    if (syntaxError) {
-      setJsonError(syntaxError);
-      toast.error(syntaxError);
+    if (editingJson && jsonText !== JSON.stringify(draft, null, 2)) {
+      setPendingForm(true);
       return;
     }
-    const parsed = JSON.parse(jsonText) as Record<string, unknown>;
-    setDraft({ ...parsed, _username: draft._username });
+    setView('form');
+  }
+
+  function applyJson() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch {
+      setJsonError('The JSON is not valid. Fix the syntax before applying it.');
+      setJsonIssues([]);
+      return;
+    }
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      setJsonError('JSON must contain one record object.');
+      setJsonIssues([]);
+      return;
+    }
+    const validation = playgroundRecord(
+      kind,
+      parsed as Record<string, unknown>
+    );
+    if (!validation.success) {
+      setJsonError(null);
+      setJsonIssues(issueText(validation.error.issues));
+      return;
+    }
+    setDraft(validation.data as Record<string, unknown>);
+    setJsonText(JSON.stringify(validation.data, null, 2));
+    setJsonError(null);
+    setJsonIssues([]);
     setFieldText({});
     setFieldErrors({});
+    setEditingJson(false);
+    if (pendingForm) setView('form');
+    setPendingForm(false);
+  }
+
+  function discardJson() {
+    setJsonText(JSON.stringify(draft, null, 2));
     setJsonError(null);
-    setView('form');
+    setJsonIssues([]);
+    setEditingJson(false);
+    if (pendingForm) setView('form');
+    setPendingForm(false);
   }
 
   async function copy(value: string, label: string) {
@@ -239,9 +295,7 @@ export function PublicDataPlayground() {
         <CardHeader>
           <CardTitle>File to change</CardTitle>
           <CardDescription>
-            {kind === 'course' || kind === 'offering'
-              ? 'Insert or replace this record in the JSON array. Keep the other records.'
-              : 'Create or replace this JSON file.'}
+            Create or replace this authoritative JSON file.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
@@ -260,6 +314,60 @@ export function PublicDataPlayground() {
             <Copy data-icon="inline-start" />
             Copy path
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Related generated files</CardTitle>
+          <CardDescription>
+            The data repository generator may update these files after the
+            authoritative record changes. Run <code>bun run generate</code>{' '}
+            there and include the changed projections in the pull request.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2">
+            {relatedFiles.map((file) => (
+              <li key={file} className="flex flex-wrap items-center gap-2">
+                <code
+                  className="bg-muted rounded-md px-2 py-1 text-sm break-all"
+                >
+                  {file}
+                </code>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void copy(file, 'Related path')}
+                  aria-label={`Copy ${file}`}
+                >
+                  <Copy data-icon="inline-start" />
+                  Copy
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {kind === 'student' ? (
+            <p className="text-muted-foreground text-sm">
+              Existing special-programme membership files under{' '}
+              <code>public/people/v2/special/</code> may also be refreshed. The
+              playground cannot know membership without reading the repository.
+            </p>
+          ) : null}
+          {kind === 'project' ? (
+            <p className="text-muted-foreground text-sm">
+              For an existing project, removed people may have old{' '}
+              <code>by-person</code> files updated or removed too.
+            </p>
+          ) : null}
+          {kind === 'course' || kind === 'offering' ? (
+            <p className="text-muted-foreground text-sm">
+              If IDs or references change, review related projects and offerings
+              in the repository; the playground does not resolve cross-record
+              references.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -357,32 +465,92 @@ export function PublicDataPlayground() {
         <TabsContent value="json">
           <Card>
             <CardHeader>
-              <CardTitle>JSON record</CardTitle>
+              <CardTitle>Advanced JSON</CardTitle>
               <CardDescription>
-                Edit the complete record here. The form and JSON views share one
-                draft when you switch tabs.
+                View the same draft as structured data. Apply valid edits before
+                returning to the form or copying.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <label className="sr-only" htmlFor="playground-json">
-                JSON record
-              </label>
-              <textarea
-                id="playground-json"
-                value={jsonText}
-                onChange={(event) => {
-                  setJsonText(event.target.value);
-                  setJsonError(null);
-                }}
-                spellCheck={false}
-                aria-invalid={Boolean(syntaxError)}
-                className="border-input bg-background focus-visible:outline-ring
-                  aria-invalid:border-destructive min-h-96 w-full rounded-md
-                  border p-4 font-mono text-sm shadow-xs"
-              />
-              {syntaxError ? (
+            <CardContent className="flex flex-col gap-4">
+              {!editingJson ? (
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingJson(true)}
+                  >
+                    Edit JSON
+                  </Button>
+                </div>
+              ) : null}
+              {jsonError ? (
                 <p role="alert" className="text-destructive mt-2 text-sm">
-                  {syntaxError}
+                  {jsonError}
+                </p>
+              ) : null}
+              {jsonIssues.length ? (
+                <div role="alert" className="text-destructive text-sm">
+                  <p>The JSON does not match this record:</p>
+                  <ul className="mt-2 list-inside list-disc">
+                    {jsonIssues.map((issue, index) => (
+                      <li key={`${issue}-${index}`}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {editingJson ? (
+                <JsonEditor
+                  value={jsonText}
+                  onChange={(text) => {
+                    setJsonText(text);
+                    setJsonError(null);
+                    setJsonIssues([]);
+                  }}
+                />
+              ) : (
+                <JsonPreview
+                  value={
+                    result.success &&
+                    typeof result.data === 'object' &&
+                    result.data !== null
+                      ? result.data
+                      : draft
+                  }
+                  enableClipboard
+                  monospace
+                />
+              )}
+              {editingJson ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    onClick={applyJson}
+                    disabled={jsonText === JSON.stringify(draft, null, 2)}
+                  >
+                    Apply JSON
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={discardJson}
+                    disabled={jsonText === JSON.stringify(draft, null, 2)}
+                  >
+                    Discard changes
+                  </Button>
+                  {pendingForm ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setPendingForm(false)}
+                    >
+                      Stay here
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+              {pendingForm ? (
+                <p className="text-muted-foreground text-sm">
+                  Apply or discard your JSON edits before switching to the form.
                 </p>
               ) : null}
             </CardContent>
