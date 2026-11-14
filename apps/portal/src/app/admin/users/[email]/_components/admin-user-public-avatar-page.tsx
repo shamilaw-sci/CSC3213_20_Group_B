@@ -183,7 +183,7 @@ export function AdminUserPublicAvatarPage({
                   aria-label="Current public picture"
                 >
                   {state.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                    // eslint-disable-next-line @next/next/no-img-element -- This API-backed avatar URL is displayed without Next Image optimization.
                     <img
                       src={state.url}
                       alt={`${name || state.username} public picture`}

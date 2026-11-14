@@ -40,7 +40,7 @@ export function AdminAvatarReviewImage({
 
   if (url) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element -- The authenticated review image is displayed from a temporary object URL.
       <img src={url} alt={alt} className={className} />
     );
   }

@@ -34,6 +34,9 @@ export function typescriptProjectRoot(tsconfigRootDir: string) {
 
   return {
     files: ['{src,test,tests,k6,scripts}/**/*.{ts,tsx,mts,cts}'],
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error' as const,
+    },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {

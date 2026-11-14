@@ -2242,7 +2242,7 @@ export default function ProjectEditor({
       void load();
     }, 0);
     return () => window.clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Route initialization must not rerun when the stateful loader functions change after a fetch.
   }, [admin, initialProject, initialSchema, initialUser, routeProjectSlug]);
 
   async function startNewProject() {

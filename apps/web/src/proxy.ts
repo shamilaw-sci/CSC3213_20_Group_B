@@ -54,7 +54,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(securityTxtRedirect, 308);
   }
 
-  // eslint-disable-next-line no-console
+  // eslint-disable-next-line no-console -- Keep the existing per-request proxy trace for deployment diagnostics.
   console.log('[scs.pdn.ac.lk]:PROXY HIT:', req.nextUrl.pathname);
   const pathname = req.nextUrl.pathname;
   if (pathname.toLowerCase().endsWith('.php')) {

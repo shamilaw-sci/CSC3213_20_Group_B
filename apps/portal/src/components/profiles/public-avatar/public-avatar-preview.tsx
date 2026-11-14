@@ -49,7 +49,7 @@ function PreviewVisual({
 }: PreviewVisualProps) {
   if (imageUrl)
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element -- Preview URLs may be local blobs that Next Image cannot optimize.
       <img
         src={imageUrl}
         alt={alt}

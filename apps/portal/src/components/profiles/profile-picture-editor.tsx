@@ -292,7 +292,7 @@ export default function ProfilePictureEditor({
             />
           </div>
           {customPictureUrl && !customUrlError && (
-            // eslint-disable-next-line @next/next/no-img-element
+            // eslint-disable-next-line @next/next/no-img-element -- This hidden image probes an arbitrary user URL for load failure.
             <img
               key={customPictureUrl}
               src={customPictureUrl}

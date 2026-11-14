@@ -2345,7 +2345,7 @@ export default function PublicProfileEditor({
       void refreshStudentPlacement(profile);
     }, 150);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Placement refresh depends on classification fields; the response also updates the remaining profile fields.
   }, [
     loading,
     profileKind,

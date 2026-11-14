@@ -47,7 +47,7 @@ export default function GlobalNotFound() {
           actions={
             <>
               {/* A hard navigation remains reliable outside the root app tree. */}
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Global 404 needs a hard navigation outside the app tree. */}
               <a href="/" className={buttonVariants()}>
                 <ArrowLeft className="size-4" />
                 Return to Portal home

@@ -35,11 +35,6 @@ const config = [
     },
   },
   {
-    linterOptions: {
-      reportUnusedDisableDirectives: false,
-    },
-  },
-  {
     files: ['tests/**/*.ts'],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {

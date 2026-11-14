@@ -4,6 +4,9 @@ import unusedImports from 'eslint-plugin-unused-imports';
 
 const baseConfig = [
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+    },
     plugins: {
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,

@@ -132,7 +132,7 @@ export default function ProfileContent({
   const [passkeyDeletingId, setPasskeyDeletingId] = useState('');
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Detect browser passkey support after hydration to keep the server render stable.
     setPasskeySupported(passkeysAreSupported());
   }, []);
 

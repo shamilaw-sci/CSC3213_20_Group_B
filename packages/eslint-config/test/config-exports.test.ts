@@ -15,6 +15,7 @@ import githubAppConfig from '../../../services/github-app/eslint.config';
 type FlatConfig = {
   files?: string[];
   name?: string;
+  linterOptions?: { reportUnusedDisableDirectives?: string };
   languageOptions?: {
     parserOptions?: { project?: string[] | boolean; projectService?: boolean };
   };
@@ -43,6 +44,7 @@ describe('shared ESLint exports', () => {
     expect(rules['simple-import-sort/imports']).toBe('error');
     expect(rules['simple-import-sort/exports']).toBe('error');
     expect(rules['unused-imports/no-unused-imports']).toBe('error');
+    expect(base[0]?.linterOptions?.reportUnusedDisableDirectives).toBe('error');
     expect(base.at(-1)?.rules?.semi).toBe('off');
   });
 
@@ -130,6 +132,7 @@ describe('shared ESLint exports', () => {
     const config = typescriptProjectRoot(root) as FlatConfig;
 
     expect(config.rules?.['@typescript-eslint/no-deprecated']).toBe('error');
+    expect(config.linterOptions?.reportUnusedDisableDirectives).toBe('error');
     expect(config.languageOptions?.parserOptions?.project).toContain(
       `${root.replaceAll('\\', '/')}/tsconfig.json`
     );
