@@ -83,6 +83,61 @@ retry these records with their stored idempotency key. If a record stays pending
 check API recovery logs and GitHub App availability before submitting another
 request. `accepted` and `awaiting_publication` are distinct from `published`.
 
+### ORCID research identity and output migration
+
+ORCID is an optional linked identity for an already signed-in, verified
+university account. Apply D1 migration `0009_orcid_link.sql` (or PostgreSQL
+`postgres/0008_orcid_link.sql`) before deploying the API. The migration adds a
+short-lived OAuth intent table and a unique index permitting one ORCID account
+row per user. The existing `(providerId, accountId)` index prevents one ORCID
+identifier from belonging to two users. The association contains the
+authenticated identifier only; OAuth access and refresh tokens are not stored.
+
+Register an ORCID Public API OAuth client and set its redirect URI exactly to
+`https://api.scs-pdn.space/api/orcid/callback` for production. The Portal origin
+and API host must share the configured Better Auth cookie domain. Configure
+`ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` as API Worker secrets (or Bun
+environment variables). From `services/api`, use `bunx wrangler secret put`
+for each name; do not commit their values. Missing credentials leave connection
+controls unavailable with a 503 response. Only `/authenticate` is requested.
+
+Better Auth 1.7.7 Generic OAuth cannot safely link an email-less ORCID profile
+under the Portal's unchanged `allowDifferentEmails: false` and
+`trustedProviders: []` policy. The provider-specific code exchange therefore
+uses the existing Better Auth session and account tables. The callback requires
+the same session that started the flow, checks a one-time expiring state, and
+upserts the account row atomically. Replacement preserves the previous
+association until a successful callback. Disconnect removes the association
+and pending intent. Google, GitHub, university email, and passkey rules are
+unchanged.
+
+Public profile PRs may contain a snapshot of the verified ORCID URL, but
+editable GitHub content is never verification evidence. People requests the
+current association from the API by public username and ignores ORCID social
+links in GitHub data. A stale PR merged after replacement or disconnection may
+retain an obsolete URL in raw public JSON until a later profile submission;
+it cannot display as verified or fetch research outputs. Review raw data
+consistency during release and reconcile any such PR before merging.
+
+The ORCID Public API `/v3.0/{id}/works` supplies public Research Outputs in
+People. The browser requests JSON directly from ORCID, whose API currently
+responds with cross-origin access. The ORCID link remains visible for an empty
+record. The Research Outputs tab appears only after usable public works are
+retrieved. Temporary failures leave in-memory cached works visible; successful
+empty results hide the tab. Normalized works are kept for about one hour, with
+no persistent publication store or synchronization worker. Recheck anonymous
+API limits and CORS behavior at release.
+
+Migration inventory on 2026-11-14: a read-only search of the separate data
+repository's 74 files under `public/people` found zero `publications`,
+`keyPublications`, or `orcid` keys. No records were deleted or rewritten there.
+That versioned repository remains the archive for older profile data. Before
+deploying removal of manual publication fields, repeat the inventory against
+the actual production data revision and preserve any newly found unique
+records in a reviewed migration report. Do not copy them into ORCID without the
+researcher's authorization. Manual publication editing, schema fields, and
+People rendering have been removed from this monorepo.
+
 ### Academic identity and Honours release check
 
 Use isolated test accounts and synthetic People profiles for mutation checks.

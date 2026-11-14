@@ -141,6 +141,8 @@ development hosts; do not copy those values into Vercel Production or Preview.
 | `GOOGLE_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | Google OAuth                                                            |
 | `GITHUB_CLIENT_ID`            | `server`  | `wrangler` | `runtime` | GitHub OAuth                                                            |
 | `GITHUB_CLIENT_SECRET`        | `secret`  | `template` | `runtime` | GitHub OAuth                                                            |
+| `ORCID_CLIENT_ID`             | `secret`  | `operator` | `runtime` | ORCID public API OAuth client identifier; required to enable linking    |
+| `ORCID_CLIENT_SECRET`         | `secret`  | `operator` | `runtime` | ORCID OAuth code exchange; required to enable linking                   |
 | `MAILER_API_URL`              | `server`  | `wrangler` | `runtime` | Mailer service endpoint                                                 |
 | `MAILER_API_KEY`              | `secret`  | `template` | `runtime` | Mailer service authentication                                           |
 | `GITHUB_APP_API_URL`          | `server`  | `wrangler` | `runtime` | GitHub App HTTP fallback                                                |

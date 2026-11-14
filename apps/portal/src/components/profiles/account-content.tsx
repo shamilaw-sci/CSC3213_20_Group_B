@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { OrcidConnection } from '@/components/profiles/orcid-connection';
 import { authConfig } from '@/config/auth.config';
 import publicEnvConfig from '@/config/public.env.config';
 import { auth_error_messages } from '@/lib/auth/auth-errors';
@@ -636,6 +637,7 @@ export default function ProfileContent({
             </div>
           </CardContent>
         </Card>
+        <OrcidConnection />
       </TabsContent>
 
       <TabsContent value="passkeys" className="space-y-6">

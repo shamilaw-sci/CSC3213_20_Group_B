@@ -168,8 +168,6 @@ function sectionFor(kind: PlaygroundKind, root: string) {
     return 'profile-links';
   if (
     [
-      'publications',
-      'keyPublications',
       'positions',
       'positionsHeld',
       'qualifications',

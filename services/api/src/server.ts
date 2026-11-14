@@ -41,6 +41,8 @@ const config = z
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GITHUB_CLIENT_ID: z.string().min(1),
     GITHUB_CLIENT_SECRET: z.string().min(1),
+    ORCID_CLIENT_ID: z.string().min(1).optional(),
+    ORCID_CLIENT_SECRET: z.string().min(1).optional(),
     MAILER_API_URL: z.url(),
     MAILER_API_KEY: z.string().min(1),
     GITHUB_APP_API_URL: z.url(),
@@ -132,11 +134,12 @@ try {
       ('user'), ('session'), ('account'), ('verification'), ('passkey'),
       ('rateLimit'), ('permission'), ('proxySettings'), ('public_avatar_rate'),
       ('public_avatar_review'), ('public_avatar_audit'),
-      ('identity_review'), ('identity_audit'), ('honours_operation_history')
+      ('identity_review'), ('identity_audit'), ('honours_operation_history'),
+      ('orcid_link_intent')
     ) AS required(name) WHERE to_regclass(quote_ident(name)) IS NOT NULL`
   );
-  if (tables.rows[0]?.count !== '14')
-    throw new Error('PostgreSQL API migrations 0001 through 0007 are required');
+  if (tables.rows[0]?.count !== '15')
+    throw new Error('PostgreSQL API migrations 0001 through 0008 are required');
   await storage.head('__scs_readiness__');
   server = Bun.serve({
     port: config.API_PORT,

@@ -10,7 +10,6 @@ import {
 import { SNumberSchema } from '#schemas/people/identifiers/s-number.schema';
 import { PersonSchema } from '#schemas/people/person.schema';
 import { SocialLinksSchema } from '#schemas/people/social-links.schema';
-import { PublicationSchema } from '#schemas/research/research-publication.schema';
 
 export const StudentTypeSchema = z.enum(['UNDERGRADUATE', 'POSTGRADUATE']);
 export const StudentTrackSchema = z.enum(['GENERAL', 'HONOURS']);
@@ -114,7 +113,6 @@ export const StudentSchema = PersonSchema.extend({
   status: StudentStatusSchema,
   personalEmail: z.email().optional(),
   researchInterests: z.array(z.string()).optional(),
-  publications: z.array(PublicationSchema).optional(),
   positions: z
     .array(
       z.object({

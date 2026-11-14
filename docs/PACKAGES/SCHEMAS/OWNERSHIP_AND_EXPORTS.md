@@ -17,7 +17,7 @@ be shared by independent producers and consumers.
 | `schemas/academics` | organizations, programmes, periods, and academic years                |
 | `schemas/courses`   | course codes, courses, offerings, and teaching roles                  |
 | `schemas/people`    | identifiers, base person, social links, students, and staff unions    |
-| `schemas/research`  | research records, publications, and conferences                       |
+| `schemas/research`  | research records and conferences                                      |
 | `schemas/projects`  | project identity, type, status, people, source, media, and dates      |
 
 Service-private database rows, provider SDK objects, React state, and

@@ -116,17 +116,11 @@ export function PublicProfileReview({
       field: 'profile-work',
       label: 'Work and studies',
       after: list(
-        draft.publications ??
-          draft.projects ??
-          draft.qualifications ??
-          draft.researchInterests
+        draft.projects ?? draft.qualifications ?? draft.researchInterests
       ),
       before: before
         ? list(
-            before.publications ??
-              before.projects ??
-              before.qualifications ??
-              before.researchInterests
+            before.projects ?? before.qualifications ?? before.researchInterests
           )
         : undefined,
     },

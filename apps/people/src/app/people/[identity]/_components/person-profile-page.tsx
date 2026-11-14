@@ -296,7 +296,9 @@ export default function PersonProfilePage({ identity }: { identity: string }) {
       />
 
       <DetailedPersonCard
+        key={identity}
         person={person}
+        identity={identity}
         showIdentity={false}
         extraTabs={extraTabs}
       />

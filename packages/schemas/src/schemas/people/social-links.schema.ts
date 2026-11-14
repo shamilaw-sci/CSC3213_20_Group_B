@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { OrcidUrlSchema } from '#schemas/people/orcid.schema';
+
 export const KnownSocialPlatforms = [
   'linkedin',
   'github',
@@ -224,14 +226,8 @@ function normalizeYoutube(value: string): string | null {
 }
 
 function normalizeOrcid(value: string): string | null {
-  const input = value.trim();
-  const url = urlFromInput(input);
-  const id =
-    url && isAllowedHost(url.hostname, ['orcid.org'])
-      ? url.pathname.replace(/^\//, '').replace(/\/$/, '')
-      : input;
-  if (!/^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(id)) return null;
-  return `https://orcid.org/${id.toUpperCase()}`;
+  const parsed = OrcidUrlSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 function normalizeGoogleScholar(value: string): string | null {

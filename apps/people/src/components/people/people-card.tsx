@@ -2,7 +2,6 @@
 
 import type {
   AcademicTeachingStaff,
-  Publication,
   SocialLinks,
   Staff,
   Student,
@@ -38,7 +37,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaBluesky,
   FaFacebookF,
@@ -87,6 +86,7 @@ import {
 } from 'react-icons/si';
 
 import { avatarUrlForPerson } from '@/lib/avatar-url';
+import { getOrcidWorks, type ResearchOutput } from '@/lib/orcid-works';
 import {
   getStudentProgrammeField,
   getStudentSubjectLabels,
@@ -466,6 +466,7 @@ function getPositions(person: Staff | Student) {
 function getSocialProfileLinks(socialLinks?: SocialLinks): ProfileLink[] {
   const knownLinks = Object.entries(socialLinks?.urls ?? {}).flatMap(
     ([platform, href]) => {
+      if (platform === 'orcid') return [];
       if (!href) return [];
       const known =
         KNOWN_SOCIAL_LINKS[platform as keyof typeof KNOWN_SOCIAL_LINKS];
@@ -484,6 +485,7 @@ function getSocialProfileLinks(socialLinks?: SocialLinks): ProfileLink[] {
 
   const additionalKnownLinks =
     socialLinks?.profiles?.flatMap(({ platform, url }) => {
+      if (platform === 'orcid') return [];
       const known = KNOWN_SOCIAL_LINKS[platform];
       if (!known) return [];
       return [
@@ -497,17 +499,27 @@ function getSocialProfileLinks(socialLinks?: SocialLinks): ProfileLink[] {
     }) ?? [];
 
   const otherLinks =
-    socialLinks?.otherPlatforms?.map((link) => ({
-      label: link.platformName,
-      href: link.url,
-      ...customLinkIcon(link.icon),
-      priority: 'secondary' as const,
-    })) ?? [];
+    socialLinks?.otherPlatforms
+      ?.filter((link) => {
+        if (/orcid/i.test(link.platformName)) return false;
+        if (!URL.canParse(link.url)) return true;
+        const host = new URL(link.url).hostname;
+        return host !== 'orcid.org' && !host.endsWith('.orcid.org');
+      })
+      .map((link) => ({
+        label: link.platformName,
+        href: link.url,
+        ...customLinkIcon(link.icon),
+        priority: 'secondary' as const,
+      })) ?? [];
 
   return [...knownLinks, ...additionalKnownLinks, ...otherLinks];
 }
 
-function getProfileLinks(person: Staff | Student): ProfileLink[] {
+function getProfileLinks(
+  person: Staff | Student,
+  verifiedOrcid?: string | null
+): ProfileLink[] {
   const academic = isAcademicTeachingStaff(person) ? person : null;
   const socialLinks = person.socialLinks;
   const links: ProfileLink[] = [];
@@ -569,6 +581,13 @@ function getProfileLinks(person: Staff | Student): ProfileLink[] {
     });
   }
 
+  if (verifiedOrcid)
+    links.push({
+      label: `Verified ORCID ${verifiedOrcid}`,
+      href: `https://orcid.org/${verifiedOrcid}`,
+      icon: SiOrcid,
+      priority: 'primary',
+    });
   return [...links, ...getSocialProfileLinks(socialLinks)];
 }
 
@@ -831,82 +850,66 @@ function QualificationList({
   );
 }
 
-function PublicationList({ publications }: { publications?: Publication[] }) {
-  if (!publications?.length) return null;
-
-  return (
-    <ul className="divide-y rounded-md border">
-      {publications.map((publication, index) => (
-        <li key={`${publication.title}-${index}`} className="p-4">
-          <p className="font-medium">{publication.title}</p>
-          {(publication.journal || publication.publicationDate) && (
-            <p className="text-muted-foreground mt-1 text-sm">
-              {[publication.journal, publication.publicationDate]
-                .filter(Boolean)
-                .join(' / ')}
-            </p>
-          )}
-          {publication.coAuthors?.length ? (
-            <p className="text-muted-foreground mt-1 text-sm">
-              Co-authors: {publication.coAuthors.join(', ')}
-            </p>
-          ) : null}
-          {publication.description && (
-            <p className="text-muted-foreground mt-2 text-sm">
-              {publication.description}
-            </p>
-          )}
-          <div className="mt-2 flex flex-wrap gap-3 text-sm">
-            {publication.doi?.doiUrl && (
-              <a
-                href={publication.doi.doiUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                DOI{publication.doi.doiId ? `: ${publication.doi.doiId}` : ''}
-              </a>
-            )}
-            {publication.url && (
-              <a
-                href={publication.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Publication link
-              </a>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export function DetailedPersonCard({
   person,
+  identity,
   showIdentity = true,
   extraTabs = [],
 }: {
   person: Staff | Student;
+  identity?: string;
   showIdentity?: boolean;
   extraTabs?: ProfileTab[];
 }) {
   const [activeTabId, setActiveTabId] = useState<string>();
+  const [verifiedOrcid, setVerifiedOrcid] = useState<string | null>(null);
+  const [researchOutputs, setResearchOutputs] = useState<ResearchOutput[]>([]);
+  useEffect(() => {
+    if (!identity) return;
+    let active = true;
+    let sequence = 0;
+    let currentOrcid: string | null = null;
+    const load = async () => {
+      const request = ++sequence;
+      try {
+        const response = await fetch(
+          `/api/orcid/${encodeURIComponent(identity)}`,
+          { cache: 'no-store' }
+        );
+        if (!response.ok) return;
+        const { orcid } = (await response.json()) as { orcid: string | null };
+        if (!active || request !== sequence) return;
+        if (orcid !== currentOrcid) setResearchOutputs([]);
+        currentOrcid = orcid;
+        setVerifiedOrcid(orcid);
+        if (!orcid) return;
+        const works = await getOrcidWorks(orcid);
+        if (active && request === sequence) setResearchOutputs(works);
+      } catch {
+        /* Temporary failures preserve the last usable view. */
+      }
+    };
+    void load();
+    const refresh = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      active = false;
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [identity]);
   const isStaff = isStaffPerson(person);
   const academic = isAcademicTeachingStaff(person) ? person : null;
   const student = isStudentPerson(person) ? person : null;
   const role = isStaff ? getRoleLabel(person) : getStudentRoleLabel(person);
-  const profileLinks = getProfileLinks(person);
+  const profileLinks = getProfileLinks(person, verifiedOrcid);
   const visibleProfileLinks =
     profileLinks.length > 6
       ? profileLinks.filter((link) => link.priority === 'primary').slice(0, 6)
       : profileLinks;
   const allResearchInterests = getResearchInterests(person);
   const allPositions = getPositions(person);
-  const publications = academic?.publications ?? student?.publications ?? [];
-  const keyPublications = academic?.keyPublications ?? [];
   const researchOngoing = academic?.researchOngoing ?? [];
   const conferences = academic?.conferencesAttended ?? [];
   const awards = academic?.awards ?? [];
@@ -1062,8 +1065,6 @@ export function DetailedPersonCard({
 
     if (
       researchOngoing.length > 0 ||
-      keyPublications.length > 0 ||
-      publications.length > 0 ||
       conferences.length > 0 ||
       awards.length > 0
     ) {
@@ -1077,16 +1078,6 @@ export function DetailedPersonCard({
                 <TimelineList items={researchOngoing} />
               </ProfileSection>
             )}
-            {keyPublications.length > 0 && (
-              <ProfileSection title="Key Publications">
-                <PublicationList publications={keyPublications} />
-              </ProfileSection>
-            )}
-            {publications.length > 0 && (
-              <ProfileSection title="Publications">
-                <PublicationList publications={publications} />
-              </ProfileSection>
-            )}
             {conferences.length > 0 && (
               <ProfileSection title="Conferences">
                 <TimelineList items={conferences} />
@@ -1098,6 +1089,49 @@ export function DetailedPersonCard({
               </ProfileSection>
             )}
           </div>
+        ),
+      });
+    }
+
+    if (researchOutputs.length > 0) {
+      nextTabs.push({
+        id: 'research-outputs',
+        label: 'Research Outputs',
+        content: (
+          <ul className="divide-y rounded-md border">
+            {researchOutputs.map((output) => (
+              <li key={output.id} className="space-y-1 p-4">
+                <p className="font-medium">{output.title}</p>
+                <p className="text-muted-foreground text-sm">
+                  {[output.type, output.date, output.venue]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {output.doi && (
+                    <a
+                      className="text-primary underline"
+                      href={`https://doi.org/${output.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      DOI: {output.doi}
+                    </a>
+                  )}
+                  {output.url && (
+                    <a
+                      className="text-primary underline"
+                      href={output.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Research output
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         ),
       });
     }

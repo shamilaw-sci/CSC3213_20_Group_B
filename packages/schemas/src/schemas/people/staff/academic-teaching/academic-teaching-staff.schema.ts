@@ -10,7 +10,6 @@ import { SocialLinksSchema } from '#schemas/people/social-links.schema';
 import { AcademicRankSchema } from '#schemas/people/staff/academic-teaching/academic-rank.schema';
 import { ConferenceSchema } from '#schemas/research/conference.schema';
 import { ResearchSchema } from '#schemas/research/research.schema';
-import { PublicationSchema } from '#schemas/research/research-publication.schema';
 
 export const AcademicTeachingStaffSchema = PersonSchema.extend({
   staffType: z.literal('ACADEMIC_TEACHING'),
@@ -60,8 +59,6 @@ export const AcademicTeachingStaffSchema = PersonSchema.extend({
     )
     .optional(),
   researchOngoing: z.array(ResearchSchema).optional(),
-  publications: z.array(PublicationSchema).optional(),
-  keyPublications: z.array(PublicationSchema).optional(),
   conferencesAttended: z.array(ConferenceSchema).optional(),
   teachings: z.array(CourseCodeSchema).optional(),
   cvUrl: z.url().optional(),

@@ -7,6 +7,7 @@ export interface AuthIdentity {
   image?: string;
   providers: Set<string>;
   githubUserId?: number;
+  orcidId?: string;
 }
 
 export interface AuthIdentityRepository {
@@ -28,6 +29,7 @@ export function authIdentityFromRows(
   if (!first) return null;
 
   const githubAccount = rows.find((account) => account.providerId === 'github');
+  const orcidAccount = rows.find((account) => account.providerId === 'orcid');
   const githubUserId = Number(githubAccount?.accountId);
 
   return {
@@ -42,6 +44,7 @@ export function authIdentityFromRows(
     ...(Number.isSafeInteger(githubUserId) && githubUserId > 0
       ? { githubUserId }
       : {}),
+    ...(orcidAccount?.accountId ? { orcidId: orcidAccount.accountId } : {}),
   };
 }
 

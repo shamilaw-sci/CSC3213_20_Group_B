@@ -23,6 +23,7 @@ export * from '#schemas/academics/academic-year.schema';
 // People
 export * from '#schemas/people/identifiers/academic-username.schema';
 export * from '#schemas/people/identifiers/s-number.schema';
+export * from '#schemas/people/orcid.schema';
 export * from '#schemas/people/people-search.schema';
 export * from '#schemas/people/person.schema';
 export * from '#schemas/people/public-avatar.schema';
@@ -45,7 +46,6 @@ export * from '#schemas/courses/course-staff.schema';
 // Research
 export * from '#schemas/research/conference.schema';
 export * from '#schemas/research/research.schema';
-export * from '#schemas/research/research-publication.schema';
 
 // Projects
 export * from '#schemas/projects/project.schema';

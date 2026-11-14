@@ -15,7 +15,7 @@ schema by domain and visualizes the relationships between them.
 The package owns contracts shared by more than one workspace or repository:
 
 - academic years, periods, organizations, programs, courses, and offerings;
-- people identifiers, profiles, students, staff, research, and publications;
+- people identifiers, profiles, students, staff, and research;
 - projects and their people/course relationships;
 - API errors, pagination, durable operations, and mutation control.
 
@@ -55,8 +55,7 @@ flowchart TD
   Person --> Student
   Person --> Staff
   Person --> Research
-  Research --> Publication
-  Publication --> Conference
+  Research --> Conference
   Project --> Person
   Project --> Course
   Project --> Offering

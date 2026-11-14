@@ -24,6 +24,8 @@ export interface Env {
 
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
+  ORCID_CLIENT_ID?: string;
+  ORCID_CLIENT_SECRET?: string;
 
   MAILER_API_URL: string;
   MAILER_API_KEY: string;

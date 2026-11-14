@@ -2,7 +2,6 @@ import { describe, expect, it } from 'bun:test';
 
 import { ConferenceSchema } from '#schemas/research/conference.schema';
 import { ResearchSchema } from '#schemas/research/research.schema';
-import { PublicationSchema } from '#schemas/research/research-publication.schema';
 
 describe('ConferenceSchema', () => {
   it('accepts a valid conference with required fields', () => {
@@ -27,45 +26,6 @@ describe('ConferenceSchema', () => {
 
   it('rejects a conference missing the name', () => {
     expect(() => ConferenceSchema.parse({ date: '2025-05-15' })).toThrow();
-  });
-});
-
-describe('PublicationSchema', () => {
-  it('accepts a minimal publication', () => {
-    expect(() =>
-      PublicationSchema.parse({ title: 'A Novel Algorithm' })
-    ).not.toThrow();
-  });
-
-  it('accepts a publication with all fields', () => {
-    expect(() =>
-      PublicationSchema.parse({
-        title: 'Deep Learning for NLP',
-        journal: 'Nature AI',
-        publicationDate: '2025-01-15',
-        coAuthors: ['Jane Smith', 'Bob Lee'],
-        description: 'A comprehensive survey',
-        doi: {
-          doiId: '10.1234/example',
-          doiUrl: 'https://doi.org/10.1234/example',
-        },
-        url: 'https://example.com/paper',
-        icon: 'https://example.com/icon.png',
-      })
-    ).not.toThrow();
-  });
-
-  it('rejects a publication with an invalid DOI URL', () => {
-    expect(() =>
-      PublicationSchema.parse({
-        title: 'Test',
-        doi: { doiUrl: 'not-a-url' },
-      })
-    ).toThrow();
-  });
-
-  it('rejects a publication missing the title', () => {
-    expect(() => PublicationSchema.parse({ journal: 'Nature' })).toThrow();
   });
 });
 

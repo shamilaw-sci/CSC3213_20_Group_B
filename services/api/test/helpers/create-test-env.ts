@@ -36,6 +36,8 @@ function createTestD1Database(): D1Database {
     CREATE UNIQUE INDEX "honours_operation_history_retry_idx" ON "honours_operation_history" ("actor_subject_id", "idempotency_key");
     CREATE UNIQUE INDEX "honours_operation_history_active_request_idx" ON "honours_operation_history" ("actor_subject_id", "request_hash") WHERE "status" IN ('pending_acceptance', 'accepted', 'processing', 'awaiting_publication');
     CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("providerId", "accountId");
+    CREATE UNIQUE INDEX "account_one_orcid_per_user" ON "account" ("userId", "providerId") WHERE "providerId" = 'orcid';
+    CREATE TABLE "orcid_link_intent" ("userId" TEXT NOT NULL PRIMARY KEY REFERENCES "user"("id") ON DELETE CASCADE, "stateHash" TEXT NOT NULL UNIQUE, "sessionId" TEXT NOT NULL, "portalOrigin" TEXT NOT NULL, "expiresAt" INTEGER NOT NULL);
     CREATE UNIQUE INDEX "passkey_credentialID_unique" ON "passkey" ("credentialID");
   `);
 
@@ -109,10 +111,19 @@ function createTestD1Database(): D1Database {
         statements.map((statement) => {
           const binding = preparedStatements.get(statement);
           if (!binding) throw new Error('Unknown D1 test statement');
+          const results = database
+            .query(binding.sql)
+            .all(...binding.values) as T[];
           return {
             success: true,
-            meta: {},
-            results: database.query(binding.sql).all(...binding.values) as T[],
+            meta: {
+              changes: (
+                database.query('SELECT changes() AS count').get() as {
+                  count: number;
+                }
+              ).count,
+            },
+            results,
           } as D1Result<T>;
         })
       )();

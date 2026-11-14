@@ -1,6 +1,13 @@
 import { ProjectIndexJsonSchema } from '@scs/schemas';
 
 import {
+  completeOrcidConnection,
+  disconnectOrcid,
+  getMyOrcid,
+  getPublicOrcid,
+  startOrcidConnection,
+} from '@/services/orcid.service';
+import {
   decideAdminIdentity,
   getAdminIdentityHistory,
   listAdminIdentity,
@@ -100,6 +107,31 @@ type RegisteredRoute = {
 };
 
 const routes: RegisteredRoute[] = [
+  {
+    method: 'POST',
+    match: { kind: 'exact', path: '/api/orcid/connect' },
+    handler: startOrcidConnection,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/orcid/callback' },
+    handler: completeOrcidConnection,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'exact', path: '/api/orcid/me' },
+    handler: getMyOrcid,
+  },
+  {
+    method: 'DELETE',
+    match: { kind: 'exact', path: '/api/orcid/me' },
+    handler: disconnectOrcid,
+  },
+  {
+    method: 'GET',
+    match: { kind: 'prefix', path: '/api/orcid/public/' },
+    handler: getPublicOrcid,
+  },
   {
     method: 'POST',
     match: { kind: 'exact', path: '/api/people/v2/avatars/me' },

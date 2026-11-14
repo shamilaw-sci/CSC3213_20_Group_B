@@ -27,7 +27,7 @@ flowchart LR
 | [Academics](ACADEMICS.md)         | organizations, subjects, programmes, periods, and years                                 |
 | [People](PEOPLE.md)               | identities, students, staff, social links, and search projections                       |
 | [Courses](COURSES.md)             | course records, offerings, staff assignments, and identifiers                           |
-| [Research](RESEARCH.md)           | research activities, publications, and conferences                                      |
+| [Research](RESEARCH.md)           | research activities and conferences                                                     |
 | [Projects](PROJECTS.md)           | showcase records, people roles, course context, links, media, and provenance            |
 | [API transport](API_TRANSPORT.md) | editor, automation, errors, mail, mutations, operations, pagination, and proxy requests |
 

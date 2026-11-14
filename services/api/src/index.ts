@@ -35,6 +35,26 @@ export async function handleApiRequest(
 
   return handleWorkerRequest(req, env, async (request, workerEnv) => {
     if (isBetterAuthRequest(request)) {
+      if (
+        request.method === 'POST' &&
+        new URL(request.url).pathname === '/api/auth/unlink-account'
+      ) {
+        const body: unknown = await request
+          .clone()
+          .json()
+          .catch(() => null);
+        if (
+          body &&
+          typeof body === 'object' &&
+          'providerId' in body &&
+          body.providerId === 'orcid'
+        ) {
+          return Response.json(
+            { error: 'Use the ORCID connection controls to disconnect' },
+            { status: 403 }
+          );
+        }
+      }
       return createAuth(request, workerEnv).handler(request);
     }
     return dispatchRoute(request, workerEnv);

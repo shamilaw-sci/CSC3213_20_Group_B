@@ -31,27 +31,35 @@ flowchart TD
 | `PeopleSearchIndexSchema`     | Complete array of people search entries.                            |
 | `SocialIconSchema`            | Built-in icon identifier or validated external icon URL.            |
 | `SocialLinksSchema`           | Normalized social-profile collection with platform detection rules. |
+| `OrcidIdentifierSchema`       | Checksummed canonical ORCID identifier or profile URL.              |
+| `OrcidUrlSchema`              | Canonical HTTPS profile URL from a valid ORCID identifier.          |
 
 Social links are available on student and all staff profile types. They have
 named slots for common social and academic platforms,
-including ORCID, Google Scholar, ResearchGate, and Academia.edu. The `urls`
+including legacy ORCID, Google Scholar, ResearchGate, and Academia.edu. The `urls`
 object holds one primary profile per known platform. `profiles` holds up to two
 additional profiles for each platform, for a total of three. Known URLs entered
 as custom links are recognized and promoted without the supplied name or icon.
 `otherPlatforms` holds at most ten custom links, each with a name, complete URL,
 and optional library or URL icon. Known profiles do not use custom-link slots.
 
+ORCID links in old social data remain parseable for migration but are not
+verification evidence. Only one ORCID account association in Better Auth's
+`account` table is active per user; People obtains it from the API rather than
+trusting social links in public GitHub data. New ORCID connections are made in
+Portal account settings.
+
 ## Staff
 
-| Schema                          | Responsibility                                                                        |
-| ------------------------------- | ------------------------------------------------------------------------------------- |
-| `AcademicRankSchema`            | Teaching-staff academic rank.                                                         |
-| `AcademicTeachingStaffSchema`   | Teaching profile with department or unit, research, publications, courses, and links. |
-| `AcademicSupportPositionSchema` | Supported academic-support designation.                                               |
-| `AcademicSupportStaffSchema`    | Support profile with designation and department or unit.                              |
-| `NonAcademicPositionSchema`     | Supported non-academic designation.                                                   |
-| `NonAcademicStaffSchema`        | Non-academic profile with designation and department or unit.                         |
-| `StaffSchema`                   | Discriminated union of all three staff profile variants.                              |
+| Schema                          | Responsibility                                                          |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `AcademicRankSchema`            | Teaching-staff academic rank.                                           |
+| `AcademicTeachingStaffSchema`   | Teaching profile with department or unit, research, courses, and links. |
+| `AcademicSupportPositionSchema` | Supported academic-support designation.                                 |
+| `AcademicSupportStaffSchema`    | Support profile with designation and department or unit.                |
+| `NonAcademicPositionSchema`     | Supported non-academic designation.                                     |
+| `NonAcademicStaffSchema`        | Non-academic profile with designation and department or unit.           |
+| `StaffSchema`                   | Discriminated union of all three staff profile variants.                |
 
 ## Students and directory configuration
 

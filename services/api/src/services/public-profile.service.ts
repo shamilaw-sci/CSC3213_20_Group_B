@@ -4,6 +4,7 @@ import {
   createPullRequestResultSchema,
   HonoursProgrammeStudentStreamMap,
   NonAcademicStaffSchema,
+  normalizeOrcidIdentifier,
   PostgraduateProgrammeSchema,
   PublicProfileKindSchema,
   StudentPlacementSchema,
@@ -33,6 +34,7 @@ import {
 import { z } from 'zod';
 
 import { callGithubApp } from '@/clients/github-app.client';
+import { getAuthIdentityByEmail } from '@/repositories/auth-accounts.repo';
 import {
   createJsonErrorResponse,
   createJsonResponse,
@@ -344,6 +346,49 @@ function trustedProfileForTarget(input: {
   }
 
   return nextProfile;
+}
+
+async function withVerifiedOrcid(
+  profile: Record<string, unknown>,
+  targetEmail: string,
+  env: Env
+): Promise<Record<string, unknown>> {
+  const identity = await getAuthIdentityByEmail(targetEmail, env);
+  const verified = identity?.orcidId
+    ? normalizeOrcidIdentifier(identity.orcidId)
+    : null;
+  const links = isRecord(profile.socialLinks) ? profile.socialLinks : {};
+  const urls = isRecord(links.urls) ? { ...links.urls } : {};
+  delete urls.orcid;
+  if (verified) urls.orcid = `https://orcid.org/${verified}`;
+  const profiles = Array.isArray(links.profiles)
+    ? links.profiles.filter(
+        (entry) => !isRecord(entry) || entry.platform !== 'orcid'
+      )
+    : undefined;
+  const otherPlatforms = Array.isArray(links.otherPlatforms)
+    ? links.otherPlatforms.filter((entry) => {
+        if (!isRecord(entry)) return true;
+        if (
+          typeof entry.platformName === 'string' &&
+          /orcid/i.test(entry.platformName)
+        )
+          return false;
+        if (typeof entry.url !== 'string' || !URL.canParse(entry.url))
+          return true;
+        const host = new URL(entry.url).hostname;
+        return host !== 'orcid.org' && !host.endsWith('.orcid.org');
+      })
+    : undefined;
+  return {
+    ...profile,
+    socialLinks: {
+      ...links,
+      urls,
+      ...(profiles ? { profiles } : {}),
+      ...(otherPlatforms ? { otherPlatforms } : {}),
+    },
+  };
 }
 
 function targetPaths(input: {
@@ -1163,6 +1208,13 @@ export async function upsertMyPublicProfilePr(
       origin
     );
   }
+  if ('orcidVerified' in profile || 'verifiedOrcid' in profile) {
+    return createJsonErrorResponse(
+      'ORCID verification is managed by account linking',
+      400,
+      origin
+    );
+  }
 
   let studentPlacement: StudentPlacementResponse | undefined;
   if (profileKind === 'student') {
@@ -1245,12 +1297,16 @@ export async function upsertMyPublicProfilePr(
     }
   }
 
-  const trustedProfile = trustedProfileForTarget({
-    profileKind,
-    profile,
-    targetEmail: user.email,
-    studentPlacement,
-  });
+  const trustedProfile = await withVerifiedOrcid(
+    trustedProfileForTarget({
+      profileKind,
+      profile,
+      targetEmail: user.email,
+      studentPlacement,
+    }),
+    user.email,
+    env
+  );
 
   if (
     profileKind === 'student' &&
@@ -1400,6 +1456,13 @@ export async function upsertAdminUserPublicProfilePr(
       origin
     );
   }
+  if ('orcidVerified' in profile || 'verifiedOrcid' in profile) {
+    return createJsonErrorResponse(
+      'ORCID verification is managed by account linking',
+      400,
+      origin
+    );
+  }
 
   let studentPlacement: StudentPlacementResponse | undefined;
   if (profileKind === 'student') {
@@ -1426,12 +1489,16 @@ export async function upsertAdminUserPublicProfilePr(
     }
   }
 
-  const trustedProfile = trustedProfileForTarget({
-    profileKind,
-    profile,
-    targetEmail: verified.target.email,
-    studentPlacement,
-  });
+  const trustedProfile = await withVerifiedOrcid(
+    trustedProfileForTarget({
+      profileKind,
+      profile,
+      targetEmail: verified.target.email,
+      studentPlacement,
+    }),
+    verified.target.email,
+    env
+  );
 
   const parseResult = schemas[profileKind].safeParse(trustedProfile);
   if (!parseResult.success) {

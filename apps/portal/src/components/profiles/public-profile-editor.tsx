@@ -188,7 +188,6 @@ const SOCIAL_FIELDS = [
   ['facebook', 'Facebook'],
   ['instagram', 'Instagram'],
   ['youtube', 'YouTube'],
-  ['orcid', 'ORCID'],
   ['googleScholar', 'Google Scholar'],
   ['researchGate', 'ResearchGate'],
   ['academia', 'Academia.edu'],
@@ -203,7 +202,6 @@ const SOCIAL_PLACEHOLDERS: Record<(typeof SOCIAL_FIELDS)[number][0], string> = {
   facebook: 'username or facebook.com/username',
   instagram: '@username or instagram.com/username',
   youtube: '@username or youtube.com/@username',
-  orcid: '0000-0000-0000-0000 or orcid.org/0000-0000-0000-0000',
   googleScholar: 'scholar.google.com/citations?user=...',
   researchGate: 'researchgate.net/profile/Name',
   academia: 'university.academia.edu/Name',
@@ -218,7 +216,7 @@ const KNOWN_SOCIAL_EXAMPLES: Record<KnownSocialPlatform, string> = {
   facebook: 'username or facebook.com/username',
   instagram: '@username or instagram.com/username',
   youtube: '@username or youtube.com/@username',
-  orcid: 'ORCID iD or orcid.org profile URL',
+  orcid: 'Connect ORCID in account settings',
   googleScholar: 'Google Scholar user ID or citations profile URL',
   researchGate: 'ResearchGate username or profile URL',
   academia: 'Academia.edu username or profile URL',
@@ -486,13 +484,9 @@ function profileIssueField(path: PropertyKey[]) {
   const root = String(path[0] ?? 'profile');
   if (root === 'socialLinks') return 'profile-links';
   if (
-    [
-      'publications',
-      'projects',
-      'qualifications',
-      'researchInterests',
-      'teachings',
-    ].includes(root)
+    ['projects', 'qualifications', 'researchInterests', 'teachings'].includes(
+      root
+    )
   ) {
     return 'profile-work';
   }
@@ -943,6 +937,12 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
     const item = otherPlatforms[index];
     const known = detectKnownSocialUrl(asString(item?.url));
     if (!known) return;
+    if (known.platform === 'orcid') {
+      toast.error(
+        'Connect ORCID in account settings to verify your researcher identity.'
+      );
+      return;
+    }
 
     const primary = asString(urls[known.platform]);
     const extras = profiles.filter(
@@ -974,6 +974,10 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-sm font-semibold">Social profiles</h3>
+      <p className="text-muted-foreground text-sm">
+        ORCID is managed in account settings. Existing manually entered ORCID
+        links are unverified and are not used for research outputs.
+      </p>
       <div className="grid gap-3 md:grid-cols-2">
         {SOCIAL_FIELDS.map(([key, label]) => (
           <Field
@@ -998,6 +1002,16 @@ function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
           <h4 className="text-sm font-medium">Additional known profiles</h4>
           {profiles.map((profile, index) => {
             const platform = profile.platform as KnownSocialPlatform;
+            if (platform === 'orcid') {
+              return (
+                <p
+                  key={`legacy-orcid-${index}`}
+                  className="text-muted-foreground text-sm"
+                >
+                  Legacy ORCID link: {asString(profile.url)} (unverified)
+                </p>
+              );
+            }
             return (
               <div
                 key={`${platform}-${index}`}
@@ -1914,19 +1928,8 @@ function CommonProfileCollections({
         </>
       ) : null}
 
-      <PublicationArray
-        label="Publications"
-        value={asArray(profile.publications)}
-        onChange={(value) => setArrayField('publications', value)}
-      />
-
       {includeAcademicExtra ? (
         <>
-          <PublicationArray
-            label="Key Publications"
-            value={asArray(profile.keyPublications)}
-            onChange={(value) => setArrayField('keyPublications', value)}
-          />
           <ArrayEditor
             label="Conferences Attended"
             value={asArray(profile.conferencesAttended)}
@@ -1979,117 +1982,6 @@ function CommonProfileCollections({
         </>
       ) : null}
     </div>
-  );
-}
-
-interface PublicationArrayProps {
-  label: string;
-  value: ProfileRecord[];
-  onChange: (value: ProfileRecord[]) => void;
-}
-
-function PublicationArray({ label, value, onChange }: PublicationArrayProps) {
-  return (
-    <ArrayEditor
-      label={label}
-      value={value}
-      emptyItem={{
-        title: '',
-        journal: '',
-        publicationDate: '',
-        coAuthors: [],
-        description: '',
-        doi: {
-          doiId: '',
-          doiUrl: '',
-        },
-        url: '',
-        icon: '',
-      }}
-      onChange={onChange}
-      renderItem={(item, update) => {
-        const doi = isRecord(item.doi) ? item.doi : {};
-        return (
-          <>
-            <Field
-              label="Title"
-              value={asString(item.title)}
-              onChange={(fieldValue) => update('title', fieldValue)}
-              required
-            />
-            <Field
-              label="Journal"
-              value={asString(item.journal)}
-              onChange={(fieldValue) => update('journal', fieldValue)}
-              placeholder="Journal or venue name"
-            />
-            <Field
-              label="Publication Date"
-              value={asString(item.publicationDate)}
-              onChange={(fieldValue) => update('publicationDate', fieldValue)}
-              placeholder="2024 or 2024-07-01"
-            />
-            <Field
-              label="DOI ID"
-              value={asString(doi.doiId)}
-              onChange={(fieldValue) =>
-                update('doi', {
-                  ...doi,
-                  doiId: fieldValue,
-                })
-              }
-              placeholder="10.1234/example"
-            />
-            <Field
-              label="DOI URL"
-              value={asString(doi.doiUrl)}
-              onChange={(fieldValue) =>
-                update('doi', {
-                  ...doi,
-                  doiUrl: fieldValue,
-                })
-              }
-              type="url"
-              placeholder="https://doi.org/10.1234/example"
-            />
-            <Field
-              label="URL"
-              value={asString(item.url)}
-              onChange={(fieldValue) => update('url', fieldValue)}
-              type="url"
-              placeholder="https://example.com/paper"
-            />
-            <Field
-              label="Icon URL"
-              value={asString(item.icon)}
-              onChange={(fieldValue) => update('icon', fieldValue)}
-              type="url"
-              placeholder="https://example.com/icon.svg"
-            />
-            <StringArrayEditor
-              label="Co-Authors"
-              value={
-                Array.isArray(item.coAuthors)
-                  ? item.coAuthors.filter(
-                      (author): author is string => typeof author === 'string'
-                    )
-                  : []
-              }
-              onChange={(fieldValue) => update('coAuthors', fieldValue)}
-              placeholder="Co-author"
-            />
-            <div className="md:col-span-2">
-              <TextAreaField
-                label="Description"
-                value={asString(item.description)}
-                onChange={(fieldValue) => update('description', fieldValue)}
-                placeholder="Short optional description"
-              />
-            </div>
-          </>
-        );
-      }}
-    />
   );
 }
 
