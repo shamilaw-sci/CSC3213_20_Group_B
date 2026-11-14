@@ -615,7 +615,7 @@ function ProfileLinkList({
     <div className="grid gap-2">
       {visibleLinks.map((link) => {
         if (link.verifiedOrcid)
-          return <VerifiedOrcidLink key={link.href} href={link.href} />;
+          return <VerifiedOrcidLink key={link.href} href={link.href} compact />;
         const Icon = link.icon;
         return (
           <a

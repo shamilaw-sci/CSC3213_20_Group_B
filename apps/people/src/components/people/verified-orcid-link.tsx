@@ -8,19 +8,59 @@ import {
 import { BadgeCheck } from 'lucide-react';
 import { SiOrcid } from 'react-icons/si';
 
-export function VerifiedOrcidLink({ href }: { href: string }) {
+function VerifiedTooltipContent() {
   return (
-    <div className="bg-card flex w-fit items-center rounded-md border">
+    <TooltipContent>
+      <span className="inline-flex items-center gap-1">
+        <BadgeCheck className="size-4" aria-hidden="true" />
+        Verified
+      </span>
+    </TooltipContent>
+  );
+}
+
+export function VerifiedOrcidLink({
+  href,
+  compact = false,
+}: {
+  href: string;
+  compact?: boolean;
+}) {
+  if (compact)
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="ORCID"
+              className="bg-card text-muted-foreground hover:border-primary
+                hover:bg-primary hover:text-primary-foreground inline-flex
+                size-10 items-center justify-center rounded-md border
+                transition-colors"
+            >
+              <SiOrcid className="size-5" aria-hidden="true" />
+            </a>
+          }
+        />
+        <VerifiedTooltipContent />
+      </Tooltip>
+    );
+
+  return (
+    <div className="bg-card flex min-h-10 items-center rounded-md border">
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="ORCID"
         className="hover:text-primary focus-visible:ring-ring inline-flex
-          size-10 items-center justify-center rounded-sm focus-visible:ring-2
-          focus-visible:outline-none"
+          min-h-10 min-w-0 flex-1 items-center gap-2 px-3 text-sm
+          focus-visible:ring-2 focus-visible:outline-none"
       >
-        <SiOrcid className="size-5" aria-hidden="true" />
+        <SiOrcid className="size-4 shrink-0" aria-hidden="true" />
+        <span className="truncate">ORCID</span>
       </a>
       <Tooltip>
         <TooltipTrigger
@@ -32,12 +72,7 @@ export function VerifiedOrcidLink({ href }: { href: string }) {
         >
           <BadgeCheck className="size-4" aria-hidden="true" />
         </TooltipTrigger>
-        <TooltipContent>
-          <span className="inline-flex items-center gap-1">
-            <BadgeCheck className="size-4" aria-hidden="true" />
-            Verified
-          </span>
-        </TooltipContent>
+        <VerifiedTooltipContent />
       </Tooltip>
     </div>
   );

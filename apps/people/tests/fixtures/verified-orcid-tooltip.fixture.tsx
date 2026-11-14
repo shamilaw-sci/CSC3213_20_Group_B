@@ -54,3 +54,15 @@ test('the separate verification trigger shows a short tooltip on keyboard focus'
     expect(screen.getByText('Verified')).toBeTruthy();
   });
 });
+
+test('the compact ORCID icon shows verification on keyboard focus', async () => {
+  render(
+    <VerifiedOrcidLink href="https://orcid.org/0000-0002-1825-0097" compact />
+  );
+  const link = screen.getByRole('link', { name: 'ORCID' });
+  expect(screen.queryByRole('button', { name: 'Verified' })).toBeNull();
+  act(() => link.focus());
+  await waitFor(() => {
+    expect(screen.getByText('Verified')).toBeTruthy();
+  });
+});
