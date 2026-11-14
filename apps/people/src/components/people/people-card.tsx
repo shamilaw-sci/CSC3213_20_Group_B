@@ -657,7 +657,7 @@ function ProfileIconLinkList({ links }: { links: ProfileLink[] }) {
     <div className="flex flex-wrap gap-2">
       {links.map((link) => {
         if (link.verifiedOrcid)
-          return <VerifiedOrcidLink key={link.href} href={link.href} compact />;
+          return <VerifiedOrcidLink key={link.href} href={link.href} />;
         const Icon = link.icon;
         return (
           <Tooltip key={`${link.label}-${link.href}`}>

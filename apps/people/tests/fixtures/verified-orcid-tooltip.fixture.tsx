@@ -41,19 +41,16 @@ afterAll(async () => {
   dom.window.close();
 });
 
-test('the separate verification trigger explains authenticated ORCID on keyboard focus', async () => {
+test('the separate verification trigger shows a short tooltip on keyboard focus', async () => {
   render(<VerifiedOrcidLink href="https://orcid.org/0000-0002-1825-0097" />);
   const link = screen.getByRole('link', { name: 'ORCID' });
-  const trigger = screen.getByRole('button', {
-    name: 'ORCID identity verified through ORCID',
-  });
+  const trigger = screen.getByRole('button', { name: 'Verified' });
   expect(link.getAttribute('href')).toBe(
     'https://orcid.org/0000-0002-1825-0097'
   );
   expect(link.contains(trigger)).toBe(false);
   act(() => trigger.focus());
   await waitFor(() => {
-    expect(screen.getByText('Verified ORCID')).toBeTruthy();
-    expect(screen.getByText(/authenticated through ORCID/)).toBeTruthy();
+    expect(screen.getByText('Verified')).toBeTruthy();
   });
 });
