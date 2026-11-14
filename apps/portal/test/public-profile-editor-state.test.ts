@@ -82,7 +82,9 @@ describe('guided public profile editor', () => {
     expect(picture).toBeGreaterThan(0);
     expect(orcid).toBeGreaterThan(picture);
     expect(details).toBeGreaterThan(orcid);
-    expect(notice).toBeGreaterThan(details);
+    expect(notice).toBeGreaterThan(orcid);
+    expect(details).toBeGreaterThan(notice);
+    expect(editor).toContain('<CardTitle>Publication status</CardTitle>');
     expect(editor).not.toContain('<CardTitle>Pending PR</CardTitle>');
     expect(editor).not.toContain('Edits update the current open PR.');
     expect(editor).toContain("pr?.status !== 'none'");

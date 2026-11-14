@@ -9,6 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@scs/ui/components/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@scs/ui/components/tooltip';
+import { BadgeCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -113,7 +119,7 @@ export function OrcidConnection({
         </CardTitle>
         <CardDescription>
           {orcid
-            ? 'Your researcher identifier is verified through ORCID.'
+            ? 'Your ORCID iD is linked to this account.'
             : inPublicProfile
               ? 'Connect your ORCID account to verify your researcher identifier and display your public research outputs.'
               : 'Connect your ORCID account to display your verified researcher identifier and automatically retrieve your public research outputs.'}
@@ -123,7 +129,25 @@ export function OrcidConnection({
         {orcid ? (
           <>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="secondary">Connected and verified</Badge>
+              <Badge variant="secondary">Connected</Badge>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      className="text-info-surface-foreground inline-flex
+                        items-center gap-1 text-sm font-medium"
+                      aria-label="Verified ORCID iD"
+                    >
+                      <BadgeCheck aria-hidden="true" className="size-4" />
+                      Verified
+                    </button>
+                  }
+                />
+                <TooltipContent>
+                  This ORCID iD was confirmed when you connected through ORCID.
+                </TooltipContent>
+              </Tooltip>
               <a
                 href={`https://orcid.org/${orcid}`}
                 target="_blank"
@@ -139,7 +163,7 @@ export function OrcidConnection({
               </h3>
               <p className="text-muted-foreground mt-1 text-sm">
                 {inPublicProfile
-                  ? 'Your public research outputs are retrieved from ORCID automatically. Add or update your publications, datasets, software, and other research contributions on ORCID. Only publicly visible outputs appear on your SCS-PDN profile, and updates may take up to one hour.'
+                  ? 'Manage research outputs on ORCID. Public outputs appear on your SCS-PDN profile automatically; updates may take up to one hour.'
                   : 'Your public research outputs are retrieved automatically from ORCID. Add or update your publications, datasets, software, and other research contributions on ORCID, and they can appear on your SCS-PDN public profile.'}
               </p>
               {!inPublicProfile && (
@@ -160,7 +184,7 @@ export function OrcidConnection({
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
-                variant="outline"
+                variant="secondary"
                 disabled={busy || loading}
                 onClick={() => void connect()}
               >
@@ -168,6 +192,10 @@ export function OrcidConnection({
               </Button>
               <Button
                 variant="outline"
+                className="border-destructive-border bg-destructive-surface
+                  text-destructive-surface-foreground
+                  hover:bg-destructive-surface/80
+                  hover:text-destructive-surface-foreground"
                 disabled={busy || loading}
                 onClick={() => void disconnect()}
               >

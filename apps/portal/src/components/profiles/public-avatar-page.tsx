@@ -318,7 +318,7 @@ export default function PublicAvatarPage() {
       : null;
 
   return (
-    <PageShell width="default">
+    <PageShell width="wide" className="min-w-0">
       <BackButton
         fallbackHref="/user/me/public-profile"
         label="Back to Public Profile"
@@ -367,8 +367,8 @@ export default function PublicAvatarPage() {
         </Card>
       ) : (
         <div
-          className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]
-            lg:items-start"
+          className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]
+            xl:items-start"
         >
           <div className="min-w-0 space-y-6">
             <Card>

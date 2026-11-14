@@ -2556,7 +2556,7 @@ export default function PublicProfileEditor({
                 ? `/admin/users/${emailPathSegment(targetEmail)}/public-avatar`
                 : '/user/me/public-avatar'
             }
-            className={buttonVariants({ variant: 'outline' })}
+            className={buttonVariants({ variant: 'secondary' })}
           >
             {targetEmail ? 'View public picture' : 'Manage public picture'}
           </Link>
@@ -2580,11 +2580,9 @@ export default function PublicProfileEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle>Public Profile Details</CardTitle>
+          <CardTitle>Publication status</CardTitle>
           <CardDescription>
-            {hasOpenDraft
-              ? 'An unmerged PR draft exists. Submitting updates that same draft.'
-              : (schema?.note ?? 'Loading the profile schema details.')}
+            Public changes are reviewed and published through GitHub.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -2640,6 +2638,19 @@ export default function PublicProfileEditor({
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Public Profile Details</CardTitle>
+          {hasOpenDraft && (
+            <CardDescription>
+              An unmerged PR draft exists. Submitting updates that same draft.
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
           <EditorWorkspace
             state={editorState}
             onStateChange={(nextState) => {
@@ -2656,7 +2667,7 @@ export default function PublicProfileEditor({
               hasOpenDraft
                 ? `Editing the draft in PR #${pr?.number}.`
                 : publishedProfile
-                  ? 'Published data is available for comparison.'
+                  ? undefined
                   : 'No public profile has been published yet.'
             }
             sections={PROFILE_EDITOR_SECTIONS}

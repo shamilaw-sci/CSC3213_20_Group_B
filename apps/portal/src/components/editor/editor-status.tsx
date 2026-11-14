@@ -21,7 +21,15 @@ export function EditorStatus({ detail, status }: EditorStatusProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-live="polite">
-      <Badge variant={destructive ? 'destructive' : 'outline'}>
+      <Badge
+        variant={destructive ? 'destructive' : 'outline'}
+        className={
+          status === 'published'
+            ? `border-success-border bg-success-surface
+              text-success-surface-foreground`
+            : undefined
+        }
+      >
         {statusLabels[status]}
       </Badge>
       {detail ? (

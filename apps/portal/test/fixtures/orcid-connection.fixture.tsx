@@ -9,6 +9,7 @@ const browserGlobals = {
   document: dom.window.document,
   navigator: dom.window.navigator,
   HTMLElement: dom.window.HTMLElement,
+  Element: dom.window.Element,
   IS_REACT_ACT_ENVIRONMENT: true,
 };
 const originals = Object.fromEntries(

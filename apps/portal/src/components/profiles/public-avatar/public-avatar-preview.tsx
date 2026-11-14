@@ -191,7 +191,7 @@ export function PublicAvatarPreview({
         {comparing ? null : (
           <div
             className={cn(
-              `bg-muted relative mx-auto aspect-square w-full max-w-sm
+              `bg-muted relative mx-auto aspect-square w-full max-w-lg
                 overflow-hidden border`,
               styleClasses[style]
             )}
@@ -201,7 +201,7 @@ export function PublicAvatarPreview({
         )}
 
         {comparing ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
             <figure className="space-y-2">
               <div
                 className={cn(
